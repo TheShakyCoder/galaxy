@@ -1,0 +1,45 @@
+-- The initial screen shown on game load, for the case the player is NOT
+-- automatically logged in (plan.md §3.2 step 3: no valid stored auth
+-- token found — first-time visitor, guest, logged-out, or expired
+-- session). Presents both entry points on one combined screen, per the
+-- decided boot flow: **Play as Guest** or **Register / Log In**.
+--
+-- Guest now actually transitions to main/faction_select.gui (this screen
+-- disables itself and tells that one to show). Register/Log In still just
+-- logs its intended next step — the real account flow against Nakama
+-- (§3.2/§3.3) isn't wired up yet. Wiring the silent-login check (step 1/2
+-- of §3.2's boot flow — skip this screen entirely if a valid token is
+-- already stored) is also separate, future work.
+
+local STATUS_LOGIN = "Register / Log In not wired up yet -- Nakama auth pending (plan.md S3.2/S3.3)"
+
+function init(self)
+	self.active = true
+	msg.post(".", "acquire_input_focus")
+	self.guest_node = gui.get_node("guest_button")
+	self.login_node = gui.get_node("login_button")
+	self.status_node = gui.get_node("status")
+	gui.set_text(self.status_node, "")
+end
+
+local function hits(node, action)
+	return gui.pick_node(node, action.x, action.y)
+end
+
+function on_input(self, action_id, action)
+	if not self.active or action_id ~= hash("touch") or not action.pressed then
+		return false
+	end
+	if hits(self.guest_node, action) then
+		print("[start_screen] Play as Guest pressed -- handing off to faction_select")
+		self.active = false
+		msg.post("#gui", "disable")
+		msg.post("faction_select#gui", "show_faction_select")
+		return true
+	elseif hits(self.login_node, action) then
+		gui.set_text(self.status_node, STATUS_LOGIN)
+		print("[start_screen] Register / Log In pressed")
+		return true
+	end
+	return false
+end

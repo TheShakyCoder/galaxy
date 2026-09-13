@@ -1,0 +1,7 @@
+/.editor_settings
+/.internal
+/build
+/nakama-server/.env
+/nakama-server/.cookie
+.DS_Store
+Thumbs.db

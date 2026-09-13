@@ -1,0 +1,94 @@
+name: "main"
+scale_along_z: 0
+embedded_instances {
+  id: "start_screen"
+  data: "components {\n"
+  "  id: \"gui\"\n"
+  "  component: \"/main/start_screen.gui\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "faction_select"
+  data: "components {\n"
+  "  id: \"gui\"\n"
+  "  component: \"/main/faction_select.gui\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "outpost"
+  data: "components {\n"
+  "  id: \"gui\"\n"
+  "  component: \"/main/outpost.gui\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "patrol_1_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/main/models/patrol_1/patrol_1.model\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}

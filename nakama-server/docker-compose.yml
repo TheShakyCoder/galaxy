@@ -1,0 +1,66 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16.8-alpine
+    # POSTGRES_PASSWORD defaults to "localdb" for local dev if unset -
+    # override it via .env for any real deployment (see .env.example). Not
+    # published to the host at all (see `expose:` only, no `ports:`
+    # mapping) - only the nakama container, on this same compose network,
+    # ever needs to reach it. Matters once this runs somewhere other than
+    # localhost (e.g. a real deployment): a plaintext local-dev password
+    # on a port open to the internet is a real risk, not hypothetical.
+    environment:
+      - POSTGRES_DB=nakama
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-localdb}
+    volumes:
+      - data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "nakama"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+  nakama:
+    container_name: nakama
+    image: registry.heroiclabs.com/heroiclabs/nakama:3.37.0
+    # No third-party social login wired in yet (plan.md §3.2/§3.3: only
+    # Guest and Register/Log In, both plain Nakama auth - device-session
+    # for the ephemeral guest path, email/password or similar for
+    # registered accounts). Add provider-specific env vars/entrypoint
+    # flags here if/when a social login is actually decided on.
+    environment:
+      # Same default/override as postgres's own POSTGRES_PASSWORD above -
+      # must match it exactly (this is the password Nakama itself uses to
+      # connect to postgres), which is why both read from the same
+      # POSTGRES_PASSWORD env var rather than being set independently.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-localdb}
+    entrypoint:
+      - "/bin/sh"
+      - "-ecx"
+      - >
+          /nakama/nakama migrate up --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama &&
+          exec /nakama/nakama --name nakama1 --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200
+    restart: always
+    links:
+      - "postgres:db"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./:/nakama/data
+    expose:
+      - "7349"
+      - "7350"
+      - "7351"
+    ports:
+      - "7349:7349"
+      - "7350:7350"
+      - "7351:7351"
+    healthcheck:
+      test: ["CMD", "/nakama/nakama", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  data:

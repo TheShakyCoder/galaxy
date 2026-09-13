@@ -1,0 +1,216 @@
+# Flight-mode control scheme, ported from the other local reference
+# project (~/Defold/SuperShips/input/game.input_binding) — see plan.md's
+# new Controls section for what each action means and which are actually
+# wired up to anything yet (flight mode itself isn't built, §4's "Build
+# flight mode" TODO). This is a generic space-flight-sim control scheme
+# (throttle/pitch/yaw, targeting, docking, FTL jump, camera, weapon
+# toggles) — mechanics, not creative expression, so reuse is fine per §0,
+# same as the rest of what's been ported from that project.
+mouse_trigger {
+  input: MOUSE_BUTTON_1
+  action: "touch"
+}
+mouse_trigger {
+  input: MOUSE_BUTTON_RIGHT
+  action: "track_target"
+}
+mouse_trigger {
+  input: MOUSE_WHEEL_UP
+  action: "zoom_in"
+}
+mouse_trigger {
+  input: MOUSE_WHEEL_DOWN
+  action: "zoom_out"
+}
+key_trigger {
+  input: KEY_W
+  action: "pitch_up"
+}
+key_trigger {
+  input: KEY_S
+  action: "pitch_down"
+}
+key_trigger {
+  input: KEY_A
+  action: "yaw_left"
+}
+key_trigger {
+  input: KEY_D
+  action: "yaw_right"
+}
+key_trigger {
+  input: KEY_SPACE
+  action: "boost"
+}
+key_trigger {
+  input: KEY_LCTRL
+  action: "thrust_down"
+}
+key_trigger {
+  input: KEY_UP
+  action: "pitch_up"
+}
+key_trigger {
+  input: KEY_DOWN
+  action: "pitch_down"
+}
+key_trigger {
+  input: KEY_LEFT
+  action: "yaw_left"
+}
+key_trigger {
+  input: KEY_RIGHT
+  action: "yaw_right"
+}
+key_trigger {
+  input: KEY_EQUALS
+  action: "throttle_up"
+}
+key_trigger {
+  input: KEY_KP_ADD
+  action: "throttle_up"
+}
+key_trigger {
+  input: KEY_MINUS
+  action: "throttle_down"
+}
+key_trigger {
+  input: KEY_KP_SUBTRACT
+  action: "throttle_down"
+}
+key_trigger {
+  input: KEY_Q
+  action: "stop_throttle"
+}
+key_trigger {
+  input: KEY_E
+  action: "full_throttle"
+}
+key_trigger {
+  input: KEY_LSHIFT
+  action: "shift"
+}
+key_trigger {
+  input: KEY_RSHIFT
+  action: "shift"
+}
+key_trigger {
+  input: KEY_LALT
+  action: "slide"
+}
+key_trigger {
+  input: KEY_RALT
+  action: "slide"
+}
+key_trigger {
+  input: KEY_V
+  action: "camera_cycle"
+}
+key_trigger {
+  input: KEY_C
+  action: "cancel_target"
+}
+key_trigger {
+  input: KEY_C
+  action: "cancel"
+}
+key_trigger {
+  input: KEY_K
+  action: "dock"
+}
+key_trigger {
+  input: KEY_P
+  action: "activate_scanner"
+}
+key_trigger {
+  input: KEY_TAB
+  action: "cycle_target"
+}
+key_trigger {
+  input: KEY_T
+  action: "match_speed"
+}
+key_trigger {
+  input: KEY_Y
+  action: "follow_friend"
+}
+key_trigger {
+  input: KEY_X
+  action: "target_nearest_enemy"
+}
+key_trigger {
+  input: KEY_Z
+  action: "target_nearest_missile"
+}
+key_trigger {
+  input: KEY_F
+  action: "fire_missiles"
+}
+key_trigger {
+  input: KEY_N
+  action: "toggle_map"
+}
+key_trigger {
+  input: KEY_J
+  action: "execute_jump"
+}
+key_trigger {
+  input: KEY_G
+  action: "toggle_guns"
+}
+key_trigger {
+  input: KEY_1
+  action: "weapon_1"
+}
+key_trigger {
+  input: KEY_2
+  action: "weapon_2"
+}
+key_trigger {
+  input: KEY_3
+  action: "weapon_3"
+}
+key_trigger {
+  input: KEY_4
+  action: "weapon_4"
+}
+key_trigger {
+  input: KEY_5
+  action: "weapon_5"
+}
+key_trigger {
+  input: KEY_6
+  action: "weapon_6"
+}
+key_trigger {
+  input: KEY_7
+  action: "weapon_7"
+}
+key_trigger {
+  input: KEY_8
+  action: "weapon_8"
+}
+key_trigger {
+  input: KEY_9
+  action: "weapon_9"
+}
+key_trigger {
+  input: KEY_BACKSPACE
+  action: "backspace"
+}
+key_trigger {
+  input: KEY_ENTER
+  action: "enter"
+}
+key_trigger {
+  input: KEY_KP_ENTER
+  action: "enter"
+}
+key_trigger {
+  input: KEY_ESC
+  action: "esc"
+}
+text_trigger {
+  input: TEXT
+  action: "text"
+}

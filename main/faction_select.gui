@@ -1,0 +1,151 @@
+script: "/main/faction_select.gui_script"
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT
+max_nodes: 512
+background_color {
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 0.0
+}
+fonts {
+  name: "default_font"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  type: TYPE_BOX
+  id: "background"
+  position { x: 960.0 y: 540.0 z: 0.0 w: 1.0 }
+  size { x: 1920.0 y: 1080.0 z: 0.0 w: 1.0 }
+  color { x: 0.05 y: 0.06 z: 0.1 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "title"
+  text: "Choose Your Faction"
+  font: "default_font"
+  position { x: 960.0 y: 820.0 z: 0.0 w: 1.0 }
+  size { x: 1000.0 y: 100.0 z: 0.0 w: 1.0 }
+  color { x: 0.9 y: 0.95 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  outline_alpha: 1.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "accord_button"
+  position { x: 700.0 y: 520.0 z: 0.0 w: 1.0 }
+  size { x: 500.0 y: 100.0 z: 0.0 w: 1.0 }
+  color { x: 0.16 y: 0.32 z: 0.55 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "accord_button_label"
+  text: "The Accord"
+  font: "default_font"
+  position { x: 700.0 y: 520.0 z: 0.0 w: 1.0 }
+  size { x: 500.0 y: 100.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "swarm_button"
+  position { x: 1220.0 y: 520.0 z: 0.0 w: 1.0 }
+  size { x: 500.0 y: 100.0 z: 0.0 w: 1.0 }
+  color { x: 0.4 y: 0.24 z: 0.5 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "swarm_button_label"
+  text: "The Swarm"
+  font: "default_font"
+  position { x: 1220.0 y: 520.0 z: 0.0 w: 1.0 }
+  size { x: 500.0 y: 100.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "status"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 260.0 z: 0.0 w: 1.0 }
+  size { x: 1400.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 0.8 y: 0.85 z: 0.9 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}

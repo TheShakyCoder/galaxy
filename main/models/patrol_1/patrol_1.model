@@ -1,0 +1,3 @@
+mesh: "/main/models/patrol_1/patrol_1.gltf"
+material: "/builtins/materials/model_lit.material"
+name: "patrol_1"

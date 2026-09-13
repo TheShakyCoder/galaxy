@@ -1,0 +1,1034 @@
+-- Home-system outpost overview screen, shown after a Guest picks a
+-- faction (main/faction_select.gui_script). Two tabs:
+--
+-- **Fitting** (default) — left side: a top-down visual of the player's
+-- active ship with one marker per fitting slot, placed at that slot's own
+-- {x, y} screen-pixel offset from the ship visual's center
+-- (main/data/ships.lua's `slot_positions` — RANDOM PLACEHOLDER
+-- coordinates for now, see plan.md §4). Right side: two always-visible
+-- lists, **Shop** (purchasable, not yet owned) and **Owned** (spares not
+-- installed). Drag a card from either list onto a matching slot marker to
+-- install it; drag an installed marker off to uninstall it.
+--
+-- **Ships** — a tab for selecting a different owned ship or purchasing a
+-- new one, per direct instruction (the other local reference project has
+-- its own version of this, ~/Defold/SuperShips/main/station.gui_script's
+-- ship-picker: buttons grouped by class, colored locked/unlocked/
+-- selected, clicking one calls its own set_ship_type — same overall idea
+-- of "click a ship entry to make it the active one," built fresh here
+-- rather than ported, since our roster/economy differ enough that
+-- reusing that script directly wouldn't fit). Two always-visible lists:
+-- **Ships For Sale** (not yet owned) and **Owned Ships** (click to
+-- select). Only one ship exists in the roster so far (Patrol 1, §2.1.2),
+-- so For Sale is empty and Owned has exactly one, correctly so.
+--
+-- A Launch button (visible on both tabs) enters flight mode — not built
+-- yet, just logs the intent.
+--
+-- This is the docked equivalent of the reference project's in-flight
+-- component panel (~/Defold/SuperShips/main/hud.gui_script's
+-- components_panel: one colored box per slot, green when filled,
+-- positioned over a background via a stored per-slot local coordinate) —
+-- same idea, but interactive/drag-and-drop instead of a read-only
+-- flight-HUD status display, and the slot positions are plotted directly
+-- on a ship silhouette rather than a separate abstract icon panel.
+--
+-- Components can only be fitted here, at an outpost (§2.8) — there's no
+-- flight-mode screen yet to do this from mid-flight anyway.
+--
+-- Ship/loadout/owned data comes from main/session.lua; display names come
+-- from main/data/modules/catalog.lua and main/data/ships.lua; the
+-- outpost's own system name comes from main/data/star_systems.lua's
+-- HOME_SYSTEM (§2.7/§2.9).
+
+local session = require("main.session")
+local star_systems = require("main.data.star_systems")
+local ships = require("main.data.ships")
+local catalog = require("main.data.modules.catalog")
+
+local FACTION_DISPLAY = { accord = "The Accord", swarm = "The Swarm" }
+
+-- Falls back to this if a ship has no `slot_positions` of its own yet -
+-- a slot with no stored position is simply not shown, same as the
+-- reference project's own "no position, no box" rule.
+local SLOT_TYPE_BY_PREFIX = { W = "weapon", C = "computer", E = "engine", H = "hull" }
+
+-- Square, not the old 110x60 landscape rectangle - a REGULAR octagon
+-- (equal side lengths) needs a square bounding box; new_octagon_node's
+-- 8-vertex pie is inscribed in an ellipse that only degenerates into a
+-- circle (and therefore a regular octagon) when width == height.
+local MARKER_SIZE = vmath.vector3(74, 74, 0)
+-- Slightly transparent per direct instruction (alpha 0.65, was fully
+-- opaque) - lets the ship visual underneath show through the slot
+-- markers a bit rather than fully hiding it. Scoped to just the marker's
+-- own background box; the icon/labels drawn on top of it, and the
+-- hover-highlight border/invalid-mark, stay fully opaque so they're
+-- still clearly legible.
+local SLOT_FILLED_COLOR = vmath.vector4(0.3, 0.8, 0.45, 0.65)
+local SLOT_EMPTY_COLOR = vmath.vector4(0.35, 0.38, 0.42, 0.65)
+
+-- Icon shown per slot (main/images/icons.atlas, built by
+-- tools/build_module_icons.py) — a filled module's own icon
+-- (catalog.lua's `icon` field) when installed, otherwise a dim
+-- generic outline icon for that slot's TYPE ("slot_weapon_empty" etc.),
+-- so an empty slot still shows what kind of module belongs there. This
+-- replaces showing the installed item's name as text (plan.md §4).
+local ICON_TEXTURE = "icons"
+local ICON_SIZE = vmath.vector3(48, 48, 0)
+local CARD_COLOR = vmath.vector4(0.16, 0.2, 0.26, 1.0)
+local CARD_SIZE = vmath.vector3(820, 50, 0)
+local CARD_SPACING = 58
+-- Small "Sell" button pinned to the right edge of a sellable card (Owned
+-- spares, Owned Ships - never Shop/For Sale, §2.8/§4's "there needs to be
+-- an option to sell a ship or sell a component" instruction). Its own
+-- node, separate from the card's own box/label, so it doesn't collide
+-- with that card's existing click behavior (dragging a module card,
+-- clicking a ship card to select it).
+local SELL_BUTTON_SIZE = vmath.vector3(90, 36, 0)
+local SELL_BUTTON_COLOR = vmath.vector4(0.5, 0.2, 0.22, 1.0)
+-- Shared by all four card-list panels (shop/owned/forsale/ownedships) -
+-- all four are authored at this same height in main/outpost.gui. Used to
+-- clip each list to its own panel and to figure out how far it's allowed
+-- to scroll (plan.md §4 - the catalog outgrew the old unscrollable,
+-- always-show-everything panel, e.g. once the mining naming-scale
+-- additions took the Shop list to 6 items).
+local PANEL_HEIGHT = 220
+local SCROLL_STEP = CARD_SPACING -- one row per wheel notch
+
+-- Hover feedback while dragging (drag-over highlight): a "border" box
+-- sized a bit bigger than the marker itself, created BEHIND it in the
+-- node list (added first, so the marker's own filled box sits on top and
+-- only the border's overflow edge shows through) - the cheap flat-color
+-- way to fake a glow/border effect without a real outline/nine-patch
+-- texture. Neon cyan when the dragged item's type matches this slot,
+-- neon red (plus a big red "X" text on top of everything) when it
+-- doesn't.
+local BORDER_SIZE = vmath.vector3(MARKER_SIZE.x + 20, MARKER_SIZE.y + 20, 0)
+local BORDER_VALID_COLOR = vmath.vector4(0.3, 1.0, 0.9, 1.0)
+local BORDER_INVALID_COLOR = vmath.vector4(1.0, 0.15, 0.2, 1.0)
+local INVALID_MARK_COLOR = vmath.vector4(1.0, 0.1, 0.1, 1.0)
+
+local TAB_COLOR_ACTIVE = vmath.vector4(0.22, 0.38, 0.5, 1.0)
+local TAB_COLOR_INACTIVE = vmath.vector4(0.15, 0.17, 0.22, 1.0)
+local SHIP_CARD_CURRENT_COLOR = vmath.vector4(0.2, 0.45, 0.3, 1.0) -- the ship you're currently flying/fitting
+
+function init(self)
+	self.active = false
+	self.active_page = "fitting" -- "fitting" | "ships"
+	self.dragging = nil -- { source = "slot"/"owned"/"shop", item = key, from_slot = id or nil, type = module type }
+	self.markers = {} -- slot_id -> { box, label, border, invalid_mark, type }
+	self.hovered_slot = nil -- slot_id currently highlighted while dragging, or nil
+	self.cards = {} -- Fitting tab's draggable module cards: { box, label, item_key, source }
+	self.ship_cards = {} -- Ships tab's clickable ship cards: { box, label, ship_id, source }
+	self.ghost = nil -- { box, label } following the cursor while dragging
+	-- Per-list scroll offset in pixels, one entry per card-list panel -
+	-- 0 = scrolled to the top. Adjusted by mouse wheel (on_input) and
+	-- clamped against each list's own current row count every time it's
+	-- rebuilt (refresh_module_cards/refresh_ship_cards), since the row
+	-- count - and therefore how far a list is even allowed to scroll -
+	-- can change between rebuilds (an item gets bought, a ship gets
+	-- added to the roster, etc.).
+	self.scroll = { shop = 0, owned = 0, forsale = 0, ownedships = 0 }
+
+	msg.post(".", "acquire_input_focus")
+	msg.post("#gui", "disable")
+
+	self.title_node = gui.get_node("title")
+	self.ship_node = gui.get_node("ship_overview")
+	self.launch_node = gui.get_node("launch_button")
+
+	self.tab_nodes = {
+		fitting = gui.get_node("tab_fitting"),
+		ships = gui.get_node("tab_ships"),
+	}
+
+	-- Fitting tab's static nodes (enabled/disabled together on tab switch)
+	self.ship_visual_node = gui.get_node("ship_visual")
+	self.shop_panel_node = gui.get_node("shop_panel")
+	self.owned_panel_node = gui.get_node("owned_panel")
+	self.fitting_static_nodes = {
+		gui.get_node("ship_visual_heading"), self.ship_visual_node,
+		gui.get_node("shop_heading"), self.shop_panel_node,
+		gui.get_node("owned_heading"), self.owned_panel_node,
+	}
+
+	-- Ships tab's static nodes
+	self.forsale_panel_node = gui.get_node("forsale_panel")
+	self.ownedships_panel_node = gui.get_node("ownedships_panel")
+	self.ships_static_nodes = {
+		gui.get_node("forsale_heading"), self.forsale_panel_node,
+		gui.get_node("ownedships_heading"), self.ownedships_panel_node,
+	}
+
+	-- Each of the four card-list panels clips its own cards (stencil,
+	-- so cards scrolled past the panel's edge are actually hidden, not
+	-- just positioned off the visible list) - set once here since these
+	-- are the same static authored panel nodes for the screen's whole
+	-- lifetime, unlike the cards themselves which get rebuilt constantly.
+	for _, panel_node in ipairs({
+		self.shop_panel_node, self.owned_panel_node,
+		self.forsale_panel_node, self.ownedships_panel_node,
+	}) do
+		gui.set_clipping_mode(panel_node, gui.CLIPPING_MODE_STENCIL)
+		gui.set_clipping_visible(panel_node, true)
+	end
+
+	-- Confirmation dialog (plan.md §4/§2.8 - "any kind of purchase or
+	-- swap needs a confirmation dialogue", per direct instruction).
+	-- Authored hidden in main/outpost.gui; shown/hidden as a group via
+	-- show_confirm/hide_confirm below. self.confirm is nil whenever the
+	-- dialog is closed, or { on_confirm = function() ... end } while
+	-- it's open and waiting on a Confirm/Cancel click (on_input's very
+	-- first check, once self.active, gates everything else on this).
+	self.confirm = nil
+	self.confirm_nodes = {
+		scrim = gui.get_node("confirm_scrim"),
+		panel = gui.get_node("confirm_panel"),
+		message = gui.get_node("confirm_message"),
+		yes = gui.get_node("confirm_yes"),
+		yes_label = gui.get_node("confirm_yes_label"),
+		no = gui.get_node("confirm_no"),
+		no_label = gui.get_node("confirm_no_label"),
+	}
+	for _, node in pairs(self.confirm_nodes) do
+		gui.set_enabled(node, false)
+	end
+end
+
+local function ship_display_name(ship_id, faction)
+	local ship = ships.SHIPS[ship_id]
+	local skin = ship and ship.faction_skins[faction]
+	return (skin and skin.name ~= "<TBD>") and skin.name or ship_id
+end
+
+local function ship_overview_text(faction)
+	local home_id = star_systems.HOME_SYSTEM[faction]
+	local home_name = (home_id and star_systems.SYSTEMS[home_id].name) or "?"
+	local ship_name = ship_display_name(session.get_ship_id(), faction)
+	return home_name, FACTION_DISPLAY[faction] or faction, ship_name
+end
+
+-- Octagon-shaped node (per direct instruction: slot markers should be
+-- octagons, not rectangles) - built from Defold's native TYPE_PIE node
+-- rather than a custom texture: an 8-vertex pie with a full 360-degree
+-- fill and no inner radius renders as a plain regular octagon inscribed
+-- in `size`'s bounding box, no image asset needed. gui.pick_node's hit
+-- test is bounding-box based regardless of node type/shape, so drag/drop
+-- hit-testing against the marker is unaffected by the corners being
+-- visually cut off.
+-- NOTE: the Lua API is gui.set_fill_angle, NOT gui.set_pie_fill_angle -
+-- confirmed against the official API docs (defold.com/ref/stable/gui) -
+-- despite the underlying .gui file's design-time field actually being
+-- named `pie_fill_angle` (confirmed separately by inspecting bob.jar's
+-- compiled NodeDesc protobuf class), which is what led to the wrong
+-- guess the first time around. That earlier wrong name was a real bug,
+-- not just a caveat: calling a nil `gui.set_pie_fill_angle` throws a Lua
+-- runtime error, which aborts build_markers() entirely partway through
+-- its first iteration - only the very first slot's `border` node had
+-- been created (via new_pie_node + the two setter calls before the
+-- crash) and was never reached by its own set_enabled(false) (that line
+-- runs in build_markers, AFTER new_octagon_node returns - which it never
+-- did), leaving one always-visible, default-white, BORDER_SIZE-shaped
+-- octagon on screen and none of the other 9 slots' markers ever built.
+local function new_octagon_node(pos, size)
+	local node = gui.new_pie_node(pos, size)
+	gui.set_perimeter_vertices(node, 8)
+	gui.set_outer_bounds(node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(node, 360)
+	gui.set_inner_radius(node, 0)
+	return node
+end
+
+local function clear_markers(self)
+	for _, marker in pairs(self.markers) do
+		gui.delete_node(marker.border)
+		gui.delete_node(marker.box)
+		gui.delete_node(marker.icon)
+		gui.delete_node(marker.label)
+		gui.delete_node(marker.level_label)
+		gui.delete_node(marker.invalid_mark)
+	end
+	self.markers = {}
+end
+
+-- Builds one marker per entry in the current ship's `slot_positions`,
+-- placed at ship_visual's own screen position plus that slot's stored
+-- {x, y} offset (screen-pixel units, center-origin — see
+-- main/data/ships.lua's own comment on slot_positions). `box`/`border` are
+-- octagons (new_octagon_node), not plain rectangles, per direct
+-- instruction. Creation order matters for draw order: border (behind) ->
+-- box -> icon -> label (a small slot-id tag, top of the box) ->
+-- level_label (a small upgrade-level badge, bottom-right corner — blank
+-- unless the installed instance is upgraded, §4's per-instance upgrade
+-- decision) -> invalid_mark (in front of everything).
+local function build_markers(self)
+	clear_markers(self)
+	local ship = ships.SHIPS[session.get_ship_id()]
+	local positions = ship and ship.slot_positions or {}
+	local visual_pos = gui.get_position(self.ship_visual_node)
+	for slot_id, offset in pairs(positions) do
+		local pos = vmath.vector3(visual_pos.x + offset.x, visual_pos.y + offset.y, 0)
+
+		local border = new_octagon_node(pos, BORDER_SIZE)
+		gui.set_pivot(border, gui.PIVOT_CENTER)
+		gui.set_enabled(border, false)
+
+		local box = new_octagon_node(pos, MARKER_SIZE)
+		gui.set_pivot(box, gui.PIVOT_CENTER)
+
+		local icon = gui.new_box_node(pos, ICON_SIZE)
+		gui.set_pivot(icon, gui.PIVOT_CENTER)
+		gui.set_texture(icon, ICON_TEXTURE)
+
+		-- Small slot-id tag (e.g. "W1"), pinned to the top edge of the
+		-- marker box so it doesn't overlap the icon at its center.
+		local label_pos = vmath.vector3(pos.x, pos.y + MARKER_SIZE.y / 2 - 10, 0)
+		local label = gui.new_text_node(label_pos, slot_id)
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_font(label, "default_font")
+		gui.set_color(label, vmath.vector4(0.05, 0.05, 0.05, 1.0))
+		gui.set_scale(label, vmath.vector3(0.5, 0.5, 1))
+
+		-- Small upgrade-level badge (e.g. "+1"), bottom-right corner —
+		-- text set/cleared in refresh_markers, blank when empty or at
+		-- level 0.
+		local level_label_pos = vmath.vector3(pos.x + MARKER_SIZE.x / 2 - 14, pos.y - MARKER_SIZE.y / 2 + 10, 0)
+		local level_label = gui.new_text_node(level_label_pos, "")
+		gui.set_pivot(level_label, gui.PIVOT_CENTER)
+		gui.set_font(level_label, "default_font")
+		gui.set_color(level_label, vmath.vector4(1.0, 0.85, 0.3, 1.0))
+		gui.set_scale(level_label, vmath.vector3(0.5, 0.5, 1))
+
+		local invalid_mark = gui.new_text_node(pos, "X")
+		gui.set_pivot(invalid_mark, gui.PIVOT_CENTER)
+		gui.set_font(invalid_mark, "default_font")
+		gui.set_color(invalid_mark, INVALID_MARK_COLOR)
+		gui.set_scale(invalid_mark, vmath.vector3(3, 3, 1))
+		gui.set_enabled(invalid_mark, false)
+
+		self.markers[slot_id] = {
+			box = box, icon = icon, label = label, level_label = level_label,
+			border = border, invalid_mark = invalid_mark,
+			type = SLOT_TYPE_BY_PREFIX[slot_id:sub(1, 1)],
+		}
+	end
+end
+
+-- Hides every slot's hover-highlight (border + invalid mark) — called
+-- whenever there's no drag in progress, or once a drag ends.
+local function clear_hover(self)
+	for _, marker in pairs(self.markers) do
+		gui.set_enabled(marker.border, false)
+		gui.set_enabled(marker.invalid_mark, false)
+	end
+	self.hovered_slot = nil
+end
+
+-- Drag-over feedback: highlights whichever slot the cursor is currently
+-- over with a neon border — cyan if the dragged item's type fits that
+-- slot, red (plus a red X) if it doesn't. Called continuously while
+-- dragging, from on_input's cursor-tracking branch.
+local function update_hover(self, action)
+	local hit_slot = nil
+	for slot_id, marker in pairs(self.markers) do
+		if gui.pick_node(marker.box, action.x, action.y) then
+			hit_slot = slot_id
+			break
+		end
+	end
+	for slot_id, marker in pairs(self.markers) do
+		if slot_id == hit_slot then
+			local valid = marker.type == self.dragging.type
+			gui.set_enabled(marker.border, true)
+			gui.set_color(marker.border, valid and BORDER_VALID_COLOR or BORDER_INVALID_COLOR)
+			gui.set_enabled(marker.invalid_mark, not valid)
+		else
+			gui.set_enabled(marker.border, false)
+			gui.set_enabled(marker.invalid_mark, false)
+		end
+	end
+	self.hovered_slot = hit_slot
+end
+
+-- Recolors every marker and swaps its icon from session.get_loadout()'s
+-- current state (called after any install/uninstall, and whenever the
+-- Fitting tab (re)opens). The slot-id label (e.g. "W1") never changes;
+-- the icon shows the installed INSTANCE's module icon when filled, or a
+-- dim generic outline icon for that slot's type when empty — replacing
+-- the old "show the item's name as text" approach (plan.md §4). The
+-- level badge shows that instance's upgrade level (§4's per-instance
+-- upgrade decision) when it's above 0, and is blank otherwise.
+local function refresh_markers(self)
+	local installed_by_slot = {}
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		installed_by_slot[entry.slot] = entry.instance_id
+	end
+	for slot_id, marker in pairs(self.markers) do
+		local instance_id = installed_by_slot[slot_id]
+		local inst = instance_id and session.get_instance(instance_id)
+		local module = inst and catalog.get(inst.item_key)
+		local icon_id = (module and module.icon) or ("slot_" .. marker.type .. "_empty")
+		gui.play_flipbook(marker.icon, icon_id)
+		gui.set_color(marker.box, inst and SLOT_FILLED_COLOR or SLOT_EMPTY_COLOR)
+		gui.set_text(marker.level_label, (inst and inst.level > 0) and ("+" .. inst.level) or "")
+	end
+end
+
+local function clear_card_list(list)
+	for _, card in ipairs(list) do
+		-- card.box is nil for the "(none)" empty-list placeholder (see
+		-- build_card_list) - only a label exists for that one.
+		if card.box then
+			gui.delete_node(card.box)
+		end
+		gui.delete_node(card.label)
+		-- sell_box/sell_label only exist on sellable rows (Owned spares,
+		-- Owned Ships) - see build_card_list.
+		if card.sell_box then
+			gui.delete_node(card.sell_box)
+			gui.delete_node(card.sell_label)
+		end
+	end
+end
+
+-- The active ship's CLASS (e.g. "Patrol"), not the ship itself - what
+-- module_fits_class below actually filters against.
+local function active_ship_class()
+	local ship = ships.SHIPS[session.get_ship_id()]
+	return ship and ship.class
+end
+
+-- Does `module` fit `ship_class`? Per direct instruction: the Shop and
+-- Owned lists should only ever offer weapons/components that actually
+-- fit the ACTIVE ship's class - this is the enforcement that was
+-- flagged as missing in plan.md §4 ever since ship_class/ship_classes
+-- were added as pure data with nothing reading them yet. Handles both
+-- schemas currently in use: the singular `ship_class` string (decided
+-- for auto cannons, §2.8 - a module belongs to exactly one class) and
+-- the older plural `ship_classes` list (still used by other module
+-- types, e.g. the Asteroid Analyser, which "fits anywhere for now").
+-- Falls back to "fits anywhere" for a module with neither field, rather
+-- than silently hiding it for missing data.
+local function module_fits_class(module, ship_class)
+	if not module then
+		return false
+	end
+	if module.ship_class then
+		return module.ship_class == ship_class
+	end
+	if module.ship_classes then
+		for _, c in ipairs(module.ship_classes) do
+			if c == ship_class then
+				return true
+			end
+		end
+		return false
+	end
+	return true
+end
+
+-- Every owned instance NOT currently installed anywhere AND that fits
+-- the active ship's class — i.e. the Owned (spares) list. Two spare
+-- copies of the same module type each get their own row/card here
+-- (they're separate instances, possibly at different upgrade levels,
+-- §4), unlike the old type-key-only model where owning a second copy of
+-- something already-owned was indistinguishable from the first.
+local function owned_spare_instances()
+	local ship_class = active_ship_class()
+	local instances = {}
+	for _, inst in ipairs(session.get_owned() or {}) do
+		if not session.is_installed(inst.id) and module_fits_class(catalog.get(inst.item_key), ship_class) then
+			table.insert(instances, inst)
+		end
+	end
+	return instances
+end
+
+-- Every catalog entry that fits the active ship's class - unlike the old
+-- model, the Shop no longer hides an item once you own one copy of it:
+-- purchasing always grants a brand-new INSTANCE (session.purchase, §4),
+-- so buying a second (or third) Gnat to fit and upgrade independently
+-- needs to still be possible. It DOES now hide items that belong to a
+-- different ship class entirely (e.g. Miner/Speculator/Prospector while
+-- flying the Patrol-class Sardine/Hummingbird), per direct instruction.
+local function shop_keys()
+	local ship_class = active_ship_class()
+	local keys = {}
+	for item_key, module in pairs(catalog.ALL) do
+		if module_fits_class(module, ship_class) then
+			table.insert(keys, item_key)
+		end
+	end
+	table.sort(keys)
+	return keys
+end
+
+-- How far a list of `row_count` items is allowed to scroll (pixels),
+-- given the shared PANEL_HEIGHT every card-list panel uses. 0 once
+-- everything already fits without scrolling.
+local function max_scroll_for(row_count)
+	if row_count <= 1 then
+		return 0
+	end
+	local content_height = (row_count - 1) * CARD_SPACING + CARD_SIZE.y
+	return math.max(0, content_height - PANEL_HEIGHT)
+end
+
+-- Fills one list panel with clickable/draggable cards, top-down, same
+-- dynamic node-creation pattern as the reference project's own
+-- component/ship buttons. `rows` is a list of already-fully-resolved
+-- { item_key, instance_id (optional - nil for a Shop/type-only row, or a
+-- ship_id row), label, color (optional box override), source } tables -
+-- built by the caller (shop_rows/owned_rows/ship_*_rows below), so this
+-- helper doesn't need to know anything about catalog/session/ships
+-- itself. Generalized like this so the same helper builds both the
+-- Fitting tab's module cards and the Ships tab's ship cards. `list_source`
+-- tags the empty-list "(none)" placeholder card (rows already carry their
+-- own `source` per-row, but there's no row to pull one from when the list
+-- is empty) - callers checking `card.source == "ship_forsale"` etc. still
+-- need it set even on a placeholder, so an empty For Sale list is still
+-- recognizably a For Sale card and not just an untagged blank.
+--
+-- `scroll_offset` (pixels, 0 = scrolled to the top) shifts every row up
+-- by that amount before the panel's own clipping (set once in init(),
+-- CLIPPING_MODE_STENCIL) hides whatever's scrolled past its edge - so a
+-- list longer than PANEL_HEIGHT scrolls instead of overflowing into
+-- whatever's below it (plan.md §4). Every card gets reparented under
+-- `panel_node` (keep_scene_transform=true, so it stays exactly where it
+-- was just positioned) purely so it inherits that clipping - cards
+-- aren't otherwise logically owned by the panel node.
+local function build_card_list(out_list, panel_node, rows, list_source, scroll_offset)
+	scroll_offset = scroll_offset or 0
+	local panel_pos = gui.get_position(panel_node)
+	local panel_size = gui.get_size(panel_node)
+	local top = panel_pos.y + panel_size.y * 0.5 - 35 + scroll_offset
+	if #rows == 0 then
+		local pos = vmath.vector3(panel_pos.x, top, 0)
+		local label = gui.new_text_node(pos, "(none)")
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_font(label, "default_font")
+		gui.set_color(label, vmath.vector4(0.5, 0.55, 0.6, 1.0))
+		gui.set_parent(label, panel_node, true)
+		table.insert(out_list, { box = nil, label = label, item_key = nil, instance_id = nil, source = list_source })
+		return
+	end
+	for i, row in ipairs(rows) do
+		local pos = vmath.vector3(panel_pos.x, top - (i - 1) * CARD_SPACING, 0)
+		local box = gui.new_box_node(pos, CARD_SIZE)
+		gui.set_pivot(box, gui.PIVOT_CENTER)
+		gui.set_color(box, row.color or CARD_COLOR)
+		gui.set_parent(box, panel_node, true)
+
+		-- Sellable rows (Owned spares, Owned Ships, §2.8/§4) shift their
+		-- own label left to make room for a "Sell" button pinned to the
+		-- right edge, so the two never visually overlap.
+		local label_pos = pos
+		if row.sellable then
+			label_pos = vmath.vector3(pos.x - SELL_BUTTON_SIZE.x / 2 - 10, pos.y, 0)
+		end
+		local label = gui.new_text_node(label_pos, row.label)
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_font(label, "default_font")
+		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
+		gui.set_parent(label, panel_node, true)
+
+		local sell_box, sell_label
+		if row.sellable then
+			local sell_pos = vmath.vector3(pos.x + CARD_SIZE.x / 2 - SELL_BUTTON_SIZE.x / 2 - 10, pos.y, 0)
+			sell_box = gui.new_box_node(sell_pos, SELL_BUTTON_SIZE)
+			gui.set_pivot(sell_box, gui.PIVOT_CENTER)
+			gui.set_color(sell_box, SELL_BUTTON_COLOR)
+			gui.set_parent(sell_box, panel_node, true)
+			sell_label = gui.new_text_node(sell_pos, "Sell")
+			gui.set_pivot(sell_label, gui.PIVOT_CENTER)
+			gui.set_font(sell_label, "default_font")
+			gui.set_color(sell_label, vmath.vector4(1.0, 1.0, 1.0, 1.0))
+			gui.set_scale(sell_label, vmath.vector3(0.7, 0.7, 1))
+			gui.set_parent(sell_label, panel_node, true)
+		end
+
+		table.insert(out_list, {
+			box = box, label = label,
+			item_key = row.item_key, instance_id = row.instance_id, source = row.source,
+			sell_box = sell_box, sell_label = sell_label,
+		})
+	end
+end
+
+local function shop_rows()
+	local rows = {}
+	for _, item_key in ipairs(shop_keys()) do
+		local module = catalog.get(item_key)
+		table.insert(rows, {
+			item_key = item_key,
+			label = (module and module.name or item_key) .. "  (price TBD)",
+			source = "shop",
+		})
+	end
+	return rows
+end
+
+local function owned_spare_rows()
+	local rows = {}
+	for _, inst in ipairs(owned_spare_instances()) do
+		local module = catalog.get(inst.item_key)
+		local name = module and module.name or inst.item_key
+		if inst.level > 0 then
+			name = name .. "  +" .. inst.level
+		end
+		table.insert(rows, {
+			item_key = inst.item_key, instance_id = inst.id,
+			label = name, source = "owned", sellable = true, -- §2.8/§4: components can be sold
+		})
+	end
+	return rows
+end
+
+local function refresh_module_cards(self)
+	clear_card_list(self.cards)
+	self.cards = {}
+	local shop = shop_rows()
+	local owned = owned_spare_rows()
+	self.scroll.shop = math.min(self.scroll.shop, max_scroll_for(#shop))
+	self.scroll.owned = math.min(self.scroll.owned, max_scroll_for(#owned))
+	build_card_list(self.cards, self.shop_panel_node, shop, "shop", self.scroll.shop)
+	build_card_list(self.cards, self.owned_panel_node, owned, "owned", self.scroll.owned)
+end
+
+local function ship_forsale_keys()
+	local keys = {}
+	for ship_id, _ in pairs(ships.SHIPS) do
+		if not session.is_ship_owned(ship_id) then
+			table.insert(keys, ship_id)
+		end
+	end
+	table.sort(keys)
+	return keys
+end
+
+local function ship_forsale_rows(faction)
+	local rows = {}
+	for _, ship_id in ipairs(ship_forsale_keys()) do
+		table.insert(rows, {
+			item_key = ship_id,
+			label = ship_display_name(ship_id, faction) .. "  (price TBD)",
+			source = "ship_forsale",
+		})
+	end
+	return rows
+end
+
+local function owned_ship_rows(faction, active_ship)
+	local owned_ships = session.get_owned_ships() or {}
+	-- "You cannot sell all ships" (direct instruction) - a Sell button on
+	-- every ship card would let a player sell their way down to zero one
+	-- click at a time, so it only appears at all once there's more than
+	-- one owned ship to spare. session.sell_ship itself also refuses to
+	-- go below one, so this is a UI-level courtesy (don't show a button
+	-- that would just fail) on top of that real guard, not a substitute
+	-- for it.
+	local sellable = #owned_ships > 1
+	local rows = {}
+	for _, ship_id in ipairs(owned_ships) do
+		local name = ship_display_name(ship_id, faction)
+		local color = nil
+		if ship_id == active_ship then
+			name = name .. "  (current)"
+			color = SHIP_CARD_CURRENT_COLOR
+		end
+		table.insert(rows, { item_key = ship_id, label = name, color = color, source = "owned_ship", sellable = sellable })
+	end
+	return rows
+end
+
+local function refresh_ship_cards(self)
+	clear_card_list(self.ship_cards)
+	self.ship_cards = {}
+	local faction = session.get_faction()
+	local active_ship = session.get_ship_id()
+	local forsale = ship_forsale_rows(faction)
+	local owned_ships = owned_ship_rows(faction, active_ship)
+	self.scroll.forsale = math.min(self.scroll.forsale, max_scroll_for(#forsale))
+	self.scroll.ownedships = math.min(self.scroll.ownedships, max_scroll_for(#owned_ships))
+	build_card_list(self.ship_cards, self.forsale_panel_node, forsale, "ship_forsale", self.scroll.forsale)
+	build_card_list(self.ship_cards, self.ownedships_panel_node, owned_ships, "owned_ship", self.scroll.ownedships)
+end
+
+-- Switches between the Fitting and Ships tabs: toggles which static
+-- panels are visible and (re)builds whichever tab's dynamic content is
+-- now showing. Dynamic content for the tab being LEFT is cleared rather
+-- than just hidden, same "delete + recreate on next visit" pattern
+-- already used elsewhere on this screen.
+local function set_page(self, page)
+	self.active_page = page
+	gui.set_color(self.tab_nodes.fitting, page == "fitting" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
+	gui.set_color(self.tab_nodes.ships, page == "ships" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
+	for _, node in ipairs(self.fitting_static_nodes) do
+		gui.set_enabled(node, page == "fitting")
+	end
+	for _, node in ipairs(self.ships_static_nodes) do
+		gui.set_enabled(node, page == "ships")
+	end
+
+	if page == "fitting" then
+		clear_card_list(self.ship_cards)
+		self.ship_cards = {}
+		build_markers(self)
+		refresh_markers(self)
+		refresh_module_cards(self)
+	else
+		clear_hover(self)
+		clear_markers(self)
+		clear_card_list(self.cards)
+		self.cards = {}
+		refresh_ship_cards(self)
+	end
+end
+
+local function hits(node, action)
+	return node and gui.pick_node(node, action.x, action.y)
+end
+
+-- gui.pick_node is a plain bounding-box test - it does NOT know about a
+-- panel's own stencil clipping, so a card scrolled/spilled outside its
+-- panel's visible bounds would otherwise still register as clickable at
+-- its (invisible) raw position. Card lists are only ever scrolled as a
+-- whole panel, so every card's owning panel is fully determined by its
+-- `source` - used as an extra gate (alongside hits(card.box, action)) so
+-- a click only counts if it also lands inside that panel's own bounds
+-- (plan.md §4).
+local function panel_for_card(self, card)
+	if card.source == "shop" then return self.shop_panel_node end
+	if card.source == "owned" then return self.owned_panel_node end
+	if card.source == "ship_forsale" then return self.forsale_panel_node end
+	if card.source == "owned_ship" then return self.ownedships_panel_node end
+	return nil
+end
+
+-- `ref` is either a catalog item_key (source == "shop": buying always
+-- grants a brand-new INSTANCE, which doesn't exist until the item is
+-- actually dropped on a slot, §4) or an owned instance id (source ==
+-- "slot"/"owned": a SPECIFIC physical copy, possibly upgraded, is being
+-- moved).
+local function start_drag(self, source, ref, from_slot, action)
+	local item_key, instance_id, inst
+	if source == "shop" then
+		item_key = ref
+	else
+		instance_id = ref
+		inst = session.get_instance(ref)
+		item_key = inst and inst.item_key
+	end
+	local module = catalog.get(item_key)
+	self.dragging = {
+		source = source, item_key = item_key, instance_id = instance_id,
+		from_slot = from_slot, type = module and module.type,
+	}
+	local pos = vmath.vector3(action.x, action.y, 0)
+	local box = gui.new_box_node(pos, vmath.vector3(220, 50, 0))
+	gui.set_pivot(box, gui.PIVOT_CENTER)
+	gui.set_color(box, vmath.vector4(0.95, 0.85, 0.3, 0.85))
+	local label_text = module and module.name or item_key
+	if inst and inst.level > 0 then
+		label_text = label_text .. "  +" .. inst.level
+	end
+	local label = gui.new_text_node(pos, label_text)
+	gui.set_pivot(label, gui.PIVOT_CENTER)
+	gui.set_font(label, "default_font")
+	gui.set_color(label, vmath.vector4(0.05, 0.05, 0.05, 1.0))
+	self.ghost = { box = box, label = label }
+end
+
+-- Opens the confirmation dialog with `message`, deferring the actual
+-- effect until the player clicks Confirm - `on_confirm` runs then (and
+-- only then); clicking Cancel just closes the dialog and does nothing.
+-- Per direct instruction: any purchase or swap goes through this rather
+-- than taking effect immediately on drop/click.
+local function show_confirm(self, message, on_confirm)
+	self.confirm = { on_confirm = on_confirm }
+	gui.set_text(self.confirm_nodes.message, message)
+	for _, node in pairs(self.confirm_nodes) do
+		gui.set_enabled(node, true)
+	end
+end
+
+local function hide_confirm(self)
+	self.confirm = nil
+	for _, node in pairs(self.confirm_nodes) do
+		gui.set_enabled(node, false)
+	end
+end
+
+local function end_drag(self)
+	if self.ghost then
+		gui.delete_node(self.ghost.box)
+		gui.delete_node(self.ghost.label)
+		self.ghost = nil
+	end
+	self.dragging = nil
+	clear_hover(self)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("show_outpost") then
+		self.active = true
+		msg.post("#gui", "enable")
+		local faction = session.get_faction()
+		local home_name, faction_label, ship_name = ship_overview_text(faction)
+		gui.set_text(self.title_node, home_name .. " Outpost")
+		gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+		set_page(self, "fitting")
+	end
+end
+
+function on_input(self, action_id, action)
+	if not self.active then
+		return false
+	end
+
+	-- Modal: while the confirmation dialog is open, it's the only thing
+	-- that can be interacted with - swallow every other input (tabs,
+	-- cards, slots, scrolling, drag) until it's resolved one way or the
+	-- other.
+	if self.confirm then
+		if action_id == hash("touch") and action.pressed then
+			if hits(self.confirm_nodes.yes, action) then
+				local on_confirm = self.confirm.on_confirm
+				hide_confirm(self)
+				on_confirm()
+			elseif hits(self.confirm_nodes.no, action) then
+				hide_confirm(self)
+			end
+		end
+		return true
+	end
+
+	-- Unbound mouse movement arrives with action_id == nil but still
+	-- carries live x/y - used here to make the ghost node follow the
+	-- cursor AND to update the drag-over slot highlight, while a drag is
+	-- in progress.
+	if action_id == nil then
+		if self.dragging and self.ghost then
+			local pos = vmath.vector3(action.x, action.y, 0)
+			gui.set_position(self.ghost.box, pos)
+			gui.set_position(self.ghost.label, pos)
+			update_hover(self, action)
+		end
+		return false
+	end
+
+	-- Mouse wheel scrolling for whichever card-list panel is currently
+	-- under the cursor (plan.md §4). Reuses the "zoom_in"/"zoom_out"
+	-- input actions already bound to MOUSE_WHEEL_UP/DOWN
+	-- (input/game.input_binding, originally meant for flight-mode camera
+	-- zoom) - the physical wheel is what matters here, not that binding's
+	-- flight-camera name.
+	if action_id == hash("zoom_in") or action_id == hash("zoom_out") then
+		local delta = (action_id == hash("zoom_in")) and -SCROLL_STEP or SCROLL_STEP
+		if self.active_page == "fitting" then
+			if hits(self.shop_panel_node, action) then
+				self.scroll.shop = math.max(0, math.min(self.scroll.shop + delta, max_scroll_for(#shop_rows())))
+				refresh_module_cards(self)
+			elseif hits(self.owned_panel_node, action) then
+				self.scroll.owned = math.max(0, math.min(self.scroll.owned + delta, max_scroll_for(#owned_spare_rows())))
+				refresh_module_cards(self)
+			end
+		else
+			if hits(self.forsale_panel_node, action) then
+				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta, max_scroll_for(#ship_forsale_rows(session.get_faction()))))
+				refresh_ship_cards(self)
+			elseif hits(self.ownedships_panel_node, action) then
+				self.scroll.ownedships = math.max(0, math.min(self.scroll.ownedships + delta, max_scroll_for(#owned_ship_rows(session.get_faction(), session.get_ship_id()))))
+				refresh_ship_cards(self)
+			end
+		end
+		return true
+	end
+
+	if action_id ~= hash("touch") then
+		return false
+	end
+
+	if action.pressed then
+		if hits(self.tab_nodes.fitting, action) then
+			set_page(self, "fitting")
+			return true
+		elseif hits(self.tab_nodes.ships, action) then
+			set_page(self, "ships")
+			return true
+		elseif hits(self.launch_node, action) then
+			print("[outpost] Launch pressed -- flight mode not built yet")
+			return true
+		end
+
+		if self.active_page == "ships" then
+			-- Ships tab: click-to-act, no drag - both a For Sale purchase
+			-- and switching to a different owned ship go through the
+			-- confirmation dialog (a purchase, and a "swap" of the active
+			-- ship, respectively - per direct instruction). Clicking the
+			-- already-active owned ship is a no-op, not a swap - nothing
+			-- would actually change, so no dialog for that.
+			for _, card in ipairs(self.ship_cards) do
+				local panel_node = panel_for_card(self, card)
+				local function apply_ship_change()
+					refresh_ship_cards(self)
+					local faction = session.get_faction()
+					local home_name, faction_label, ship_name = ship_overview_text(faction)
+					gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+				end
+
+				-- Sell button (Owned Ships only, and only when it would
+				-- leave at least one ship remaining, §2.8/§4's "you cannot
+				-- sell all ships") - checked before the card's own
+				-- select/purchase click so the two don't fire together.
+				if card.sell_box and hits(card.sell_box, action) and hits(panel_node, action) then
+					local name = ship_display_name(card.item_key, session.get_faction())
+					show_confirm(self, "Sell " .. name .. "?", function()
+						session.sell_ship(card.item_key)
+						apply_ship_change()
+					end)
+					return true
+				end
+
+				if hits(card.box, action) and hits(panel_node, action) then
+					if card.source == "ship_forsale" then
+						local name = ship_display_name(card.item_key, session.get_faction())
+						show_confirm(self, "Buy " .. name .. " and make it your active ship?", function()
+							session.purchase_ship(card.item_key)
+							session.select_ship(card.item_key)
+							apply_ship_change()
+						end)
+					elseif card.source == "owned_ship" and card.item_key ~= session.get_ship_id() then
+						local name = ship_display_name(card.item_key, session.get_faction())
+						show_confirm(self, "Switch your active ship to " .. name .. "?", function()
+							session.select_ship(card.item_key)
+							apply_ship_change()
+						end)
+					end
+					return true
+				end
+			end
+			return false
+		end
+
+		-- Fitting tab: start dragging an installed item off its slot marker
+		for slot_id, marker in pairs(self.markers) do
+			if hits(marker.box, action) then
+				local loadout = session.get_loadout() or {}
+				for _, entry in ipairs(loadout) do
+					if entry.slot == slot_id then
+						start_drag(self, "slot", entry.instance_id, slot_id, action)
+						update_hover(self, action)
+						return true
+					end
+				end
+				return false -- empty slot, nothing to drag
+			end
+		end
+		-- start dragging a module card from either list - a Shop card
+		-- carries a catalog item_key (no instance exists until it's
+		-- actually dropped, §4), an Owned card carries the specific
+		-- instance_id being moved.
+		for _, card in ipairs(self.cards) do
+			local panel_node = panel_for_card(self, card)
+
+			-- Sell button (Owned spares only, §2.8/§4) - checked before
+			-- the card's own drag-start hit so the two don't fire
+			-- together (the two nodes overlap on screen: sell_box sits
+			-- inside card.box's own full-width footprint).
+			if card.sell_box and hits(card.sell_box, action) and hits(panel_node, action) then
+				local module = catalog.get(card.item_key)
+				local name = module and module.name or card.item_key
+				local instance_id = card.instance_id
+				show_confirm(self, "Sell " .. name .. "?", function()
+					session.sell(instance_id)
+					refresh_module_cards(self)
+				end)
+				return true
+			end
+
+			if card.box and hits(card.box, action) and hits(panel_node, action) then
+				local ref = (card.source == "shop") and card.item_key or card.instance_id
+				start_drag(self, card.source, ref, nil, action)
+				update_hover(self, action)
+				return true
+			end
+		end
+		return false
+	elseif action.released and self.dragging then
+		local drag = self.dragging
+		local dropped_on_slot = nil
+		for slot_id, marker in pairs(self.markers) do
+			if marker.type == drag.type and hits(marker.box, action) then
+				dropped_on_slot = slot_id
+				break
+			end
+		end
+		if dropped_on_slot then
+			-- Any PURCHASE (shop-sourced) or SWAP (displacing whatever's
+			-- already installed in dropped_on_slot) needs a confirmation
+			-- dialog before it actually happens, per direct instruction.
+			-- Plain installs from an Owned/slot source into an EMPTY slot
+			-- don't - nothing is being bought or replaced, so those still
+			-- apply immediately below. Dropping an item back onto the
+			-- exact slot it was just dragged off of doesn't count as a
+			-- swap either - nothing would actually change.
+			local is_purchase = drag.source == "shop"
+			local existing_instance_id = nil
+			for _, entry in ipairs(session.get_loadout() or {}) do
+				if entry.slot == dropped_on_slot then
+					existing_instance_id = entry.instance_id
+				end
+			end
+			local is_swap = existing_instance_id ~= nil
+				and not (drag.source == "slot" and drag.from_slot == dropped_on_slot)
+
+			if is_purchase or is_swap then
+				local module = catalog.get(drag.item_key)
+				local module_name = module and module.name or drag.item_key
+				local existing_name
+				if is_swap then
+					local existing = session.get_instance(existing_instance_id)
+					local existing_module = existing and catalog.get(existing.item_key)
+					existing_name = existing_module and existing_module.name or "the installed item"
+				end
+				local message
+				if is_purchase and is_swap then
+					message = "Buy " .. module_name .. " and swap it into " .. dropped_on_slot
+						.. ", replacing " .. existing_name .. "?"
+				elseif is_purchase then
+					message = "Buy " .. module_name .. " and install it in " .. dropped_on_slot .. "?"
+				else
+					message = "Swap " .. module_name .. " into " .. dropped_on_slot
+						.. ", replacing " .. existing_name .. "?"
+				end
+
+				local pending_item_key = drag.item_key
+				local pending_instance_id = drag.instance_id
+				local pending_source = drag.source
+				local pending_slot = dropped_on_slot
+				end_drag(self) -- ends the drag visually either way; nothing installs until confirmed
+				show_confirm(self, message, function()
+					local instance_id = pending_instance_id
+					if pending_source == "shop" then
+						instance_id = session.purchase(pending_item_key)
+					end
+					session.install(pending_slot, instance_id)
+					refresh_markers(self)
+					refresh_module_cards(self)
+				end)
+				return true
+			end
+
+			session.install(dropped_on_slot, drag.instance_id)
+		elseif drag.source == "slot" then
+			session.uninstall(drag.from_slot)
+		end
+		-- otherwise (owned/shop card dropped somewhere invalid): no-op, cancel
+		end_drag(self)
+		refresh_markers(self)
+		refresh_module_cards(self)
+		return true
+	end
+	return false
+end

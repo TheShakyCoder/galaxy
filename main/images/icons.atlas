@@ -1,0 +1,21 @@
+images {
+  image: "/main/images/icons/auto_cannon_basic.png"
+}
+images {
+  image: "/main/images/icons/asteroid_analyser.png"
+}
+images {
+  image: "/main/images/icons/mining_cannon_basic.png"
+}
+images {
+  image: "/main/images/icons/slot_weapon_empty.png"
+}
+images {
+  image: "/main/images/icons/slot_computer_empty.png"
+}
+images {
+  image: "/main/images/icons/slot_engine_empty.png"
+}
+images {
+  image: "/main/images/icons/slot_hull_empty.png"
+}
