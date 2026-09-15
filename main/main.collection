@@ -76,8 +76,31 @@ embedded_instances {
   "  component: \"/main/models/patrol_1/patrol_1.model\"\n"
   "}\n"
   position {
+    x: 100000.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
     x: 0.0
     y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "escort_1_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/main/models/escort_1/escort_1.model\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 1000.0
     z: 0.0
   }
   rotation {

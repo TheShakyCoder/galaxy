@@ -814,9 +814,15 @@ screen's placeholder box.
 - **A preview instance** (`patrol_1_preview`, a fourth embedded object in
   `main/main.collection` with a bare `model` component) was added purely so
   `bob.jar` actually validates the mesh/model resource chain — nothing referenced
-  the `.model` file otherwise, so it would have silently gone unbuilt. This is not a
-  real flight-mode/3D scene (there's still no camera or render setup for one, §4) —
-  just enough to prove the asset is genuinely valid.
+  the `.model` file otherwise, so it would have silently gone unbuilt. Originally
+  just enough to prove the asset is genuinely valid, with no camera/render setup at
+  all (§4's original note here). **Since repurposed** (§2.8.9): this is the exact
+  same instance, now also carrying `main/ship_preview.script` (a slow constant
+  rotation) and moved from the world origin out to `(100000, 0, 0)` — the off-world
+  position `render/custom.render_script`'s dedicated offscreen pass renders it from,
+  feeding the Ships tab's live ship detail preview. Still not a flight-mode/3D scene
+  (there's still no camera/render setup for THAT, §4) — this one's sole purpose is
+  the ship preview render target.
 - **Verified thoroughly**, more so than most earlier steps since this is the first
   actual binary/mesh asset in the project: (1) the top-down PNG was visually
   inspected and sent to the user before finalizing; (2) a full `bob.jar build`
@@ -831,6 +837,110 @@ screen's placeholder box.
   generator script was re-run from its final `tools/` location to confirm it
   reproduces the checked-in files identically, so regenerating later (e.g. once real
   dimensions are given) is a one-command operation, not a manual one.
+
+**Escort 1's first real 3D model, and a top-down plan extracted from it (decided,
+implemented)** — per direct instruction ("create a 3D model of the barracuda"), same
+approach as Patrol 1's above: a rudimentary, wholly original 3D hull plus a top-down
+plan derived directly from the same geometry, replacing the old `<TBD>` model state.
+- **The model**: `main/models/escort_1/escort_1.gltf` — 22m long, 5m beam, 4.4m tall
+  including the bridge/cabin (26 unique vertices, 44 triangles, flat shaded, no
+  texture) — "one size class up from Patrol 1," the only actual design intent
+  confirmed so far for Escort-tier scale (§2.1.2/§4, still placeholder proportions,
+  same caveat Patrol 1's own dimensions carry). A 9-point hull outline rather than
+  Patrol 1's 7-point curve — boxier, more parallel-sided amidships, meant to read as
+  a distinct "first real combat hull" silhouette at a glance rather than just a
+  scaled-up boat. Generator script: `tools/build_escort1_model.py` (needs Pillow;
+  none was installed in this environment, so a throwaway scratchpad venv was created
+  and removed afterward rather than touching system Python).
+- **Material**: `/builtins/materials/model.material` (the plain/unlit one, same
+  choice §2.8.9 made for Patrol 1 and for the same reason — self-contained default
+  lighting baked into the material, no external `light` resource needed).
+- **Wired in**: `main/data/ships.lua`'s `faction_skins.accord/swarm.model` for
+  `escort_1` now point at `/main/models/escort_1/escort_1.model` (both factions
+  share this one hull, same as Patrol 1 — distinct faction art is still open, §4).
+- **A preview instance** (`escort_1_preview`, a fifth embedded object in
+  `main/main.collection`, bare `model` component) added for the same reason as
+  Patrol 1's original one: proves the mesh/model resource chain actually builds,
+  since nothing else references a `.model` file as a structured resource dependency
+  (`ships.lua`'s own reference is just a plain Lua string, invisible to `bob.jar`'s
+  dependency scanner).
+- **Follow-up — wired into the live 3D preview too (decided)**: the user tried the
+  Barracuda's detail modal and reported the preview as blank (the honest
+  "not available yet" placeholder this ship correctly had at first, since only
+  Patrol 1's model was hooked up). Extended §2.8.9's single-ship preview to support
+  any number of ships **sharing one render target/camera** rather than needing one
+  per ship: moved `escort_1_preview` to the exact same off-world anchor as
+  `patrol_1_preview` (both now at `(100000, 0, 0)`) — since the offscreen pass's
+  camera is fixed and looks at that one point, whichever rig's `model` component is
+  *enabled* is the one that actually shows up in the render, so only one is ever
+  enabled at a time. `main/outpost.gui_script` gained a `PREVIEW_RIGS` table (model
+  path → rig instance id); `show_ship_detail` now looks up the clicked ship's model
+  path in it and, on a match, `msg.post`s `"enable"` to that rig's `#model` and
+  `"disable"` to every other rig's, before assigning the shared `"ship_preview"`
+  texture — so opening a different ship's modal swaps which mesh the same render
+  target is actually showing. No render script changes needed at all. Also gave
+  `escort_1_preview` its own `main/ship_preview.script` component (it wasn't
+  rotating before, since it had no script yet).
+- **Verified**: the top-down PNG was visually inspected before finalizing (sent to
+  the user); both outpost-screen test harnesses re-run with new assertions (Escort
+  1's modal now gets the `"ship_preview"` texture and no longer shows the
+  no-preview fallback text; Patrol 1's modal still gets it too afterward — a
+  regression check that switching rigs for one ship doesn't leave another
+  ship without its own) — all passing; a real `bob.jar build` compiled the new/
+  changed `.gltf`/`.model`/`.collection`/`.gui_script` cleanly both times (before
+  and after the live-preview follow-up). **Still not independently confirmed
+  on-screen**, same honest caveat as §2.8.9's own original verification note — the
+  automated browser click-through remains blocked in this environment (see there
+  for the full description of that limitation); a fresh local HTML5 bundle with
+  this fix was rebuilt and redeployed to the same local dev server either way, so
+  the user's own next manual check will see it.
+- **Real bug, this time reported from the user's own real browser click (not the
+  automation limitation above) — clicking a ship in either list did nothing at
+  all.** Root cause: `show_ship_detail`'s rig-switching `msg.post` calls (added by
+  the live-preview follow-up just above) ran **before** the loop that actually
+  `gui.set_enabled`s every modal node — so if a `msg.post` call ever threw (the
+  real engine throws on a bad/nonexistent message address; it doesn't silently
+  no-op), the whole function aborted right there and the modal's nodes were never
+  enabled at all. Indistinguishable from "nothing happens" at the click. Fixed two
+  ways: (1) reordered `show_ship_detail` so the modal is opened (state set, every
+  node enabled, button labels/visibility decided) **first**, with the rig-switching
+  block - the riskier, "bonus visual effect" part - moved after, and wrapped in
+  `pcall` so it can never again take the whole modal down with it; (2) also
+  corrected the message address itself to `"/" .. rig .. "#model"` (a leading `/`,
+  root-relative - the likely actual mistake). This is exactly the kind of bug a
+  no-op `msg.post` test stub can never catch, so both harnesses' stub was upgraded
+  to behave like the real engine here: it now throws for any address that isn't
+  `"."`, a bare `"#fragment"`, or one of the actual embedded instance ids in
+  `main.collection` - re-running both harnesses under this stricter stub confirms
+  the reordered function still opens the modal correctly either way. A real
+  `bob.jar build` also re-confirmed afterward, and a fresh local HTML5 bundle was
+  rebuilt/redeployed with this fix.
+- **The actual missing piece for the live render, found after the modal's preview
+  panel came back as a plain white square (the classic "texture name didn't resolve,
+  engine fell back to its default white texture" symptom) once the click-through bug
+  above was fixed enough to see it at all.** §2.8.9's original research confirmed
+  the `.render` file's own `render_resources { name path }` mechanism (real, via
+  `RenderPrototypeDesc`'s compiled fields) and took at face value a fetched doc
+  claim that `gui.set_texture(node, "name")` could reference that name directly with
+  "no per-`.gui`-scene texture declaration needed" — **that specific claim was
+  wrong** (or for a different engine version). Checked further and found the real
+  mechanism by the same direct-inspection method as before: `main/outpost.gui`'s own
+  compiled schema (`Gui$SceneDesc`) has a **separate, dedicated `resources` field**
+  (repeated `{ name, path }`, distinct from the existing `textures` field) — a GUI
+  scene has to declare the render target as one of ITS OWN resources too, the same
+  declarative shape as the `.render` file's own list, not just rely on the global
+  render-pipeline declaration. Added `resources { name: "ship_preview" path:
+  "/render/ship_preview.render_target" }` to `main/outpost.gui` alongside its
+  existing `textures { ... }` blocks — `gui.set_texture(node, "ship_preview")` in the
+  script needed no changes, it was already correct once this was in place.
+- **Verified**: a real `bob.jar build` compiled the new `resources {}` block
+  cleanly (confirming the field/schema guess was right, the same way every other
+  hand-derived protobuf shape this session was confirmed); both harnesses re-run
+  with no regressions (this is a pure `.gui`-file addition, invisible to their
+  stubbed `gui` table); a fresh local HTML5 bundle rebuilt/redeployed. Still
+  pending the user's own on-screen confirmation that the ship itself now actually
+  renders inside the preview panel, not just that the white-square symptom's likely
+  cause has been addressed — same automated-click-through limitation as before.
 
 #### 2.8.1 Slot icons (decided — icon instead of item name text)
 
@@ -931,6 +1041,32 @@ name, so it stays.
   cropping back to the original bounds. Pure asset edit, no code change; the
   pre-rotation original is kept in the session scratchpad backup alongside the other
   full-resolution originals.
+- **Recolored by slot type (decided)**: per direct instruction, the four per-type
+  empty-slot icons no longer all share the same gold - weapon (`Octagon W.png`) stays
+  gold/amber (hue ≈49° on the HSL wheel, unchanged), and the other three were
+  hue-rotated in place with ImageMagick (`magick <file> -modulate 100,100,<hue>`,
+  100=no shift, 1 unit≈1.8°) to: **engine → red** (`Octagon E.png`, modulate hue 73,
+  landed ≈358°), **computer → blue** (`Octagon C.png`, modulate hue 6, landed ≈235°),
+  **hull → green** (`Octagon H.png`, modulate hue 139, landed ≈119°). A pure hue
+  rotation rather than a flat recolor, so each keeps the exact same neon-glow
+  gradient (soft halo + bright core + dark rim) the gold version had, just shifted to
+  a different hue family. `Octagon Empty.png` and both `Octagon Cannon *.png`
+  (weapon-type, filled-slot icons) are unaffected - explicitly out of scope, per
+  direct instruction to leave weapon icons as they are. Pre-recolor gold copies of
+  `Octagon E/C/H.png` kept in the session scratchpad backup.
+- **Shop/Owned component cards color-coded by type too (decided)**: per direct
+  instruction, extended the same weapon=gold/engine=red/computer=blue/hull=green
+  scheme from the slot icons above to the Fitting tab's Shop (available for sale) and
+  Owned (player's spares in storage) card lists (`main/outpost.gui_script`) — a new
+  `TYPE_CARD_COLOR` table (solid, dark-toned versions of the same four hues, since
+  these are plain colored card backgrounds behind light text, not glow-icon art) is
+  looked up by `module.type` in `shop_rows`/`owned_spare_rows` and passed through
+  `build_card_list`'s existing `row.color or CARD_COLOR` fallback (no changes needed
+  there — it already supported a per-row override color, previously only used for
+  the Ships tab's "current ship" highlight). A module whose type isn't one of the
+  four falls back to the old flat `CARD_COLOR` rather than guessing a color. Ships
+  tab lists (For Sale/Owned Ships) are untouched — the request was about components,
+  not ships.
 - **Verified**: both outpost-screen test harnesses re-run with no regressions (their
   stub `gui` table needed `set_texture`/`play_flipbook` no-ops added, matching the
   real API used to assign an atlas image to a runtime-created box node); a real
@@ -1211,6 +1347,222 @@ ships."**
   a sold ship via the dialog, and confirming `session.sell_ship` itself refuses to
   sell the last remaining ship even if called directly (not just a UI-level guard).
   A real `bob.jar build` compiles cleanly.
+
+#### 2.8.8 Shop/Owned type-filter buttons (decided)
+
+Per direct instruction: **"on the list of available components and offload
+components put a filter where clicking each of the component type filters the list
+by the component such as engine hull computer and weapon."** Read as: one shared
+filter (not two independent ones) that narrows *both* the Fitting tab's Shop
+(available for sale) and Owned (spares in storage) lists to a single module type at
+a time.
+
+- **UI**: four new buttons — Weapon/Computer/Engine/Hull — added to `main/outpost.gui`
+  as a row directly above the Shop heading (`filter_weapon/_computer/_engine/_hull`
+  + matching `_label` text nodes, x-centers 1110/1330/1550/1770, same 880-wide span as
+  the Shop/Owned panels). To make room without touching `PANEL_HEIGHT` or any
+  scroll-clipping math, `shop_heading`/`shop_panel`/`owned_heading`/`owned_panel`
+  were all shifted down 45px (845→800, 715→670, 575→530, 445→400) — this exactly
+  matches the Ships tab's own `forsale_heading`/`forsale_panel`/
+  `ownedships_heading`/`ownedships_panel` y-positions (800/670/530/400), which
+  already left this same gap unused above them, so the shift aligns the two tabs'
+  vertical rhythm rather than introducing a new one.
+- **Toggle, not two states**: clicking a type sets `self.type_filter` to it; clicking
+  the *same* button again clears it back to `nil` (show everything) — no separate
+  "All" button needed. Buttons recolor via a new `FILTER_ACTIVE_COLOR` table (bright
+  version of each `TYPE_CARD_COLOR` hue, §2.8.1's card-coloring bullet) when their
+  type is the active filter, dim `TYPE_CARD_COLOR` otherwise — same
+  active/inactive-highlight pattern as the main Overview/Fitting/Ships tab bar.
+- **Filtering itself**: `shop_keys`/`owned_spare_instances` (and the `shop_rows`/
+  `owned_spare_rows` built from them) take an optional `type_filter` param, ANDed
+  onto the existing ship-class fit check — `main/outpost.gui_script`. The mouse-wheel
+  scroll-clamp handler was updated to pass `self.type_filter` through too, so
+  scrolling still clamps correctly against the *filtered* row count, not the full one.
+  `self.type_filter` is deliberately NOT reset when leaving/re-entering the Fitting
+  tab — a standing preference for the session, same as the per-panel scroll offsets.
+- **Real bug found and fixed by the harness before it ever reached a build**: the
+  toggle was first written as `self.type_filter = (self.type_filter == type_name) and
+  nil or type_name` — the classic Lua `and/or` ternary idiom, which silently breaks
+  whenever the "true" branch value is itself `nil` (or `false`): `X and nil` is
+  always `nil`, so `nil or type_name` always evaluates to `type_name`, regardless of
+  `X`. In practice this meant clicking an already-active filter button did nothing —
+  it looked selected forever and could never be cleared. Caught immediately by this
+  feature's own new harness case (click a filter, assert it's active; click the same
+  button again, assert it's cleared — the second assertion failed) and fixed with a
+  plain `if/else`.
+- **Verified**: `outpost_harness.lua`/`outpost_harness2.lua` updated with the new
+  `filter_*` stub nodes at the real file's (shifted) coordinates; `outpost_harness.lua`
+  gained a new case exercising the filter end-to-end (narrows Shop to just
+  computer-type items, confirms it's strictly smaller than the unfiltered list,
+  clears back to the full list on a second click) — this is what caught the
+  and/or bug above. Both harnesses re-run clean after the fix; a real `bob.jar build`
+  confirms the shifted/added `main/outpost.gui` nodes compile.
+
+#### 2.8.9 Ship detail modal + ship preview (decided — live 3D render attempted, rolled back to a static image)
+
+Per direct instruction: **"in the ships tab when you click the ship rather than
+confirming the purchase, show a modal with a 3D rendering of the ship along with the
+stats. At the bottom of the modal put a Purchase link and a Cancel link. If the ship
+is already purchased put a Select link and a Cancel link."** Clarified with the user
+before building: the 3D render had to be a genuine **live** render (not a reuse of
+the existing static top-down PNG), and the modal's Purchase/Select button acts
+**immediately** — no follow-up plain confirm dialog (§2.8.6) — except insufficient
+Scrip on a Purchase, which still falls back to that plain notice-only dialog.
+
+This is the first 3D content ever rendered in this project (every screen before this
+was pure 2D GUI), so it needed a real render-to-texture pipeline, not just another
+GUI/script edit — considerably bigger in kind than anything else this session. Went
+through `EnterPlanMode` given that scope, and researched the exact engine mechanism
+by extracting and reading the real compiled files this project's own `bob.jar`
+bundles (not guessing/paraphrasing docs) before writing anything.
+
+**A. Ship detail modal** (`main/outpost.gui`/`.gui_script`) — new nodes
+`ship_detail_scrim/panel/name/preview/stats/primary/primary_label/cancel/cancel_label`,
+same "modal gates all other input" pattern as the existing `confirm_*` dialog, just a
+bigger panel. Clicking a Ships-tab card (`ship_forsale` or `owned_ship`) now calls
+`show_ship_detail(self, ship_id)` instead of `show_confirm(...)` directly:
+- Stats (`ship_stats_text`) are a curated real subset of `main/data/ships.lua`'s
+  `data`/`components` (Hull Points, Armor, Speed/Boost, FTL Range, Power, Sensor
+  Range, W/C/E/H slot counts) — same numbers the Overview tab's fitting breakdown
+  already reads, not invented.
+- Button state: not owned → Purchase; owned, not active → Select; owned AND already
+  active → no primary button at all (view-only + Cancel) — this used to be a silent
+  no-op click on the card itself; now it's an explicit state instead of a dead end.
+- Purchase/Select act immediately in `on_input`'s new `self.ship_detail` gate.
+  Insufficient Scrip on Purchase closes the modal and falls back to the existing
+  plain `show_confirm` notice.
+- Sell (§2.8.7) is unchanged — still the card's own inline Sell button + the plain
+  confirm dialog, untouched by this feature.
+
+**B. Live 3D ship preview** — confirmed directly from this project's own `bob.jar`
+(extracted and read the actual compiled files, not assumed):
+- `game.project` had no `[bootstrap] render` key at all before this, so every screen
+  implicitly used `/builtins/render/default.render` →
+  `/builtins/render/default.render_script`. Added `render = /render/custom.renderc`;
+  `render/custom.render_script` starts as an **exact copy** of that real default
+  script (pulled from `bob.jar`, not reconstructed from memory) with one addition —
+  every other screen's rendering is unaffected.
+- `render/custom.render` declares a `render_resources { name: "ship_preview" path:
+  "/render/ship_preview.render_target" }` entry — confirmed via
+  `RenderPrototypeDesc`'s actual compiled protobuf fields that this is a real,
+  current mechanism (not newer-version-only) for exposing a named render target as a
+  plain texture usable anywhere by name, including `gui.set_texture(node,
+  "ship_preview")` with **no per-`.gui`-scene texture declaration needed**.
+- `render/ship_preview.render_target` — one 512×512 `TEXTURE_FORMAT_RGBA` color
+  attachment + a matching `DEPTH_STENCIL_FORMAT_D32F` depth attachment (both enum
+  names confirmed the same way, via `RenderTargetDesc`'s compiled fields).
+- `render/custom.render_script`'s added `draw_ship_preview` binds that target
+  (`render.set_render_target("ship_preview")` — confirmed via Defold's own docs to
+  accept the resource name directly, no separate handle-fetch call needed), clears
+  it, sets a **fixed** perspective look-at view/projection computed once in `init()`
+  (the rig only rotates, never moves), draws the `model` predicate into it, then
+  restores `render.RENDER_TARGET_DEFAULT` before the rest of the frame proceeds
+  exactly as before. Deliberately does NOT use a `camera` game-object component for
+  this — that mechanism drives the *main* on-screen `camera_world` globally
+  (`set_camera_world`/`camera.get_cameras()` in the real default script), and
+  hijacking it would silently break any future flight-mode 3D content.
+- **Preview rig**: repurposed the existing `patrol_1_preview` embedded instance in
+  `main/main.collection` (originally added, per this same section's earlier history,
+  purely so `bob.jar` would validate the model/mesh resource chain, with no
+  camera/render setup at all) — moved from the world origin to `(100000, 0, 0)`, far
+  outside the normal on-screen stretch-projection bounds so it never appears in the
+  regular pass, and gave it a new `main/ship_preview.script` (a constant slow
+  Y-rotation, `go.set_rotation` each frame — the only thing that changes; position is
+  fixed).
+- **Lighting - changed the approach after checking, not guessed**: `patrol_1.model`
+  originally referenced `/builtins/materials/model_lit.material`, confirmed (by
+  reading its actual `.fp` shader) to need real per-frame light data from engine
+  `light` components via a `LightBuffer` uniform. Checking further, this project's
+  `bob.jar` has **no `.light` resource builder/proto at all** for a fixed-schema
+  light file — lights in this engine version are authored as a generic, schema-less
+  `DdfStruct` (key/value struct), which would have been genuinely high-risk to
+  hand-author correctly with no live editor to verify against. Switched
+  `patrol_1.model` to the plain `/builtins/materials/model.material` instead — its
+  own `.fp` shader (also read directly) has a **self-contained default light
+  constant baked into the material** (a `"light"` vertex constant defaulting to
+  `(1,1,1,1)` as a world-space light position, plus a hardcoded 0.2 ambient term) and
+  needs no external light component or resource at all. Nothing else in the project
+  referenced `patrol_1.model`'s material choice, so this had no other side effects.
+- **Modal wiring**: `show_ship_detail` sets `gui.set_texture(preview_node,
+  "ship_preview")` only when the clicked ship's `faction_skins[faction].model`
+  matches `PREVIEW_MODEL_PATH` (currently only Patrol 1 — Escort 1 is still `model =
+  "<TBD>"`, §4); any other ship shows the existing `"Octagon Empty"` icon as an
+  honest placeholder plus a note in the stats text, rather than a stale or faked
+  render.
+
+**Verified — and an honest limitation**:
+- Both outpost-screen test harnesses extended with the new `ship_detail_*` stub
+  nodes and full behavioral coverage of section A (Purchase/Select/just-Cancel
+  states, immediate action, insufficient-funds fallback) — all passing, no
+  regressions to any earlier case.
+- A real `bob.jar build` compiled every new/changed file cleanly on the first real
+  attempt — `.render_target`/`.render`/`.render_script`/the edited `.collection`
+  and `.model`/`main/outpost.gui` — confirming the hand-derived protobuf schemas
+  were read correctly.
+- Went further than a compile check for this specific task, since a wrong runtime
+  Lua call here (unlike everything else this session) would compile fine but
+  silently render nothing: built a real local HTML5 bundle (not just the remote
+  `resolve build` validation used elsewhere) and loaded it in the already-connected
+  Chrome browser. The engine boots cleanly with **zero console errors** across
+  multiple full reloads, which is itself meaningful evidence — the custom render
+  script's new offscreen pass runs unconditionally every single frame starting
+  immediately at boot (before any navigation), so an uncaught Lua error in it (e.g. a
+  wrong render API call) would have broken the *entire* render pipeline and left the
+  GUI unrendered; instead the start screen renders correctly every time.
+  **However**: clicking through to the Ships tab to actually SEE the modal and its
+  live texture could not be completed — synthetic clicks (both the browser tool's
+  own click action and manually-dispatched pointer/mouse event sequences with
+  correct focus, coordinates, and down/move/up ordering, verified via direct page JS)
+  did not register with the game's canvas, for reasons that didn't resolve after
+  reasonable troubleshooting (checked for blocking overlays, focus state, coordinate
+  scaling, and event ordering — none explained it). This reads as an
+  automation/environment limitation specific to driving this WASM/SDL canvas via
+  synthetic input, not a defect surfaced by my changes. **Not yet independently
+  confirmed**: that the ship model actually appears correctly framed/lit inside the
+  live texture (as opposed to rendering successfully but off-frame, or some other
+  visual issue the "nothing crashed" evidence above can't rule out). Flagging this
+  plainly rather than claiming full verification — the user can check this directly
+  in their own browser (real mouse input, not simulated) at
+  `http://127.0.0.1:8934/index.html`.
+
+**Final outcome — rolled back to a static image (decided)**: the user did check in
+their own real browser, and reported the preview as a plain white square — the
+classic "texture reference didn't resolve" symptom. Two further fix attempts (a
+`main/outpost.gui`-level `resources {}` declaration for the render target, found via
+the same direct-file-inspection method as the rest of this section; then, when that
+still didn't work, offering to keep debugging vs. fall back) did not resolve it, and
+with no way to get real-time visual feedback in this environment (the click-through
+limitation above), the user chose to abandon the live-render approach rather than
+keep guessing at an increasingly narrow, hard-to-verify runtime API. **Rolled back
+entirely**:
+- `game.project`'s `[bootstrap] render` key removed (back to the implicit engine
+  default render pipeline).
+- `render/custom.render`, `render/custom.render_script`, and
+  `render/ship_preview.render_target` deleted.
+- `main/outpost.gui`'s `resources { ship_preview }` block removed; `main/ship_preview.script`
+  deleted.
+- `patrol_1_preview`/`escort_1_preview` in `main/main.collection` reverted to bare
+  `model`-only instances (their original, pre-§2.8.9 form, still off-world so they
+  never appear in the normal on-screen pass) — kept, not deleted, since they still
+  serve their ORIGINAL purpose of proving each ship's mesh/model resource chain
+  actually builds (§2.9's own note on `patrol_1_preview`'s original purpose).
+- **Replaced with**: the exact same reliable mechanism the Fitting tab's
+  `ship_visual` node already uses — a `PREVIEW_IMAGES` table in
+  `main/outpost.gui_script` mapping each ship's model path to its own
+  `{texture, image}` atlas reference (`patrol_1`/`patrol_1_topdown`,
+  `escort_1`/`escort_1_topdown`, both already-existing atlases/PNGs from this
+  ship's own §2.1.2/§2.9 model-building work) — `gui.set_texture` +
+  `gui.play_flipbook`, the same pair of calls the marker icons already use, no
+  render pipeline involved at all. A ship with neither model nor image still shows
+  the honest "no preview image available" placeholder.
+- **Verified**: both outpost-screen test harnesses updated (Escort 1's/Patrol 1's own
+  preview atlas+image assertions replace the old `"ship_preview"` texture checks) and
+  re-run with no regressions; a real `bob.jar build` compiled the rollback cleanly; a
+  fresh local HTML5 bundle rebuilt/redeployed. This is a plain static-texture
+  mechanism already proven to work elsewhere in this same screen, so — unlike the
+  live-render attempt — this doesn't carry the same "still needs the user's own
+  on-screen confirmation" caveat to the same degree, though the user's own visual
+  check is naturally still the final word.
 
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 

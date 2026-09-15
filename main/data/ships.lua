@@ -201,13 +201,21 @@ M.SHIPS = {
 			-- small/schooling-or-darting flavor) to match Escort's "first
 			-- real," combat-capable role (§2.1).
 			--
-			-- `model`/`weapon_gui` still `<TBD>` - no 3D hull has been built
-			-- for this ship yet (unlike Patrol 1's hand-authored glTF), and
-			-- the outpost screen's ship visual is hardcoded to Patrol 1's own
-			-- top-down image regardless of active ship (plan.md §4), so
-			-- nothing reads this field yet either way.
-			accord = { name = "Barracuda", model = "<TBD>", weapon_gui = "<TBD>" },
-			swarm  = { name = "Falcon", model = "<TBD>", weapon_gui = "<TBD>" },
+			-- `model` (decided, replacing the old `<TBD>` state): a rudimentary
+			-- ORIGINAL low-poly hull, one size class up from Patrol 1's small
+			-- patrol-boat scale (22m long, 5m beam, §2.1.2/§4 - still placeholder
+			-- proportions, not a considered design, same caveat Patrol 1's own
+			-- dimensions carry), hand-authored as a glTF
+			-- (main/models/escort_1/escort_1.gltf, tools/build_escort1_model.py)
+			-- - same "no BSG-derived design" rule as Patrol 1 (§0). Both
+			-- factions share this same placeholder hull for now, same as
+			-- Patrol 1 - distinct faction art is still open (§4). `weapon_gui`
+			-- still `<TBD>` - and the outpost screen's ship visual/live 3D
+			-- preview (§2.8.9) are both still hardcoded to Patrol 1 regardless
+			-- of active ship (plan.md §4), so nothing reads this ship's own
+			-- model/top-down image yet either way.
+			accord = { name = "Barracuda", model = "/main/models/escort_1/escort_1.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Falcon", model = "/main/models/escort_1/escort_1.model", weapon_gui = "<TBD>" },
 		},
 	},
 }

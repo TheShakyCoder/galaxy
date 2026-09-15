@@ -103,6 +103,32 @@ local ICON_TEXTURE = "icons"
 -- visible face, not float as a small badge in the middle of it.
 local ICON_SIZE = MARKER_SIZE
 local CARD_COLOR = vmath.vector4(0.16, 0.2, 0.26, 1.0)
+-- Per direct instruction: Shop and Owned (spares) cards are color-coded by the
+-- module's slot TYPE, matching the same weapon=gold/engine=red/computer=blue/
+-- hull=green hue family as the Octagon slot-marker icons (§2.8.1) - so a
+-- card's color previews which slot it fits before you even drag it. Falls
+-- back to the plain CARD_COLOR above for a module whose type isn't one of
+-- the four (shouldn't happen, but don't guess a color for it either).
+local TYPE_CARD_COLOR = {
+	weapon = vmath.vector4(0.42, 0.34, 0.12, 1.0),
+	engine = vmath.vector4(0.42, 0.16, 0.16, 1.0),
+	computer = vmath.vector4(0.16, 0.22, 0.42, 1.0),
+	hull = vmath.vector4(0.16, 0.36, 0.22, 1.0),
+}
+-- Brighter version of each TYPE_CARD_COLOR hue, used for the Fitting tab's
+-- four type-filter buttons (§2.8.8) when that type is the active filter -
+-- same dim TYPE_CARD_COLOR when not selected, so the buttons preview the
+-- same color-coding the cards themselves use.
+local FILTER_ACTIVE_COLOR = {
+	weapon = vmath.vector4(0.85, 0.68, 0.22, 1.0),
+	engine = vmath.vector4(0.85, 0.25, 0.25, 1.0),
+	computer = vmath.vector4(0.25, 0.35, 0.85, 1.0),
+	hull = vmath.vector4(0.25, 0.7, 0.35, 1.0),
+}
+-- Fixed display order for the four filter buttons - matches the existing
+-- SLOT_TYPE_ORDER convention used elsewhere on this screen (Overview tab's
+-- fitting breakdown).
+local FILTER_TYPE_ORDER = { "weapon", "computer", "engine", "hull" }
 local CARD_SIZE = vmath.vector3(820, 50, 0)
 local CARD_SPACING = 58
 -- Small "Sell" button pinned to the right edge of a sellable card (Owned
@@ -148,6 +174,14 @@ function init(self)
 	self.cards = {} -- Fitting tab's draggable module cards: { box, label, item_key, source }
 	self.ship_cards = {} -- Ships tab's clickable ship cards: { box, label, ship_id, source }
 	self.ghost = nil -- { box, label } following the cursor while dragging
+	-- Fitting tab's type filter (§2.8.8, per direct instruction): nil shows
+	-- every type in Shop/Owned as before; set to "weapon"/"computer"/
+	-- "engine"/"hull" narrows both lists to just that type. Toggled by
+	-- clicking a filter button - clicking the already-active one clears it
+	-- back to nil (show everything) rather than needing a separate "All"
+	-- button. Deliberately NOT reset on tab switch/re-entry - it's a
+	-- standing preference for the session, same as the scroll offsets below.
+	self.type_filter = nil
 	-- Per-list scroll offset in pixels, one entry per card-list panel -
 	-- 0 = scrolled to the top. Adjusted by mouse wheel (on_input) and
 	-- clamped against each list's own current row count every time it's
@@ -195,10 +229,22 @@ function init(self)
 	self.ship_visual_node = gui.get_node("ship_visual")
 	self.shop_panel_node = gui.get_node("shop_panel")
 	self.owned_panel_node = gui.get_node("owned_panel")
+	-- Type-filter buttons (§2.8.8) - one box per type, keyed the same as
+	-- TYPE_CARD_COLOR/FILTER_ACTIVE_COLOR/FILTER_TYPE_ORDER above.
+	self.filter_nodes = {
+		weapon = gui.get_node("filter_weapon"),
+		computer = gui.get_node("filter_computer"),
+		engine = gui.get_node("filter_engine"),
+		hull = gui.get_node("filter_hull"),
+	}
 	self.fitting_static_nodes = {
 		gui.get_node("ship_visual_heading"), self.ship_visual_node,
 		gui.get_node("shop_heading"), self.shop_panel_node,
 		gui.get_node("owned_heading"), self.owned_panel_node,
+		self.filter_nodes.weapon, gui.get_node("filter_weapon_label"),
+		self.filter_nodes.computer, gui.get_node("filter_computer_label"),
+		self.filter_nodes.engine, gui.get_node("filter_engine_label"),
+		self.filter_nodes.hull, gui.get_node("filter_hull_label"),
 	}
 
 	-- Ships tab's static nodes
@@ -240,6 +286,27 @@ function init(self)
 		no_label = gui.get_node("confirm_no_label"),
 	}
 	for _, node in pairs(self.confirm_nodes) do
+		gui.set_enabled(node, false)
+	end
+
+	-- Ship detail modal (§2.8.9, per direct instruction: clicking a ship card
+	-- in the Ships tab shows this instead of going straight to the plain
+	-- confirm dialog) - self.ship_detail is nil whenever closed, or
+	-- { ship_id = ... } while open. Its own Purchase/Select button acts
+	-- immediately (no follow-up confirm) - see show_ship_detail/on_input.
+	self.ship_detail = nil
+	self.ship_detail_nodes = {
+		scrim = gui.get_node("ship_detail_scrim"),
+		panel = gui.get_node("ship_detail_panel"),
+		name = gui.get_node("ship_detail_name"),
+		preview = gui.get_node("ship_detail_preview"),
+		stats = gui.get_node("ship_detail_stats"),
+		primary = gui.get_node("ship_detail_primary"),
+		primary_label = gui.get_node("ship_detail_primary_label"),
+		cancel = gui.get_node("ship_detail_cancel"),
+		cancel_label = gui.get_node("ship_detail_cancel_label"),
+	}
+	for _, node in pairs(self.ship_detail_nodes) do
 		gui.set_enabled(node, false)
 	end
 end
@@ -603,11 +670,16 @@ end
 -- (they're separate instances, possibly at different upgrade levels,
 -- §4), unlike the old type-key-only model where owning a second copy of
 -- something already-owned was indistinguishable from the first.
-local function owned_spare_instances()
+-- `type_filter` (optional - nil/"weapon"/"computer"/"engine"/"hull", §2.8.8)
+-- additionally restricts to modules of exactly that type, on top of the
+-- existing ship_class fit check - the Fitting tab's type-filter buttons.
+local function owned_spare_instances(type_filter)
 	local ship_class = active_ship_class()
 	local instances = {}
 	for _, inst in ipairs(session.get_owned() or {}) do
-		if not session.is_installed(inst.id) and module_fits_class(catalog.get(inst.item_key), ship_class) then
+		local module = catalog.get(inst.item_key)
+		if not session.is_installed(inst.id) and module_fits_class(module, ship_class)
+			and (not type_filter or (module and module.type == type_filter)) then
 			table.insert(instances, inst)
 		end
 	end
@@ -621,11 +693,12 @@ end
 -- needs to still be possible. It DOES now hide items that belong to a
 -- different ship class entirely (e.g. Miner/Speculator/Prospector while
 -- flying the Patrol-class Sardine/Hummingbird), per direct instruction.
-local function shop_keys()
+-- `type_filter`: see owned_spare_instances above.
+local function shop_keys(type_filter)
 	local ship_class = active_ship_class()
 	local keys = {}
 	for item_key, module in pairs(catalog.ALL) do
-		if module_fits_class(module, ship_class) then
+		if module_fits_class(module, ship_class) and (not type_filter or module.type == type_filter) then
 			table.insert(keys, item_key)
 		end
 	end
@@ -725,22 +798,24 @@ local function build_card_list(out_list, panel_node, rows, list_source, scroll_o
 	end
 end
 
-local function shop_rows()
+-- `type_filter`: see owned_spare_instances above.
+local function shop_rows(type_filter)
 	local rows = {}
-	for _, item_key in ipairs(shop_keys()) do
+	for _, item_key in ipairs(shop_keys(type_filter)) do
 		local module = catalog.get(item_key)
 		table.insert(rows, {
 			item_key = item_key,
 			label = (module and module.name or item_key) .. "  (" .. session.get_module_price() .. " Scrip)",
 			source = "shop",
+			color = module and TYPE_CARD_COLOR[module.type],
 		})
 	end
 	return rows
 end
 
-local function owned_spare_rows()
+local function owned_spare_rows(type_filter)
 	local rows = {}
-	for _, inst in ipairs(owned_spare_instances()) do
+	for _, inst in ipairs(owned_spare_instances(type_filter)) do
 		local module = catalog.get(inst.item_key)
 		local name = module and module.name or inst.item_key
 		if inst.level > 0 then
@@ -749,16 +824,28 @@ local function owned_spare_rows()
 		table.insert(rows, {
 			item_key = inst.item_key, instance_id = inst.id,
 			label = name, source = "owned", sellable = true, -- §2.8/§4: components can be sold
+			color = module and TYPE_CARD_COLOR[module.type],
 		})
 	end
 	return rows
 end
 
+-- Recolors the four type-filter buttons: bright FILTER_ACTIVE_COLOR for
+-- whichever type is currently selected (self.type_filter), dim
+-- TYPE_CARD_COLOR (matching the unfiltered card color) for the rest, same
+-- "active vs. inactive" pattern as the main Overview/Fitting/Ships tab bar.
+local function refresh_filter_buttons(self)
+	for _, type_name in ipairs(FILTER_TYPE_ORDER) do
+		local active = self.type_filter == type_name
+		gui.set_color(self.filter_nodes[type_name], active and FILTER_ACTIVE_COLOR[type_name] or TYPE_CARD_COLOR[type_name])
+	end
+end
+
 local function refresh_module_cards(self)
 	clear_card_list(self.cards)
 	self.cards = {}
-	local shop = shop_rows()
-	local owned = owned_spare_rows()
+	local shop = shop_rows(self.type_filter)
+	local owned = owned_spare_rows(self.type_filter)
 	self.scroll.shop = math.min(self.scroll.shop, max_scroll_for(#shop))
 	self.scroll.owned = math.min(self.scroll.owned, max_scroll_for(#owned))
 	build_card_list(self.cards, self.shop_panel_node, shop, "shop", self.scroll.shop)
@@ -858,6 +945,7 @@ local function set_page(self, page)
 		self.ship_cards = {}
 		build_markers(self)
 		refresh_markers(self)
+		refresh_filter_buttons(self)
 		refresh_module_cards(self)
 	else -- "ships"
 		clear_hover(self)
@@ -942,6 +1030,117 @@ local function hide_confirm(self)
 	end
 end
 
+-- Ship detail modal preview image, keyed by model path (§2.8.9). A genuine
+-- LIVE 3D render (a render-target/offscreen-camera pipeline, feeding an
+-- always-loaded off-world preview rig into this same panel) was attempted
+-- first, per direct instruction, and built far enough to compile cleanly,
+-- but never actually rendered anything but a blank/white square at runtime
+-- despite two rounds of fixes - and with no way to get real-time visual
+-- feedback in this environment (automated browser click-through is blocked
+-- here, §2.8.9's own verification note), further guessing at the exact
+-- runtime API had too much risk of cost for too little confidence. Rolled
+-- back per direct instruction in favor of this - the same reliable static
+-- top-down image mechanism the Fitting tab's ship_visual node already uses
+-- successfully. A ship whose faction_skins model doesn't match any entry
+-- here has no preview art at all yet - honest placeholder instead of
+-- faking one.
+local PREVIEW_IMAGES = {
+	["/main/models/patrol_1/patrol_1.model"] = { texture = "patrol_1", image = "patrol_1_topdown" },
+	["/main/models/escort_1/escort_1.model"] = { texture = "escort_1", image = "escort_1_topdown" },
+}
+
+-- Real stat block for the detail modal - straight from main/data/ships.lua's
+-- `data` (Hull/Engine/FTL/Computer baseline, §2.1.1) and `components` (W/C/E/H
+-- slot counts, §2.8), same numbers the Overview tab's fitting breakdown
+-- already reads. A curated subset, not every field in `data` - legible in the
+-- modal's fixed-size panel rather than a full engineering dump.
+local function ship_stats_text(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return ""
+	end
+	local d = ship.data or {}
+	local c = ship.components or {}
+	local lines = {
+		"Class: " .. (ship.class or "?"),
+		"",
+		"Hull Points: " .. (d.hull_points or "?"),
+		"Armor: " .. (d.armor or "?"),
+		"Speed: " .. (d.speed_m_per_sec or "?") .. " m/s  (Boost: " .. (d.boost_speed_m_per_sec or "?") .. " m/s)",
+		"FTL Range: " .. (d.ftl_range_ly or "?") .. " ly",
+		"Power: " .. (d.power or "?"),
+		"Sensor Range: " .. (d.sensor_range_m or "?") .. " m",
+		"",
+		"Slots: W" .. (c.W or 0) .. "  C" .. (c.C or 0) .. "  E" .. (c.E or 0) .. "  H" .. (c.H or 0),
+	}
+	return table.concat(lines, "\n")
+end
+
+-- Opens the ship detail modal (§2.8.9) for `ship_id` - replaces the old
+-- straight-to-confirm-dialog behavior on a Ships tab card click. Figures out
+-- its own button state (Purchase/Select/just-Cancel) from real session state
+-- rather than the caller needing to know which case applies.
+local function show_ship_detail(self, ship_id)
+	local ship = ships.SHIPS[ship_id]
+	local faction = session.get_faction()
+	local owned = session.is_ship_owned(ship_id)
+	local is_active = ship_id == session.get_ship_id()
+
+	self.ship_detail = { ship_id = ship_id }
+	gui.set_text(self.ship_detail_nodes.name, ship_display_name(ship_id, faction) .. "  (" .. (ship and ship.class or "?") .. ")")
+
+	local stats = ship_stats_text(ship_id)
+	local model_path = ship and faction and ship.faction_skins[faction] and ship.faction_skins[faction].model
+	local preview_image = model_path and PREVIEW_IMAGES[model_path]
+	if not preview_image then
+		stats = "(no preview image available for this ship yet)\n\n" .. stats
+	end
+	gui.set_text(self.ship_detail_nodes.stats, stats)
+
+	-- Not owned -> "Purchase"; owned but not the active ship -> "Select";
+	-- owned AND already active -> no primary button at all (nothing for it
+	-- to do - this used to be a silent no-op click on the card itself; now
+	-- it's an explicit "just Cancel" state instead of a dead-end button).
+	local show_primary = true
+	if not owned then
+		gui.set_text(self.ship_detail_nodes.primary_label, "Purchase")
+	elseif not is_active then
+		gui.set_text(self.ship_detail_nodes.primary_label, "Select")
+	else
+		show_primary = false
+	end
+
+	-- Open the modal FIRST, before touching the preview image below - keeps
+	-- the fix from §2.8.9's click-through bug (a bad texture/flipbook call
+	-- must never leave the whole modal invisible just because its preview
+	-- art failed) even now that the preview is a plain static image rather
+	-- than the live render that bug was originally about.
+	for _, node in pairs(self.ship_detail_nodes) do
+		gui.set_enabled(node, true)
+	end
+	gui.set_enabled(self.ship_detail_nodes.primary, show_primary)
+	gui.set_enabled(self.ship_detail_nodes.primary_label, show_primary)
+
+	gui.set_color(self.ship_detail_nodes.preview, vmath.vector4(1.0, 1.0, 1.0, 1.0))
+	if preview_image then
+		gui.set_texture(self.ship_detail_nodes.preview, preview_image.texture)
+		gui.play_flipbook(self.ship_detail_nodes.preview, preview_image.image)
+	else
+		-- Explicitly reassigned every time (not left stale) - otherwise a
+		-- ship with no preview of its own would keep showing whichever
+		-- ship's image happened to be textured on this node last.
+		gui.set_texture(self.ship_detail_nodes.preview, ICON_TEXTURE)
+		gui.play_flipbook(self.ship_detail_nodes.preview, "Octagon Empty")
+	end
+end
+
+local function hide_ship_detail(self)
+	self.ship_detail = nil
+	for _, node in pairs(self.ship_detail_nodes) do
+		gui.set_enabled(node, false)
+	end
+end
+
 local function end_drag(self)
 	if self.ghost then
 		gui.delete_node(self.ghost.box)
@@ -988,6 +1187,46 @@ function on_input(self, action_id, action)
 		return true
 	end
 
+	-- Modal: the ship detail modal (§2.8.9) works the same way - swallow
+	-- everything else until Purchase/Select or Cancel is clicked. Unlike
+	-- self.confirm, Purchase/Select act immediately here (no further
+	-- confirm dialog), per direct instruction - except insufficient Scrip
+	-- on a Purchase, which still falls back to the plain notice-only
+	-- confirm dialog (closing this one first).
+	if self.ship_detail then
+		if action_id == hash("touch") and action.pressed then
+			if hits(self.ship_detail_nodes.primary, action) then
+				local ship_id = self.ship_detail.ship_id
+				local owned = session.is_ship_owned(ship_id)
+				hide_ship_detail(self)
+				if owned then
+					session.select_ship(ship_id)
+					refresh_ship_cards(self)
+					local faction = session.get_faction()
+					local home_name, faction_label, ship_name = ship_overview_text(faction)
+					gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+				else
+					local name = ship_display_name(ship_id, session.get_faction())
+					local price = session.get_ship_price()
+					if session.get_scrip() < price then
+						show_confirm(self, "Not enough Scrip to buy " .. name
+							.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
+					elseif session.purchase_ship(ship_id) then
+						session.select_ship(ship_id)
+						refresh_ship_cards(self)
+						local faction = session.get_faction()
+						local home_name, faction_label, ship_name = ship_overview_text(faction)
+						gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+						refresh_currency(self)
+					end
+				end
+			elseif hits(self.ship_detail_nodes.cancel, action) then
+				hide_ship_detail(self)
+			end
+		end
+		return true
+	end
+
 	-- Unbound mouse movement arrives with action_id == nil but still
 	-- carries live x/y - used here to make the ghost node follow the
 	-- cursor AND to update the drag-over slot highlight, while a drag is
@@ -1012,10 +1251,10 @@ function on_input(self, action_id, action)
 		local delta = (action_id == hash("zoom_in")) and -SCROLL_STEP or SCROLL_STEP
 		if self.active_page == "fitting" then
 			if hits(self.shop_panel_node, action) then
-				self.scroll.shop = math.max(0, math.min(self.scroll.shop + delta, max_scroll_for(#shop_rows())))
+				self.scroll.shop = math.max(0, math.min(self.scroll.shop + delta, max_scroll_for(#shop_rows(self.type_filter))))
 				refresh_module_cards(self)
 			elseif hits(self.owned_panel_node, action) then
-				self.scroll.owned = math.max(0, math.min(self.scroll.owned + delta, max_scroll_for(#owned_spare_rows())))
+				self.scroll.owned = math.max(0, math.min(self.scroll.owned + delta, max_scroll_for(#owned_spare_rows(self.type_filter))))
 				refresh_module_cards(self)
 			end
 		else
@@ -1057,61 +1296,61 @@ function on_input(self, action_id, action)
 		end
 
 		if self.active_page == "ships" then
-			-- Ships tab: click-to-act, no drag - both a For Sale purchase
-			-- and switching to a different owned ship go through the
-			-- confirmation dialog (a purchase, and a "swap" of the active
-			-- ship, respectively - per direct instruction). Clicking the
-			-- already-active owned ship is a no-op, not a swap - nothing
-			-- would actually change, so no dialog for that.
+			-- Ships tab: click-to-act, no drag. Clicking a card (either
+			-- list) opens the ship detail modal (§2.8.9, per direct
+			-- instruction) instead of going straight to a confirm dialog -
+			-- that modal figures out its own Purchase/Select/just-Cancel
+			-- state and performs the action immediately on its own button.
+			-- Selling is unchanged: still the card's own inline Sell button
+			-- + the plain confirm dialog (§2.8.7), checked first so it
+			-- doesn't also open the detail modal for the same click.
 			for _, card in ipairs(self.ship_cards) do
 				local panel_node = panel_for_card(self, card)
-				local function apply_ship_change()
-					refresh_ship_cards(self)
-					local faction = session.get_faction()
-					local home_name, faction_label, ship_name = ship_overview_text(faction)
-					gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
-				end
 
-				-- Sell button (Owned Ships only, and only when it would
-				-- leave at least one ship remaining, §2.8/§4's "you cannot
-				-- sell all ships") - checked before the card's own
-				-- select/purchase click so the two don't fire together.
 				if card.sell_box and hits(card.sell_box, action) and hits(panel_node, action) then
 					local name = ship_display_name(card.item_key, session.get_faction())
 					local refund = session.get_ship_sell_refund()
 					show_confirm(self, "Sell " .. name .. " for " .. refund .. " Scrip?", function()
 						session.sell_ship(card.item_key)
-						apply_ship_change()
+						refresh_ship_cards(self)
+						local faction = session.get_faction()
+						local home_name, faction_label, ship_name = ship_overview_text(faction)
+						gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
 					end)
 					return true
 				end
 
-				if hits(card.box, action) and hits(panel_node, action) then
-					if card.source == "ship_forsale" then
-						local name = ship_display_name(card.item_key, session.get_faction())
-						local price = session.get_ship_price()
-						if session.get_scrip() < price then
-							show_confirm(self, "Not enough Scrip to buy " .. name
-								.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
-						else
-							show_confirm(self, "Buy " .. name .. " for " .. price .. " Scrip and make it your active ship?", function()
-								if session.purchase_ship(card.item_key) then
-									session.select_ship(card.item_key)
-									apply_ship_change()
-								end
-							end)
-						end
-					elseif card.source == "owned_ship" and card.item_key ~= session.get_ship_id() then
-						local name = ship_display_name(card.item_key, session.get_faction())
-						show_confirm(self, "Switch your active ship to " .. name .. "?", function()
-							session.select_ship(card.item_key)
-							apply_ship_change()
-						end)
-					end
+				if card.box and hits(card.box, action) and hits(panel_node, action) then
+					show_ship_detail(self, card.item_key)
 					return true
 				end
 			end
 			return false
+		end
+
+		-- Fitting tab: type-filter buttons (§2.8.8) - clicking a type narrows
+		-- both Shop and Owned to that type; clicking the already-active one
+		-- clears the filter back to showing everything. Checked before the
+		-- marker/card hit-tests below since it's its own click target, not a
+		-- drag source.
+		for _, type_name in ipairs(FILTER_TYPE_ORDER) do
+			if hits(self.filter_nodes[type_name], action) then
+				-- NOTE: deliberately an if/else, not the usual "cond and a or
+				-- b" idiom - that idiom breaks when the "true" branch value
+				-- is itself nil/false (here, clearing the filter), since
+				-- "cond and nil" is always nil, so the "or b" always wins
+				-- regardless of cond. Caught by this feature's own test
+				-- harness case (clicking an active filter again silently
+				-- failed to clear it) before this ever reached a real build.
+				if self.type_filter == type_name then
+					self.type_filter = nil
+				else
+					self.type_filter = type_name
+				end
+				refresh_filter_buttons(self)
+				refresh_module_cards(self)
+				return true
+			end
 		end
 
 		-- Fitting tab: start dragging an installed item off its slot marker

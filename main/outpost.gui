@@ -20,6 +20,10 @@ textures {
   name: "icons"
   texture: "/main/images/icons.atlas"
 }
+textures {
+  name: "escort_1"
+  texture: "/main/images/escort_1.atlas"
+}
 nodes {
   type: TYPE_BOX
   id: "background"
@@ -382,11 +386,163 @@ nodes {
   layer: ""
 }
 nodes {
+  type: TYPE_BOX
+  id: "filter_weapon"
+  position { x: 1110.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.42 y: 0.34 z: 0.12 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "filter_weapon_label"
+  text: "Weapon"
+  font: "default_font"
+  position { x: 1110.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "filter_computer"
+  position { x: 1330.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.16 y: 0.22 z: 0.42 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "filter_computer_label"
+  text: "Computer"
+  font: "default_font"
+  position { x: 1330.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "filter_engine"
+  position { x: 1550.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.42 y: 0.16 z: 0.16 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "filter_engine_label"
+  text: "Engine"
+  font: "default_font"
+  position { x: 1550.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "filter_hull"
+  position { x: 1770.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.16 y: 0.36 z: 0.22 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "filter_hull_label"
+  text: "Hull"
+  font: "default_font"
+  position { x: 1770.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
   type: TYPE_TEXT
   id: "shop_heading"
   text: "Shop (available to buy)"
   font: "default_font"
-  position { x: 1440.0 y: 845.0 z: 0.0 w: 1.0 }
+  position { x: 1440.0 y: 800.0 z: 0.0 w: 1.0 }
   size { x: 880.0 y: 50.0 z: 0.0 w: 1.0 }
   color { x: 0.7 y: 0.75 z: 0.8 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -406,7 +562,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "shop_panel"
-  position { x: 1440.0 y: 715.0 z: 0.0 w: 1.0 }
+  position { x: 1440.0 y: 670.0 z: 0.0 w: 1.0 }
   size { x: 880.0 y: 220.0 z: 0.0 w: 1.0 }
   color { x: 0.08 y: 0.09 z: 0.14 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -424,7 +580,7 @@ nodes {
   id: "owned_heading"
   text: "Owned (spares)"
   font: "default_font"
-  position { x: 1440.0 y: 575.0 z: 0.0 w: 1.0 }
+  position { x: 1440.0 y: 530.0 z: 0.0 w: 1.0 }
   size { x: 880.0 y: 50.0 z: 0.0 w: 1.0 }
   color { x: 0.7 y: 0.75 z: 0.8 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -444,7 +600,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "owned_panel"
-  position { x: 1440.0 y: 445.0 z: 0.0 w: 1.0 }
+  position { x: 1440.0 y: 400.0 z: 0.0 w: 1.0 }
   size { x: 880.0 y: 220.0 z: 0.0 w: 1.0 }
   color { x: 0.08 y: 0.09 z: 0.14 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -685,6 +841,174 @@ nodes {
   text: "Cancel"
   font: "default_font"
   position { x: 1100.0 y: 460.0 z: 0.0 w: 1.0 }
+  size { x: 300.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "ship_detail_scrim"
+  position { x: 960.0 y: 540.0 z: 0.0 w: 1.0 }
+  size { x: 1920.0 y: 1080.0 z: 0.0 w: 1.0 }
+  color { x: 0.0 y: 0.0 z: 0.0 w: 0.7 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "ship_detail_panel"
+  position { x: 960.0 y: 540.0 z: 0.0 w: 1.0 }
+  size { x: 1000.0 y: 700.0 z: 0.0 w: 1.0 }
+  color { x: 0.1 y: 0.12 z: 0.17 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "ship_detail_name"
+  text: "Ship"
+  font: "default_font"
+  position { x: 960.0 y: 840.0 z: 0.0 w: 1.0 }
+  size { x: 900.0 y: 50.0 z: 0.0 w: 1.0 }
+  color { x: 0.92 y: 0.95 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "ship_detail_preview"
+  position { x: 660.0 y: 560.0 z: 0.0 w: 1.0 }
+  size { x: 360.0 y: 360.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "ship_detail_stats"
+  text: "Stats"
+  font: "default_font"
+  position { x: 1160.0 y: 740.0 z: 0.0 w: 1.0 }
+  size { x: 560.0 y: 400.0 z: 0.0 w: 1.0 }
+  color { x: 0.85 y: 0.9 z: 0.95 w: 1.0 }
+  pivot: PIVOT_N
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: true
+  text_leading: 1.25
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "ship_detail_primary"
+  position { x: 810.0 y: 260.0 z: 0.0 w: 1.0 }
+  size { x: 300.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 0.2 y: 0.5 z: 0.3 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "ship_detail_primary_label"
+  text: "Purchase"
+  font: "default_font"
+  position { x: 810.0 y: 260.0 z: 0.0 w: 1.0 }
+  size { x: 300.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "ship_detail_cancel"
+  position { x: 1110.0 y: 260.0 z: 0.0 w: 1.0 }
+  size { x: 300.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 0.35 y: 0.38 z: 0.42 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "ship_detail_cancel_label"
+  text: "Cancel"
+  font: "default_font"
+  position { x: 1110.0 y: 260.0 z: 0.0 w: 1.0 }
   size { x: 300.0 y: 80.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
