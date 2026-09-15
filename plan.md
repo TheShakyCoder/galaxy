@@ -356,6 +356,81 @@ three-currency draft):
   pay-to-win is accepted as part of the monetization model (the earlier "no
   pay-to-win" stance is abandoned).
 
+#### 2.6.1 Scrip balance implemented (decided — with placeholder prices)
+
+Per direct instruction: the outpost screen now **always shows the player's Scrip
+balance, updating live as items/ships are bought and sold**. This needed a real,
+working balance and real transaction amounts to do honestly, not just a static
+number on screen — so `main/session.lua` now tracks an actual `scrip` value, and
+every buy/sell function spends or credits it for real.
+
+- **Starting balance and every price/refund are FLAT PLACEHOLDER values** — 500
+  starting Scrip, 100 to buy any module (flat, not per-item), 50 refund selling one,
+  500 to buy a ship (flat, not per-ship), 250 refund selling one. **Not real economy
+  design** (§2.6's actual pricing is still fully open work) — introduced purely so
+  the currency display has something genuine to show and update, per §0/§4's "don't
+  invent unconfirmed numbers" rule: the *mechanic* is real, the *numbers* are
+  explicitly flagged placeholders, same spirit as Patrol 1's stat block before real
+  tuning existed.
+- **Insufficient funds are handled, not ignored**: `session.purchase`/
+  `purchase_ship` refuse (return `nil`/`false`, spend nothing) if the balance is too
+  low. The outpost screen checks affordability before opening the normal purchase
+  dialog and shows a distinct "Not enough Scrip to buy X (need N, have M)" notice
+  instead — reusing the same confirmation-dialog UI (§2.8.6) with a no-op callback,
+  rather than a new dialog type.
+- **UI**: a `scrip_label` node in `main/outpost.gui`, positioned outside all three
+  tabs' static-node groups (top-right, alongside the title) so it's never hidden
+  regardless of active tab — "always show," literally. `refresh_currency` in
+  `main/outpost.gui_script` keeps it in sync, called on `show_outpost` and
+  (unconditionally) right after every confirmation-dialog resolution, since that's
+  the only place the balance can ever change.
+- Shop/For Sale card labels and every purchase/sell confirmation message now state
+  the actual (placeholder) price/refund instead of the old generic "(price TBD)" —
+  since a real number is genuinely being charged now, showing "TBD" next to it would
+  be dishonest, not just incomplete.
+- **Verified**: both outpost-screen test harnesses extended with balance assertions
+  around their existing purchase/sell flows (module purchase, module sale, ship
+  purchase, ship sale) confirming the exact expected balance and readout text after
+  each, plus a new case forcing the balance below a module's price and confirming
+  the distinct insufficient-funds notice appears, spends nothing, and installs
+  nothing. A real `bob.jar build` compiles cleanly.
+
+#### 2.6.2 Water/Iron/Hydrogen readouts added (decided — display only, static values)
+
+Per direct instruction: the outpost screen's always-visible currency header
+(§2.6.1) now shows **all four** of the player's balances — Scrip, **Water**,
+**Iron**, and **Hydrogen** (the "fourth resource," §2.6's renamed fuel stat) —
+stacked in a column at the top-right, `scrip_label` on top and the other three
+below it in the same style.
+
+- `main/session.lua` gained `M.water`/`M.iron`/`M.hydrogen`, each a flat
+  placeholder starting balance of 500 (`STARTING_WATER`/`STARTING_IRON`/
+  `STARTING_HYDROGEN`), set in `choose_faction` exactly like `M.scrip`, plus
+  `get_water()`/`get_iron()`/`get_hydrogen()` getters.
+- **Unlike Scrip, these three are honestly static** — no mining, repair, or
+  FTL/boost mechanic exists yet to actually spend or earn them, so nothing
+  ever changes them after the starting value is set. `ships.lua`'s
+  `repair_cost_iron`/`boost_cost_hydrogen_per_sec`/`ftl_cost_hydrogen_per_ly`
+  fields are stats a future mechanic will read, not something currently
+  deducting against these balances — flagged explicitly in `session.lua`'s
+  comments so a future pass doesn't mistake "static" for "working." Also
+  flagged: the starting placeholders (500 each) aren't reconciled against
+  `repair_cost_iron`'s existing placeholder value (10,000) — nothing spends
+  against either number yet, so that scale mismatch is open work (§4).
+- **UI**: `water_label`/`iron_label`/`hydrogen_label` text nodes in
+  `main/outpost.gui`, stacked below `scrip_label` in the same top-right
+  column (all four outside every tab's static-node group, so none are ever
+  hidden regardless of active tab). `scrip_label` itself shrank from 60px to
+  32px tall to fit the four-row stack in the available space above the
+  Fitting tab's Shop panel. `refresh_currency` in `main/outpost.gui_script`
+  now sets all four texts in one place, called at the same two sites as
+  before (`show_outpost`, and after every confirmation-dialog resolution).
+- **Verified**: both outpost-screen test harnesses extended with assertions
+  that all four readouts show the correct starting values on `show_outpost`,
+  and that Water/Iron/Hydrogen remain exactly unchanged after unrelated
+  Scrip-spending flows (module/ship purchases and sales) elsewhere in the
+  same test run. A real `bob.jar build` compiles cleanly.
+
 ### 2.7 Star system map (decided — real data file now exists)
 
 **Implemented**: `main/data/star_systems.lua` — 58 star systems. Topology (positions,
@@ -631,7 +706,8 @@ display):
   off the silhouette.
 - **Drag and drop** (unchanged mechanics from the previous version): drag a card from
   Shop/Owned onto a matching-type slot marker to install it (Shop items purchased
-  first, still `(price TBD)`); drag an installed marker off to uninstall it back to
+  first, for real — a flat placeholder Scrip price, §2.6.1 — through the
+  confirmation dialog, §2.8.6); drag an installed marker off to uninstall it back to
   Owned; mismatched-type or empty-space drops cancel with no change; dragging a
   slot's item onto another matching slot moves it there (displacing the target's
   occupant back to a spare, not a true two-way swap — see `main/session.lua`'s
@@ -677,8 +753,9 @@ make it the active one):
   Ships** (click to select; the active one is tagged "(current)" and colored
   differently). Plain click-to-act, not drag-and-drop — there's no "slot" concept
   for ships to be dropped onto.
-- Clicking a **For Sale** ship purchases it (still `(price TBD)`, free-grant for now,
-  same caveat as module purchases) and immediately selects it as active.
+- Clicking a **For Sale** ship purchases it — for real, spending a flat placeholder
+  Scrip price (§2.6.1) through the confirmation dialog (§2.8.6) — and selects it as
+  active on success.
 - **`main/session.lua`** gained `owned_ships`/`active_ship_id` (replacing the old
   singular `ship_id` — same accessor name, `get_ship_id()`, so nothing else needed to
   change) plus `select_ship`/`purchase_ship`/`is_ship_owned`/`get_owned_ships`.
@@ -788,11 +865,79 @@ name, so it stays.
 - **Data**: each `main/data/modules/*.lua` entry gets an `icon` field (the atlas
   region name). Ship-agnostic — the icon is a property of the *module*, not the ship
   or slot.
+- **Switched to hand-provided "Octagon" icon set (decided)**: per direct instruction,
+  a batch of new octagon-shaped icons (`main/images/icons/Octagon *.png`) replaces the
+  procedurally-generated ones for both the empty-slot outlines and the two auto-cannon
+  types — these are supplied finished art, not drawn by
+  `tools/build_module_icons.py` (that script now just lists them, `MANUAL_ICONS`, so
+  re-running it to regenerate the *other* icons doesn't drop these from
+  `icons.atlas`). Mapping:
+    - Empty slot, by type: weapon → `"Octagon W"`, computer → `"Octagon C"`,
+      engine → `"Octagon E"`, hull → `"Octagon H"` — `outpost.gui_script`'s new
+      `SLOT_EMPTY_ICON` table, replacing the old `"slot_" .. type .. "_empty"` naming.
+    - A mining-type cannon (Digger and its Escort/Frigate/Carrier placeholders) →
+      `"Octagon Cannon Asteroid"`.
+    - The normal ordinance combat cannon (Gnat, `auto_cannon_basic`) →
+      `"Octagon Cannon Spaceship"`.
+    - `"Octagon Empty.png"` was also supplied but nothing maps to it yet — listed in
+      the atlas/`MANUAL_ICONS` for future use, not wired to any slot/module (§4 — don't
+      guess its purpose).
+  - Asteroid Analyser (the one computer module) keeps its old procedurally-generated
+    `"asteroid_analyser"` icon — no Octagon-prefixed replacement was provided for it.
+- **Component icon display size pinned to the old placeholder size (decided)**: the
+  hand-provided Octagon icons are much higher-resolution than the old
+  procedurally-generated placeholders (1400×1400 for the four empty-slot icons,
+  1800×1506 — not even square — for the two Cannon icons and the unused "Octagon
+  Empty", vs. the old flat 128×128 canvas every generated icon used), per direct
+  instruction the on-screen icon must still render at the same size as before. Fixed
+  by explicitly forcing `gui.set_size_mode(icon, gui.SIZE_MODE_MANUAL)` right after
+  creating the marker's icon node in `build_markers` (`main/outpost.gui_script`) — so
+  it always renders at `ICON_SIZE` (48×48) regardless of the assigned texture's own
+  pixel dimensions/aspect ratio, rather than risk `SIZE_MODE_AUTO` inflating (and, for
+  the non-square Cannon icons, distorting the layout around) the node to match the
+  source image.
+- **Octagon icon files downsized for a smaller build (decided)**: the hand-provided
+  originals were far larger than needed for a 48×48 on-screen icon (1400×1400 for the
+  four empty-slot icons, 1800×1506 for the two Cannon icons and "Octagon Empty" — over
+  1MB each, ~7.1MB total). Per direct instruction, downsized in place with
+  `sips -Z 128` (matches this project's existing 128px icon convention,
+  `tools/build_module_icons.py`'s `SIZE`) — the non-square Cannon/Empty icons scaled
+  proportionally (now 128×107, same aspect ratio as before) rather than forced square,
+  so this doesn't add any distortion beyond what square-node stretching (the
+  `SIZE_MODE_MANUAL` fix above) already did. Total dropped from ~7.1MB to ~96KB
+  (>98% smaller) — matters for this being a Poki/HTML5 game where the whole build is
+  downloaded up front. Full-resolution originals kept in the session scratchpad (not
+  checked into the project) in case higher-res source art is ever wanted for something
+  else later.
+- **Follow-up correction — icon size increased to match the grey marker box, not the
+  old small icon (decided)**: per direct instruction, "the same size as the current
+  placeholder" (above) actually meant the grey/colored octagon marker box itself
+  (`box`, `MARKER_SIZE`, 74×74, §2.8.3) — the thing an empty slot's grey octagon is
+  standing in for — not the old small 48×48 icon footprint. The Octagon art is a
+  complete octagon graphic in its own right (its own border/fill baked into the
+  image), meant to cover the marker's whole visible face rather than float as a small
+  badge in its middle. `ICON_SIZE` changed from a fixed 48×48 to just `MARKER_SIZE`
+  (74×74) so the two always stay in sync; the `SIZE_MODE_MANUAL` fix above still
+  applies unchanged (still needed, just pinning to the new bigger `ICON_SIZE` instead
+  of the old one) — the Octagon PNGs' non-square/high-resolution originals still can't
+  be allowed to dictate the node's actual rendered size.
+- **"Octagon Cannon Asteroid" rotated 45° (decided)**: per direct instruction, the
+  image itself (`main/images/icons/Octagon Cannon Asteroid.png`, by this point
+  user-cropped down to a square 99×99 — see the file-size bullet above) was rotated
+  45° in place — `magick "…" -background none -rotate 45 -gravity center -extent
+  99x99 "…"` (ImageMagick), transparent fill for the corners the rotation exposes,
+  re-cropped back to the original 99×99 canvas rather than left to expand — the
+  artwork has enough margin around the octagon shape that nothing gets clipped by
+  cropping back to the original bounds. Pure asset edit, no code change; the
+  pre-rotation original is kept in the session scratchpad backup alongside the other
+  full-resolution originals.
 - **Verified**: both outpost-screen test harnesses re-run with no regressions (their
   stub `gui` table needed `set_texture`/`play_flipbook` no-ops added, matching the
   real API used to assign an atlas image to a runtime-created box node); a real
   `bob.jar build` confirmed the new atlas/textures block/`.gui_script` changes compile
-  through Defold's actual texture pipeline, not just well-formed data.
+  through Defold's actual texture pipeline, not just well-formed data. Re-verified
+  again after the Octagon-icon switch above, same two harnesses + a real build, no
+  regressions.
 
 #### 2.8.2 Module upgrades (decided — per-instance)
 
@@ -849,8 +994,10 @@ Per direct instruction, the ship-visual slot markers (the `box`/`border` nodes,
   the bounding box is square. `MARKER_SIZE` was the old 110×60 landscape rectangle
   (left over from when the marker showed name text), which produced a stretched,
   irregular octagon. Changed to a square 74×74 (`BORDER_SIZE` derives from it, so it's
-  square too) — large enough to comfortably fit the 48×48 module icon plus its corner
-  labels.
+  square too). Originally sized to comfortably fit a smaller 48×48 module icon plus
+  its corner labels; `ICON_SIZE` was later changed to match `MARKER_SIZE` exactly
+  (§2.8.1's "icon size increased to match the grey marker box" follow-up), so the icon
+  now covers the marker's whole face and the corner labels sit on top of it instead.
 - **Real bug, found and fixed after the user saw it rendering live**: the fill-angle
   setter is `gui.set_fill_angle`, confirmed against the official API docs
   (defold.com/ref/stable/gui) — NOT `gui.set_pie_fill_angle`, which is what got shipped
@@ -886,6 +1033,19 @@ Per direct instruction, the ship-visual slot markers (the `box`/`border` nodes,
   compiles cleanly. The actual fix (both the crash and the regular-octagon shape)
   still needs confirming in a real engine, same as every other "does this render
   right" question in this project.
+- **Follow-up correction — rotated so flat edges face top/bottom/left/right (decided)**:
+  with 8 perimeter vertices evenly spaced starting at the default 0° (3 o'clock),
+  the octagon had a *vertex* (point) at the top/bottom/left/right and a flat edge on
+  each diagonal — per direct instruction, this needed to be the other way around,
+  flat edges at top/bottom/left/right. Fixed by rotating the whole node 22.5° (half
+  the 45° gap between 8 evenly-spaced vertices) via `gui.set_rotation(node,
+  vmath.vector3(0, 0, 22.5))`, added at the end of `new_octagon_node` in
+  `main/outpost.gui_script` — this shifts every vertex onto a diagonal, leaving a
+  flat edge centered on each of the four axes. Applies to both `box` and `border`
+  for every marker, same as the rest of `new_octagon_node`. **Verified**: both
+  outpost-screen test harnesses' stubbed `gui` table given a `set_rotation` no-op
+  (records `n.rotation`, mirroring the other cosmetic setters) and re-run with no
+  regressions; a real `bob.jar build` still compiles cleanly.
 
 #### 2.8.4 Card lists scroll (decided — real bug found + fixed via testing)
 
@@ -1075,6 +1235,42 @@ ships."**
   faction to dock at (the only systems where a faction has *no* outpost at all are
   the enemy's home-region exclusion zone, which that faction can't be in anyway for
   the innermost 3 — see §2.7).
+
+#### 2.9.1 Outpost screen's Overview tab (decided — new default tab)
+
+Per direct instruction: the outpost screen now has a third tab, **Overview**, shown
+*instead of* defaulting to Fitting — navigable via the shared tab bar, same as the
+other two — containing a summary of the player's status and progress.
+
+- **Tab bar**: now Overview | Fitting | Ships (in that order), all three sharing the
+  same tab-switching mechanism (`main/outpost.gui_script`'s `set_page`). Re-spaced to
+  fit three tabs evenly (220px wide each, was 250px for two).
+- **Default on entry (decided)**: `on_message("show_outpost")` now calls
+  `set_page(self, "overview")`, not `"fitting"`.
+- **Content is real data, not an invented progress system**: faction, home system,
+  active ship name + class, fleet size + owned ship names, active-ship fitting
+  completeness broken down by slot type (e.g. "Weapon: 2/3") pulled from
+  `ships.lua`'s `components` vs. `session.get_loadout()`, and an owned-components
+  tally (installed vs. spare count, total upgrade levels applied). No fabricated
+  "progress %," rank, or XP — per §0/§4's "don't invent unconfirmed numbers" rule,
+  which extends to not inventing a progression system that doesn't actually exist
+  anywhere else in this project. Rebuilt fresh every time the tab is (re)entered, so
+  it always reflects current state, not a stale snapshot from when the screen first
+  opened.
+- **No separate "Go to Fitting"/"Go to Ships" links on the page itself (decided,
+  reversed)**: these were built initially, then removed per direct instruction as
+  redundant with the shared tab bar already sitting at the top of every tab — the
+  page is otherwise read-only, navigable only via that tab bar, same as Fitting/Ships
+  themselves. `overview_content`'s box grew (460px → 560px tall) to fill the space
+  the two buttons used to occupy.
+- **Verified**: both outpost-screen test harnesses updated for the new default tab
+  and 3-tab-bar node layout (every earlier test that assumed Fitting was already
+  active on entry now explicitly switches to it first, via the tab bar); cases
+  confirm the Overview tab is the default and shows correct faction/ship/fleet/
+  fitting data, that the tab bar navigates away from and back to it correctly, and
+  (in `outpost_harness2.lua`, which exercises ship buying/selling/switching) that
+  the Overview content actually updates to reflect those changes rather than
+  showing a stale snapshot. A real `bob.jar build` compiles cleanly.
 
 ### 2.10 Controls (decided — key bindings; flight mode itself not built yet)
 
@@ -1495,6 +1691,11 @@ day-to-day issue.
       - Verified: clean `bob.jar build` (all files compile) plus runtime data-flow
         tests in plain `lua` (faction → home system name → ship class → all three
         tab lists all resolve correctly end-to-end).
+      - **Since superseded**: the tab set described above (Installed/Owned/Shop) is
+        the very early version; by the time Ships/Sell/Confirm/etc. were added the
+        real tabs had become **Fitting** (ship visual + Shop/Owned lists, §2.8) and
+        **Ships** (Ships For Sale/Owned Ships, §2.1.2) — see §2.9.1 below for the
+        third tab, **Overview**, added after that and made the default.
 - [ ] Implement the guest Nakama session as genuinely ephemeral/throwaway (per §3.3)
       — verify it never gets written to a persistent user/device table, only Nakama's
       normal device-auth path should ever do that.
@@ -1545,8 +1746,15 @@ day-to-day issue.
 - [x] ~~Wire up actual install/purchase interaction on the outpost screen~~ —
       resolved: drag-and-drop from Owned/Shop onto a matching slot (§2.8), modeled
       on the reference project's in-flight component panel.
-- [ ] Define real pricing for Shop items (currently `(price TBD)` / free-grant
-      placeholder, §2.8).
+- [ ] Define real, per-item Shop/ship pricing — currently a flat placeholder Scrip
+      price for any module (100) and any ship (500) regardless of what it actually
+      is, not real per-item economy design (§2.6.1).
+- [ ] Wire up real mining/repair/FTL-boost mechanics that actually spend/earn Water,
+      Iron, and Hydrogen (§2.6.2) — all three are currently static display-only
+      balances (500 each, never touched after character creation); also reconcile
+      their placeholder starting values against `repair_cost_iron = 10000`
+      (`main/data/ships.lua`), which is on a completely different, unreconciled scale
+      since nothing spends against either number yet.
 - [ ] Design server-side enforcement of "components can only be added/removed at an
       outpost" (§2.8) once flight mode exists — currently trivially true since
       there's nowhere else to try it from yet.
@@ -1569,8 +1777,9 @@ day-to-day issue.
       per-ship once a second ship exists, instead of the current single global pool
       (§2.9's Ships tab) — deferred, not solved, since there's nothing to test it
       against yet.
-- [ ] Define real ship pricing for the Ships tab's For Sale list (currently
-      `(price TBD)` / free-grant placeholder, same as module Shop pricing, §2.9).
+- [ ] Define real per-ship pricing for the Ships tab's For Sale list — currently a
+      flat 500-Scrip placeholder regardless of ship class, same as module Shop
+      pricing (§2.6.1).
 - [ ] Build flight mode — the outpost screen's Launch button currently just logs
       that it was pressed; there's no actual space-flight scene to enter yet. The
       control scheme it should read from is already decided/implemented

@@ -27,6 +27,45 @@ M.loadout = nil
 -- nothing to test per-ship segregation against yet. Flagged as an open
 -- question in plan.md §4 once more ships exist.
 
+-- `scrip`: the player's balance of Scrip (§2.6's general currency, as
+-- opposed to PvP-only Valor). Per direct instruction, the outpost screen
+-- always shows this and it updates as items/ships are bought and sold -
+-- which needs a REAL balance and REAL transaction amounts to do
+-- honestly, not just a static display. STARTING_SCRIP and every price/
+-- refund below are FLAT PLACEHOLDER values, not real per-item economy
+-- design (§2.6's actual pricing is still open work, §4) - introduced
+-- now purely so the currency display has something genuine to show and
+-- update, rather than a number that never changes.
+M.scrip = nil
+local STARTING_SCRIP = 500
+local MODULE_PRICE = 100
+local MODULE_SELL_REFUND = 50
+local SHIP_PRICE = 500
+local SHIP_SELL_REFUND = 250
+
+-- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
+-- (§2.6) - distinct from Scrip/Valor, which are the two CURRENCIES. Per
+-- direct instruction, the outpost screen always shows all four of these
+-- balances together. Unlike `scrip` above, none of these three has a real
+-- transaction wired up anywhere yet - no mining, repair, or FTL/boost
+-- mechanic exists in code to actually earn or spend them (`repair_cost_iron`
+-- and `boost_cost_hydrogen_per_sec`/`ftl_cost_hydrogen_per_ly` in
+-- ships.lua are stat FIELDS a future mechanic will read, not something
+-- anything currently deducts against). So these three are honestly STATIC
+-- for now - set once here and never touched again - rather than faking
+-- transactions just to make the display look alive. STARTING_WATER/IRON/
+-- HYDROGEN are flat placeholder values with no economy-balancing behind
+-- them yet (same caveat as STARTING_SCRIP above); note they're not even
+-- scaled against the existing repair_cost_iron = 10000 placeholder stat,
+-- since nothing spends against either number yet - reconciling that scale
+-- is open work, plan.md §4.
+M.water = nil
+M.iron = nil
+M.hydrogen = nil
+local STARTING_WATER = 500
+local STARTING_IRON = 500
+local STARTING_HYDROGEN = 500
+
 -- Monotonically-increasing instance id counter, reset on every
 -- choose_faction (a fresh guest session) — plain incrementing integers are
 -- fine since this is in-memory/per-tab state, never persisted or compared
@@ -64,6 +103,10 @@ function M.choose_faction(faction)
 	next_instance_id = 1
 	M.owned = {}
 	M.loadout = {}
+	M.scrip = STARTING_SCRIP
+	M.water = STARTING_WATER
+	M.iron = STARTING_IRON
+	M.hydrogen = STARTING_HYDROGEN
 	for _, gift in ipairs(STARTING_GIFT_SLOTS) do
 		local id = alloc_instance_id()
 		table.insert(M.owned, { id = id, item_key = gift.item_key, level = 0 })
@@ -73,6 +116,57 @@ end
 
 function M.get_faction()
 	return M.faction
+end
+
+function M.get_scrip()
+	return M.scrip
+end
+
+function M.get_water()
+	return M.water
+end
+
+function M.get_iron()
+	return M.iron
+end
+
+function M.get_hydrogen()
+	return M.hydrogen
+end
+
+-- The flat placeholder price/refund a caller (e.g. the outpost screen's
+-- confirmation dialogs and Shop/For Sale card labels) should show and
+-- charge for a given kind of transaction — see the STARTING_SCRIP
+-- comment above on why these are placeholders, not real prices.
+function M.get_module_price()
+	return MODULE_PRICE
+end
+
+function M.get_module_sell_refund()
+	return MODULE_SELL_REFUND
+end
+
+function M.get_ship_price()
+	return SHIP_PRICE
+end
+
+function M.get_ship_sell_refund()
+	return SHIP_SELL_REFUND
+end
+
+-- Spends `amount` Scrip if (and only if) the player can afford it —
+-- returns false and changes nothing otherwise. The balance never goes
+-- negative.
+local function spend_scrip(amount)
+	if M.scrip < amount then
+		return false
+	end
+	M.scrip = M.scrip - amount
+	return true
+end
+
+local function add_scrip(amount)
+	M.scrip = M.scrip + amount
 end
 
 -- Kept as the existing accessor name (used throughout the outpost
@@ -105,13 +199,19 @@ function M.select_ship(ship_id)
 	return false
 end
 
--- Adds `ship_id` to owned ships if not already owned. Price is TBD
--- (same "free grant, not a real transaction yet" caveat as
--- M.purchase for modules, §2.8/§4).
+-- Adds `ship_id` to owned ships if not already owned, spending
+-- get_ship_price() Scrip (a flat placeholder, see STARTING_SCRIP's
+-- comment - not real per-ship pricing). Returns false, spending nothing,
+-- if the player can't afford it or already owns the ship.
 function M.purchase_ship(ship_id)
-	if not M.is_ship_owned(ship_id) then
-		table.insert(M.owned_ships, ship_id)
+	if M.is_ship_owned(ship_id) then
+		return false
 	end
+	if not spend_scrip(SHIP_PRICE) then
+		return false
+	end
+	table.insert(M.owned_ships, ship_id)
+	return true
 end
 
 -- Returns the list of owned INSTANCES (see M.owned's own comment above) —
@@ -178,11 +278,16 @@ end
 
 -- Grants a brand-new OWNED INSTANCE of `item_key` — decided (§4): every
 -- purchase creates its own separately-upgradeable physical copy, never
--- tops up a shared per-type count. Price is TBD (§2.8) — still a free
--- grant, not a real purchase transaction. Returns the new instance's id,
--- so a caller (e.g. the outpost screen's "drag a Shop card onto a slot"
--- flow) can install it immediately without a second lookup.
+-- tops up a shared per-type count. Spends get_module_price() Scrip (a
+-- flat placeholder, see STARTING_SCRIP's comment - not real per-item
+-- pricing). Returns the new instance's id on success, so a caller (e.g.
+-- the outpost screen's "drag a Shop card onto a slot" flow) can install
+-- it immediately without a second lookup - or nil if the player can't
+-- afford it, spending nothing.
 function M.purchase(item_key)
+	if not spend_scrip(MODULE_PRICE) then
+		return nil
+	end
 	local id = alloc_instance_id()
 	table.insert(M.owned, { id = id, item_key = item_key, level = 0 })
 	return id
@@ -255,9 +360,9 @@ end
 -- rather than leaving a dangling loadout entry pointing at a
 -- now-nonexistent instance), then removes it from `owned` entirely -
 -- unlike M.uninstall, the instance itself stops existing, not just its
--- slot membership. Price/refund is TBD (§2.8/§4), same "not a real
--- transaction yet" caveat as M.purchase. Returns false if the instance
--- doesn't exist.
+-- slot membership. Credits get_module_sell_refund() Scrip (a flat
+-- placeholder, see STARTING_SCRIP's comment). Returns false if the
+-- instance doesn't exist.
 function M.sell(instance_id)
 	if not M.get_instance(instance_id) then
 		return false
@@ -274,6 +379,7 @@ function M.sell(instance_id)
 			break
 		end
 	end
+	add_scrip(MODULE_SELL_REFUND)
 	return true
 end
 
@@ -284,7 +390,8 @@ end
 -- one ship. Selling the currently ACTIVE ship (while others remain) is
 -- allowed - the active ship just becomes whichever other owned ship
 -- happens to be first in the list afterward, so there's always a valid
--- active ship. Price/refund is TBD (§2.8/§4), same caveat as M.sell.
+-- active ship. Credits get_ship_sell_refund() Scrip (a flat placeholder,
+-- see STARTING_SCRIP's comment).
 function M.sell_ship(ship_id)
 	if not M.is_ship_owned(ship_id) then
 		return false
@@ -301,6 +408,7 @@ function M.sell_ship(ship_id)
 	if M.active_ship_id == ship_id then
 		M.active_ship_id = M.owned_ships[1]
 	end
+	add_scrip(SHIP_SELL_REFUND)
 	return true
 end
 

@@ -19,3 +19,24 @@ images {
 images {
   image: "/main/images/icons/slot_hull_empty.png"
 }
+images {
+  image: "/main/images/icons/Octagon W.png"
+}
+images {
+  image: "/main/images/icons/Octagon C.png"
+}
+images {
+  image: "/main/images/icons/Octagon E.png"
+}
+images {
+  image: "/main/images/icons/Octagon H.png"
+}
+images {
+  image: "/main/images/icons/Octagon Cannon Asteroid.png"
+}
+images {
+  image: "/main/images/icons/Octagon Cannon Spaceship.png"
+}
+images {
+  image: "/main/images/icons/Octagon Empty.png"
+}

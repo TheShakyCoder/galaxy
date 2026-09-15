@@ -95,14 +95,17 @@ M.SHIPS = {
 			W1 = { x = 0, y = 250 },     -- bow-mounted gun
 			W2 = { x = -70, y = 100 },   -- port midships gun, forward of the cabin
 			W3 = { x = 70, y = 100 },    -- starboard midships gun, forward of the cabin
-			C1 = { x = 0, y = -49 },     -- computer, mounted on the cabin
-			C2 = { x = 0, y = -110 },    -- computer, mounted on the cabin (aft)
-			H1 = { x = 0, y = 20 },      -- hull/armor, amidships along the keel
-			-- H2 (new, per direct instruction bumping H from 1 to 2 slots):
-			-- centerline, evenly spaced between C2 (-110) and the engines'
-			-- own centerline slot E2 (-230) - a second hull/armor point
-			-- spread aft along the keel rather than stacked on H1.
-			H2 = { x = 0, y = -170 },    -- hull/armor, aft along the keel
+			-- C1/C2 (repositioned per direct instruction - manually adjusted
+			-- in the editor, not by a script): side-by-side across the cabin
+			-- at the same y, rather than stacked fore/aft at the same x.
+			C1 = { x = -70, y = -70 },   -- computer, port side of the cabin
+			C2 = { x = 70, y = -70 },     -- computer, centerline of the cabin
+			-- H1/H2 (repositioned per direct instruction, same manual
+			-- adjustment as C1/C2 above): H1 stays amidships but moved to
+			-- the port side; H2 moved from stacked-below-H1 to its own
+			-- centerline spot just aft of amidships.
+			H1 = { x = -70, y = 20 },    -- hull/armor, port side amidships
+			H2 = { x = 70, y = 20 },     -- hull/armor, centerline, just aft of amidships
 			-- Per direct instruction: all three engines moved down (further
 			-- stern-ward, more negative y) by ~50px; E2 specifically (the
 			-- bottom-middle slot - centerline, lowest y of all 9 slots) then
