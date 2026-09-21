@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_tactical/harpy_eagle.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/frigate_tactical/harpy_eagle_palette.png"
+name: "harpy_eagle"

@@ -70,10 +70,14 @@ embedded_instances {
   }
 }
 embedded_instances {
-  id: "patrol_1_preview"
+  id: "patrol_interceptor_preview"
   data: "components {\n"
   "  id: \"model\"\n"
-  "  component: \"/main/models/patrol_1/patrol_1.model\"\n"
+  "  component: \"/assets/models/patrol_interceptor/patrol_interceptor.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
   "}\n"
   position {
     x: 100000.0
@@ -93,14 +97,612 @@ embedded_instances {
   }
 }
 embedded_instances {
-  id: "escort_1_preview"
+  id: "escort_interceptor_preview"
   data: "components {\n"
   "  id: \"model\"\n"
-  "  component: \"/main/models/escort_1/escort_1.model\"\n"
+  "  component: \"/assets/models/escort_interceptor/escort_interceptor.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
   "}\n"
   position {
     x: 100000.0
     y: 1000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "hummingbird_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_interceptor/hummingbird.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 2000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "barracuda_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_interceptor/barracuda.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 3000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "falcon_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_interceptor/falcon.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 4000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "frigatebird_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_interceptor/frigatebird.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 5000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "remora_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_support/remora.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 6000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "hammerhead_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_tactical/hammerhead.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 7000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "pelican_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_support/pelican.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 8000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "moray_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_assault/moray.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 9000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "piranha_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_assault/piranha.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 10000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "osprey_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_tactical/osprey.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 11000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "harpy_eagle_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_tactical/harpy_eagle.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 12000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "golden_eagle_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_assault/golden_eagle.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 13000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "marlin_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_interceptor/marlin.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 14000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "manta_ray_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_support/manta_ray.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 15000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "tiger_shark_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/frigate_assault/tiger_shark.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 16000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "oxpecker_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_support/oxpecker.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 17000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "shrike_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_assault/shrike.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 18000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "kingfisher_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_tactical/kingfisher.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 19000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "egret_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_support/egret.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 20000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "goshawk_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_assault/goshawk.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 21000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "pilotfish_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_support/pilotfish.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 22000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "anglerfish_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_tactical/anglerfish.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 23000.0
     z: 0.0
   }
   rotation {

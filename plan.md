@@ -242,28 +242,383 @@ class, per direct instruction.
   ship visual is hardcoded to Patrol 1's own top-down image regardless of the active
   ship anyway (§4), so nothing reads this field yet either way.
 
-**Ship naming convention (decided)**: real-world animal species, sized to roughly
-match the ship's class — smaller species for smaller classes, bigger species for
-bigger classes:
+**Ship naming convention (decided)**: real-world animal species, two-dimensional —
+crossing **size tier** (Patrol/Escort/Frigate/Carrier, bigger species for bigger
+sizes) with **class/role** (Interceptor/Support/Assault/Tactical, a consistent
+flavor per row regardless of size):
 - **The Accord**: fish species.
 - **The Swarm**: bird species.
 
-| Class | Accord (fish) | Swarm (bird) | Notes |
-|---|---|---|---|
-| Patrol | **Sardine** (proposed) | **Hummingbird** (proposed) | Both real animals chosen for small/fast/schooling-or-darting flavor, matching Patrol's "fast, cheap, disposable" role (§2.1) |
-| Escort | **Barracuda** (proposed) | **Falcon** (proposed) | Predatory/combat-flavored species (vs. Patrol's small/schooling-or-darting flavor), matching Escort's "first real," combat-capable role (§2.1) |
-| Frigate | TBD, larger still | TBD, larger still — *Frigatebird* is an obvious real-species pun worth considering here | Not yet assigned |
-| Carrier | TBD, largest — *Whale Shark* (the largest real fish species) is a natural fit | TBD, largest — e.g. *Albatross* (largest wingspan) | Not yet assigned |
+Accord (fish) matrix — Carrier column intentionally not yet addressed:
 
-- **Patrol 1's proposed names** — same confirm-or-correct pattern as Scrip/Valor:
-  Accord = **Sardine**, Swarm = **Hummingbird**. Set in `main/data/ships.lua`'s
-  `faction_skins`, replacing the old `<TBD>` name placeholders — flag if you want
-  different species.
-- **Escort 1's proposed names**, same pattern: Accord = **Barracuda**, Swarm =
-  **Falcon**. Set in `main/data/ships.lua`'s `escort_1` entry.
-- Only the size-relative-to-class rule is fully decided; the actual species for
-  Frigate/Carrier are just illustrative ideas above, not commitments, since those
-  ships don't exist in the roster yet.
+| Role ↓ / Size → | Patrol | Escort | Frigate |
+|---|---|---|---|
+| **Interceptor** | **Sardine** (proposed) | **Barracuda** (proposed) | **Marlin** (proposed) — large, exceptionally fast open-water fish, scales up Sardine/Barracuda's speed flavor |
+| **Support** | **Pilotfish** (proposed) — small fish that shadows/assists larger predators, literal support-role flavor | **Remora** (proposed) — attaches to and aids bigger fish, mid-size support flavor | **Manta Ray** (proposed) — large, gentle, glides alongside other sea life; "big support" flavor |
+| **Assault** | **Piranha** (proposed) — small, aggressive pack predator | **Moray** (proposed) — mid-size ambush predator, brute aggression | **Tiger Shark** (proposed) — large apex predator, heavy-hitter flavor |
+| **Tactical** | **Anglerfish** (proposed) — small, wins by trickery/lures rather than speed | **Lionfish** (proposed) — mid-size, venomous, precise ambush predator | **Hammerhead** (proposed) — large shark famous for its sensory/tactical edge |
+
+- **Patrol Interceptor's proposed names** — same confirm-or-correct pattern as
+  Scrip/Valor: Accord = **Sardine**, Swarm = **Hummingbird**. Set in
+  `main/data/ships.lua`'s `faction_skins`, replacing the old `<TBD>` name
+  placeholders — flag if you want different species. (Sardine specifically maps
+  to the **Interceptor** row above.)
+- **Escort Interceptor's proposed names**, same pattern: Accord = **Barracuda**,
+  Swarm = **Falcon**. Set in `main/data/ships.lua`'s `escort_interceptor` entry.
+  (Barracuda maps to the **Interceptor** row above.)
+- The 10 new Accord names above (Interceptor/Frigate plus the full Support/Assault/
+  Tactical rows) are proposed but not yet wired into `ships.lua` — no ship data
+  entries exist yet for those class/role × size combinations (only
+  `patrol_interceptor` and `escort_interceptor`, both Interceptor-row, exist in
+  the roster today). Add them once real stat blocks for those ships are decided.
+
+Swarm (bird) matrix — same role/size structure as the Accord table above, Carrier
+column intentionally not yet addressed:
+
+| Role ↓ / Size → | Patrol | Escort | Frigate |
+|---|---|---|---|
+| **Interceptor** | **Hummingbird** (proposed) | **Falcon** (proposed) | **Frigatebird** (proposed) — large seabird famed for speed/aerial agility, scales up Hummingbird/Falcon's speed flavor (also doubles as a pun on the Frigate size-tier name) |
+| **Support** | **Oxpecker** (proposed) — small bird that rides/cleans larger animals, symbiotic support flavor (parallels Pilotfish) | **Egret** (proposed) — mid-size, often seen alongside larger animals/herds (parallels Remora) | **Pelican** (proposed) — large, cooperative group-fishing behavior, gentle-giant flavor (parallels Manta Ray) |
+| **Assault** | **Shrike** (proposed) — small but notoriously vicious, impales prey (parallels Piranha) | **Goshawk** (proposed) — mid-size, aggressive ambush forest hunter (parallels Moray) | **Golden Eagle** (proposed) — large apex aerial predator, heavy-hitter flavor (parallels Tiger Shark) |
+| **Tactical** | **Kingfisher** (proposed) — small, wins through exact-timing precision dives rather than trickery (parallels Anglerfish) | **Osprey** (proposed) — mid-size raptor with a specialized reversible-talon grip technique built for one job (parallels Lionfish) | **Harpy Eagle** (proposed) — large, extraordinary sensory/hunting precision (parallels Hammerhead) |
+
+- **Patrol Interceptor's proposed names** — Swarm = **Hummingbird**, mapping to
+  the **Interceptor** row above (Accord counterpart: Sardine).
+- **Escort Interceptor's proposed names** — Swarm = **Falcon**, mapping to the
+  **Interceptor** row above (Accord counterpart: Barracuda).
+- The 10 new Swarm names above (Interceptor/Frigate plus the full Support/Assault/
+  Tactical rows) are proposed but not yet wired into `ships.lua`, same caveat as
+  the Accord names — no ship data entries exist yet for those combinations.
+- The Carrier column for both factions is still open — *Whale Shark*/*Albatross*
+  remain illustrative ideas, not addressed in this pass.
+- **First ship data entry for this matrix**: `frigate_support` (Support row,
+  Frigate size) added to `ships.lua` — Accord = Manta Ray, Swarm = Pelican, both
+  `model` still `<TBD>` (see correction note below — a model was briefly wired to
+  Pelican here, then moved to Frigatebird instead). Also introduces a new `role`
+  field on ship entries (Interceptor/Support/Assault/Tactical) separate from the
+  existing `class` field (which stays the size tier — `ship.class` is already
+  read elsewhere for display/module-compatibility).
+- **Correction**: the SuperShips `aesir.glb` model (see the §0 exception note
+  below) was initially wired to Pelican (`frigate_support`) but actually belongs
+  to **Frigatebird** — added as a new `frigate_interceptor` entry (Interceptor
+  row, Frigate size; Accord = Marlin, `model` still `<TBD>`) per direct
+  correction. Assets moved from `assets/models/frigate_support/pelican.*` to
+  `assets/models/frigate_interceptor/frigatebird.*`; `frigate_support`'s Pelican
+  skin reverted to `model = "<TBD>"`.
+- **§0 exception, explicitly acknowledged, not silent**: Frigatebird's `model` is
+  sourced from `~/Defold/SuperShips`'s `bsgo_ships_improved/hd/aesir/aesir.glb`.
+  That asset's own manifest/README describe it as a "reference-guided
+  interpretation" of an actual BSGO "Colonial"-faction capital ship, explicitly
+  built so its silhouette is recognizable — i.e. it *is* BSG-derived vehicle
+  design, the same category of asset §0 (and this plan's own Patrol Interceptor/
+  Escort Interceptor notes) already ruled out for the Viper Mk II/Cylon Raider
+  meshes. Flagged directly and used anyway per direct instruction after being
+  shown a live render and the specific resemblance risk (raised bridge tower,
+  swept flight-pod struts). Treat this as a one-off, called-out exception rather
+  than a precedent — future models from that same SuperShips folder should get
+  the same flag-and-confirm treatment, not be assumed pre-cleared by this one.
+- **Chassis IDs renamed (direct instruction)** to a `<size>_<role>` scheme so the
+  role dimension is visible in the id itself, not just in the `role` field:
+  `patrol_1` → **`patrol_interceptor`**, `escort_1` → **`escort_interceptor`**,
+  `frigate_1` → **`frigate_support`**. Applied everywhere the old ids appeared —
+  `ships.lua` keys/paths, `session.lua`'s `STARTING_SHIP_ID`, `outpost.gui`/
+  `outpost.gui_script` (texture names, preview camera lookup tables),
+  `main.collection` (preview embedded-instance ids and model component paths),
+  and the asset files themselves (`assets/models/patrol_1/` →
+  `assets/models/patrol_interceptor/` etc., `main/images/patrol_1.atlas` →
+  `patrol_interceptor.atlas`, `tools/build_patrol1_model.py` →
+  `build_patrol_interceptor_model.py`, regenerated rather than hand-renamed so
+  the embedded glTF node/material names stay in sync). Earlier sections above and
+  the historical log below (§2.8.9/§4 entries) still say `patrol_1`/`escort_1`/
+  `frigate_1` in places — left as-is since those describe what was actually built
+  at the time, same convention as this plan's other "(renamed from X)" notes.
+- **Second ship data entry added**: `escort_support` (Support row, Escort size) —
+  Accord = Remora, Swarm = Egret (`model` still `<TBD>`). Same universal-baseline
+  stat block and empty `components`/`slot_positions` as every other Escort/
+  Frigate-tier ship so far.
+- **§0 exception, explicitly acknowledged, not silent — second instance**:
+  Remora's `model` is sourced from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/glaive/glaive.glb`. Same pattern as Frigatebird's
+  `aesir.glb`: `"faction": "Colonial"`, referenced from `playbsgo.com/fleet.html`,
+  described in its own manifest as a "reference-guided interpretation" with an
+  explicitly recognizable silhouette ("broad flattened hexagonal command bow;
+  narrow waist; flared stern drives") — i.e. BSG-derived vehicle design, §0's
+  excluded category. Flagged directly a second time (not assumed pre-cleared by
+  the Frigatebird precedent, per that entry's own note) and used anyway per
+  direct instruction after being shown the render. Same one-off-exception
+  framing applies: future SuperShips models still need their own flag-and-confirm
+  pass, not a blanket pre-clearance from these two.
+- Both new ships (`frigate_interceptor`, `escort_support`) got matching preview
+  wiring in `main.collection` (`frigatebird_preview`/`remora_preview` embedded
+  instances) and `outpost.gui_script` (`PREVIEW_WORLD_POS`/`PREVIEW_CAMERA`
+  entries, eye offset/far-plane computed from each model's actual bounding
+  radius — ~321 units for Frigatebird, ~119 for Remora, both with no node-level
+  scale transform to account for) so their 3D models actually render, correctly
+  framed, in the outpost's ship detail view once selected — not just present on
+  disk with no preview hookup.
+- **Third ship data entry added**: `frigate_tactical` (Tactical row, Frigate
+  size) — Accord = Hammerhead, wired to a model; Swarm = Harpy Eagle (`model`
+  still `<TBD>`). Same universal-baseline stat block and empty
+  `components`/`slot_positions` as every other Escort/Frigate-tier ship so far.
+- **§0 exception, explicitly acknowledged, not silent — third instance**:
+  Hammerhead's `model` is sourced from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/gungnir/gungnir.glb`. Same pattern as the previous two:
+  `"faction": "Colonial"`, referenced from `playbsgo.com/fleet.html`, described
+  in its own manifest as a "reference-guided interpretation" of a canon
+  Battlestar-line capital ship with an explicitly recognizable silhouette ("long
+  rectangular gunship bow; red armored shoulder pods around the stern") — i.e.
+  BSG-derived vehicle design, §0's excluded category. Flagged directly a third
+  time (not assumed pre-cleared by the prior two) and used anyway per direct
+  instruction after being shown the render. Same one-off-exception framing still
+  applies: future SuperShips models still need their own flag-and-confirm pass.
+- `frigate_tactical` got the same preview wiring as the other two new ships —
+  `hammerhead_preview` in `main.collection`, `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA`
+  entries in `outpost.gui_script` (~349-unit bounding radius, the largest model
+  in the roster so far, no node-level scale transform).
+- **BSGO-identifying internal metadata stripped (direct instruction)** from all
+  three SuperShips-sourced GLBs above (Frigatebird/`aesir.glb`, Remora/
+  `glaive.glb`, Hammerhead/`gungnir.glb`) - node/mesh names renamed from the
+  source ship's own name (e.g. `"Aesir"`) to `<our name>_hull`, materials
+  renamed from `colonial_*`/`engine_glow` to `<our name>_*`, and each node's
+  `extras` block (`ship_id`/`faction: "Colonial"`/`ship_class`) removed
+  entirely - matching this file's own established "stripped of identifying
+  third-party metadata before being added" rule (§2.1.2's Barracuda/Falcon
+  note). Verified the patched GLBs still render identically (geometry/UVs/
+  materials untouched, only name strings and the extras block changed).
+  Confirmed via `assets/models/**/*.glb` audit that every other model in the
+  roster (`barracuda`, `falcon`, `hummingbird`, `sardine`, the two hand-authored
+  hulls) was already clean - this scrub was needed only for the three
+  SuperShips-sourced ones.
+- **Fourth ship entry filled in, fourth §0 exception**: Pelican
+  (`frigate_support`'s Swarm skin, previously `<TBD>`) now points at
+  `assets/models/frigate_support/pelican.glb`, sourced from
+  `~/Defold/SuperShips`'s `bsgo_ships_improved/hd/hel/hel.glb` (BSGO-identifying
+  metadata stripped the same way as the other three, per the note above -
+  `"Hel"` → `pelican_hull`, `cylon_*` materials → `pelican_*`). **Stronger flag
+  than the previous three**: `hel`'s manifest tags it `"faction": "Cylon"` -
+  the *other* explicitly-named banned term in §0 (alongside "Colonial") - and
+  its render is a wide bone-white organic shell with a row of glowing red
+  lights, the show's signature Cylon bio-mechanical/red-scanner-eye look,
+  arguably more immediately recognizable than the three Colonial-line ships
+  used so far. Flagged directly, called out as a *stronger* match than
+  precedent (not treated as equivalent-and-therefore-pre-cleared), and used
+  anyway per direct instruction. Got the same preview wiring as the others
+  (`pelican_preview` in `main.collection`, `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA`
+  in `outpost.gui_script`, ~310-unit bounding radius).
+- Running tally: **four** acknowledged §0 exceptions now in the roster
+  (Frigatebird/aesir, Remora/glaive, Hammerhead/gungnir, Pelican/hel) — still
+  each individually flagged-and-confirmed, never treated as a blanket
+  pre-clearance for the SuperShips folder as a whole.
+- **Fifth ship entry added, fifth §0 exception**: new `escort_assault` chassis
+  (Assault row, Escort size) — Accord = Moray, wired to a model; Swarm =
+  Goshawk (`model` still `<TBD>`). Same universal-baseline stat block and empty
+  `components`/`slot_positions` as every other Escort/Frigate-tier ship so far.
+  Moray's `model` is sourced from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/maul/maul.glb`, BSGO-identifying metadata stripped on
+  copy this time (not retroactively) - `"Maul"` → `moray_hull`,
+  `colonial_*`/`engine_glow` materials → `moray_*`, `extras` removed. Same
+  pattern as the four exceptions before it: `"faction": "Colonial"`,
+  `playbsgo.com/fleet.html` reference, "reference-guided interpretation" of a
+  canon Colonial Escort-class assault ship. Flagged directly a fifth time and
+  used anyway per direct instruction. Got the same preview wiring as the others
+  (`moray_preview` in `main.collection`, `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA` in
+  `outpost.gui_script`, ~99-unit bounding radius - the smallest SuperShips-
+  sourced model in the roster so far).
+- **Batch of three (direct instruction)**: `rhino`→Piranha, `liche`→Osprey,
+  `scythe`→Barracuda, all from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/`, all flagged and confirmed together before wiring
+  in, all BSGO-identifying metadata stripped on copy (same as every prior
+  SuperShips-sourced model in this file).
+  - **Sixth ship entry, sixth §0 exception**: new `patrol_assault` chassis
+    (Assault row, Patrol size) — Accord = Piranha, wired to `rhino.glb`; Swarm =
+    Shrike (`model` still `<TBD>`). `rhino` is tagged `"faction": "Colonial"`,
+    `"cls": "Strike"` — an 11m small strike-fighter, unlike the capital/escort-
+    scale sources used so far — "reference-guided interpretation" of a canon
+    Colonial strike craft (armored cockpit wedge, stub wings, raised rear engine
+    cluster). Uses the unmodified universal baseline stat block, not Patrol
+    Interceptor's own hull_points=600 override (that override was ship-specific,
+    not Patrol-tier-wide).
+  - **Seventh ship entry, seventh §0 exception**: new `escort_tactical` chassis
+    (Tactical row, Escort size) — Swarm = Osprey, wired to `liche.glb`; Accord =
+    Lionfish (`model` still `<TBD>`). Same "Cylon" pattern as Pelican's `hel.glb`
+    - `liche` is tagged `"faction": "Cylon"`, bone-white/metallic split-blade
+    shape, same bio-mechanical Cylon design language.
+  - **Eighth §0 exception, on an EXISTING ship**: Barracuda's `model`
+    (`escort_interceptor`, previously a clean, non-SuperShips user-supplied
+    asset per its own long-standing note) was **replaced** with `scythe.glb`,
+    copied directly over the old `assets/models/escort_interceptor/barracuda.glb`
+    file path. `scythe` is tagged `"faction": "Colonial"`, "reference-guided
+    interpretation" of a canon Colonial Escort-class ship (tall axe-shaped hull,
+    cruciform stern fins). Falcon's model on the same ship entry is unaffected -
+    still the original clean asset, no §0 flag. `outpost.gui_script`'s
+    `PREVIEW_CAMERA` entry for `barracuda.model` was recomputed against the new
+    file's own ~114-unit bounding radius (the old asset was a different scale).
+- Running tally: **eight** acknowledged §0 exceptions now in the roster across
+  seven ship entries (Frigatebird/aesir, Remora/glaive, Hammerhead/gungnir,
+  Pelican/hel, Moray/maul, Piranha/rhino, Osprey/liche, and Barracuda's
+  replacement/scythe) — still each individually flagged-and-confirmed, never
+  treated as a blanket pre-clearance for the SuperShips folder as a whole.
+- **Batch of two (direct instruction)**: `nidhogg`→Harpy Eagle, `jormung`→Golden
+  Eagle, both from `~/Defold/SuperShips`'s `bsgo_ships_improved/hd/`, flagged
+  and confirmed together before wiring in, both BSGO-identifying metadata
+  stripped on copy.
+  - **Ninth §0 exception, fills in an existing `<TBD>`**: Harpy Eagle
+    (`frigate_tactical`'s Swarm skin, previously `<TBD>`) now points at
+    `assets/models/frigate_tactical/harpy_eagle.glb`. `nidhogg` is tagged
+    `"faction": "Cylon"`, "reference-guided interpretation" of a canon Cylon
+    ship - an organic central spear wrapped by four outward-curving skeletal
+    claws. The claw shape happens to read as a fitting coincidence for an
+    eagle-named ship, though that wasn't the selection reason.
+  - **Tenth ship entry, tenth §0 exception**: new `frigate_assault` chassis
+    (Assault row, Frigate size) — Swarm = Golden Eagle, wired to `jormung.glb`;
+    Accord = Tiger Shark (`model` still `<TBD>`). `jormung` is tagged
+    `"faction": "Cylon"`, "reference-guided interpretation" of a canon Cylon
+    capital ("Line" class) ship - deep vertical blade hull, flared forward edge,
+    the same row-of-red-lights motif as Pelican's `hel.glb`. At ~400-unit
+    bounding radius this is the **largest model in the roster so far**.
+  - Both got the same preview wiring as every other model (`harpy_eagle_preview`
+    / `golden_eagle_preview` in `main.collection`, matching
+    `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA` entries in `outpost.gui_script`).
+- Running tally: **ten** acknowledged §0 exceptions now in the roster across
+  nine ship entries — still each individually flagged-and-confirmed, never
+  treated as a blanket pre-clearance for the SuperShips folder as a whole.
+- **Batch of three (direct instruction)**: `fenrir`→Marlin, `vanir`→Manta Ray,
+  `jotunn`→Tiger Shark, all from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/`, flagged and confirmed together before wiring in.
+  This batch **completes the entire Frigate row** on the Accord side of the
+  naming matrix (Interceptor/Support/Assault/Tactical all now have Accord
+  models; only Tactical's Swarm counterpart, Harpy Eagle, was already filled
+  separately). All three BSGO-identifying-metadata-stripped on copy.
+  - **Eleventh §0 exception, fills an existing `<TBD>`**: Marlin
+    (`frigate_interceptor`'s Accord skin) now points at `fenrir.glb`.
+    **Cross-faction note**: `fenrir`'s manifest tags it `"faction": "Cylon"` -
+    despite being used here for an Accord (fish-named) ship, not a Swarm one -
+    flagged specifically as a mismatch, not just a generic resemblance risk.
+    Sleek forked-hull/lance shape, confirmed anyway per direct instruction.
+  - **Twelfth §0 exception, fills an existing `<TBD>`**: Manta Ray
+    (`frigate_support`'s Accord skin) now points at `vanir.glb`. Tagged
+    `"faction": "Colonial"` - twin-parallel-hull shape with connecting bridges,
+    a fitting-coincidence silhouette for a ray, though not the selection reason.
+  - **Thirteenth §0 exception, fills an existing `<TBD>`**: Tiger Shark
+    (`frigate_assault`'s Accord skin) now points at `jotunn.glb`. Tagged
+    `"faction": "Colonial"` - deep armored assault hull with stepped dorsal deck
+    and rear outriggers.
+  - All three got the same preview wiring as every other model
+    (`marlin_preview`/`manta_ray_preview`/`tiger_shark_preview` in
+    `main.collection`, matching `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA` entries in
+    `outpost.gui_script`, bounding radii ~300/~286/~327 units respectively).
+- Running tally: **thirteen** acknowledged §0 exceptions now in the roster
+  across nine ship entries — still each individually flagged-and-confirmed,
+  never treated as a blanket pre-clearance for the SuperShips folder as a whole.
+- **Batch of four (direct instruction)**: `raider`→Hummingbird, `heavy_raider`→
+  Oxpecker, `marauder`→Shrike, `war_raider`→Kingfisher, all from
+  `~/Defold/SuperShips`'s `bsgo_ships_improved/hd/`. This batch **completes the
+  entire Patrol row** on the Swarm side of the naming matrix.
+  - **Fourteenth §0 exception - HIGHEST SEVERITY IN THE FILE**: Hummingbird's
+    `model` (`patrol_interceptor`, previously a clean CC-BY-4.0 Sketchfab asset,
+    attribution JazOone "SpaceShip") was **replaced** with `raider.glb`. Flagged
+    to you explicitly before proceeding, distinct from every prior exception:
+    `raider` is not merely "BSG-derived" like the other thirteen - it IS, by
+    name, the **Cylon Raider** - the exact ship this plan's own Patrol/Escort
+    model notes have repeatedly cited BY NAME as the paradigm example of what
+    §0 excludes ("deliberately NOT... the actual Viper Mk II/Cylon Raider
+    meshes"). Its SuperShips manifest also carries a note none of the other
+    thirteen sources have: `"note": "reference only; friend already has a
+    Raider"` - a separate signal from the asset pack's own author that this
+    file wasn't intended for general reuse, on top of the BSG-IP question.
+    Used anyway per direct instruction after being shown the render and both
+    of these points called out explicitly - logged here as a conscious,
+    acknowledged override of this plan's own most-repeated exclusion example,
+    not a slip.
+  - **Fifteenth §0 exception, new ship entry**: new `patrol_support` chassis
+    (Support row, Patrol size) - Swarm = Oxpecker, wired to `heavy_raider.glb`
+    (`"cls": "Strike"`, 10m transport-variant scale, same Raider design family
+    as Hummingbird's model); Accord = Pilotfish (`model` still `<TBD>`).
+  - **Sixteenth §0 exception, fills an existing `<TBD>`**: Shrike
+    (`patrol_assault`'s Swarm skin) now points at `marauder.glb` - a close
+    visual cousin of the Raider silhouette (single curved wing/body, red light
+    bar) despite being a distinct named source ship.
+  - **Seventeenth §0 exception, new ship entry**: new `patrol_tactical` chassis
+    (Tactical row, Patrol size) - Swarm = Kingfisher, wired to `war_raider.glb`
+    (a broader flying-wing shape, less identical to the classic Raider look but
+    same design family); Accord = Anglerfish (`model` still `<TBD>`).
+  - All four got the same preview wiring as every other model
+    (`oxpecker_preview`/`shrike_preview`/`kingfisher_preview` new in
+    `main.collection`, Hummingbird's existing preview camera entry in
+    `outpost.gui_script` recomputed for the new file's ~6.7-unit radius).
+- Running tally: **seventeen** acknowledged §0 exceptions now in the roster
+  across twelve ship entries — still each individually flagged-and-confirmed,
+  never treated as a blanket pre-clearance for the SuperShips folder as a
+  whole, and the Hummingbird/raider one specifically logged as a conscious
+  override rather than lumped in as "more of the same."
+- **Batch of three (direct instruction)**: `banshee`→Falcon, `spectre`→Egret,
+  `wraith`→Goshawk, all from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/`. This batch **completes the entire Escort row** on
+  the Swarm side of the naming matrix (Interceptor/Support/Assault/Tactical all
+  now have Swarm models - Tactical's Osprey was already done separately).
+  - **Eighteenth §0 exception, replaces an existing clean asset**: Falcon's
+    `model` (`escort_interceptor`, previously a distinct per-faction
+    user-supplied asset, not SuperShips-sourced, no prior §0 flag) was
+    **replaced** with `banshee.glb`, copied over the old
+    `assets/models/escort_interceptor/falcon.glb` file path - same pattern as
+    the earlier Barracuda/scythe and Hummingbird/raider swaps. Tagged
+    `"faction": "Cylon"`, "reference-guided interpretation" of a canon Cylon
+    Escort-class ship (compact rear body, four long separated forward lances).
+    `outpost.gui_script`'s PREVIEW_CAMERA entry recomputed for the new file's
+    ~128-unit radius.
+  - **Nineteenth §0 exception, fills an existing `<TBD>`**: Egret
+    (`escort_support`'s Swarm skin) now points at `spectre.glb` - three
+    pronounced radial fins around a long forward spear.
+  - **Twentieth §0 exception, fills an existing `<TBD>`**: Goshawk
+    (`escort_assault`'s Swarm skin) now points at `wraith.glb` - angular split
+    armored jaws with a central opening and large red inner vents, an
+    aggressive shape fitting the Assault row.
+  - All three got the same preview wiring as every other model
+    (`egret_preview`/`goshawk_preview` new in `main.collection`, matching
+    `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA` entries in `outpost.gui_script`).
+- Running tally: **twenty** acknowledged §0 exceptions now in the roster across
+  twelve ship entries — still each individually flagged-and-confirmed, never
+  treated as a blanket pre-clearance for the SuperShips folder as a whole.
+- **Batch of three (direct instruction)**: `viper_mk2`→Sardine, `raptor`→
+  Pilotfish, `viper_mk7`→Anglerfish, all from `~/Defold/SuperShips`'s
+  `bsgo_ships_improved/hd/`. This batch **completes the entire Patrol row** on
+  the Accord side of the naming matrix.
+  - **Twenty-first §0 exception, HIGHEST SEVERITY, tied with Hummingbird/
+    raider**: Sardine's underlying mesh (`patrol_interceptor.model` wraps
+    `assets/models/patrol_interceptor/sardine.glb`, a separate file from the
+    project's own hand-authored `patrol_interceptor.glb` hull - a pre-existing
+    gap between this file's old comment and its actual wiring, not introduced
+    here) was **replaced** with `viper_mk2.glb`. This completes the EXACT named
+    pair this project has always cited as its paradigm §0 exclusion example -
+    "Viper Mk II/Cylon Raider" - now with the Viper Mk II half wired to
+    Sardine, the very ship the original "no Viper Mk II" comment was about.
+    Same `"note": "reference only; friend already has a Mk II"` marker as
+    Raider's manifest entry. Its render was already confirmed earlier in this
+    session (during the original IP-risk discussion, before any SuperShips
+    model had been used at all). Used anyway per direct instruction after being
+    shown this framing explicitly - a conscious override, not a slip.
+    `outpost.gui_script`'s PREVIEW_CAMERA entry recomputed for the new file's
+    ~5.1-unit radius.
+  - **Twenty-second §0 exception, fills an existing `<TBD>`**: Pilotfish
+    (`patrol_support`'s Accord skin) now points at `raptor.glb` - the
+    well-known Colonial transport/scout ship from the source material.
+  - **Twenty-third §0 exception, fills an existing `<TBD>`**: Anglerfish
+    (`patrol_tactical`'s Accord skin) now points at `viper_mk7.glb` (Viper Mk
+    VII) - a later, distinct numbered Viper variant, still individually
+    recognizable though less singularly iconic than Mk II.
+  - Note: the SuperShips source folder was reorganized externally during this
+    session - models already used got moved into a `bsgo_ships_improved/hd/
+    copied/` subfolder. This batch's three files were found there rather than
+    at their original top-level paths; content/provenance unaffected.
+  - All three got the same preview wiring as every other model
+    (`pilotfish_preview`/`anglerfish_preview` new in `main.collection`,
+    matching entries in `outpost.gui_script`).
+- Running tally: **twenty-three** acknowledged §0 exceptions now in the roster
+  across twelve ship entries — still each individually flagged-and-confirmed,
+  never treated as a blanket pre-clearance for the SuperShips folder as a
+  whole, and both Hummingbird/raider and Sardine/viper_mk2 specifically logged
+  as conscious overrides of this project's own named exclusion pair rather than
+  lumped in as "more of the same."
 
 **Component slot counts (decided)** — per direct instruction: Patrol 1 started from the
 reference project's own **Viper Mk II standard tier** slot counts
@@ -1564,6 +1919,359 @@ entirely**:
   on-screen confirmation" caveat to the same degree, though the user's own visual
   check is naturally still the final word.
 
+**Second attempt, after fixing browser-automation click-through (decided — settled,
+not attempting a third time)**: once the click-testing problem itself was root-caused
+and fixed (§3.5), the live 3D render was rebuilt from scratch (same design as above:
+`render/custom.render`+`.render_script`, the `ship_preview.render_target`, the
+`resources {}` GUI declaration, off-world rigs with a rotation script) to actually
+verify it with real visual feedback this time, rather than guessing blind. Compiled
+cleanly again — but the moment the ship detail modal was actually opened for real,
+**the entire browser tab froze solid**, needing a forced navigation (and, once, a
+fresh tab) to recover — not a cosmetic bug like the white square, an actual hang. This
+is a categorically more serious failure than last time: it means a GUI scene
+referencing an offscreen render target as a texture (`resources { path:
+"*.render_target" }`) is not just poorly-documented in this engine build, it's
+**unsafe** — plausibly a genuine native-level deadlock (e.g. a resource-readiness wait
+that never resolves) rather than anything reachable/fixable from script or GUI-file
+content. Rolled back a second time, identically to the bullet above. **Settled**: the
+static top-down image is the final approach for this feature, verified working
+end-to-end with real (automation-fixed) clicks — Ships tab → both ships' detail
+modals open correctly with their own art/stats/buttons, Cancel closes cleanly, no
+errors, no freeze. Not attempting the live 3D render a third time — two independent
+attempts, the second one actively breaking the page rather than just looking wrong,
+is enough signal that this isn't a good use of further time in this engine build.
+
+**Third attempt, per direct instruction to "try again" (decided — working, live
+3D render shipped)**: despite the above, the user asked again to "show a 3-D
+rendering of the ship when the player select the ship." Given the second attempt's
+real freeze, flagged the risk explicitly and asked how to proceed
+(`AskUserQuestion`); the user chose **"Try a different technical approach"** —
+not a blind retry. New design, deliberately avoiding both suspect mechanisms from
+attempt two at once (a GUI `resources {}` block referencing a `.render_target`, and
+`msg.post` from a GUI script to a game-object component):
+
+- No `.render_target` resource and no GUI `resources {}` block at all.
+- `render/custom.render_script` — an exact copy of the real default render script
+  plus one addition: after the normal frame (including the GUI draw), a second,
+  **viewport-restricted** draw of the `model` predicate — `render.set_viewport`
+  computed by converting a fixed design-space rectangle (matching
+  `ship_detail_preview`'s exact GUI position/size) into real window pixels, a fixed
+  `matrix4_look_at`/`matrix4_perspective` aimed at whichever world position the GUI
+  script last requested, clearing only depth for that viewport. Since this draws
+  *after* GUI, it paints over the static fallback image exactly in that rectangle
+  when active, and does nothing when inactive — the static image is the zero-code
+  fallback, not a separate code path.
+- Two off-world, model-only preview rigs (`patrol_1_preview`/`escort_1_preview`,
+  reusing §2.9's existing purpose for them), each with a tiny
+  `main/ship_preview.script` that just does `go.set_rotation` each frame — always
+  enabled, never toggled via `msg.post` to a game object.
+- Communication uses only `msg.post("@render:", "set_ship_preview", {...})` — the
+  same socket-style addressing the stock render script's own comments already
+  document as safe, never messaging a game-object instance directly.
+- **Verified stable**: with the held-click recipe (§3.5), opening the ship detail
+  modal for either ship no longer freezes the tab — confirmed via a `Date.now()`
+  responsiveness check immediately after the click, `read_console_messages`
+  (no errors), and screenshots, repeated across every rebuild in this section.
+
+**Bug found and fixed: ships rendered as solid black silhouettes.** Root cause,
+confirmed by reading `/builtins/materials/model.material`'s actual shader source
+from `bob.jar` (not assumed): `model.fp` does
+`texture(tex0, var_texcoord0.xy) * tint_pm` — it reads a bound 2D texture, never
+the mesh's `COLOR_0` vertex attribute. (It's also a real lit shader — a lambertian
+diffuse term against a default `(1,1,1,1)` light constant plus 0.2 ambient, contrary
+to this plan's earlier note above that it was unlit; corrected here.) The
+hand-authored hull meshes (`tools/build_patrol1_model.py`/`build_escort1_model.py`)
+only ever carried flat vertex colors — fine for the offline top-down PNG render
+(which reads the Python vertex data directly, bypassing the GPU shader entirely),
+but this was the **first time either model was ever actually rendered by the live
+engine**, and `tex0` sampled nothing bound → black.
+
+Fixing "no texture" took four real attempts before landing on the actual mechanism,
+each one build-clean and each one still black in the browser — worth recording
+precisely since the failure mode gave no error at any stage:
+1. Added a `TEXCOORD_0` accessor + a tiny 2×1 hull/cabin palette PNG, referenced
+   from the **outer `.model` file's `textures:` field** as a bare PNG path, with the
+   mesh's own glTF material carrying no texture reference at all. Built and
+   deployed fine, still black — because the outer `.model` texture list can only
+   *override* a texture slot the mesh's own material already declares; with zero
+   slots declared, there was nothing to bind to.
+2. Wrapped the palette PNG in a matching `.atlas` file (this project's universal
+   texture-reference convention everywhere else) and pointed `.model`'s `textures:`
+   at that instead. Broke the **bundle** step specifically (a plain `resolve build`
+   passed, but `bundle` failed: `Unable to find resource
+   main/models/escort_1/escort_1_palette.atlas`, despite the file genuinely
+   existing) — `.atlas` is apparently not a resource type Defold's model-texture
+   resolution supports, unlike every GUI texture reference in this project. Dropped.
+3. Embedded the palette **inside the glTF's own material** as a real
+   `baseColorTexture`, first as a `data:` URI image, then as a proper `bufferView`
+   reference (matching a real, correctly-textured third-party asset, `sardine.glb`
+   — see below) — both still black. Investigated further by inspecting the actual
+   compiled `build/default/main/models/escort_1/` output directly: **no
+   `.texturec`/`.texturesetc` was ever produced for this model, in any of these
+   attempts** — Defold's build pipeline wasn't even trying to compile a texture
+   resource for the embedded image, regardless of how it was embedded. (Also found
+   and fixed a real bug along the way: the glTF bufferView byte-length helper was
+   recording the 4-byte-*padded* length instead of the image's true byte count,
+   corrupting the embedded PNG with 1-3 trailing garbage bytes — worth fixing
+   regardless, but not the actual cause here.)
+4. **The fix**: keep the mesh's own material declaring a real `baseColorTexture`
+   slot (so there's something to bind to, per attempt 1's finding) **and** point the
+   outer `.model` file's `textures:` field at the same palette PNG directly (per
+   attempt 1's original mechanism, this time with a slot for it to land in). This is
+   the only combination that made Defold's build actually emit a
+   `escort_1_palette.texturec` — confirmed by inspecting the build output before
+   even reopening the browser — and it renders correctly: Escort 1's cabin box
+   now shows visibly lighter blue-grey against its darker hull, matching
+   `CABIN_COLOR`/`HULL_COLOR` exactly. Applied to both ships' `.model` files.
+   (Precisely why a hand-built glTF/glb needs this outer override while a
+   fully-authored third-party one doesn't remains not fully understood at the
+   engine-source level — recorded honestly rather than overclaiming a root cause.)
+
+**Also found and fixed: `bob.jar` invocation itself was silently wrong for most of
+this debugging.** `java -jar <defold jar>` uses that jar's manifest `Main-Class`,
+which is `com.defold.editor.Main` — the **desktop editor GUI**, not the `bob` build
+tool. Several `resolve build` calls that looked like long, silent hangs (10-20
+minutes, real CPU use, no output) were actually the full editor trying to boot
+headless (confirmed via `lsof` showing Metal/accessibility-framework loads, never
+seen from a real build). The correct invocation is
+`java -cp <defold jar> com.dynamo.bob.Bob --platform wasm-web ... resolve build
+bundle` (explicit main class) — every build in this section after that point took
+1-2 minutes and printed real progress.
+
+**Model swap**: per direct instruction, Patrol 1/Sardine's mesh was swapped from
+the hand-authored boat hull to a user-supplied `sardine.glb` (a textured,
+Sketchfab-style asset with `BASE`/`WINGS` materials — a winged craft, not a boat
+hull). Flagged to the user at the time: this is a departure from this plan's own
+"no BSG-style fighter-craft silhouette" convention for this ship tier (§0/§4), and
+the Sketchfab-style material naming is worth a licensing sanity check on the user's
+end — recorded here rather than silently absorbed. Renders correctly (it already
+carried its own valid embedded textures).
+
+**Per-faction models (decided — all four faction skins now distinct)**: per direct
+instruction ("assign the hummingbird, falcon and barracuda models"), extended the
+same live-preview pipeline to give each faction its own model instead of both
+factions sharing one placeholder hull per ship class:
+
+- **`hummingbird.glb`** (Patrol 1/Swarm) — a clean Sketchfab asset ("SpaceShip" by
+  JazOone, CC-BY-4.0, properly attributed in its own metadata) with a real embedded
+  `baseColorTexture`, same as `sardine.glb` — needed no extra work, just a new
+  `hummingbird.model` (mesh + `/builtins/materials/model.material`, no `textures:`
+  override) and a `faction_skins.swarm` entry pointing at it.
+- **`barracuda.glb`/`falcon.glb`** (Escort 1/Accord+Swarm) — **flagged and paused
+  before wiring these in.** Their own embedded glTF metadata was unambiguous: node
+  `extras` read `{"ship_id": "wraith", "faction": "Cylon", ...}` and
+  `{"ship_id": "maul", "faction": "Colonial", ...}` respectively, with materials
+  literally named `cylon_hull`/`cylon_glow`/`cylon_dark` and
+  `colonial_hull`/`colonial_stripe`/`colonial_dark`/`engine_glow` — i.e. both are
+  themselves tagged, in their own source data, as Battlestar Galactica "Cylon" and
+  "Colonial" faction assets. Directly conflicts with this plan's own §0 IP boundary.
+  Asked the user how to proceed (`AskUserQuestion`: hold off / use as-is / use but
+  strip identifying metadata) — chose **"use them but strip identifying metadata"**,
+  explicitly told at the time that this reduces the surface-level fingerprint
+  (extras/node/material names) but does NOT change the underlying mesh geometry,
+  which may itself still resemble a copyrighted silhouette — recorded here as a
+  known, accepted residual risk, not a resolved one. Stripped the `Cylon`/`Colonial`/
+  `Wraith`/`Maul` extras and renamed nodes/materials to neutral
+  `barracuda_hull`/`barracuda_glow`/`barracuda_dark` and
+  `falcon_hull`/`falcon_stripe`/`falcon_dark`/`falcon_glow` (JSON-chunk edit only,
+  binary geometry/BIN chunk untouched) before use.
+- **Texturing barracuda/falcon**: unlike `sardine.glb`/`hummingbird.glb`, neither
+  asset has any `baseColorTexture` at all — each of their several materials (3 for
+  barracuda, 4 for falcon) is a flat `baseColorFactor` color only, which
+  `model.material`'s shader never reads (same root cause as the hand-authored hulls
+  above). Fixed the same way: wrote a small script
+  (scratchpad `add_palette_texture.py`) that, per model, (a) adds a `TEXCOORD_0`
+  accessor to each primitive pointing at a texel matching that primitive's own
+  material index, (b) builds an Nx1 palette PNG (one texel per material, in
+  material order, colors taken directly from each material's own `baseColorFactor`),
+  (c) embeds it via `bufferView` (not a `data:` URI — see the established finding
+  above) and gives every material a `baseColorTexture` slot pointing at it, and
+  (d) resets `baseColorFactor` to white on all of them (now fully "baked" into the
+  palette instead). Combined with the already-established fix (the outer `.model`
+  file's own `textures:` field pointing at the same palette PNG, standalone on
+  disk) — confirmed via the same `.texturec`-in-build-output check, then visually:
+  Barracuda shows a dark hull with a distinct red glow accent; Falcon shows a dark
+  hull with a distinct red stripe and a lighter panel, both correctly and
+  distinctly colored, not solid black.
+- **Camera framing (decided — fixed for all ships, not just Sardine)**: the fixed
+  preview camera (`PREVIEW_EYE_OFFSET`, tuned for the ~6m hand-authored escort_1
+  hull) was far too close for every one of these real, user-supplied assets —
+  computed each model's TRUE world-space bounding radius via a full glTF
+  scene-graph traversal (composing every parent node's transform, not just reading
+  a raw accessor min/max — necessary because e.g. `sardine.glb`'s own node chain
+  applies a 100x/0.01x parent-node scale pair that cancels out non-trivially).
+  Radii ranged from ~6 (escort_1's own hull) to ~146 (`barracuda.glb`) — nearly a
+  25x spread. Sent a per-model `eye_offset`/`far` pair in the same
+  `set_ship_preview` message (each the original tuned `(0,3,8)` vector/100 far-plane
+  scaled uniformly by `this model's radius / 6.34`, preserving the original tuned
+  viewing angle exactly while scaling distance and far-plane reach together — the
+  far plane needed scaling too, not just distance, or the biggest models clipped
+  outright). `render/custom.render_script` falls back to its own built-in defaults
+  when a ship sends neither field, so ships without an entry are unaffected.
+- **Bug found in this same pass**: after all of the above, Barracuda/Falcon still
+  rendered as *escort_1's own hand-built hull* (pointed bow, boxy cabin) instead of
+  their own geometry. Root cause was much simpler than the texture/framing work
+  above: `main/data/ships.lua`'s `faction_skins` table for Escort 1 was never
+  actually updated — only Patrol 1's `accord`/`swarm` entries got repointed to the
+  new per-faction `.model` files earlier in this same pass; Escort 1's two entries
+  were still both pointing at the original placeholder `escort_1.model`. Fixed by
+  updating those two lines; both outpost-screen test harnesses' stale assertions
+  (written back when Barracuda shared `escort_1.model`'s own static top-down image)
+  updated to match the new, correct behavior instead (no static top-down image of
+  its own yet, falls back to the plain icon placeholder — the live 3D overlay is
+  what actually shows the ship, which the GUI-only harness doesn't model).
+
+**Current state**: live 3D render is shipped and stable for all four faction skins
+plus both base ship classes — no freeze, correct/distinct colors and geometry per
+ship, continuous rotation, correctly framed, clean Cancel. The barracuda/falcon
+geometry-origin IP risk (previous bullet) is the one open, consciously-accepted
+item; no further framing follow-up remains outstanding.
+
+**Ships-For-Sale grid (direct instruction, later pass)**: the outpost's Ships tab
+"For Sale" panel was a single-column text list (name + price per row, like Owned
+Ships still is) — changed to a grid, with a live 3D preview in every cell instead
+of just text, per direct instruction ("put the ships in a grid rather than a list
+and show the 3D rendering in each grid item"). Only this one panel changed; Owned
+Ships keeps the original list.
+- **Mechanism**: generalized the exact same proven-safe technique
+  `draw_ship_preview_overlay` already used for the single ship-detail-modal preview
+  above (`render.set_viewport` + `render.set_view`/`set_projection` +
+  `render.draw(predicates.model)`, restricted to a small rect, drawn LAST each
+  frame after the normal GUI pass) rather than reaching for a render target - this
+  file's own header comment already documents TWO earlier render-target attempts
+  that failed outright (a white square, then a full browser-tab freeze), which is
+  exactly why the single-preview mechanism was built this way in the first place.
+  Refactored the shared per-item draw logic into `draw_ship_preview_at` (render
+  script) and added a second overlay pass, `draw_ship_preview_grid_overlay`, that
+  loops over a LIST of `{rect, target_pos, eye_offset, far}` entries — one call to
+  the same underlying draw function per visible grid cell, each with its own
+  viewport/camera - instead of the single case's one entry. New message
+  `set_ship_preview_grid` (parallel to the existing `set_ship_preview`) carries
+  that list from `main/outpost.gui_script` to the render script.
+- **Grid layout** (`main/outpost.gui_script`): new `build_ship_forsale_grid`
+  (parallel to the existing `build_card_list`, used only for this one panel) - 6
+  columns, cell size derived from `forsale_panel`'s own known 1200x220 footprint
+  (main/outpost.gui), one row visible at a time for bigger/clearer previews
+  (mouse wheel scrolls further rows, same interaction as the old list). Each cell
+  is a box (click hit-target, same role every other card's `box` already plays)
+  plus a name+price text strip along its bottom edge.
+- **Preview list construction**: `compute_forsale_preview_items` reads each
+  visible `ship_forsale` card's actual on-screen box position/size and its
+  ship's `model_path` (now carried on `ship_forsale_rows`' own row data), looks
+  up `PREVIEW_WORLD_POS`/`PREVIEW_CAMERA` (the same tables the modal already
+  uses), and sends only cells that (a) actually have a model - a `<TBD>` skin
+  just shows its plain card, no live 3D, same honest fallback as the modal's own
+  "no preview available" case - and (b) sit FULLY inside `forsale_panel`'s
+  current bounds. That second check matters because the render script's overlay
+  pass draws AFTER the normal GUI pass, so it isn't clipped by the panel's own
+  stencil (`gui.CLIPPING_MODE_STENCIL`) the way the cell's box/label are -
+  without it, a partially-scrolled-off cell's 3D render would visually leak past
+  the panel edge over other UI.
+- **Suppression while the modal is open**: both overlay passes draw in the same
+  LAST-after-GUI step, so `refresh_forsale_preview` sends an empty grid list
+  whenever `show_ship_detail` opens (and restores it when `hide_ship_detail`
+  closes) - otherwise the grid's previews would render simultaneously with the
+  modal's single preview. Also cleared on leaving the Ships tab entirely
+  (`set_page`).
+- Verified: `luac -p` syntax-checked clean on both
+  `main/outpost.gui_script` and `render/custom.render_script` after these
+  changes (a real Lua interpreter happened to be available locally, unlike the
+  Defold engine itself - still no way to actually launch/screenshot the live
+  outpost screen this session, so exact pixel spacing/framing may need a real
+  visual pass once it can be run).
+
+**Ships-For-Sale grid polish pass (direct instruction, follow-up)**: raised as a
+UX concern - the grid's scroll "feels sensitive" (one wheel notch replaced almost
+everything on screen, since only one row was visible) with no hint it was
+scrollable at all. Four fixes, all requested together:
+- **Two rows visible, not one** (supersedes the previous pass's "one row visible"
+  choice) - `GRID_ROWS_VISIBLE = 2`, `GRID_GUTTER`/`GRID_LABEL_H` trimmed slightly
+  (14→10, 34→26) to keep a reasonable 3D-preview area at the smaller resulting
+  cell height. `SCROLL_STEP_GRID` also halved (half a row per wheel notch, not a
+  full one).
+- **Smooth animated scrolling**: added a real `update(self, dt)` lifecycle
+  function (didn't exist before) that lerps `self.scroll_display.forsale` (what's
+  actually displayed) toward `self.scroll.forsale` (the target, set immediately by
+  wheel/drag input, unchanged) at `SCROLL_LERP_SPEED`'s share of the remaining gap
+  per second, snapping the last fraction of a pixel to avoid a lerp that never
+  quite finishes. Required decoupling layout from scroll position:
+  `build_ship_forsale_grid` now always builds at the unscrolled base position and
+  records it per-card (`base_cy`/`base_strip_cy`/`cell_x`); a new
+  `apply_forsale_scroll_display` repositions the already-built nodes to the
+  current display offset via `gui.set_position` instead of rebuilding/reparenting
+  them - scrolling (wheel or drag) no longer touches `refresh_ship_cards` at all,
+  only an actual data change (ship bought/sold, tab reopened) does, and that case
+  snaps straight to the target with no animation (`self.scroll_display.forsale =
+  self.scroll.forsale` right after rebuilding).
+- **Scroll indicator + thin scrollbar**: four new static nodes authored in
+  `main/outpost.gui` (`forsale_scrollbar_track`/`_thumb`, `forsale_scroll_up`/
+  `_down`, added to `ships_static_nodes` so they show/hide with the tab like every
+  other panel-level node) - a plain ASCII `"^"`/`"v"` for the chevrons rather than
+  a Unicode triangle glyph, since no text node anywhere else in this file uses a
+  non-ASCII character and there was no way to confirm `default_font` even has
+  those glyphs without running the engine; a real arrow icon can replace these
+  later once someone can look at it live. `refresh_forsale_scrollbar` (new)
+  shows/hides and sizes/positions all four each time the grid changes or
+  animates, hiding the whole scrollbar entirely when nothing needs scrolling
+  (rather than showing a scrollbar that can't move).
+- **Drag-to-scroll**: a press inside `forsale_panel` no longer acts immediately
+  (unlike every other card list on this screen, which still does) - it's
+  resolved on release as a click (opens whichever card, if any, was under the
+  initial press) only if the cursor stayed within `DRAG_CLICK_THRESHOLD` (6px) of
+  where it was pressed; past that, it's treated as a drag-scroll instead (applied
+  live, per pixel of cursor movement, via the existing `action_id == nil`
+  mouse-move branch already used for the module-fitting drag-ghost) - a drag can
+  never accidentally open the ship detail modal mid-scroll. New `self.forsale_press`
+  state tracks this between press/move/release. Owned Ships (the only other list
+  on this tab) is unaffected - still click-on-press like every other card list.
+- Verified: `luac -p` syntax-checked clean on `main/outpost.gui_script` after all
+  four changes; `main/outpost.gui`'s own brace count balanced. Still no way to
+  actually run/screenshot the live outpost screen this session - the animation
+  timing (`SCROLL_LERP_SPEED = 12`), drag feel, and exact chevron/scrollbar
+  placement are all reasoned through on paper (cell/panel geometry checked by
+  hand: two 95px rows + 3×10px gutters exactly fill the 220px panel height) but
+  not visually confirmed; may want a real pass once it can be run.
+
+**Directional-style lighting on every ship preview (direct instruction)**: light
+positioned "behind and slightly offset from the camera" for each preview (both
+the single ship-detail-modal one and every Ships-For-Sale grid cell) - previously
+whatever `/builtins/materials/model.material` defaults to (a fixed point near the
+world origin, `(1,1,1,1)`), unchanged since the preview feature was first built.
+- **Verified from the engine's own shipped source, not guessed**: unzipped this
+  editor's own `builtins.zip` (`~/Library/Application Support/Defold/unpack/...`)
+  to read `model.material`/`model.vp`/`model.fp` directly. The material already
+  declares a `light` vertex constant (`CONSTANT_TYPE_USER`, a vec4) that
+  `model.vp` treats as a WORLD-SPACE POSITION (transforms it into view space,
+  passes it through) and `model.fp` uses to compute a per-fragment diffuse term
+  via `normalize(light - fragment_position)` - i.e. a point light keyed by
+  position, not a true infinite directional light, plus a flat 0.2 ambient term.
+  No custom shader/material needed - just override that one constant per draw.
+- **Mechanism**: `render.draw(predicates.model, { constants = ... })` - the same
+  officially-supported per-draw constant-override option already used elsewhere
+  in this engine for sprite `tint` - built via `render.constant_buffer()`, set
+  once per preview inside the now-shared `draw_ship_preview_at` (so both the
+  single-preview and grid-preview overlay passes get it automatically, no
+  duplicated logic).
+- **"Behind and slightly offset" computed from each preview's own camera**: new
+  `light_pos_for(target_pos, eye_offset)` - `eye_offset` already IS the camera's
+  own offset from `target_pos` (`render.set_view` looks from `target_pos +
+  eye_offset` toward `target_pos`), so extending 1.6x further along that same
+  vector puts the light behind the camera as seen from the ship, not beside or
+  in front of it. A `vmath.cross(eye_offset, world-up)` term then nudges it
+  sideways (0.35x the camera's own distance) and a plain up term nudges it
+  upward (0.2x) - a small three-quarter key-light offset rather than a
+  perfectly flat on-camera light, which would flatten out the model's own
+  shape entirely. Placed far enough behind the camera that its rays read as
+  close to parallel across a model this small, which is what makes a
+  position-based point light look "directional" despite the shader only
+  supporting a position.
+- Verified: `luac -p` syntax-checked clean. **Not visually confirmed** - the
+  standalone `<model-viewer>` web page used earlier this session to preview raw
+  `.glb` files (e.g. when checking new SuperShips-sourced models) uses its own
+  completely different lighting/renderer and would NOT reflect this
+  Defold-specific shader change even if re-opened; there is still no way to
+  launch the actual Defold engine this session to see the real result.
+
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 
 - **Guest** (§1.1): always spawns at the **outpost of their chosen faction's home
@@ -1898,6 +2606,69 @@ A project-level app-manifest override (this repo's own `ext.manifest` +
 uses) would make this a tracked source file instead of a build-cache edit, but Bob
 didn't pick that up when tried — not worth chasing further given this isn't a real
 day-to-day issue.
+
+### 3.5 Browser-automation click testing (decided — root cause found, reusable recipe)
+
+Clicking anything in the running game via the browser-automation tooling (this
+session's Chrome extension/CDP-driven tab) silently did nothing for a long stretch —
+no errors, no visible response, indistinguishable from the game itself being broken.
+It wasn't: the user's own real clicks in the same browser worked the whole time. Root
+cause turned out to be **two separate, stacking problems**, both about how automated
+input differs from a real hardware click, neither a defect in this project's code:
+
+1. **The Chrome window wasn't getting real OS-level focus.** The tab could be
+   "selected"/driven by the extension while the actual window sat behind other
+   windows on screen, unfocused at the OS level. `document.hasFocus()` confirmed
+   `false` in this state. Confirmed via direct instrumentation that clicks still
+   arrived as genuine, browser-trusted (`isTrusted: true`) events at the exact right
+   target/coordinates even while unfocused — so this alone doesn't explain a fully
+   silent failure, but it's a real prerequisite.
+   - **Fix**: an AppleScript that finds the specific Chrome *window* containing the
+     target tab (not just `activate`, which can raise the wrong window if more than
+     one is open) and raises it:
+     ```applescript
+     tell application "Google Chrome"
+       repeat with w in windows
+         repeat with i from 1 to (count of tabs of w)
+           if (URL of (tab i of w)) contains "8934" then
+             set active tab index of w to i
+             set index of w to 1
+             activate
+           end if
+         end repeat
+       end repeat
+     end tell
+     ```
+2. **The bigger factor: automated clicks release far faster than a real click.**
+   Traced into the actual compiled engine JS (`Galaxy_wasm.js`, this project's own
+   `bob.jar`-produced output) and found mouse input is a legacy GLFW-style shim whose
+   button-changed handler gates on a callback slot (`GLFW.mouseButtonFunc`) that
+   turned out to be dead/unused in this engine version either way — but the real
+   effect observed was that a synthetic press-and-release completing in ~2ms (this
+   session's default browser-automation click) can complete entirely **between** two
+   of the engine's own per-frame input polls, so the "pressed" state is never
+   observed at all. A real human click naturally holds the button down for tens of
+   milliseconds, spanning several rendered frames.
+   - **Fix**: hold the synthetic mousedown for a real duration (~250ms) before
+     releasing, dispatched as a genuine `pointermove`→`pointerdown`/`mousedown`→
+     (wait)→`pointerup`/`mouseup`→`click` sequence via page JS (`dispatchEvent` on
+     the canvas), not the automation tool's default instant click.
+
+**Confirmed as the actual fix, not a guess**: with both applied, automated clicks
+navigate the full game correctly (start screen → faction select → outpost tabs →
+opening/closing the ship detail modal), matching what the user's own real clicks
+already did.
+
+**Reusable recipe for future sessions** — before any automated click-testing of this
+project:
+1. Run the window-raising AppleScript above (swap the URL substring for whatever's
+   being tested).
+2. Use a held-down synthetic click (mousedown → wait ~250ms → mouseup/click) instead
+   of an instantaneous one, for every click, not just the first.
+3. If a page ever stops responding to automation mid-session (see §2.8.9's own
+   account of a genuine engine freeze), a plain reload isn't always enough to recover
+   the *automation connection* itself — closing the tab and opening a fresh one, then
+   reapplying steps 1–2, resolved it when a reload alone didn't.
 
 ## 4. Open Questions / TODO
 - [ ] Give the four card-list panels a scroll-position indicator (e.g. a simple

@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_interceptor/escort_interceptor.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/escort_interceptor/escort_interceptor_palette.png"
+name: "escort_interceptor"

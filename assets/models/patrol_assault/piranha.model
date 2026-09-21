@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_assault/piranha.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/patrol_assault/piranha_palette.png"
+name: "piranha"

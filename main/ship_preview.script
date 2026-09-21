@@ -1,0 +1,40 @@
+-- Ship preview rig rotation (§2.8.9, third attempt). Each off-world preview
+-- instance in main/main.collection (patrol_interceptor_preview, escort_interceptor_preview)
+-- uses this same script - just spins slowly in place. Position is set once
+-- in main.collection, at each ship's own distinct off-world location (far
+-- outside the normal on-screen world bounds) so it never appears in the
+-- regular on-screen pass - only in render/custom.render_script's dedicated
+-- viewport-overlay pass, which aims its own camera at whichever ship's
+-- position the outpost GUI script asked for. This script only ever
+-- touches rotation, never position.
+local ROTATION_SPEED_DEG_PER_SEC = 30
+local MSG_SET_LIGHT = hash("set_light")
+
+function update(self, dt)
+	self.angle = (self.angle or 0) + ROTATION_SPEED_DEG_PER_SEC * dt
+	go.set_rotation(vmath.quat_rotation_y(math.rad(self.angle)))
+end
+
+-- Per-preview light position (direct instruction: behind and slightly
+-- offset from the camera). Confirmed via a live diagnostic (§2.8.9 follow-
+-- up) that render.draw's own `constants` override option - used
+-- successfully elsewhere on this exact material for `tint`, a
+-- fragment_constants entry - does NOT reach `light`, a vertex_constants
+-- entry, in this engine build: overriding `tint` that way turned every ship
+-- bright red as expected, but overriding `light` the same way produced no
+-- visible change at all, even set exactly at the camera's own eye position
+-- (which should light up anything visible on screen if it worked). go.set on
+-- the component directly is the standard, best-documented mechanism for ANY
+-- material constant regardless of vertex/fragment stage, so this script -
+-- already the one live component running per preview rig - is what actually
+-- applies it now; main/outpost.gui_script computes WHERE (needs the
+-- corresponding PREVIEW_CAMERA eye_offset, which lives there, not here) and
+-- posts it over. `light` is a WORLD-SPACE position (model.vp's own
+-- convention), independent of this rig's own continuous rotation above, so
+-- setting it once per preview-open is enough - it doesn't need to be
+-- refreshed every frame like the rotation does.
+function on_message(self, message_id, message)
+	if message_id == MSG_SET_LIGHT then
+		go.set("#model", "light", vmath.vector4(message.pos.x, message.pos.y, message.pos.z, 1.0))
+	end
+end

@@ -1,0 +1,495 @@
+-- Custom render script (§2.8.9, THIRD attempt at a live ship preview - a
+-- deliberately different technical approach from the first two, which were
+-- both rolled back: attempt 1 (a render target referenced only from the
+-- render script) rendered nothing but a white square at runtime; attempt 2
+-- (that same render target ALSO referenced from a GUI scene's own
+-- `resources {}` block, so `gui.set_texture` could use it directly) froze
+-- the entire browser tab solid the moment the modal opened. Neither
+-- mechanism is used here at all - no render target, no GUI `resources{}`
+-- block, and no msg.post from the GUI script to a game-object component
+-- (untested-for-safety in this build). This version only uses two
+-- mechanisms already proven safe elsewhere in this exact project:
+-- `render.set_viewport` (a completely standard technique) and messaging
+-- the render script itself via "@render:" (the same pathway the stock
+-- default script's own comments already document, e.g.
+-- "use_stretch_projection").
+--
+-- Starts as an EXACT copy of the engine's own
+-- /builtins/render/default.render_script (pulled directly from this
+-- project's bob.jar and read verbatim), which every screen in this project
+-- relied on implicitly until now (game.project had no [bootstrap] render
+-- key at all before §2.8.9). The only addition is draw_ship_preview_overlay
+-- at the very end of update() - everything else is unchanged, so every
+-- existing screen keeps rendering exactly as before.
+--
+-- Ship preview overlay: draws the `model` predicate a SECOND time,
+-- restricted to a small on-screen viewport that exactly overlaps the ship
+-- detail modal's `ship_detail_preview` GUI node (main/outpost.gui) - as the
+-- LAST thing each frame, after the normal GUI draw, so it paints over that
+-- node's own (static top-down image) contents in just that rectangle
+-- whenever active. When inactive, nothing extra is drawn and the static
+-- image underneath is all that shows - the already-safe static image is
+-- the automatic fallback, not a separate code path. main/outpost.gui_script
+-- toggles this on/off and picks which ship's off-world rig to aim at by
+-- messaging "@render:" (set_ship_preview) whenever the modal opens/closes -
+-- never touching the rig game objects themselves, which just sit in
+-- main/main.collection, always enabled, each at its own distinct off-world
+-- position (so only the one the camera is currently aimed at is ever
+-- actually visible - the others are simply outside its frustum).
+
+--
+-- message constants
+--
+local MSG_CLEAR_COLOR =         hash("clear_color")
+local MSG_WINDOW_RESIZED =      hash("window_resized")
+local MSG_SET_VIEW_PROJ =       hash("set_view_projection")
+local MSG_SET_CAMERA_PROJ =     hash("use_camera_projection")
+local MSG_USE_STRETCH_PROJ =    hash("use_stretch_projection")
+local MSG_USE_FIXED_PROJ =      hash("use_fixed_projection")
+local MSG_USE_FIXED_FIT_PROJ =  hash("use_fixed_fit_projection")
+local MSG_SET_SHIP_PREVIEW =    hash("set_ship_preview")
+local MSG_SET_SHIP_PREVIEW_GRID = hash("set_ship_preview_grid")
+
+local DEFAULT_NEAR = -1
+local DEFAULT_FAR =   1
+local DEFAULT_ZOOM =  1
+
+-- Ship preview overlay constants. The rect is in DESIGN space (matching
+-- game.project's [display] width/height, 1920x1080) - it's converted to
+-- actual window pixels using state.width/height (design) vs
+-- state.window_width/height (actual) every frame, the same ratio the GUI's
+-- own projection already stretches by, so this lines up with the GUI node
+-- regardless of the real browser window size. Must match
+-- `ship_detail_preview`'s own position/size in main/outpost.gui exactly:
+-- position (660, 560), size (360, 360), PIVOT_CENTER -> bottom-left corner
+-- (660-180, 560-180) = (480, 380).
+local PREVIEW_GUI_RECT = { x = 480, y = 380, w = 360, h = 360 }
+-- Default eye offset for a ship with no per-model value supplied (fallback
+-- only - every real ship sends its own, computed from that model's actual
+-- world-space bounding radius, per plan.md S2.8.9's per-faction model work.
+-- A single fixed offset looked fine for the two ~6-11 unit hand-authored
+-- hulls it was originally tuned against, but real supplied assets range up
+-- to two orders of magnitude bigger - a fixed camera distance left those
+-- looking like an unrecognizable extreme close-up). Includes the same flat
+-- 1.5x zoom-out (per direct instruction) every per-model PREVIEW_CAMERA
+-- entry in outpost.gui_script also applies, so an unlisted ship still
+-- matches the others' framing rather than looking tighter/closer.
+local PREVIEW_EYE_OFFSET_DEFAULT = vmath.vector3(0, 4.5, 12)
+
+--
+-- projection that centers content with maintained aspect ratio and optional zoom
+--
+local function get_fixed_projection(camera, state)
+    camera.zoom = camera.zoom or DEFAULT_ZOOM
+    local projected_width = state.window_width / camera.zoom
+    local projected_height = state.window_height / camera.zoom
+    local left = -(projected_width - state.width) / 2
+    local bottom = -(projected_height - state.height) / 2
+    local right = left + projected_width
+    local top = bottom + projected_height
+    return vmath.matrix4_orthographic(left, right, bottom, top, camera.near, camera.far)
+end
+--
+-- projection that centers and fits content with maintained aspect ratio
+--
+local function get_fixed_fit_projection(camera, state)
+    camera.zoom = math.min(state.window_width / state.width, state.window_height / state.height)
+    return get_fixed_projection(camera, state)
+end
+--
+-- projection that stretches content
+--
+local function get_stretch_projection(camera, state)
+    return vmath.matrix4_orthographic(0, state.width, 0, state.height, camera.near, camera.far)
+end
+--
+-- projection for gui
+--
+local function get_gui_projection(camera, state)
+    return vmath.matrix4_orthographic(0, state.window_width, 0, state.window_height, camera.near, camera.far)
+end
+
+local function update_clear_color(state, color)
+    if color then
+        state.clear_buffers[graphics.BUFFER_TYPE_COLOR0_BIT] = color
+    end
+end
+
+local function update_camera(camera, state)
+    if camera.projection_fn then
+        camera.proj = camera.projection_fn(camera, state)
+        camera.options.frustum = camera.proj * camera.view
+    end
+end
+
+local function update_state(state)
+    state.window_width = render.get_window_width()
+    state.window_height = render.get_window_height()
+    state.valid = state.window_width > 0 and state.window_height > 0
+    if not state.valid then
+        return false
+    end
+    -- Make sure state updated only once when resize window
+    if state.window_width == state.prev_window_width and state.window_height == state.prev_window_height then
+        return true
+    end
+    state.prev_window_width = state.window_width
+    state.prev_window_height = state.window_height
+    state.width = render.get_width()
+    state.height = render.get_height()
+    for _, camera in pairs(state.cameras) do
+        update_camera(camera, state)
+    end
+    return true
+end
+
+local function init_camera(camera, projection_fn, near, far, zoom)
+    camera.view = vmath.matrix4()
+    camera.near = near == nil and DEFAULT_NEAR or near
+    camera.far = far == nil and DEFAULT_FAR or far
+    camera.zoom = zoom == nil and DEFAULT_ZOOM or zoom
+    camera.projection_fn = projection_fn
+end
+
+local function create_predicates(...)
+    local arg = {...}
+    local predicates = {}
+    for _, predicate_name in pairs(arg) do
+        predicates[predicate_name] = render.predicate({predicate_name})
+    end
+    return predicates
+end
+
+local function create_camera(state, name, is_main_camera)
+    local camera = {}
+    camera.options = {}
+    state.cameras[name] = camera
+    if is_main_camera then
+        state.main_camera = camera
+    end
+    return camera
+end
+
+local function create_state()
+    local state = {}
+    local color = vmath.vector4(0, 0, 0, 0)
+    color.x = sys.get_config_number("render.clear_color_red", 0)
+    color.y = sys.get_config_number("render.clear_color_green", 0)
+    color.z = sys.get_config_number("render.clear_color_blue", 0)
+    color.w = sys.get_config_number("render.clear_color_alpha", 0)
+    state.clear_buffers = {
+        [graphics.BUFFER_TYPE_COLOR0_BIT] = color,
+        [graphics.BUFFER_TYPE_DEPTH_BIT] = 1,
+        [graphics.BUFFER_TYPE_STENCIL_BIT] = 0
+    }
+    state.cameras = {}
+    return state
+end
+
+local function set_camera_world(state)
+    local camera_components = camera.get_cameras()
+
+    -- This will set the last enabled camera from the stack of camera components
+    if #camera_components > 0 then
+        for i = #camera_components, 1, -1 do
+            if camera.get_enabled(camera_components[i]) then
+                local camera_component = state.cameras.camera_component
+                camera_component.camera = camera_components[i]
+                render.set_camera(camera_component.camera, { use_frustum = true })
+                -- The frustum will be overridden by the render.set_camera call,
+                -- so we don't need to return anything here other than an empty table.
+                return camera_component.options
+            end
+        end
+    end
+
+    -- If no active camera was found, we use the default main "camera world" camera
+    local camera_world = state.cameras.camera_world
+    render.set_view(camera_world.view)
+    render.set_projection(camera_world.proj)
+    return camera_world.options
+end
+
+local function reset_camera_world(state)
+    -- unbind the camera if a camera component is used
+    if state.cameras.camera_component.camera then
+        state.cameras.camera_component.camera = nil
+        render.set_camera()
+    end
+end
+
+-- Where to put the light for a ship preview (direct instruction: behind and
+-- slightly offset from the camera) - `/builtins/materials/model.material`'s
+-- own shader (model.vp/model.fp, verified directly from this engine's own
+-- builtins.zip - not guessed) already takes a `light` constant as a
+-- WORLD-SPACE POSITION and computes per-fragment diffuse from
+-- normalize(light - fragment_position), i.e. a point light, not a true
+-- infinite directional one. Placed far enough behind the camera along its
+-- own viewing axis, though, its rays are nearly parallel across a model as
+-- small as these ship previews - which is what makes this read as
+-- "directional" despite the shader only supporting a position. `eye_offset`
+-- IS the camera's own offset from `target_pos` (see draw_ship_preview_at
+-- below), so extending further along that same vector puts the light
+-- BEHIND the camera as seen from the ship, not beside or in front of it;
+-- the cross-product term then nudges it slightly sideways/up off that exact
+-- axis - a small three-quarter key-light offset rather than a perfectly
+-- flat on-camera light, which would flatten out the model's own shape.
+-- TEMPORARY DIAGNOSTIC (direct instruction): simplified to sit EXACTLY at
+-- the camera's own eye position - the simplest possible "does the override
+-- even reach the shader at all" test, with no offset-direction math that
+-- could itself be wrong. An on-axis camera light like this must illuminate
+-- whatever's currently visible on screen if `constants.light` is actually
+-- being received by model.fp; if the ship still looks just as flat/dark as
+-- before with this in place, the override isn't taking effect at all
+-- (rather than the source meshes having inverted normals, the other
+-- candidate explanation). Revert to the real behind-and-offset version
+-- (see git history / this comment block's own prior contents) once this
+-- test tells us which it is.
+local function light_pos_for(target_pos, eye_offset)
+    return target_pos + eye_offset
+end
+
+-- Draws the `model` predicate once, restricted to a small on-screen
+-- viewport aimed at `target_pos` - the shared mechanism behind both the
+-- single ship-detail-modal preview and the Ships-For-Sale grid's per-cell
+-- previews below. `design_rect` is {x, y, w, h} in DESIGN space (matching
+-- game.project's [display] width/height), converted to actual window
+-- pixels using state.width/height (design) vs state.window_width/height
+-- (actual) - see the file header comment above for why this
+-- viewport-restricted-redraw approach is used at all instead of a render
+-- target. Caller is responsible for resetting the viewport back to
+-- fullscreen afterwards.
+local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, predicates, state)
+    local vx = math.floor(design_rect.x / state.width * state.window_width)
+    local vy = math.floor(design_rect.y / state.height * state.window_height)
+    local vw = math.floor(design_rect.w / state.width * state.window_width)
+    local vh = math.floor(design_rect.h / state.height * state.window_height)
+    if vw <= 0 or vh <= 0 then
+        return
+    end
+
+    render.set_viewport(vx, vy, vw, vh)
+    render.clear({ [graphics.BUFFER_TYPE_DEPTH_BIT] = 1 })
+    eye_offset = eye_offset or PREVIEW_EYE_OFFSET_DEFAULT
+    far = far or 100
+    render.set_view(vmath.matrix4_look_at(target_pos + eye_offset, target_pos, vmath.vector3(0, 1, 0)))
+    render.set_projection(vmath.matrix4_perspective(math.rad(45), vw / vh, 0.1, far))
+    render.set_depth_mask(true)
+    render.enable_state(graphics.STATE_DEPTH_TEST)
+    render.enable_state(graphics.STATE_CULL_FACE)
+    -- Per-preview light position (direct instruction) - overrides
+    -- model.material's own default `light` constant ((1,1,1,1), effectively
+    -- a fixed point near the world origin) for just this draw call, via
+    -- render.draw's own `constants` option, same officially-supported
+    -- per-draw override mechanism used for `tint` elsewhere in this engine -
+    -- no custom material/shader needed, the built-in one already reads this.
+    local constants = render.constant_buffer()
+    local light_pos = light_pos_for(target_pos, eye_offset)
+    constants.light = vmath.vector4(light_pos.x, light_pos.y, light_pos.z, 1.0)
+    -- TEMPORARY DIAGNOSTIC, ROUND 2: `light` (a vertex_constants entry)
+    -- overriding with no visible effect, despite render.draw succeeding with
+    -- the right computed value, points at either (a) render.draw's
+    -- `constants` option not actually reaching vertex-stage user constants
+    -- in this engine version, or (b) something wrong with predicate/object
+    -- targeting more broadly. `tint` is a fragment_constants entry on this
+    -- same material, the standard textbook example for this exact mechanism
+    -- - overriding it this loudly (5x red, past 1.0 to survive any clamping)
+    -- should be unmistakable if constants override is working AT ALL here.
+    -- If ships still don't turn red, the bug is broader than just `light`.
+    constants.tint = vmath.vector4(5.0, 0.0, 0.0, 1.0)
+    -- TEMPORARY DIAGNOSTIC (direct instruction): the on-camera-light test
+    -- produced no visible change at all, which shouldn't be possible if this
+    -- override is really reaching the shader - print() pipes to the browser
+    -- console on HTML5 builds, so this confirms whether the function even
+    -- runs and with what values, and surfaces any error render.draw itself
+    -- throws (a render-script error can fail silently per-frame without
+    -- crashing the whole engine or showing up as a JS console error).
+    -- Remove once this is diagnosed.
+    DEBUG_LIGHT_PRINT_COUNT = (DEBUG_LIGHT_PRINT_COUNT or 0) + 1
+    local should_print = DEBUG_LIGHT_PRINT_COUNT <= 5
+    if should_print then
+        print("[light debug] target=" .. tostring(target_pos) .. " eye_offset=" .. tostring(eye_offset)
+            .. " light_pos=" .. tostring(light_pos))
+    end
+    local ok, err = pcall(render.draw, predicates.model, { constants = constants })
+    if not ok then
+        print("[light debug] render.draw with constants FAILED: " .. tostring(err))
+        render.draw(predicates.model)
+    elseif should_print then
+        print("[light debug] render.draw with constants succeeded")
+    end
+    render.disable_state(graphics.STATE_CULL_FACE)
+    render.disable_state(graphics.STATE_DEPTH_TEST)
+end
+
+-- Ship preview overlay pass (§2.8.9, third attempt) - see the file header
+-- comment above for the full design/safety rationale.
+local function draw_ship_preview_overlay(self, predicates, state)
+    if not self.preview.visible then
+        return
+    end
+    draw_ship_preview_at(PREVIEW_GUI_RECT, self.preview.target_pos,
+        self.preview.eye_offset, self.preview.far, predicates, state)
+    render.set_viewport(0, 0, state.window_width, state.window_height)
+end
+
+-- Ships-For-Sale grid overlay (direct instruction: a live 3D preview per
+-- grid cell, not just the single ship-detail modal) - same mechanism as
+-- draw_ship_preview_overlay above, generalized to draw N previews in one
+-- frame instead of one, each restricted to its own small viewport matching
+-- a grid cell in main/outpost.gui's forsale_panel. main/outpost.gui_script
+-- sends the current list (design-space rect + per-model target_pos/
+-- eye_offset/far, same shape the single-preview message already uses) via
+-- set_ship_preview_grid whenever the grid is built, scrolled, or the ship
+-- detail modal opens/closes (which sends an empty list to suppress this one
+-- while its own single preview is showing - both are drawn in this same
+-- LAST-after-GUI pass, so they'd otherwise render simultaneously).
+local function draw_ship_preview_grid_overlay(self, predicates, state)
+    if #self.preview_grid == 0 then
+        return
+    end
+    for _, item in ipairs(self.preview_grid) do
+        draw_ship_preview_at(item.rect, item.target_pos, item.eye_offset, item.far, predicates, state)
+    end
+    render.set_viewport(0, 0, state.window_width, state.window_height)
+end
+
+function init(self)
+    self.predicates = create_predicates("tile", "gui", "particle", "model", "debug_text")
+
+    -- Ship preview overlay state (§2.8.9) - toggled/aimed via on_message
+    -- (MSG_SET_SHIP_PREVIEW), sent by main/outpost.gui_script whenever the
+    -- ship detail modal opens/closes. Off by default.
+    self.preview = { visible = false, target_pos = vmath.vector3(0, 0, 0) }
+    -- Ships-For-Sale grid preview overlay state (direct instruction) -
+    -- list of {rect, target_pos, eye_offset, far}, one per visible grid
+    -- cell, set via MSG_SET_SHIP_PREVIEW_GRID. Empty by default.
+    self.preview_grid = {}
+
+    -- default is stretch projection. copy from builtins and change for different projection
+    -- or send a message to the render script to change projection:
+    -- msg.post("@render:", "use_stretch_projection", { near = -1, far = 1 })
+    -- msg.post("@render:", "use_fixed_projection", { near = -1, far = 1, zoom = 2 })
+    -- msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
+
+    local state = create_state()
+    self.state = state
+
+    local camera_world = create_camera(state, "camera_world", true)
+    init_camera(camera_world, get_stretch_projection)
+    local camera_gui = create_camera(state, "camera_gui")
+    init_camera(camera_gui, get_gui_projection)
+    -- Create a special camera that wraps camera components (if they exist)
+    -- It will take precedence over any other camera, and not change from messages
+    local camera_component = create_camera(state, "camera_component")
+    update_state(state)
+end
+
+function update(self)
+    local state = self.state
+    if not state.valid then
+        if not update_state(state) then
+            return
+        end
+    end
+
+    local predicates = self.predicates
+    -- clear screen buffers
+    --
+    -- turn on depth_mask before `render.clear()` to clear it as well
+    render.set_depth_mask(true)
+    render.set_stencil_mask(0xff)
+    render.clear(state.clear_buffers)
+
+    -- setup camera view and projection
+    --
+    local draw_options_world = set_camera_world(state)
+    render.set_viewport(0, 0, state.window_width, state.window_height)
+
+    -- set states used for all the world predicates
+    render.set_blend_func(graphics.BLEND_FACTOR_SRC_ALPHA, graphics.BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
+    render.enable_state(graphics.STATE_DEPTH_TEST)
+
+    -- render `model` predicate for default 3D material
+    --
+    render.enable_state(graphics.STATE_CULL_FACE)
+    render.draw(predicates.model, draw_options_world)
+    render.set_depth_mask(false)
+    render.disable_state(graphics.STATE_CULL_FACE)
+
+    -- render the other components: sprites, tilemaps, particles etc
+    --
+    render.enable_state(graphics.STATE_BLEND)
+    render.draw(predicates.tile, draw_options_world)
+    render.draw(predicates.particle, draw_options_world)
+    render.disable_state(graphics.STATE_DEPTH_TEST)
+
+    render.draw_debug3d()
+
+    reset_camera_world(state)
+
+    -- render GUI
+    --
+    local camera_gui = state.cameras.camera_gui
+    render.set_view(camera_gui.view)
+    render.set_projection(camera_gui.proj)
+
+    render.enable_state(graphics.STATE_STENCIL_TEST)
+    render.draw(predicates.gui, camera_gui.options)
+    render.draw(predicates.debug_text, camera_gui.options)
+    render.disable_state(graphics.STATE_STENCIL_TEST)
+    render.disable_state(graphics.STATE_BLEND)
+
+    -- Ship preview overlay(s) - drawn LAST, on top of the GUI, each
+    -- restricted to its own small viewport - see draw_ship_preview_overlay/
+    -- draw_ship_preview_grid_overlay above. Mutually exclusive in practice
+    -- (main/outpost.gui_script clears one whenever it shows the other), but
+    -- harmless to call both unconditionally either way.
+    draw_ship_preview_overlay(self, predicates, state)
+    draw_ship_preview_grid_overlay(self, predicates, state)
+end
+
+function on_message(self, message_id, message)
+    local state = self.state
+    local camera = state.main_camera
+
+    if message_id == MSG_CLEAR_COLOR then
+        update_clear_color(state, message.color)
+    elseif message_id == MSG_WINDOW_RESIZED then
+        update_state(state)
+    elseif message_id == MSG_SET_VIEW_PROJ then
+        camera.view = message.view
+        self.camera_projection = message.projection or vmath.matrix4()
+        update_camera(camera, state)
+    elseif message_id == MSG_SET_CAMERA_PROJ then
+        camera.projection_fn = function() return self.camera_projection end
+    elseif message_id == MSG_USE_STRETCH_PROJ then
+        init_camera(camera, get_stretch_projection, message.near, message.far)
+        update_camera(camera, state)
+    elseif message_id == MSG_USE_FIXED_PROJ then
+        init_camera(camera, get_fixed_projection, message.near, message.far, message.zoom)
+        update_camera(camera, state)
+    elseif message_id == MSG_USE_FIXED_FIT_PROJ then
+        init_camera(camera, get_fixed_fit_projection, message.near, message.far)
+        update_camera(camera, state)
+    elseif message_id == MSG_SET_SHIP_PREVIEW then
+        self.preview.visible = message.visible
+        if message.target_pos then
+            self.preview.target_pos = message.target_pos
+        end
+        -- Per-model camera distance/far-plane (plan.md S2.8.9's per-faction
+        -- model work) - real supplied assets range up to ~20x the world
+        -- radius of the hand-authored hulls this pass was first tuned
+        -- against, so a single fixed offset/far-plane left the biggest ones
+        -- looking like an unrecognizable close-up (and some far-plane
+        -- clipped). Both optional - nil falls back to the original tuned
+        -- constants above, unaffected.
+        self.preview.eye_offset = message.eye_offset
+        self.preview.far = message.far
+    elseif message_id == MSG_SET_SHIP_PREVIEW_GRID then
+        -- Ships-For-Sale grid previews (direct instruction) - see
+        -- draw_ship_preview_grid_overlay's own comment above for the full
+        -- shape/rationale. An absent or empty list just draws nothing.
+        self.preview_grid = message.items or {}
+    end
+end

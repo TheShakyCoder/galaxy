@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_support/pelican.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/frigate_support/pelican_palette.png"
+name: "pelican"

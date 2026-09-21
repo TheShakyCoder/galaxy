@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_support/oxpecker.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/patrol_support/oxpecker_palette.png"
+name: "oxpecker"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_assault/tiger_shark.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/frigate_assault/tiger_shark_palette.png"
+name: "tiger_shark"

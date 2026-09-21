@@ -165,6 +165,50 @@ local TAB_COLOR_ACTIVE = vmath.vector4(0.22, 0.38, 0.5, 1.0)
 local TAB_COLOR_INACTIVE = vmath.vector4(0.15, 0.17, 0.22, 1.0)
 local SHIP_CARD_CURRENT_COLOR = vmath.vector4(0.2, 0.45, 0.3, 1.0) -- the ship you're currently flying/fitting
 
+-- Ships-For-Sale grid (direct instruction: grid layout with a live 3D
+-- preview per cell, replacing the old single-column text list - just for
+-- this one panel; Owned Ships keeps the original build_card_list list).
+-- Column count/cell size are derived from forsale_panel's own known size
+-- (1200x220, main/outpost.gui, same PANEL_HEIGHT every card-list panel
+-- shares) rather than a fresh independent guess - same footing as
+-- CARD_SIZE/CARD_SPACING above being sized against that panel's own 820px
+-- width.
+--
+-- Two rows visible at once (direct instruction, follow-up polish pass) -
+-- the original 1-row version made a single wheel notch replace basically
+-- everything on screen at once, which read as "sensitive"/jumpy rather than
+-- a smooth scroll; two rows means a notch only ever changes about half the
+-- visible content. GRID_GUTTER/GRID_LABEL_H trimmed slightly from their
+-- original 1-row values to keep each cell's 3D preview area reasonable at
+-- the smaller cell height this produces.
+local GRID_COLS = 6
+local GRID_ROWS_VISIBLE = 2
+local GRID_GUTTER = 10
+local GRID_CELL_W = (1200 - (GRID_COLS + 1) * GRID_GUTTER) / GRID_COLS
+local GRID_CELL_H = (PANEL_HEIGHT - (GRID_ROWS_VISIBLE + 1) * GRID_GUTTER) / GRID_ROWS_VISIBLE
+local GRID_LABEL_H = 26 -- bottom strip of each cell reserved for name+price text
+-- Half a row per wheel notch (not a full row) - finer-grained on top of the
+-- two-row change above, and further smoothed by the animated scroll below
+-- (SCROLL_LERP_SPEED) so a notch no longer feels like an abrupt snap.
+local SCROLL_STEP_GRID = (GRID_CELL_H + GRID_GUTTER) / 2
+-- Animated scroll (direct instruction): this file's own `update(self, dt)`
+-- lerps self.scroll_display.forsale toward the target self.scroll.forsale
+-- by this fraction of the remaining distance per second (exponential
+-- smoothing) - see apply_forsale_scroll_display's own comment below.
+local SCROLL_LERP_SPEED = 12
+-- Drag-to-scroll (direct instruction): a Ships-For-Sale press only resolves
+-- as a click (opens the ship detail modal) if the cursor stayed within this
+-- many pixels of where it was pressed - otherwise it's treated as a
+-- drag-scroll instead, so dragging never accidentally opens a ship's detail
+-- modal mid-scroll. See on_input's own handling of self.forsale_press.
+local DRAG_CLICK_THRESHOLD = 6
+
+-- Forward-declared: needs PREVIEW_WORLD_POS/PREVIEW_CAMERA (defined much
+-- further down, next to show_ship_detail) but is called from
+-- refresh_ship_cards (defined well before those tables) - see its actual
+-- definition below (next to compute_forsale_preview_items) for what it does.
+local refresh_forsale_preview
+
 function init(self)
 	self.active = false
 	self.active_page = "overview" -- "overview" | "fitting" | "ships" - defaults to Overview per direct instruction
@@ -190,6 +234,16 @@ function init(self)
 	-- can change between rebuilds (an item gets bought, a ship gets
 	-- added to the roster, etc.).
 	self.scroll = { shop = 0, owned = 0, forsale = 0, ownedships = 0 }
+	-- Currently-DISPLAYED scroll position for the Ships-For-Sale grid, kept
+	-- separate from self.scroll.forsale (the TARGET) - update()'s own
+	-- per-frame lerp eases this toward the target on wheel-scroll (direct
+	-- instruction: smooth animated scrolling instead of an instant snap).
+	self.scroll_display = { forsale = 0 }
+	-- Set on a Ships-For-Sale grid press, resolved on release as either a
+	-- click (opens that card's ship detail modal) or a drag-scroll,
+	-- depending on how far the cursor moved in between (direct instruction:
+	-- drag-to-scroll, not just mouse wheel) - see on_input's own handling.
+	self.forsale_press = nil
 
 	msg.post(".", "acquire_input_focus")
 	msg.post("#gui", "disable")
@@ -250,9 +304,19 @@ function init(self)
 	-- Ships tab's static nodes
 	self.forsale_panel_node = gui.get_node("forsale_panel")
 	self.ownedships_panel_node = gui.get_node("ownedships_panel")
+	-- Ships-For-Sale grid's scroll affordances (direct instruction) - static
+	-- chrome authored in main/outpost.gui, shown/hidden and repositioned by
+	-- refresh_forsale_scrollbar rather than rebuilt per-refresh like the
+	-- cards themselves.
+	self.forsale_scrollbar_track = gui.get_node("forsale_scrollbar_track")
+	self.forsale_scrollbar_thumb = gui.get_node("forsale_scrollbar_thumb")
+	self.forsale_scroll_up = gui.get_node("forsale_scroll_up")
+	self.forsale_scroll_down = gui.get_node("forsale_scroll_down")
 	self.ships_static_nodes = {
 		gui.get_node("forsale_heading"), self.forsale_panel_node,
 		gui.get_node("ownedships_heading"), self.ownedships_panel_node,
+		self.forsale_scrollbar_track, self.forsale_scrollbar_thumb,
+		self.forsale_scroll_up, self.forsale_scroll_down,
 	}
 
 	-- Each of the four card-list panels clips its own cards (stencil,
@@ -625,6 +689,12 @@ local function clear_card_list(list)
 			gui.delete_node(card.sell_box)
 			gui.delete_node(card.sell_label)
 		end
+		-- strip only exists on Ships-For-Sale grid cells (the name+price
+		-- backing bar drawn on top of the live 3D preview) - see
+		-- build_ship_forsale_grid.
+		if card.strip then
+			gui.delete_node(card.strip)
+		end
 	end
 end
 
@@ -866,10 +936,19 @@ end
 local function ship_forsale_rows(faction)
 	local rows = {}
 	for _, ship_id in ipairs(ship_forsale_keys()) do
+		local ship = ships.SHIPS[ship_id]
+		local skin = ship and faction and ship.faction_skins[faction]
 		table.insert(rows, {
 			item_key = ship_id,
 			label = ship_display_name(ship_id, faction) .. "  (" .. session.get_ship_price() .. " Scrip)",
 			source = "ship_forsale",
+			-- Carried through to build_ship_forsale_grid's own card entries
+			-- so compute_forsale_preview_items doesn't need to re-derive
+			-- ship/faction lookups itself - "<TBD>" (no real asset yet)
+			-- naturally fails PREVIEW_WORLD_POS's own lookup later, same
+			-- honest "no preview available" fallback the ship detail modal
+			-- already uses.
+			model_path = skin and skin.model,
 		})
 	end
 	return rows
@@ -898,6 +977,146 @@ local function owned_ship_rows(faction, active_ship)
 	return rows
 end
 
+-- Grid version of max_scroll_for above, for the Ships-For-Sale panel only -
+-- rows wrap every GRID_COLS items instead of one item per row.
+local function max_scroll_for_grid(item_count)
+	local grid_rows = math.ceil(item_count / GRID_COLS)
+	if grid_rows <= 1 then
+		return 0
+	end
+	local content_height = (grid_rows - 1) * (GRID_CELL_H + GRID_GUTTER) + GRID_CELL_H
+	return math.max(0, content_height - PANEL_HEIGHT)
+end
+
+-- Grid variant of build_card_list, used ONLY for the Ships-For-Sale panel
+-- (direct instruction: grid layout with a live 3D preview per cell instead
+-- of the old single-column text list). Each cell's `box` is both the click
+-- hit-target (same role as every other card's box) AND the area the render
+-- script's live 3D overlay paints into - this function only creates that
+-- box plus a name+price text strip along its bottom edge; it doesn't touch
+-- the render script itself. `model_path` is carried onto each card entry so
+-- compute_forsale_preview_items (below, near show_ship_detail) can build the
+-- render script's preview list straight from self.ship_cards without
+-- re-deriving ship/faction lookups.
+-- Builds every cell at its UNSCROLLED base position (scroll ignored here
+-- entirely) and records that base position on each card (`base_cy`/
+-- `base_strip_cy`/`cell_x`) - apply_forsale_scroll_display (below) is what
+-- actually moves cells to the current scroll position afterwards, every
+-- time it changes, without needing to rebuild/reparent any nodes. Kept
+-- separate from that positioning step so a data-driven rebuild (ship
+-- bought/sold, tab reopened) doesn't have to know or care what the current
+-- scroll/animation state is - it always regenerates the same base layout,
+-- and whoever calls this also calls apply_forsale_scroll_display right
+-- after to place it correctly (see refresh_ship_cards).
+local function build_ship_forsale_grid(out_list, panel_node, rows)
+	local panel_pos = gui.get_position(panel_node)
+	local panel_size = gui.get_size(panel_node)
+	local left = panel_pos.x - panel_size.x * 0.5 + GRID_GUTTER
+	local top = panel_pos.y + panel_size.y * 0.5 - GRID_GUTTER
+
+	if #rows == 0 then
+		local pos = vmath.vector3(panel_pos.x, top - GRID_CELL_H * 0.5, 0)
+		local label = gui.new_text_node(pos, "(none)")
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_font(label, "default_font")
+		gui.set_color(label, vmath.vector4(0.5, 0.55, 0.6, 1.0))
+		gui.set_parent(label, panel_node, true)
+		table.insert(out_list, { box = nil, label = label, item_key = nil, source = "ship_forsale" })
+		return
+	end
+
+	for i, row in ipairs(rows) do
+		local col = (i - 1) % GRID_COLS
+		local grid_row = math.floor((i - 1) / GRID_COLS)
+		local cx = left + col * (GRID_CELL_W + GRID_GUTTER) + GRID_CELL_W * 0.5
+		local base_cy = top - grid_row * (GRID_CELL_H + GRID_GUTTER) - GRID_CELL_H * 0.5
+
+		local box = gui.new_box_node(vmath.vector3(cx, base_cy, 0), vmath.vector3(GRID_CELL_W, GRID_CELL_H, 0))
+		gui.set_pivot(box, gui.PIVOT_CENTER)
+		gui.set_color(box, CARD_COLOR)
+		gui.set_parent(box, panel_node, true)
+
+		-- Name+price strip along the bottom edge of the cell. The render
+		-- script's live 3D overlay is the LAST thing drawn each frame, after
+		-- the normal GUI pass (render/custom.render_script's own header
+		-- comment) - so it would paint OVER this strip if given the cell's
+		-- full rect. compute_forsale_preview_items (below, near
+		-- show_ship_detail) instead sends only the rect ABOVE this strip
+		-- (cell height minus GRID_LABEL_H) as the 3D viewport, so the strip
+		-- always stays on top, never buried under the model.
+		local base_strip_cy = base_cy - GRID_CELL_H * 0.5 + GRID_LABEL_H * 0.5
+		local strip = gui.new_box_node(vmath.vector3(cx, base_strip_cy, 0), vmath.vector3(GRID_CELL_W, GRID_LABEL_H, 0))
+		gui.set_pivot(strip, gui.PIVOT_CENTER)
+		gui.set_color(strip, vmath.vector4(0.03, 0.035, 0.05, 0.85))
+		gui.set_parent(strip, panel_node, true)
+
+		local label = gui.new_text_node(vmath.vector3(cx, base_strip_cy, 0), row.label)
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_font(label, "default_font")
+		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
+		gui.set_scale(label, vmath.vector3(0.55, 0.55, 1))
+		gui.set_parent(label, panel_node, true)
+
+		table.insert(out_list, {
+			box = box, label = label, strip = strip,
+			item_key = row.item_key, source = "ship_forsale",
+			model_path = row.model_path,
+			cell_x = cx, base_cy = base_cy, base_strip_cy = base_strip_cy,
+		})
+	end
+end
+
+-- Moves every Ships-For-Sale card to `self.scroll_display.forsale` (the
+-- CURRENTLY DISPLAYED scroll position, which may still be animating toward
+-- the real target `self.scroll.forsale` - see SCROLL_LERP_SPEED's own
+-- comment) by offsetting each card's own recorded base position, rather
+-- than rebuilding the card list. Called right after build_ship_forsale_grid
+-- (to place the freshly-built base layout at the current display
+-- position), and every frame update() is actively animating toward a new
+-- target, and immediately (no lerp) while actively drag-scrolling.
+local function apply_forsale_scroll_display(self)
+	local offset = self.scroll_display.forsale
+	for _, card in ipairs(self.ship_cards) do
+		if card.source == "ship_forsale" and card.box and card.base_cy then
+			gui.set_position(card.box, vmath.vector3(card.cell_x, card.base_cy + offset, 0))
+			local strip_y = card.base_strip_cy + offset
+			gui.set_position(card.label, vmath.vector3(card.cell_x, strip_y, 0))
+			if card.strip then
+				gui.set_position(card.strip, vmath.vector3(card.cell_x, strip_y, 0))
+			end
+		end
+	end
+end
+
+-- Shows/hides and sizes the Ships-For-Sale scrollbar (track + thumb) and
+-- up/down chevrons - all four are static nodes authored in main/outpost.gui
+-- (panel-level chrome, not per-card), just toggled/repositioned here.
+-- Nothing to scroll at all (every for-sale ship fits on screen at once)
+-- hides all four rather than showing a scrollbar that can't move.
+local function refresh_forsale_scrollbar(self)
+	local count = #ship_forsale_rows(session.get_faction())
+	local max_scroll = max_scroll_for_grid(count)
+	local scrollable = max_scroll > 0
+	gui.set_enabled(self.forsale_scrollbar_track, scrollable)
+	gui.set_enabled(self.forsale_scrollbar_thumb, scrollable)
+	gui.set_enabled(self.forsale_scroll_up, scrollable and self.scroll_display.forsale > 0.5)
+	gui.set_enabled(self.forsale_scroll_down, scrollable and self.scroll_display.forsale < max_scroll - 0.5)
+	if not scrollable then
+		return
+	end
+	local grid_rows = math.ceil(count / GRID_COLS)
+	local content_height = (grid_rows - 1) * (GRID_CELL_H + GRID_GUTTER) + GRID_CELL_H
+	local track_pos = gui.get_position(self.forsale_scrollbar_track)
+	local track_size = gui.get_size(self.forsale_scrollbar_track)
+	local visible_fraction = math.min(1, PANEL_HEIGHT / content_height)
+	local thumb_h = math.max(20, track_size.y * visible_fraction)
+	local scroll_fraction = self.scroll_display.forsale / max_scroll
+	local thumb_travel = track_size.y - thumb_h
+	local thumb_y = track_pos.y + track_size.y / 2 - thumb_h / 2 - scroll_fraction * thumb_travel
+	gui.set_size(self.forsale_scrollbar_thumb, vmath.vector3(track_size.x, thumb_h, 0))
+	gui.set_position(self.forsale_scrollbar_thumb, vmath.vector3(track_pos.x, thumb_y, 0))
+end
+
 local function refresh_ship_cards(self)
 	clear_card_list(self.ship_cards)
 	self.ship_cards = {}
@@ -905,10 +1124,17 @@ local function refresh_ship_cards(self)
 	local active_ship = session.get_ship_id()
 	local forsale = ship_forsale_rows(faction)
 	local owned_ships = owned_ship_rows(faction, active_ship)
-	self.scroll.forsale = math.min(self.scroll.forsale, max_scroll_for(#forsale))
+	self.scroll.forsale = math.min(self.scroll.forsale, max_scroll_for_grid(#forsale))
+	-- A data-driven rebuild (ship bought/sold, tab reopened) snaps straight
+	-- to the target - no animation here, only actual user-scroll-input
+	-- (wheel/drag) eases via update()'s own per-frame lerp.
+	self.scroll_display.forsale = self.scroll.forsale
 	self.scroll.ownedships = math.min(self.scroll.ownedships, max_scroll_for(#owned_ships))
-	build_card_list(self.ship_cards, self.forsale_panel_node, forsale, "ship_forsale", self.scroll.forsale)
+	build_ship_forsale_grid(self.ship_cards, self.forsale_panel_node, forsale)
+	apply_forsale_scroll_display(self)
 	build_card_list(self.ship_cards, self.ownedships_panel_node, owned_ships, "owned_ship", self.scroll.ownedships)
+	refresh_forsale_preview(self)
+	refresh_forsale_scrollbar(self)
 end
 
 -- Switches between the Overview, Fitting, and Ships tabs: toggles which
@@ -954,6 +1180,13 @@ local function set_page(self, page)
 		self.cards = {}
 		refresh_ship_cards(self)
 	end
+
+	-- Leaving the Ships tab entirely (overview/fitting): clears the
+	-- Ships-For-Sale grid's live previews, same as refresh_ship_cards
+	-- already does when the tab stays open but its content changes -
+	-- harmless/idempotent to call again for the "ships" branch above, which
+	-- already sent this via refresh_ship_cards.
+	refresh_forsale_preview(self)
 end
 
 local function hits(node, action)
@@ -1030,23 +1263,177 @@ local function hide_confirm(self)
 	end
 end
 
--- Ship detail modal preview image, keyed by model path (§2.8.9). A genuine
--- LIVE 3D render (a render-target/offscreen-camera pipeline, feeding an
--- always-loaded off-world preview rig into this same panel) was attempted
--- first, per direct instruction, and built far enough to compile cleanly,
--- but never actually rendered anything but a blank/white square at runtime
--- despite two rounds of fixes - and with no way to get real-time visual
--- feedback in this environment (automated browser click-through is blocked
--- here, §2.8.9's own verification note), further guessing at the exact
--- runtime API had too much risk of cost for too little confidence. Rolled
--- back per direct instruction in favor of this - the same reliable static
--- top-down image mechanism the Fitting tab's ship_visual node already uses
--- successfully. A ship whose faction_skins model doesn't match any entry
--- here has no preview art at all yet - honest placeholder instead of
--- faking one.
-local PREVIEW_IMAGES = {
-	["/main/models/patrol_1/patrol_1.model"] = { texture = "patrol_1", image = "patrol_1_topdown" },
-	["/main/models/escort_1/escort_1.model"] = { texture = "escort_1", image = "escort_1_topdown" },
+-- Ship detail modal preview, keyed by model path (§2.8.9) - PREVIEW_WORLD_POS
+-- is a THIRD-ATTEMPT live 3D overlay. Attempts 1 and 2 (a render-target/
+-- offscreen-camera pipeline referenced either only from the render script,
+-- or also from a GUI scene's own `resources{}` block) were both rolled
+-- back - attempt 1 rendered nothing but a white square; attempt 2 froze the
+-- entire browser tab solid the moment the modal opened, a much more
+-- serious failure. This attempt uses neither mechanism:
+-- `render/custom.render_script` draws the `model` predicate a second time,
+-- in a small on-screen viewport that overlaps `ship_detail_preview`
+-- exactly, as the LAST thing each frame - aimed at whichever off-world
+-- position this table gives for the ship's model. Toggled/aimed purely by
+-- messaging the render script itself (`msg.post("@render:",
+-- "set_ship_preview", ...)`, the same "@render:" pathway the stock default
+-- render script's own comments document) - never a GUI resource
+-- declaration, never a message to a game-object component.
+--
+-- Originally paired with a PREVIEW_IMAGES static top-down PNG as a
+-- guaranteed-visible base layer underneath (the live 3D pass draws over it
+-- when active) - removed per direct instruction once every ship actually
+-- had a live 3D preview of its own, so there was nothing left for it to be
+-- a fallback FOR. `ship_detail_preview` is a plain GUI box node with no
+-- texture/flipbook now - if this table is ever rolled back, static images
+-- would need reintroducing alongside it (see git history for
+-- PREVIEW_IMAGES's exact old contents/wiring).
+--
+-- A ship with no entry here has no preview art at all yet - honest
+-- placeholder (plain background box) instead of faking one.
+local PREVIEW_WORLD_POS = {
+	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = vmath.vector3(100000, 0, 0),
+	["/assets/models/escort_interceptor/escort_interceptor.model"] = vmath.vector3(100000, 1000, 0),
+	["/assets/models/patrol_interceptor/hummingbird.model"] = vmath.vector3(100000, 2000, 0),
+	["/assets/models/escort_interceptor/barracuda.model"] = vmath.vector3(100000, 3000, 0),
+	["/assets/models/escort_interceptor/falcon.model"] = vmath.vector3(100000, 4000, 0),
+	["/assets/models/frigate_interceptor/frigatebird.model"] = vmath.vector3(100000, 5000, 0),
+	["/assets/models/escort_support/remora.model"] = vmath.vector3(100000, 6000, 0),
+	["/assets/models/frigate_tactical/hammerhead.model"] = vmath.vector3(100000, 7000, 0),
+	["/assets/models/frigate_support/pelican.model"] = vmath.vector3(100000, 8000, 0),
+	["/assets/models/escort_assault/moray.model"] = vmath.vector3(100000, 9000, 0),
+	["/assets/models/patrol_assault/piranha.model"] = vmath.vector3(100000, 10000, 0),
+	["/assets/models/escort_tactical/osprey.model"] = vmath.vector3(100000, 11000, 0),
+	["/assets/models/frigate_tactical/harpy_eagle.model"] = vmath.vector3(100000, 12000, 0),
+	["/assets/models/frigate_assault/golden_eagle.model"] = vmath.vector3(100000, 13000, 0),
+	["/assets/models/frigate_interceptor/marlin.model"] = vmath.vector3(100000, 14000, 0),
+	["/assets/models/frigate_support/manta_ray.model"] = vmath.vector3(100000, 15000, 0),
+	["/assets/models/frigate_assault/tiger_shark.model"] = vmath.vector3(100000, 16000, 0),
+	["/assets/models/patrol_support/oxpecker.model"] = vmath.vector3(100000, 17000, 0),
+	["/assets/models/patrol_assault/shrike.model"] = vmath.vector3(100000, 18000, 0),
+	["/assets/models/patrol_tactical/kingfisher.model"] = vmath.vector3(100000, 19000, 0),
+	["/assets/models/escort_support/egret.model"] = vmath.vector3(100000, 20000, 0),
+	["/assets/models/escort_assault/goshawk.model"] = vmath.vector3(100000, 21000, 0),
+	["/assets/models/patrol_support/pilotfish.model"] = vmath.vector3(100000, 22000, 0),
+	["/assets/models/patrol_tactical/anglerfish.model"] = vmath.vector3(100000, 23000, 0),
+}
+
+-- Per-model camera distance/far-plane, sent alongside PREVIEW_WORLD_POS's
+-- target position. A single fixed eye offset (the render script's own
+-- PREVIEW_EYE_OFFSET_DEFAULT) was tuned against the hand-authored escort_interceptor
+-- hull's ~6.3-unit world-space bounding radius; real user-supplied assets
+-- range up to ~20x that (computed via a full scene-graph traversal - node
+-- transforms compose non-trivially, e.g. sardine.glb's own 100x/0.01x
+-- parent-node scale pair - not just eyeballing a raw accessor min/max).
+-- Left at that fixed distance, barracuda/falcon rendered as an
+-- unrecognizable extreme close-up, and the far plane clipped the bigger
+-- ones outright. Each entry here is (0, 3, 8) scaled uniformly by (this
+-- model's own radius / 6.34) - a bounding-sphere-tight fit - and THEN by a
+-- further flat 1.5x zoom-out on top (per direct instruction: the tight fit
+-- looked cropped/claustrophobic even when technically nothing was clipped,
+-- especially once the static fallback image was removed and the 3D view
+-- became the only thing on screen). `far` is (distance + radius + 50)
+-- margin, computed against the POST-zoom-out distance so the bigger models
+-- still don't clip. Keyed by model_path (the .model file), same key
+-- PREVIEW_WORLD_POS uses - NOT by the mesh's own .glb/.gltf filename. A
+-- ship with no entry here just uses the render script's own built-in
+-- (also zoomed-out) defaults.
+local PREVIEW_CAMERA = {
+	-- sardine.glb (the mesh this .model actually wraps) was replaced with
+	-- viper_mk2.glb (§0-flagged, see ships.lua's patrol_interceptor entry) -
+	-- recomputed for its own ~5.1-unit bounding radius.
+	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0, 3.61, 9.63), far = 65.37 },
+	["/assets/models/escort_interceptor/escort_interceptor.model"] = { eye_offset = vmath.vector3(0, 8.15, 21.74), far = 84.71 },
+	-- hummingbird.glb was replaced with raider.glb (§0-flagged, see ships.lua's
+	-- patrol_interceptor entry) - recomputed for its own ~6.7-unit bounding
+	-- radius, close to the old asset's scale but not identical.
+	["/assets/models/patrol_interceptor/hummingbird.model"] = { eye_offset = vmath.vector3(0, 4.74, 12.64), far = 70.18 },
+	-- barracuda.glb was replaced with scythe.glb (§0-flagged, see ships.lua's
+	-- escort_interceptor entry) - recomputed for its own ~114-unit bounding
+	-- radius, different scale than the old asset this was originally tuned to.
+	["/assets/models/escort_interceptor/barracuda.model"] = { eye_offset = vmath.vector3(0, 81.05, 216.12), far = 395.0 },
+	-- falcon.glb was replaced with banshee.glb (§0-flagged, see ships.lua's
+	-- escort_interceptor entry) - recomputed for its own ~128-unit bounding
+	-- radius.
+	["/assets/models/escort_interceptor/falcon.model"] = { eye_offset = vmath.vector3(0, 91.2, 243.2), far = 438.23 },
+	-- frigatebird.glb (aesir.glb, §0-flagged, see ships.lua's frigate_interceptor
+	-- entry) has a ~321-unit world-space bounding radius (raw accessor min/max
+	-- across all 4 primitives, no node-level scale transform on this asset) -
+	-- by far the biggest model in this table so far.
+	["/assets/models/frigate_interceptor/frigatebird.model"] = { eye_offset = vmath.vector3(0, 227.83, 607.55), far = 1019.85 },
+	-- remora.glb (glaive.glb, §0-flagged, see ships.lua's escort_support entry)
+	-- has a ~119-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/escort_support/remora.model"] = { eye_offset = vmath.vector3(0, 84.45, 225.21), far = 409.51 },
+	-- hammerhead.glb (gungnir.glb, §0-flagged, see ships.lua's frigate_tactical
+	-- entry) has a ~349-unit world-space bounding radius, no node-level scale
+	-- transform on this asset - the biggest model in this table so far.
+	["/assets/models/frigate_tactical/hammerhead.model"] = { eye_offset = vmath.vector3(0, 247.67, 660.44), far = 1104.29 },
+	-- pelican.glb (hel.glb, §0-flagged, see ships.lua's frigate_support entry)
+	-- has a ~310-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/frigate_support/pelican.model"] = { eye_offset = vmath.vector3(0, 220.36, 587.64), far = 988.07 },
+	-- moray.glb (maul.glb, §0-flagged, see ships.lua's escort_assault entry)
+	-- has a ~99-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/escort_assault/moray.model"] = { eye_offset = vmath.vector3(0, 70.43, 187.81), far = 349.81 },
+	-- piranha.glb (rhino.glb, §0-flagged, see ships.lua's patrol_assault entry)
+	-- has a ~7-unit world-space bounding radius - an 11m small strike-fighter
+	-- scale, the smallest SuperShips-sourced model used so far, closer to
+	-- Patrol Interceptor's own ~6.3-unit hull than any of the capital/escort-
+	-- scale ones above.
+	["/assets/models/patrol_assault/piranha.model"] = { eye_offset = vmath.vector3(0, 5.0, 13.33), far = 71.28 },
+	-- osprey.glb (liche.glb, §0-flagged, see ships.lua's escort_tactical entry)
+	-- has a ~123-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/escort_tactical/osprey.model"] = { eye_offset = vmath.vector3(0, 87.14, 232.37), far = 420.94 },
+	-- harpy_eagle.glb (nidhogg.glb, §0-flagged, see ships.lua's frigate_tactical
+	-- entry) has a ~339-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/frigate_tactical/harpy_eagle.model"] = { eye_offset = vmath.vector3(0, 240.39, 641.05), far = 1073.33 },
+	-- golden_eagle.glb (jormung.glb, §0-flagged, see ships.lua's frigate_assault
+	-- entry) has a ~400-unit world-space bounding radius - the largest model in
+	-- the roster so far, no node-level scale transform.
+	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0, 284.22, 757.93), far = 1259.91 },
+	-- marlin.glb (fenrir.glb, §0-flagged, see ships.lua's frigate_interceptor
+	-- entry) has a ~300-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/frigate_interceptor/marlin.model"] = { eye_offset = vmath.vector3(0, 212.97, 567.92), far = 956.59 },
+	-- manta_ray.glb (vanir.glb, §0-flagged, see ships.lua's frigate_support
+	-- entry) has a ~286-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/frigate_support/manta_ray.model"] = { eye_offset = vmath.vector3(0, 202.75, 540.65), far = 913.06 },
+	-- tiger_shark.glb (jotunn.glb, §0-flagged, see ships.lua's frigate_assault
+	-- entry) has a ~327-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/frigate_assault/tiger_shark.model"] = { eye_offset = vmath.vector3(0, 232.09, 618.9), far = 1037.97 },
+	-- oxpecker.glb (heavy_raider.glb, §0-flagged, see ships.lua's patrol_support
+	-- entry) has a ~5.8-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/patrol_support/oxpecker.model"] = { eye_offset = vmath.vector3(0, 4.09, 10.91), far = 67.42 },
+	-- shrike.glb (marauder.glb, §0-flagged, see ships.lua's patrol_assault
+	-- entry) has a ~8.4-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/patrol_assault/shrike.model"] = { eye_offset = vmath.vector3(0, 5.94, 15.83), far = 75.27 },
+	-- kingfisher.glb (war_raider.glb, §0-flagged, see ships.lua's
+	-- patrol_tactical entry) has a ~8.2-unit world-space bounding radius, no
+	-- node-level scale transform on this asset.
+	["/assets/models/patrol_tactical/kingfisher.model"] = { eye_offset = vmath.vector3(0, 5.82, 15.52), far = 74.78 },
+	-- egret.glb (spectre.glb, §0-flagged, see ships.lua's escort_support entry)
+	-- has a ~146-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/escort_support/egret.model"] = { eye_offset = vmath.vector3(0, 103.38, 275.69), far = 490.09 },
+	-- goshawk.glb (wraith.glb, §0-flagged, see ships.lua's escort_assault
+	-- entry) has a ~146-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/escort_assault/goshawk.model"] = { eye_offset = vmath.vector3(0, 103.63, 276.34), far = 491.13 },
+	-- pilotfish.glb (raptor.glb, §0-flagged, see ships.lua's patrol_support
+	-- entry) has a ~7-unit world-space bounding radius, no node-level scale
+	-- transform on this asset.
+	["/assets/models/patrol_support/pilotfish.model"] = { eye_offset = vmath.vector3(0, 4.94, 13.17), far = 71.02 },
+	-- anglerfish.glb (viper_mk7.glb, §0-flagged, see ships.lua's
+	-- patrol_tactical entry) has a ~5.9-unit world-space bounding radius, no
+	-- node-level scale transform on this asset.
+	["/assets/models/patrol_tactical/anglerfish.model"] = { eye_offset = vmath.vector3(0, 4.16, 11.1), far = 67.72 },
 }
 
 -- Real stat block for the detail modal - straight from main/data/ships.lua's
@@ -1091,9 +1478,9 @@ local function show_ship_detail(self, ship_id)
 
 	local stats = ship_stats_text(ship_id)
 	local model_path = ship and faction and ship.faction_skins[faction] and ship.faction_skins[faction].model
-	local preview_image = model_path and PREVIEW_IMAGES[model_path]
-	if not preview_image then
-		stats = "(no preview image available for this ship yet)\n\n" .. stats
+	local world_pos = model_path and PREVIEW_WORLD_POS[model_path]
+	if not world_pos then
+		stats = "(no preview available for this ship yet)\n\n" .. stats
 	end
 	gui.set_text(self.ship_detail_nodes.stats, stats)
 
@@ -1110,28 +1497,44 @@ local function show_ship_detail(self, ship_id)
 		show_primary = false
 	end
 
-	-- Open the modal FIRST, before touching the preview image below - keeps
-	-- the fix from §2.8.9's click-through bug (a bad texture/flipbook call
-	-- must never leave the whole modal invisible just because its preview
-	-- art failed) even now that the preview is a plain static image rather
-	-- than the live render that bug was originally about.
+	-- Open the modal FIRST, before touching the preview below - keeps the
+	-- fix from §2.8.9's click-through bug (a bad texture/flipbook call must
+	-- never leave the whole modal invisible just because its preview art
+	-- failed) even now that there's no static image left to call
+	-- gui.set_texture/play_flipbook on.
 	for _, node in pairs(self.ship_detail_nodes) do
 		gui.set_enabled(node, true)
 	end
 	gui.set_enabled(self.ship_detail_nodes.primary, show_primary)
 	gui.set_enabled(self.ship_detail_nodes.primary_label, show_primary)
 
-	gui.set_color(self.ship_detail_nodes.preview, vmath.vector4(1.0, 1.0, 1.0, 1.0))
-	if preview_image then
-		gui.set_texture(self.ship_detail_nodes.preview, preview_image.texture)
-		gui.play_flipbook(self.ship_detail_nodes.preview, preview_image.image)
-	else
-		-- Explicitly reassigned every time (not left stale) - otherwise a
-		-- ship with no preview of its own would keep showing whichever
-		-- ship's image happened to be textured on this node last.
-		gui.set_texture(self.ship_detail_nodes.preview, ICON_TEXTURE)
-		gui.play_flipbook(self.ship_detail_nodes.preview, "Octagon Empty")
-	end
+	-- No static 2D image anymore (removed per direct instruction, once every
+	-- ship had its own live 3D preview) - `ship_detail_preview` is a plain
+	-- GUI box node; the live 3D overlay below is the only thing that
+	-- actually paints it (the render script only clears DEPTH for this
+	-- viewport, not color, so whatever's left showing around the ship's own
+	-- silhouette is this node's own base color - a dark "viewport" tone
+	-- rather than a jarring flat white). A ship with no world position
+	-- (below) just shows that plain dark box, honestly, instead of a stale
+	-- or faked image.
+	gui.set_color(self.ship_detail_nodes.preview, vmath.vector4(0.06, 0.07, 0.1, 1.0))
+
+	-- Live 3D overlay (§2.8.9, third attempt) - purely a message to the
+	-- render script itself; see PREVIEW_WORLD_POS's own comment above for
+	-- why this is considered safe where the previous two attempts weren't.
+	-- camera is per-model (PREVIEW_CAMERA's own comment above) - nil is
+	-- fine, the render script falls back to its own built-in default.
+	local camera = model_path and PREVIEW_CAMERA[model_path]
+	msg.post("@render:", "set_ship_preview", {
+		visible = world_pos ~= nil,
+		target_pos = world_pos,
+		eye_offset = camera and camera.eye_offset,
+		far = camera and camera.far,
+	})
+
+	-- Suppress the Ships-For-Sale grid's own previews while this modal's
+	-- single preview is showing - see refresh_forsale_preview's own comment.
+	refresh_forsale_preview(self)
 end
 
 local function hide_ship_detail(self)
@@ -1139,6 +1542,76 @@ local function hide_ship_detail(self)
 	for _, node in pairs(self.ship_detail_nodes) do
 		gui.set_enabled(node, false)
 	end
+	msg.post("@render:", "set_ship_preview", { visible = false })
+	-- Restore the Ships-For-Sale grid's own previews - suppressed while the
+	-- modal was open (see refresh_forsale_preview's own comment below).
+	refresh_forsale_preview(self)
+end
+
+-- Builds the render script's live-3D-preview list for the Ships-For-Sale
+-- grid (direct instruction) - one entry per currently-visible grid cell
+-- that actually has a model, in the same {rect, target_pos, eye_offset, far}
+-- shape PREVIEW_WORLD_POS/PREVIEW_CAMERA already use for the single ship
+-- detail modal preview above. `rect` only covers the area ABOVE each cell's
+-- name+price strip (build_ship_forsale_grid's own GRID_LABEL_H), so the 3D
+-- overlay - drawn LAST each frame, after the normal GUI pass - never paints
+-- over that strip.
+--
+-- A cell only makes the list if its whole rect currently sits inside
+-- forsale_panel's own bounds: the render script's overlay pass isn't
+-- clipped by this panel's stencil the way the cell's own box/label are (see
+-- the render script's own header comment), so this check is what keeps a
+-- partially-scrolled-off cell's 3D render from visually leaking past the
+-- panel edge.
+local function compute_forsale_preview_items(self)
+	local items = {}
+	local panel_pos = gui.get_position(self.forsale_panel_node)
+	local panel_size = gui.get_size(self.forsale_panel_node)
+	local panel_top = panel_pos.y + panel_size.y * 0.5
+	local panel_bottom = panel_pos.y - panel_size.y * 0.5
+	for _, card in ipairs(self.ship_cards) do
+		if card.source == "ship_forsale" and card.box and card.model_path then
+			local world_pos = PREVIEW_WORLD_POS[card.model_path]
+			if world_pos then
+				local pos = gui.get_position(card.box)
+				local size = gui.get_size(card.box)
+				local cell_top = pos.y + size.y * 0.5
+				local cell_bottom = pos.y - size.y * 0.5
+				if cell_top <= panel_top and cell_bottom >= panel_bottom then
+					local camera = PREVIEW_CAMERA[card.model_path]
+					local preview_h = size.y - GRID_LABEL_H
+					table.insert(items, {
+						rect = {
+							x = pos.x - size.x / 2,
+							y = cell_bottom + GRID_LABEL_H,
+							w = size.x,
+							h = preview_h,
+						},
+						target_pos = world_pos,
+						eye_offset = camera and camera.eye_offset,
+						far = camera and camera.far,
+					})
+				end
+			end
+		end
+	end
+	return items
+end
+
+-- Sends (or clears) the Ships-For-Sale grid's live-preview list to the
+-- render script. Suppressed (sent as an empty list) whenever the ship
+-- detail modal is open - its own single preview overlay would otherwise
+-- render alongside the grid's, since both are drawn in the same
+-- LAST-after-GUI pass (§2.8.9) - or whenever the Ships tab isn't the active
+-- page at all. Called from refresh_ship_cards (data/scroll changed),
+-- show_ship_detail/hide_ship_detail (modal opened/closed), and set_page
+-- (tab switched away).
+function refresh_forsale_preview(self)
+	local items = {}
+	if self.active_page == "ships" and not self.ship_detail then
+		items = compute_forsale_preview_items(self)
+	end
+	msg.post("@render:", "set_ship_preview_grid", { items = items })
 end
 
 local function end_drag(self)
@@ -1162,6 +1635,33 @@ function on_message(self, message_id, message, sender)
 		refresh_currency(self)
 		set_page(self, "overview") -- default tab, per direct instruction
 	end
+end
+
+-- Animates the Ships-For-Sale grid's scroll position (direct instruction:
+-- smooth scrolling instead of an instant snap) - eases self.scroll_display
+-- toward self.scroll.forsale (set immediately by wheel/drag input,
+-- unaffected) by SCROLL_LERP_SPEED's share of the remaining distance each
+-- frame, snapping the rest of the way once close enough that the lerp would
+-- otherwise never quite finish. Only touches anything while the Ships tab
+-- is actually open and there's an actual gap to close - otherwise a no-op.
+function update(self, dt)
+	if not self.active or self.active_page ~= "ships" then
+		return
+	end
+	local target = self.scroll.forsale
+	local display = self.scroll_display.forsale
+	if display == target then
+		return
+	end
+	if math.abs(target - display) < 0.5 then
+		display = target
+	else
+		display = display + (target - display) * math.min(1, dt * SCROLL_LERP_SPEED)
+	end
+	self.scroll_display.forsale = display
+	apply_forsale_scroll_display(self)
+	refresh_forsale_preview(self)
+	refresh_forsale_scrollbar(self)
 end
 
 function on_input(self, action_id, action)
@@ -1238,6 +1738,29 @@ function on_input(self, action_id, action)
 			gui.set_position(self.ghost.label, pos)
 			update_hover(self, action)
 		end
+		-- Ships-For-Sale drag-to-scroll (direct instruction) - see
+		-- self.forsale_press's own comment (init) and the "ships" tab press
+		-- handling above for how it's started/resolved. Moves the TARGET
+		-- (self.scroll.forsale) but snaps the display straight to it rather
+		-- than going through update()'s own lerp - while the cursor is
+		-- actively dragging it, the content should track the cursor exactly,
+		-- not lag behind it; the eased animation is only for
+		-- wheel/momentum-less discrete scroll steps.
+		if self.forsale_press then
+			local delta = action.y - self.forsale_press.last_y
+			self.forsale_press.last_y = action.y
+			if not self.forsale_press.dragged and math.abs(action.y - self.forsale_press.start_y) > DRAG_CLICK_THRESHOLD then
+				self.forsale_press.dragged = true
+			end
+			if self.forsale_press.dragged then
+				local max_scroll = max_scroll_for_grid(#ship_forsale_rows(session.get_faction()))
+				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta, max_scroll))
+				self.scroll_display.forsale = self.scroll.forsale
+				apply_forsale_scroll_display(self)
+				refresh_forsale_preview(self)
+				refresh_forsale_scrollbar(self)
+			end
+		end
 		return false
 	end
 
@@ -1259,8 +1782,13 @@ function on_input(self, action_id, action)
 			end
 		else
 			if hits(self.forsale_panel_node, action) then
-				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta, max_scroll_for(#ship_forsale_rows(session.get_faction()))))
-				refresh_ship_cards(self)
+				-- Grid, not list, so it scrolls half a row (SCROLL_STEP_GRID)
+				-- per wheel notch, not a full CARD_SPACING row - only moves
+				-- the TARGET; update()'s own per-frame lerp eases the actual
+				-- displayed position toward it (direct instruction: smooth
+				-- animated scrolling instead of an instant snap/rebuild).
+				local delta_grid = (action_id == hash("zoom_in")) and -SCROLL_STEP_GRID or SCROLL_STEP_GRID
+				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta_grid, max_scroll_for_grid(#ship_forsale_rows(session.get_faction()))))
 			elseif hits(self.ownedships_panel_node, action) then
 				self.scroll.ownedships = math.max(0, math.min(self.scroll.ownedships + delta, max_scroll_for(#owned_ship_rows(session.get_faction(), session.get_ship_id()))))
 				refresh_ship_cards(self)
@@ -1296,14 +1824,39 @@ function on_input(self, action_id, action)
 		end
 
 		if self.active_page == "ships" then
-			-- Ships tab: click-to-act, no drag. Clicking a card (either
-			-- list) opens the ship detail modal (§2.8.9, per direct
-			-- instruction) instead of going straight to a confirm dialog -
-			-- that modal figures out its own Purchase/Select/just-Cancel
-			-- state and performs the action immediately on its own button.
-			-- Selling is unchanged: still the card's own inline Sell button
-			-- + the plain confirm dialog (§2.8.7), checked first so it
-			-- doesn't also open the detail modal for the same click.
+			-- Ships-For-Sale grid: press-and-drag-to-scroll (direct
+			-- instruction), checked BEFORE the click-to-act loop below so a
+			-- press anywhere in this one panel is never acted on immediately
+			-- - it's resolved on release (on_input's action.released branch)
+			-- as either a click (opens whichever card, if any, was under the
+			-- initial press) or a drag-scroll, depending on how far the
+			-- cursor moved in between (DRAG_CLICK_THRESHOLD). This is what
+			-- lets the grid be scrolled by dragging its own content, not
+			-- just the mouse wheel, without a drag ever accidentally
+			-- opening a ship's detail modal mid-scroll. Owned Ships (the
+			-- other list on this tab) is unaffected - still click-on-press,
+			-- same as every other card list on this whole screen.
+			if hits(self.forsale_panel_node, action) then
+				local hit_item_key = nil
+				for _, card in ipairs(self.ship_cards) do
+					if card.source == "ship_forsale" and card.box and hits(card.box, action) then
+						hit_item_key = card.item_key
+						break
+					end
+				end
+				self.forsale_press = { item_key = hit_item_key, start_y = action.y, last_y = action.y, dragged = false }
+				return true
+			end
+
+			-- Click-to-act, no drag, for everything else on this tab.
+			-- Clicking a card opens the ship detail modal (§2.8.9, per
+			-- direct instruction) instead of going straight to a confirm
+			-- dialog - that modal figures out its own Purchase/Select/
+			-- just-Cancel state and performs the action immediately on its
+			-- own button. Selling is unchanged: still the card's own inline
+			-- Sell button + the plain confirm dialog (§2.8.7), checked
+			-- first so it doesn't also open the detail modal for the same
+			-- click.
 			for _, card in ipairs(self.ship_cards) do
 				local panel_node = panel_for_card(self, card)
 
@@ -1482,6 +2035,18 @@ function on_input(self, action_id, action)
 		end_drag(self)
 		refresh_markers(self)
 		refresh_module_cards(self)
+		return true
+	elseif action.released and self.forsale_press then
+		-- Resolves a Ships-For-Sale press (started above, in the "ships"
+		-- active_page press handling) as a click only if the cursor never
+		-- moved past DRAG_CLICK_THRESHOLD - a real drag-scroll (already
+		-- applied live, per motion, in the action_id == nil branch above)
+		-- never also opens the ship detail modal on release.
+		local press = self.forsale_press
+		self.forsale_press = nil
+		if not press.dragged and press.item_key then
+			show_ship_detail(self, press.item_key)
+		end
 		return true
 	end
 	return false

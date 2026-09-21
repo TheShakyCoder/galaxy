@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_interceptor/barracuda.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/escort_interceptor/barracuda_palette.png"
+name: "barracuda"

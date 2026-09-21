@@ -21,7 +21,7 @@
 local M = {}
 
 M.SHIPS = {
-	["patrol_1"] = {
+	["patrol_interceptor"] = {
 		class = "Patrol",
 		-- Full stat block (plan.md §2.1.1's Hull/Engine/FTL/Computer Systems
 		-- baseline), populated directly on this ship rather than left as pure
@@ -65,10 +65,10 @@ M.SHIPS = {
 		-- `components = { W = 3, C = 2, E = 3, H = 1 }` - plain integers,
 		-- a balancing fact not creative expression, same footing as the
 		-- Hull/Engine/FTL/Computer stat block above (§0/§2.1.1). Per
-		-- direct instruction, `H` bumped from 1 to 2 - Patrol 1 now
+		-- direct instruction, `H` bumped from 1 to 2 - Patrol Interceptor now
 		-- deviates from that reference baseline rather than matching it
 		-- exactly (H is the one field no longer identical to Viper Mk II
-		-- standard tier). Applied to Patrol 1 as a whole (a ship-level
+		-- standard tier). Applied to Patrol Interceptor as a whole (a ship-level
 		-- stat, shared by both faction skins) rather than Accord-only,
 		-- consistent with "only name/model/weapon_gui differ per
 		-- faction" (§2.1.2) - flag if Sardine specifically (Accord-only)
@@ -87,8 +87,8 @@ M.SHIPS = {
 		-- the actual hull rather than floating at random; waiting on real
 		-- coordinates (plan.md §4). Derived from the hull's own real
 		-- geometry: the outpost screen renders the ship visual at
-		-- ~49.17 px/meter (see main/models/patrol_1/ -
-		-- "build_patrol1_model.py" if this ever needs regenerating), so a
+		-- ~49.17 px/meter (see assets/models/patrol_interceptor/ -
+		-- "build_patrol_interceptor_model.py" if this ever needs regenerating), so a
 		-- point at ship-space (x, z) meters maps to a screen offset of
 		-- roughly (x * 49.17, z * 49.17).
 		slot_positions = {
@@ -130,27 +130,315 @@ M.SHIPS = {
 			-- state): a rudimentary ORIGINAL 3D hull, small-patrol-boat scale
 			-- (12m long, 3m beam, 2.8m tall including a small cabin),
 			-- hand-authored as a low-poly glTF
-			-- (main/models/patrol_1/patrol_1.gltf, 22 unique vertices / 36
+			-- (assets/models/patrol_interceptor/patrol_interceptor.gltf, 22 unique vertices / 36
 			-- triangles) - deliberately NOT the reference project's actual
 			-- Viper Mk II/Cylon Raider meshes, which are BSG-derived vehicle
 			-- designs off-limits per §0 regardless of the CC-BY license on
 			-- those specific mesh files (that license covers only the
 			-- modeler's own copyright in the file, not the underlying
-			-- BSG-owned design). Both factions share this same placeholder
-			-- hull for now - distinct faction art is still open (§4).
-			accord = { name = "Sardine", model = "/main/models/patrol_1/patrol_1.model", weapon_gui = "<TBD>" },
-			swarm  = { name = "Hummingbird", model = "/main/models/patrol_1/patrol_1.model", weapon_gui = "<TBD>" },
+			-- BSG-owned design). This hand-authored hull still exists on disk
+			-- (assets/models/patrol_interceptor/patrol_interceptor.glb) but is
+			-- NOT what Sardine's `model` actually renders - see below.
+			--
+			-- Sardine's `model` (`patrol_interceptor.model`) actually wraps
+			-- `assets/models/patrol_interceptor/sardine.glb`, a SEPARATE file
+			-- from the hand-authored hull above - this was already true before
+			-- this note was written (a pre-existing gap between this comment's
+			-- claim and the actual wiring, not something introduced here). That
+			-- `sardine.glb` has now been REPLACED per direct instruction with
+			-- ~/Defold/SuperShips's `bsgo_ships_improved/hd/viper_mk2/
+			-- viper_mk2.glb` (BSGO-identifying metadata stripped on copy, same
+			-- as every other SuperShips-sourced model in this file).
+			-- HIGHEST-SEVERITY §0 EXCEPTION, tied with Hummingbird's raider.glb:
+			-- `viper_mk2` completes the EXACT named pair this comment block has
+			-- always cited as the paradigm example of what §0 excludes - "Viper
+			-- Mk II/Cylon Raider" - and it's now wired to the very ship
+			-- (Sardine, Interceptor/Patrol) this comment was originally written
+			-- about. Same `"note": "reference only; friend already has a Mk
+			-- II"` marker as Raider's own manifest entry - a separate signal
+			-- from the asset pack's own author, not just the BSG-IP question.
+			-- Used anyway per direct instruction after being shown the render
+			-- (confirmed earlier in this same session) and both of these points
+			-- called out explicitly - a conscious, acknowledged override of
+			-- this comment's own original rule, not a silent contradiction.
+			--
+			-- Hummingbird's `model` was ORIGINALLY a separate user-supplied,
+			-- CC-BY-4.0-licensed Sketchfab asset (attribution: JazOone,
+			-- "SpaceShip") - since REPLACED per direct instruction with
+			-- ~/Defold/SuperShips's `bsgo_ships_improved/hd/raider/raider.glb`
+			-- (copied over the old `assets/models/patrol_interceptor/
+			-- hummingbird.glb` file path, BSGO-identifying metadata stripped on
+			-- copy same as every other SuperShips-sourced model in this file).
+			-- HIGHEST-SEVERITY §0 EXCEPTION IN THIS FILE: `raider` is not just
+			-- "BSG-derived" like the other exceptions below - it IS, by name,
+			-- the exact "Cylon Raider" this very comment block (and this
+			-- project's plan.md) has repeatedly cited as the paradigm example
+			-- of what §0 excludes. Its own SuperShips manifest also carries a
+			-- note the other sourced models don't: `"note": "reference only;
+			-- friend already has a Raider"` - a signal from the asset pack's
+			-- own author that this particular file wasn't intended for general
+			-- reuse, separate from the BSG-IP question. Flagged with this
+			-- specific severity and used anyway per direct instruction after
+			-- being shown the render and both of these points explicitly - not
+			-- a silent contradiction of this comment's own stated rule.
+			accord = { name = "Sardine", model = "/assets/models/patrol_interceptor/patrol_interceptor.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Hummingbird", model = "/assets/models/patrol_interceptor/hummingbird.model", weapon_gui = "<TBD>" },
 		},
 	},
-	["escort_1"] = {
+	["patrol_support"] = {
+		class = "Patrol",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Support.
+		role = "Support",
+		-- Full stat block: the unmodified universal baseline (§2.1.1) - NOT
+		-- Patrol Interceptor's own hull_points=600 override (ship-specific, not
+		-- Patrol-tier-wide, per §2.1.1's shared-baseline note elsewhere in this
+		-- file).
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- No confirmed slot-count number exists yet for this ship, so left
+		-- empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Support row): Accord =
+			-- Pilotfish, Swarm = Oxpecker - both proposed, same confirm-or-correct
+			-- pattern as every other name in this file.
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/heavy_raider/heavy_raider.glb`
+			-- (copied to `assets/models/patrol_support/oxpecker.glb`, real binary
+			-- GLB, baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Heavy Raider" ->
+			-- "oxpecker_hull", "cylon_*" materials -> "oxpecker_*", extras
+			-- removed).
+			-- FLAGGED, same "Cylon" pattern as the others, and part of the same
+			-- Raider design family as Hummingbird's own model (see
+			-- `patrol_interceptor` above for that entry's own heightened-severity
+			-- note) - a transport variant with forward tusks and twin shoulder
+			-- drives, `"cls": "Strike"`, 10m scale. Used anyway per direct
+			-- instruction after being shown the render - not a §0-compliant
+			-- asset, kept here as an explicit, acknowledged exception rather
+			-- than a silent one.
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/raptor/raptor.glb` (copied to
+			-- `assets/models/patrol_support/pilotfish.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Raptor" ->
+			-- "pilotfish_hull", "colonial_*"/"glass"/"engine_glow" materials ->
+			-- "pilotfish_*", extras removed).
+			-- FLAGGED, same "Colonial" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Colonial"`, `"cls": "Strike"` (8.6m
+			-- scale) - the well-known Colonial transport/scout ship from the
+			-- source material, a fitting "support role" ship even if that's not
+			-- why it was picked. Used anyway per direct instruction after being
+			-- shown the render - not a §0-compliant asset, kept here as an
+			-- explicit, acknowledged exception rather than a silent one.
+			accord = { name = "Pilotfish", model = "/assets/models/patrol_support/pilotfish.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Oxpecker", model = "/assets/models/patrol_support/oxpecker.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["patrol_assault"] = {
+		class = "Patrol",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Assault.
+		role = "Assault",
+		-- Full stat block: the unmodified universal baseline (§2.1.1) - NOT
+		-- Patrol Interceptor's own hull_points=600 override, since that override
+		-- was specific to that one ship, not a Patrol-tier-wide change (§2.1.1
+		-- establishes 650 as the shared starting point for all four classes).
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- No confirmed slot-count number exists yet for this ship, so left
+		-- empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Assault row): Accord = Piranha,
+			-- Swarm = Shrike - both proposed, same confirm-or-correct pattern as
+			-- every other name in this file.
+			--
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/rhino/rhino.glb` (copied to
+			-- `assets/models/patrol_assault/piranha.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Rhino" ->
+			-- "piranha_hull", "colonial_olive"/"glass"/"colonial_dark"/
+			-- "engine_glow" materials -> "piranha_*", extras removed).
+			-- FLAGGED, same pattern as the exceptions before it: source asset's
+			-- own manifest tags it `"faction": "Colonial"`, `"cls": "Strike"`
+			-- (an 11m small strike-fighter, unlike the capital/escort-scale
+			-- sources used so far), referenced from playbsgo.com/fleet.html,
+			-- "reference-guided interpretation" of a canon Colonial strike craft
+			-- (armored cockpit wedge, broad stub wings, raised rear engine
+			-- cluster) - i.e. BSG-derived vehicle design, §0's excluded
+			-- category. Used anyway per direct instruction after being shown the
+			-- render - not a §0-compliant asset, kept here as an explicit,
+			-- acknowledged exception rather than a silent one.
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/marauder/marauder.glb`
+			-- (copied to `assets/models/patrol_assault/shrike.glb`, real binary
+			-- GLB, baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Marauder" ->
+			-- "shrike_hull", "cylon_*" materials -> "shrike_*", extras removed).
+			-- FLAGGED, same "Cylon" pattern as the others, and a close visual
+			-- cousin of the Cylon Raider silhouette (single curved wing/body,
+			-- red light bar) even though it's a distinct named ship in the
+			-- source (`"cls": "Strike"`, 12m fighter scale). Used anyway per
+			-- direct instruction after being shown the render - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			accord = { name = "Piranha", model = "/assets/models/patrol_assault/piranha.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Shrike", model = "/assets/models/patrol_assault/shrike.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["patrol_tactical"] = {
+		class = "Patrol",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Tactical.
+		role = "Tactical",
+		-- Full stat block: the unmodified universal baseline (§2.1.1) - NOT
+		-- Patrol Interceptor's own hull_points=600 override (ship-specific, not
+		-- Patrol-tier-wide).
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- No confirmed slot-count number exists yet for this ship, so left
+		-- empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Tactical row): Accord =
+			-- Anglerfish, Swarm = Kingfisher - both proposed, same
+			-- confirm-or-correct pattern as every other name in this file.
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/war_raider/war_raider.glb`
+			-- (copied to `assets/models/patrol_tactical/kingfisher.glb`, real
+			-- binary GLB, baseColorFactor materials only, no textures).
+			-- BSGO-identifying internal metadata stripped on copy (node/mesh
+			-- "War Raider" -> "kingfisher_hull", "cylon_*" materials ->
+			-- "kingfisher_*", extras removed).
+			-- FLAGGED, same "Cylon" pattern as the others, part of the same
+			-- Raider design family as Hummingbird's model (see
+			-- `patrol_interceptor` above) but a broader flying-wing shape, less
+			-- identical to the classic Raider silhouette - a broad solid swept
+			-- wing with a compact armored center, `"cls": "Strike"`, 9m scale.
+			-- Used anyway per direct instruction after being shown the render -
+			-- not a §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/viper_mk7/viper_mk7.glb`
+			-- (copied to `assets/models/patrol_tactical/anglerfish.glb`, real
+			-- binary GLB, baseColorFactor materials only, no textures).
+			-- BSGO-identifying internal metadata stripped on copy (node/mesh
+			-- "Viper Mk VII" -> "anglerfish_hull", "colonial_*"/"glass"/
+			-- "engine_glow" materials -> "anglerfish_*", extras removed).
+			-- FLAGGED, same "Colonial" pattern as the others, and a close
+			-- relative of Sardine's own viper_mk2.glb (see `patrol_interceptor`
+			-- above for that entry's own heightened-severity note) - a later,
+			-- distinct numbered Viper variant (`"cls": "Strike"`, 9.2m scale),
+			-- still individually recognizable to anyone familiar with the source
+			-- material even if less singularly iconic than Mk II. Used anyway
+			-- per direct instruction after being shown the render - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			accord = { name = "Anglerfish", model = "/assets/models/patrol_tactical/anglerfish.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Kingfisher", model = "/assets/models/patrol_tactical/kingfisher.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["escort_interceptor"] = {
 		class = "Escort",
 		-- Full stat block (plan.md §2.1.1's Hull/Engine/FTL/Computer Systems
 		-- baseline) - the UNMODIFIED universal baseline, no overrides (unlike
-		-- Patrol 1's hull_points), since none have been specified for this
+		-- Patrol Interceptor's hull_points), since none have been specified for this
 		-- ship yet. §2.1.1 already establishes that all four classes share
 		-- this same starting point, so this is a legitimate, non-invented
 		-- value set, not a placeholder guess - just pending real per-ship
-		-- tuning like Patrol 1's was before its hull_points override.
+		-- tuning like Patrol Interceptor's was before its hull_points override.
 		data = {
 			-- Hull Systems
 			hull_points = 650,
@@ -183,7 +471,7 @@ M.SHIPS = {
 			visual_range_m = 500,
 		},
 		-- Component slot counts and their screen positions are NOT set yet -
-		-- unlike Patrol 1, no source number (Viper Mk II tier or otherwise)
+		-- unlike Patrol Interceptor, no source number (Viper Mk II tier or otherwise)
 		-- has been given for Escort, and plan.md's own rule is "don't invent
 		-- unconfirmed numbers" (§0/§4). Deliberately left empty rather than
 		-- guessed: the outpost screen already handles a ship with zero
@@ -201,21 +489,634 @@ M.SHIPS = {
 			-- small/schooling-or-darting flavor) to match Escort's "first
 			-- real," combat-capable role (§2.1).
 			--
-			-- `model` (decided, replacing the old `<TBD>` state): a rudimentary
-			-- ORIGINAL low-poly hull, one size class up from Patrol 1's small
-			-- patrol-boat scale (22m long, 5m beam, §2.1.2/§4 - still placeholder
-			-- proportions, not a considered design, same caveat Patrol 1's own
-			-- dimensions carry), hand-authored as a glTF
-			-- (main/models/escort_1/escort_1.gltf, tools/build_escort1_model.py)
-			-- - same "no BSG-derived design" rule as Patrol 1 (§0). Both
-			-- factions share this same placeholder hull for now, same as
-			-- Patrol 1 - distinct faction art is still open (§4). `weapon_gui`
-			-- still `<TBD>` - and the outpost screen's ship visual/live 3D
-			-- preview (§2.8.9) are both still hardcoded to Patrol 1 regardless
-			-- of active ship (plan.md §4), so nothing reads this ship's own
-			-- model/top-down image yet either way.
-			accord = { name = "Barracuda", model = "/main/models/escort_1/escort_1.model", weapon_gui = "<TBD>" },
-			swarm  = { name = "Falcon", model = "/main/models/escort_1/escort_1.model", weapon_gui = "<TBD>" },
+			-- `model` (decided, replacing the old `<TBD>` state): originally a
+			-- rudimentary ORIGINAL low-poly hull, hand-authored as a glTF
+			-- (assets/models/escort_interceptor/escort_interceptor.gltf, tools/build_escort_interceptor_model.py,
+			-- still referenced by the base "escort_interceptor" ship_id above) - same
+			-- "no BSG-derived design" rule as Patrol Interceptor (§0).
+			--
+			-- Falcon's `model` (REPLACED per direct instruction - originally a
+			-- distinct per-faction, user-supplied asset (S2.8.9), stripped of
+			-- identifying third-party metadata before being added, not
+			-- SuperShips-sourced, no §0 flag needed): now sourced from
+			-- ~/Defold/SuperShips's `assets/models/bsgo_ships_improved/hd/
+			-- banshee/banshee.glb` (copied over the old `assets/models/
+			-- escort_interceptor/falcon.glb`, same filename/path). BSGO-
+			-- identifying internal metadata stripped on copy (node/mesh
+			-- "Banshee" -> "falcon_hull", "cylon_*" materials -> "falcon_*",
+			-- extras removed).
+			-- FLAGGED: source asset's own manifest tags it `"faction": "Cylon"`,
+			-- referenced from playbsgo.com/fleet.html, "reference-guided
+			-- interpretation" of a canon Cylon Escort-class ship (compact rear
+			-- body, four long separated forward lances). Used anyway per direct
+			-- instruction after being shown the render - not a §0-compliant
+			-- asset, kept here as an explicit, acknowledged exception rather
+			-- than a silent one. `outpost.gui_script`'s PREVIEW_CAMERA entry for
+			-- this model was recomputed against the new file's own ~128-unit
+			-- bounding radius (was tuned to the old asset's different scale).
+			--
+			-- Barracuda's `model` (REPLACED per direct instruction - the file
+			-- originally here was the same kind of clean user-supplied asset as
+			-- Falcon's, now swapped out): sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/scythe/scythe.glb` (copied
+			-- over the old `assets/models/escort_interceptor/barracuda.glb`,
+			-- same filename/path, real binary GLB, baseColorFactor materials
+			-- only, no textures). BSGO-identifying internal metadata stripped on
+			-- copy, same as every other SuperShips-sourced model in this file
+			-- (node/mesh "Scythe" -> "barracuda_hull", "colonial_*"/"glass"/
+			-- "engine_glow" materials -> "barracuda_*", extras removed).
+			-- FLAGGED, same pattern as the five exceptions before it: source
+			-- asset's own manifest tags it `"faction": "Colonial"`, referenced
+			-- from playbsgo.com/fleet.html, "reference-guided interpretation" of
+			-- a canon Colonial Escort-class ship (tall axe-shaped hull, cruciform
+			-- stern fins) - i.e. BSG-derived vehicle design, §0's excluded
+			-- category. Used anyway per direct instruction after being shown the
+			-- render and this same resemblance risk a sixth time - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one. `outpost.gui_script`'s
+			-- PREVIEW_CAMERA entry for this model was recomputed against the
+			-- new file's own ~114-unit bounding radius (was tuned to the old
+			-- asset's different scale before).
+			accord = { name = "Barracuda", model = "/assets/models/escort_interceptor/barracuda.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Falcon", model = "/assets/models/escort_interceptor/falcon.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["escort_support"] = {
+		class = "Escort",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Support.
+		role = "Support",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- Escort Interceptor - no Escort-specific tuning has been decided for
+		-- this ship yet.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
+		-- number exists yet, so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Support row): Accord = Remora,
+			-- Swarm = Egret - both proposed, same confirm-or-correct pattern as
+			-- every other name in this file.
+			--
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/glaive/glaive.glb` (copied to
+			-- `assets/models/escort_support/remora.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures - same format Defold's
+			-- importer already renders correctly for this project's other
+			-- third-party models).
+			-- FLAGGED, same as Frigatebird's aesir.glb (`frigate_interceptor`
+			-- above): that source asset's own manifest/README describe it as a
+			-- "reference-guided interpretation" of an actual BSGO "Colonial"-faction
+			-- Escort-class ship, explicitly built so its silhouette is recognizable
+			-- - i.e. it's BSG-derived vehicle design, the same category of asset §0
+			-- already ruled out for the Viper Mk II/Cylon Raider meshes. Used here
+			-- anyway per direct instruction after being shown the render and this
+			-- same resemblance risk a second time - not a §0-compliant asset, kept
+			-- here as an explicit, acknowledged exception rather than a silent one.
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/spectre/spectre.glb` (copied
+			-- to `assets/models/escort_support/egret.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Spectre" ->
+			-- "egret_hull", "cylon_*" materials -> "egret_*", extras removed).
+			-- FLAGGED, same "Cylon" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Cylon"`, referenced from
+			-- playbsgo.com/fleet.html, "reference-guided interpretation" of a
+			-- canon Cylon Escort-class ship - three pronounced radial fins around
+			-- a long forward spear. Used anyway per direct instruction after
+			-- being shown the render - not a §0-compliant asset, kept here as an
+			-- explicit, acknowledged exception rather than a silent one.
+			accord = { name = "Remora", model = "/assets/models/escort_support/remora.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Egret", model = "/assets/models/escort_support/egret.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["escort_tactical"] = {
+		class = "Escort",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Tactical.
+		role = "Tactical",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- every other Escort/Frigate-tier ship so far.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- No confirmed slot-count number exists yet for this ship, so left
+		-- empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Tactical row): Accord =
+			-- Lionfish, Swarm = Osprey - both proposed, same confirm-or-correct
+			-- pattern as every other name in this file.
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/liche/liche.glb` (copied to
+			-- `assets/models/escort_tactical/osprey.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Liche" ->
+			-- "osprey_hull", "cylon_*" materials -> "osprey_*", extras removed).
+			-- FLAGGED, same "Cylon" pattern as Pelican's hel.glb: source asset's
+			-- own manifest tags it `"faction": "Cylon"` - the explicitly-named
+			-- banned term in §0 - referenced from playbsgo.com/fleet.html,
+			-- "reference-guided interpretation" of a canon Cylon ship (vertically
+			-- separated upper/lower forward blades, bone-white/metallic look,
+			-- same bio-mechanical Cylon design language as Pelican's source).
+			-- Used anyway per direct instruction after being shown the render -
+			-- not a §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			-- Accord's `model` is still `<TBD>` - no third-party or hand-authored
+			-- asset has been picked for Lionfish yet.
+			accord = { name = "Lionfish", model = "<TBD>", weapon_gui = "<TBD>" },
+			swarm  = { name = "Osprey", model = "/assets/models/escort_tactical/osprey.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["escort_assault"] = {
+		class = "Escort",
+		-- `role` (see `frigate_support`'s own entry for the field's rationale): Assault.
+		role = "Assault",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- every other Escort/Frigate-tier ship so far - no Escort-specific
+		-- tuning has been decided for this ship yet.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
+		-- number exists yet, so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Assault row): Accord = Moray,
+			-- Swarm = Goshawk - both proposed, same confirm-or-correct pattern as
+			-- every other name in this file.
+			--
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/maul/maul.glb` (copied to
+			-- `assets/models/escort_assault/moray.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped before adding, same as every other
+			-- SuperShips-sourced model in this file (node/mesh "Maul" ->
+			-- "moray_hull", "colonial_*"/"engine_glow" materials -> "moray_*",
+			-- the extras block with ship_id/faction/ship_class removed entirely).
+			-- FLAGGED, same pattern as the four exceptions before it: that source
+			-- asset's own manifest describes it as a "reference-guided
+			-- interpretation" of an actual BSGO "Colonial"-faction Escort-class
+			-- assault ship, explicitly built so its silhouette is recognizable -
+			-- i.e. it's BSG-derived vehicle design, the same category of asset §0
+			-- already ruled out for the Viper Mk II/Cylon Raider meshes. Used here
+			-- anyway per direct instruction after being shown the render and this
+			-- same resemblance risk a fifth time - not a §0-compliant asset, kept
+			-- here as an explicit, acknowledged exception rather than a silent one.
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/wraith/wraith.glb` (copied to
+			-- `assets/models/escort_assault/goshawk.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Wraith" ->
+			-- "goshawk_hull", "cylon_*" materials -> "goshawk_*", extras
+			-- removed).
+			-- FLAGGED, same "Cylon" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Cylon"`, referenced from
+			-- playbsgo.com/fleet.html, "reference-guided interpretation" of a
+			-- canon Cylon Escort-class ship - angular split armored jaws with a
+			-- central opening and large red inner vents, an aggressive shape
+			-- fitting the Assault row. Used anyway per direct instruction after
+			-- being shown the render - not a §0-compliant asset, kept here as an
+			-- explicit, acknowledged exception rather than a silent one.
+			accord = { name = "Moray", model = "/assets/models/escort_assault/moray.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Goshawk", model = "/assets/models/escort_assault/goshawk.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["frigate_support"] = {
+		class = "Frigate",
+		-- `role` (new field, plan.md §2.1.2's Interceptor/Support/Assault/Tactical
+		-- naming-matrix rows): Support. Deliberately separate from `class` above,
+		-- which stays the size tier (Patrol/Escort/Frigate/Carrier) - outpost.gui_script
+		-- already reads `ship.class` for display and module-compatibility filtering,
+		-- so that field couldn't be repurposed to hold the role instead. Purely
+		-- descriptive for now, same as `components`/`slot_positions` being left
+		-- empty below - not yet wired into any gameplay logic. Patrol Interceptor/Escort Interceptor
+		-- predate this dimension and are Interceptor-row per the naming matrix, but
+		-- don't have a `role` field set retroactively (out of scope here).
+		role = "Support",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- Escort Interceptor - no Frigate-specific tuning has been decided yet, so this is
+		-- the shared starting point, not an invented number.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as Escort Interceptor: no confirmed Frigate-tier slot-count number exists yet,
+		-- so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Support row): Accord = Manta Ray,
+			-- Swarm = Pelican - both proposed, same confirm-or-correct pattern as
+			-- every other name in this file. (The aesir-derived glb was briefly
+			-- and incorrectly wired to Pelican here; it actually belongs to
+			-- Frigatebird, Interceptor row, `frigate_interceptor` above - moved
+			-- there per direct correction.)
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/hel/hel.glb` (copied to
+			-- `assets/models/frigate_support/pelican.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped before adding (node/mesh renamed
+			-- "Hel" -> "pelican_hull", materials "cylon_*" -> "pelican_*", the
+			-- `extras` block with ship_id/faction/ship_class removed entirely) -
+			-- same cleanup applied retroactively to Frigatebird's and Remora's
+			-- and Hammerhead's models per direct instruction.
+			-- FLAGGED, stronger than the previous three: this source asset's own
+			-- manifest tags it `"faction": "Cylon"` (the OTHER explicitly-named
+			-- banned term in §0, alongside "Colonial") and its render is a wide
+			-- bone-white organic shell with a row of glowing red lights - the
+			-- show's signature Cylon bio-mechanical/red-scanner-eye look, arguably
+			-- more immediately recognizable than the Colonial-line ships used so
+			-- far. Used anyway per direct instruction after being shown the
+			-- render and this specific (stronger) resemblance risk - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/vanir/vanir.glb` (copied to
+			-- `assets/models/frigate_support/manta_ray.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Vanir" ->
+			-- "manta_ray_hull", "colonial_*"/"engine_glow" materials ->
+			-- "manta_ray_*", extras removed).
+			-- FLAGGED, same "Colonial" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Colonial"`, referenced from
+			-- playbsgo.com/fleet.html, "reference-guided interpretation" of a
+			-- canon Colonial capital ("Line" class) ship - two full-length
+			-- parallel hulls with an open central channel and connecting
+			-- bridges, a twin-hull silhouette that reads as a fitting coincidence
+			-- for a Manta Ray, though that's not why it was picked. Used anyway
+			-- per direct instruction after being shown the render - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			accord = { name = "Manta Ray", model = "/assets/models/frigate_support/manta_ray.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Pelican", model = "/assets/models/frigate_support/pelican.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["frigate_interceptor"] = {
+		class = "Frigate",
+		-- `role` (see `frigate_support` above for the field's own rationale): Interceptor.
+		role = "Interceptor",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
+		-- been decided yet.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as the other Frigate-tier ships: no confirmed slot-count number
+		-- exists yet, so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Interceptor row): Accord = Marlin,
+			-- Swarm = Frigatebird - both proposed, same confirm-or-correct pattern as
+			-- every other name in this file.
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/aesir/aesir.glb` (copied to
+			-- `assets/models/frigate_interceptor/frigatebird.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures - same format Defold's
+			-- importer already renders correctly for this project's other
+			-- third-party models). Originally (mis)assigned to Pelican on
+			-- `frigate_support` - moved here per direct correction.
+			-- FLAGGED: that source asset's own manifest/README describe it as a
+			-- "reference-guided interpretation" of an actual BSGO "Colonial"-faction
+			-- capital ship, explicitly built so its silhouette is recognizable -
+			-- i.e. it's BSG-derived vehicle design, the same category of asset §0
+			-- and this file's own Patrol Interceptor/Escort Interceptor header comments
+			-- already ruled out for the Viper Mk II/Cylon Raider meshes. Used here
+			-- anyway per direct instruction after being shown the live render and
+			-- the specific resemblance risk - not a §0-compliant asset, kept here
+			-- as an explicit, acknowledged exception rather than a silent one.
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/fenrir/fenrir.glb` (copied to
+			-- `assets/models/frigate_interceptor/marlin.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Fenrir" ->
+			-- "marlin_hull", "cylon_*" materials -> "marlin_*", extras removed).
+			-- FLAGGED, and NOTE the cross-faction mismatch: this source asset's
+			-- own manifest tags it `"faction": "Cylon"` - the other explicitly-
+			-- named banned term in §0 - despite being used here for an Accord
+			-- (fish-named) ship, not a Swarm one. "Reference-guided
+			-- interpretation" of a canon Cylon ship (forked long forward hull,
+			-- paired lower lances, tall swept rear fins - a sleek, fast-reading
+			-- shape that fits Marlin's Interceptor-row speed flavor regardless of
+			-- source faction). Used anyway per direct instruction after being
+			-- shown the render and this specific cross-faction resemblance risk -
+			-- not a §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			accord = { name = "Marlin", model = "/assets/models/frigate_interceptor/marlin.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Frigatebird", model = "/assets/models/frigate_interceptor/frigatebird.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["frigate_tactical"] = {
+		class = "Frigate",
+		-- `role` (see `frigate_support` above for the field's own rationale): Tactical.
+		role = "Tactical",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
+		-- been decided yet.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
+		-- number exists yet, so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Tactical row): Accord = Hammerhead,
+			-- Swarm = Harpy Eagle - both proposed, same confirm-or-correct pattern
+			-- as every other name in this file.
+			--
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/gungnir/gungnir.glb` (copied to
+			-- `assets/models/frigate_tactical/hammerhead.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures - same format Defold's
+			-- importer already renders correctly for this project's other
+			-- third-party models).
+			-- FLAGGED, same as Frigatebird's aesir.glb and Remora's glaive.glb: that
+			-- source asset's own manifest/README describe it as a "reference-guided
+			-- interpretation" of an actual BSGO "Colonial"-faction capital ("Line"
+			-- class) ship, explicitly built so its silhouette is recognizable -
+			-- i.e. it's BSG-derived vehicle design, the same category of asset §0
+			-- already ruled out for the Viper Mk II/Cylon Raider meshes. Used here
+			-- anyway per direct instruction after being shown the render and this
+			-- same resemblance risk a third time - not a §0-compliant asset, kept
+			-- here as an explicit, acknowledged exception rather than a silent one.
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/nidhogg/nidhogg.glb` (copied
+			-- to `assets/models/frigate_tactical/harpy_eagle.glb`, real binary
+			-- GLB, baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Nidhogg" ->
+			-- "harpy_eagle_hull", "cylon_*" materials -> "harpy_eagle_*", extras
+			-- removed).
+			-- FLAGGED, same "Cylon" pattern as Pelican's hel.glb and Osprey's
+			-- liche.glb: source asset's own manifest tags it `"faction": "Cylon"`,
+			-- referenced from playbsgo.com/fleet.html, "reference-guided
+			-- interpretation" of a canon Cylon ship (organic central spear
+			-- wrapped by four outward-curving skeletal claws - the claw shape
+			-- actually reads as a fitting coincidence for an eagle-named ship,
+			-- though that's not why it was picked). Used anyway per direct
+			-- instruction after being shown the render - not a §0-compliant
+			-- asset, kept here as an explicit, acknowledged exception rather
+			-- than a silent one.
+			accord = { name = "Hammerhead", model = "/assets/models/frigate_tactical/hammerhead.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Harpy Eagle", model = "/assets/models/frigate_tactical/harpy_eagle.model", weapon_gui = "<TBD>" },
+		},
+	},
+	["frigate_assault"] = {
+		class = "Frigate",
+		-- `role` (see `frigate_support` above for the field's own rationale): Assault.
+		role = "Assault",
+		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
+		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
+		-- been decided yet.
+		data = {
+			-- Hull Systems
+			hull_points = 650,
+			hull_recovery_per_sec = 5,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 5,
+			critical_defense = 100,
+
+			-- Engine Systems
+			avoidance = 500,
+			turning_speed_deg_per_sec = 47.5,
+			turning_acceleration_deg_per_sec2 = 47.5,
+			inertial_compensation_m_per_sec = 100,
+			acceleration_m_per_sec2 = 10,
+			speed_m_per_sec = 52.5,
+			boost_speed_m_per_sec = 77.5,
+			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+
+			-- FTL Systems
+			ftl_range_ly = 5.5,
+			ftl_charge_sec = 15,
+			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+
+			-- Computer Systems
+			power = 175,
+			power_recharge_per_sec = 6,
+			firewall_rating = 200,
+			emitter_rating = 200,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 500,
+		},
+		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
+		-- number exists yet, so left empty rather than guessed (§0/§4).
+		components = {},
+		slot_positions = {},
+		faction_skins = {
+			-- Naming convention (plan.md §2.1.2's Assault row): Accord = Tiger
+			-- Shark, Swarm = Golden Eagle - both proposed, same confirm-or-correct
+			-- pattern as every other name in this file.
+			--
+			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/jormung/jormung.glb` (copied
+			-- to `assets/models/frigate_assault/golden_eagle.glb`, real binary
+			-- GLB, baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Jormung" ->
+			-- "golden_eagle_hull", "cylon_*" materials -> "golden_eagle_*",
+			-- extras removed).
+			-- FLAGGED, same "Cylon" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Cylon"`, referenced from
+			-- playbsgo.com/fleet.html, "reference-guided interpretation" of a
+			-- canon Cylon capital ("Line" class) ship - deep vertical blade hull
+			-- with a flared forward edge, the same row-of-red-lights motif as
+			-- Pelican's hel.glb. At ~400-unit bounding radius, this is the
+			-- largest model in the roster so far. Used anyway per direct
+			-- instruction after being shown the render - not a §0-compliant
+			-- asset, kept here as an explicit, acknowledged exception rather
+			-- than a silent one.
+			-- Accord's `model`: sourced from ~/Defold/SuperShips's
+			-- `assets/models/bsgo_ships_improved/hd/jotunn/jotunn.glb` (copied to
+			-- `assets/models/frigate_assault/tiger_shark.glb`, real binary GLB,
+			-- baseColorFactor materials only, no textures). BSGO-identifying
+			-- internal metadata stripped on copy (node/mesh "Jotunn" ->
+			-- "tiger_shark_hull", "colonial_*"/"engine_glow" materials ->
+			-- "tiger_shark_*", extras removed).
+			-- FLAGGED, same "Colonial" pattern as the others: source asset's own
+			-- manifest tags it `"faction": "Colonial"`, referenced from
+			-- playbsgo.com/fleet.html, "reference-guided interpretation" of a
+			-- canon Colonial capital ("Line" class) ship - deep armored assault
+			-- hull, sloping prow, stepped dorsal deck, rear outriggers, an
+			-- appropriately heavy-hitter shape for the Assault row. Used anyway
+			-- per direct instruction after being shown the render - not a
+			-- §0-compliant asset, kept here as an explicit, acknowledged
+			-- exception rather than a silent one.
+			accord = { name = "Tiger Shark", model = "/assets/models/frigate_assault/tiger_shark.model", weapon_gui = "<TBD>" },
+			swarm  = { name = "Golden Eagle", model = "/assets/models/frigate_assault/golden_eagle.model", weapon_gui = "<TBD>" },
 		},
 	},
 }

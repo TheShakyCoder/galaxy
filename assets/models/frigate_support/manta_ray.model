@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_support/manta_ray.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/frigate_support/manta_ray_palette.png"
+name: "manta_ray"

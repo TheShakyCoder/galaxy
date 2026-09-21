@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_support/remora.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/escort_support/remora_palette.png"
+name: "remora"

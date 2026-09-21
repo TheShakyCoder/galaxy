@@ -78,13 +78,13 @@ local function alloc_instance_id()
 end
 
 -- Starting gift for every new character, regardless of faction (direct
--- instruction): the Patrol 1 ship (§2.1.2) fitted with one basic Auto
--- Cannon ("Gnat") and one Mining Cannon ("Digger", §2.8) — one in each
+-- instruction): the Patrol Interceptor ship (§2.1.2) fitted with one basic
+-- Auto Cannon ("Gnat") and one Mining Cannon ("Digger", §2.8) — one in each
 -- weapon slot. The Asteroid Analyser (§2.8, a Computer-slot module) is NOT
 -- part of the starting gift — it's available to purchase instead (see the
 -- outpost screen's Shop tab), demonstrating the owned-vs-purchasable
 -- distinction below.
-local STARTING_SHIP_ID = "patrol_1"
+local STARTING_SHIP_ID = "patrol_interceptor"
 local STARTING_GIFT_SLOTS = {
 	{ slot = "W1", item_key = "auto_cannon_basic" },
 	{ slot = "W2", item_key = "mining_cannon_basic" },
