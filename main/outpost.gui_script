@@ -88,6 +88,58 @@ local MARKER_SIZE = vmath.vector3(74, 74, 0)
 -- still clearly legible.
 local SLOT_FILLED_COLOR = vmath.vector4(0.3, 0.8, 0.45, 0.65)
 local SLOT_EMPTY_COLOR = vmath.vector4(0.35, 0.38, 0.42, 0.65)
+-- Advanced-only slot, not yet unlocked (direct instruction: grey out and
+-- disable rather than hide - see build_markers' own `locked` comment).
+-- Dimmer and flatter than SLOT_EMPTY_COLOR so it reads as unavailable
+-- rather than just another empty slot.
+local SLOT_LOCKED_COLOR = vmath.vector4(0.18, 0.19, 0.2, 0.45)
+local SLOT_LOCKED_ICON_COLOR = vmath.vector4(0.5, 0.5, 0.5, 0.5)
+
+-- Weapon firing-arc hover indicator (plan.md §2.8's `angle_deg`/`arc`
+-- provision) - a translucent wedge shown while hovering an OCCUPIED weapon
+-- slot on the Fitting screen, centered on that slot's own mount point.
+-- Radius kept modest (120px) since ship_visual (main/outpost.gui) is only
+-- 260px wide (+-130 from center) - a much bigger wedge would spill past the
+-- panel into the Shop/Owned lists beside it.
+local WEAPON_ARC_SIZE = vmath.vector3(240, 240, 0)
+local WEAPON_ARC_COLOR = vmath.vector4(1.0, 0.85, 0.25, 0.35)
+local WEAPON_ARC_PERIMETER_VERTICES = 48 -- smooth circle, not a faceted polygon like the octagon markers
+
+-- Confirm dialog Yes/No button layout (positions authored in
+-- main/outpost.gui: confirm_yes at x=820, confirm_no at x=1100,
+-- confirm_panel centered at x=960 - symmetric +-140 either side).
+-- Reused to re-center Yes when show_confirm's show_cancel is false.
+local CONFIRM_YES_X = 820
+local CONFIRM_YES_CENTERED_X = 960
+local CONFIRM_BUTTON_Y = 460
+
+-- Sector Map tab (new) - all 58 main/data/star_systems.lua systems plotted
+-- as dot+label pairs, ported from the reference project's own
+-- main/map.gui_script + main/sector_map.lua (per direct instruction) -
+-- same "create the 58 nodes once, just show/hide/recolor on open" pattern,
+-- since the map plots static data that never changes mid-session (there's
+-- no flight mode yet, §2.10/§4, so a system's `map_x`/`map_y` position and
+-- which one counts as "current" - see refresh_map below - never move
+-- during a session either).
+--
+-- Unlike the reference (which plotted map_x/map_y as a DIRECT 1:1 screen
+-- offset - its own comment noted the source data happened to already be a
+-- screen-appropriate scale for its smaller map overlay), `MAP_SCALE` here
+-- is computed at build_map_dots() time from the real data bounds (found
+-- via a one-off luajit scan of star_systems.lua: x spans [-385.5, 372.5],
+-- y spans [-230.5, 180.5], so a naive 1:1 plot would only fill a small
+-- fraction of `map_panel`'s much bigger 1720x620 area) rather than
+-- hardcoded, so it stays correct if a system's position (or the roster
+-- itself) ever changes.
+local MAP_PANEL_CENTER = vmath.vector3(960, 460, 0) -- matches main/outpost.gui's "map_panel" node position
+local MAP_PANEL_HALF_SIZE = vmath.vector3(1720 / 2, 620 / 2, 0) -- matches "map_panel"'s size
+local MAP_MARGIN = 70 -- panel-edge padding so dots/labels never clip the panel border
+local MAP_DOT_SIZE = vmath.vector3(14, 14, 0)
+local MAP_DOT_SIZE_CURRENT = vmath.vector3(22, 22, 0) -- grown, not just recolored - same reasoning as MARKER_SIZE's own "color alone isn't enough" precedent elsewhere in this file
+local MAP_LABEL_OFFSET_Y = 16
+local MAP_LABEL_SCALE = vmath.vector3(0.38, 0.38, 1)
+local MAP_DOT_COLOR = vmath.vector4(0.5, 0.55, 0.62, 1.0) -- neutral grey - every system except the current one
+local MAP_CURRENT_COLOR = vmath.vector4(0.4, 0.9, 1.0, 1.0) -- cyan, same color the reference used for "where you are right now"
 
 -- Icon shown per slot (main/images/icons.atlas) — a filled module's own
 -- icon (catalog.lua's `icon` field) when installed, otherwise a generic
@@ -310,6 +362,7 @@ function init(self)
 		overview = gui.get_node("tab_overview"),
 		fitting = gui.get_node("tab_fitting"),
 		ships = gui.get_node("tab_ships"),
+		map = gui.get_node("tab_map"),
 	}
 
 	-- Overview tab's static nodes. No "Go to Fitting"/"Go to Ships" links
@@ -324,6 +377,21 @@ function init(self)
 
 	-- Fitting tab's static nodes (enabled/disabled together on tab switch)
 	self.ship_visual_node = gui.get_node("ship_visual")
+	-- Weapon firing-arc hover wedge (plan.md §2.8) - one reusable TYPE_PIE
+	-- node, repositioned/reshaped and toggled per hovered slot rather than
+	-- built once per marker like build_markers' own per-slot nodes, since
+	-- only one can ever be shown at a time (whatever's under the cursor).
+	-- Same TYPE_PIE setup as new_octagon_node (further down this file) but
+	-- WEAPON_ARC_PERIMETER_VERTICES-sided (a smooth circle, not an 8-sided
+	-- octagon) and a variable fill/rotation instead of a fixed 360.
+	self.weapon_arc_node = gui.new_pie_node(gui.get_position(self.ship_visual_node), WEAPON_ARC_SIZE)
+	gui.set_perimeter_vertices(self.weapon_arc_node, WEAPON_ARC_PERIMETER_VERTICES)
+	gui.set_outer_bounds(self.weapon_arc_node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_inner_radius(self.weapon_arc_node, 0)
+	gui.set_pivot(self.weapon_arc_node, gui.PIVOT_CENTER)
+	gui.set_color(self.weapon_arc_node, WEAPON_ARC_COLOR)
+	gui.set_enabled(self.weapon_arc_node, false)
+	self.weapon_arc_hover_slot = nil -- slot_id the wedge is currently shown for, or nil
 	self.shop_panel_node = gui.get_node("shop_panel")
 	self.owned_panel_node = gui.get_node("owned_panel")
 	-- Type-filter buttons (§2.8.8) - one box per type, keyed the same as
@@ -372,6 +440,60 @@ function init(self)
 		gui.get_node("row_header_patrol"), gui.get_node("row_header_escort"),
 		gui.get_node("row_header_frigate"),
 	}
+
+	-- Map tab's static nodes, plus its 58 per-system dot+label pairs -
+	-- created once here (ported approach, per direct instruction, from the
+	-- reference project's own main/map.gui_script), not rebuilt per visit
+	-- like Fitting's markers/Ships' cards, since the map plots
+	-- main/data/star_systems.lua's static roster: nothing about a system's
+	-- own position ever changes mid-session. set_page's "map" branch just
+	-- toggles these on/off and calls refresh_map (further down this file)
+	-- to recolor/resize whichever one is "current".
+	self.map_static_nodes = {
+		gui.get_node("map_heading"), gui.get_node("map_panel"),
+		gui.get_node("map_current_text"),
+	}
+	self.map_current_text_node = gui.get_node("map_current_text")
+	do
+		-- Scale-to-fit (plan.md's own "derive from real geometry, don't
+		-- hardcode a guess" convention, e.g. slot_positions' px/meter note) -
+		-- computed from the actual bounds of every system's map_x/map_y
+		-- rather than a hand-picked constant, so this stays correct if the
+		-- roster or any position in it ever changes.
+		local min_x, max_x, min_y, max_y = math.huge, -math.huge, math.huge, -math.huge
+		for _, sys in pairs(star_systems.SYSTEMS) do
+			min_x = math.min(min_x, sys.map_x)
+			max_x = math.max(max_x, sys.map_x)
+			min_y = math.min(min_y, sys.map_y)
+			max_y = math.max(max_y, sys.map_y)
+		end
+		local data_center = vmath.vector3((min_x + max_x) / 2, (min_y + max_y) / 2, 0)
+		local data_half = vmath.vector3(math.max(max_x - min_x, 1) / 2, math.max(max_y - min_y, 1) / 2, 0)
+		local panel_half_usable = MAP_PANEL_HALF_SIZE - vmath.vector3(MAP_MARGIN, MAP_MARGIN, 0)
+		local map_scale = math.min(panel_half_usable.x / data_half.x, panel_half_usable.y / data_half.y)
+
+		self.map_dots = {} -- system_id -> { box = node, label = node }
+		for id, sys in pairs(star_systems.SYSTEMS) do
+			local pos = MAP_PANEL_CENTER + vmath.vector3(
+				(sys.map_x - data_center.x) * map_scale,
+				(sys.map_y - data_center.y) * map_scale,
+				0)
+
+			local box = gui.new_box_node(pos, MAP_DOT_SIZE)
+			gui.set_pivot(box, gui.PIVOT_CENTER)
+			gui.set_color(box, MAP_DOT_COLOR)
+			gui.set_enabled(box, false)
+
+			local label = gui.new_text_node(pos + vmath.vector3(0, MAP_LABEL_OFFSET_Y, 0), sys.name)
+			gui.set_font(label, "default_font")
+			gui.set_pivot(label, gui.PIVOT_CENTER)
+			gui.set_scale(label, MAP_LABEL_SCALE)
+			gui.set_color(label, MAP_DOT_COLOR)
+			gui.set_enabled(label, false)
+
+			self.map_dots[id] = { box = box, label = label }
+		end
+	end
 
 	-- Each of the three card-list panels clips its own cards (stencil,
 	-- so cards scrolled past the panel's edge are actually hidden, not
@@ -642,10 +764,24 @@ end
 -- decision) -> invalid_mark (in front of everything).
 local function build_markers(self)
 	clear_markers(self)
-	local ship = ships.SHIPS[session.get_ship_id()]
+	local ship_id = session.get_ship_id()
+	local ship = ships.SHIPS[ship_id]
 	local positions = ship and ship.slot_positions or {}
+	local counts = effective_components(ship_id)
 	local visual_pos = gui.get_position(self.ship_visual_node)
 	for slot_id, offset in pairs(positions) do
+		-- Advanced-only slots (direct instruction: e.g. Patrol Interceptor's
+		-- W4/E5) stay defined in slot_positions for BOTH tiers, but only
+		-- actually USABLE once the ship's been advanced - still shown (not
+		-- hidden), just marked `locked` below and rendered greyed-out,
+		-- non-interactive (refresh_markers/update_hover/the drop-resolution
+		-- in on_input all check this) until then. A slot's ordinal number
+		-- exceeding the CURRENT tier's count for that type
+		-- (effective_components already picks `advanced` vs `components`)
+		-- is what makes it locked.
+		local prefix, number = slot_id:match("^(%a)(%d+)$")
+		local slot_total = prefix and counts[prefix]
+		local locked = slot_total ~= nil and tonumber(number) > slot_total
 		local pos = vmath.vector3(visual_pos.x + offset.x, visual_pos.y + offset.y, 0)
 
 		local border = new_octagon_node(pos, BORDER_SIZE)
@@ -698,6 +834,7 @@ local function build_markers(self)
 			box = box, icon = icon, label = label, level_label = level_label,
 			border = border, invalid_mark = invalid_mark,
 			type = SLOT_TYPE_BY_PREFIX[slot_id:sub(1, 1)],
+			locked = locked,
 		}
 	end
 end
@@ -726,7 +863,10 @@ local function update_hover(self, action)
 	end
 	for slot_id, marker in pairs(self.markers) do
 		if slot_id == hit_slot then
-			local valid = marker.type == self.dragging.type
+			-- Locked (advanced-only, not unlocked yet) slots are never a
+			-- valid drop target, same red-border-plus-X feedback as a
+			-- type mismatch (direct instruction: greyed out AND unusable).
+			local valid = marker.type == self.dragging.type and not marker.locked
 			gui.set_enabled(marker.border, true)
 			gui.set_color(marker.border, valid and BORDER_VALID_COLOR or BORDER_INVALID_COLOR)
 			gui.set_enabled(marker.invalid_mark, not valid)
@@ -751,15 +891,88 @@ local function refresh_markers(self)
 	for _, entry in ipairs(session.get_loadout() or {}) do
 		installed_by_slot[entry.slot] = entry.instance_id
 	end
+	-- Cached for update_weapon_arc_hover below, so the hover check (run on
+	-- every mouse-move) doesn't need to rebuild this from session.get_loadout()
+	-- itself each time - refreshed here alongside the markers it describes.
+	self.installed_by_slot = installed_by_slot
 	for slot_id, marker in pairs(self.markers) do
 		local instance_id = installed_by_slot[slot_id]
 		local inst = instance_id and session.get_instance(instance_id)
 		local module = inst and catalog.get(inst.item_key)
 		local icon_id = (module and module.icon) or SLOT_EMPTY_ICON[marker.type]
 		gui.play_flipbook(marker.icon, icon_id)
-		gui.set_color(marker.box, inst and SLOT_FILLED_COLOR or SLOT_EMPTY_COLOR)
+		if marker.locked then
+			-- Advanced-only slot, ship not advanced yet (direct instruction:
+			-- greyed out and unusable, not hidden) - a locked slot is always
+			-- empty (nothing can ever be installed into it while locked), so
+			-- there's no filled/level-badge state to consider here.
+			gui.set_color(marker.box, SLOT_LOCKED_COLOR)
+			gui.set_color(marker.icon, SLOT_LOCKED_ICON_COLOR)
+		else
+			gui.set_color(marker.box, inst and SLOT_FILLED_COLOR or SLOT_EMPTY_COLOR)
+			gui.set_color(marker.icon, vmath.vector4(1.0, 1.0, 1.0, 1.0))
+		end
 		gui.set_text(marker.level_label, (inst and inst.level > 0) and ("+" .. inst.level) or "")
 	end
+end
+
+local function hide_weapon_arc(self)
+	gui.set_enabled(self.weapon_arc_node, false)
+	self.weapon_arc_hover_slot = nil
+end
+
+-- Shows the firing-arc wedge for one occupied weapon slot, centered on that
+-- slot's own mount point (same {x, y} the marker itself sits at) and aimed
+-- per ships.lua's `angle_deg` (plan.md §2.8) - not the ship's overall center,
+-- since different weapon slots on the same hull can point different ways
+-- (e.g. Patrol Interceptor's W2/W3 angled +-15 off the bow).
+--
+-- Defold's TYPE_PIE fill starts at local 0 degrees (3 o'clock - see
+-- new_octagon_node's own comment on perimeter-vertex placement) and sweeps
+-- toward increasing angles; node `rotation` then offsets that start point.
+-- Converting our own bearing convention (0 = dead ahead/+y, positive =
+-- clockwise toward +x) into the pie's math-angle space (0 = +x/east,
+-- positive = counter-clockwise) gives `90 - angle_deg` as the wedge's
+-- CENTER in pie-space - offsetting by half the arc width then gives the
+-- rotation needed to make the pie's fill START there, so the fill ends up
+-- centered on the intended bearing rather than starting from it.
+local function show_weapon_arc(self, slot_id, angle_deg, arc)
+	local marker = self.markers[slot_id]
+	if not marker then return end
+	local pos = gui.get_position(marker.box)
+	gui.set_position(self.weapon_arc_node, pos)
+	gui.set_size(self.weapon_arc_node, WEAPON_ARC_SIZE)
+	gui.set_fill_angle(self.weapon_arc_node, arc)
+	gui.set_rotation(self.weapon_arc_node, vmath.vector3(0, 0, 90 - angle_deg - arc / 2))
+	gui.set_enabled(self.weapon_arc_node, true)
+	self.weapon_arc_hover_slot = slot_id
+end
+
+-- Mouse-move hover check for the wedge above - separate from update_hover
+-- (which only runs mid-drag, for the drag-over slot highlight); this one
+-- runs whenever the Fitting tab is open and nothing else has input focus,
+-- regardless of dragging. Only occupied, unlocked WEAPON slots show
+-- anything - hull/engine/computer slots don't fire, so they never have an
+-- `angle_deg`/`arc` to show in the first place.
+local function update_weapon_arc_hover(self, action)
+	local ship_id = session.get_ship_id()
+	local ship = ships.SHIPS[ship_id]
+	local positions = ship and ship.slot_positions or {}
+	for slot_id, marker in pairs(self.markers) do
+		if marker.type == "weapon" and not marker.locked and gui.pick_node(marker.box, action.x, action.y) then
+			local instance_id = self.installed_by_slot and self.installed_by_slot[slot_id]
+			local inst = instance_id and session.get_instance(instance_id)
+			local module = inst and catalog.get(inst.item_key)
+			if module and module.arc then
+				local slot_pos = positions[slot_id]
+				show_weapon_arc(self, slot_id, (slot_pos and slot_pos.angle_deg) or 0, module.arc)
+				return
+			end
+			hide_weapon_arc(self)
+			return
+		end
+	end
+	hide_weapon_arc(self)
 end
 
 local function clear_card_list(list)
@@ -1259,6 +1472,29 @@ local function refresh_ship_cards(self)
 	refresh_forsale_scrollbar(self)
 end
 
+-- Recolors/resizes every one of init()'s 58 map dots and updates
+-- "map_current_text" - called on entering the Map tab, not at init() time,
+-- since session.get_faction() isn't decided yet when outpost.gui_script's
+-- own init() runs (main.collection embeds start_screen/faction_select/
+-- outpost together, §3's project-layout note - faction is only chosen
+-- once the player clicks through faction_select). The "current" system is
+-- always just the player's own home system (star_systems.HOME_SYSTEM) -
+-- there's no flight mode yet (§2.10/§4) to ever actually BE anywhere else.
+local function refresh_map(self)
+	local faction = session.get_faction()
+	local current_id = star_systems.HOME_SYSTEM[faction]
+	local current_name = (current_id and star_systems.SYSTEMS[current_id] and star_systems.SYSTEMS[current_id].name) or "-"
+	gui.set_text(self.map_current_text_node, "Current system: " .. current_name)
+	for id, dot in pairs(self.map_dots) do
+		local is_current = id == current_id
+		local color = is_current and MAP_CURRENT_COLOR or MAP_DOT_COLOR
+		local size = is_current and MAP_DOT_SIZE_CURRENT or MAP_DOT_SIZE
+		gui.set_color(dot.box, color)
+		gui.set_color(dot.label, color)
+		gui.set_size(dot.box, size)
+	end
+end
+
 -- Switches between the Overview, Fitting, and Ships tabs: toggles which
 -- static panels are visible and (re)builds whichever tab's dynamic
 -- content is now showing. Dynamic content for a tab being LEFT is
@@ -1267,9 +1503,11 @@ end
 -- per-visit dynamic nodes of its own, just its text refreshed on entry.
 local function set_page(self, page)
 	self.active_page = page
+	hide_weapon_arc(self) -- don't leave the weapon firing-arc hover wedge stuck on-screen after leaving Fitting
 	gui.set_color(self.tab_nodes.overview, page == "overview" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
 	gui.set_color(self.tab_nodes.fitting, page == "fitting" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
 	gui.set_color(self.tab_nodes.ships, page == "ships" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
+	gui.set_color(self.tab_nodes.map, page == "map" and TAB_COLOR_ACTIVE or TAB_COLOR_INACTIVE)
 	for _, node in ipairs(self.overview_static_nodes) do
 		gui.set_enabled(node, page == "overview")
 	end
@@ -1278,6 +1516,13 @@ local function set_page(self, page)
 	end
 	for _, node in ipairs(self.ships_static_nodes) do
 		gui.set_enabled(node, page == "ships")
+	end
+	for _, node in ipairs(self.map_static_nodes) do
+		gui.set_enabled(node, page == "map")
+	end
+	for _, dot in pairs(self.map_dots) do
+		gui.set_enabled(dot.box, page == "map")
+		gui.set_enabled(dot.label, page == "map")
 	end
 
 	if page == "overview" then
@@ -1295,12 +1540,20 @@ local function set_page(self, page)
 		refresh_markers(self)
 		refresh_filter_buttons(self)
 		refresh_module_cards(self)
-	else -- "ships"
+	elseif page == "ships" then
 		clear_hover(self)
 		clear_markers(self)
 		clear_card_list(self.cards)
 		self.cards = {}
 		refresh_ship_cards(self)
+	else -- "map"
+		clear_hover(self)
+		clear_markers(self)
+		clear_card_list(self.cards)
+		self.cards = {}
+		clear_card_list(self.ship_cards)
+		self.ship_cards = {}
+		refresh_map(self)
 	end
 
 	-- Leaving the Ships tab entirely (overview/fitting): clears the
@@ -1373,12 +1626,27 @@ end
 -- only then); clicking Cancel just closes the dialog and does nothing.
 -- Per direct instruction: any purchase or swap goes through this rather
 -- than taking effect immediately on drop/click.
-local function show_confirm(self, message, on_confirm)
+--
+-- `show_cancel` (optional, defaults to true) - direct instruction: a
+-- purely informational notice with nothing to actually confirm (e.g. "this
+-- slot needs the ship advanced first") should show only the one
+-- acknowledge button, not a Confirm/Cancel PAIR implying there's a choice
+-- to make. When false, Yes is re-centered on the panel (rather than left
+-- of a hidden Cancel, leaving an empty gap) and Cancel/No stays disabled.
+local function show_confirm(self, message, on_confirm, show_cancel)
+	if show_cancel == nil then
+		show_cancel = true
+	end
 	self.confirm = { on_confirm = on_confirm }
 	gui.set_text(self.confirm_nodes.message, message)
 	for _, node in pairs(self.confirm_nodes) do
 		gui.set_enabled(node, true)
 	end
+	gui.set_enabled(self.confirm_nodes.no, show_cancel)
+	gui.set_enabled(self.confirm_nodes.no_label, show_cancel)
+	local yes_pos = vmath.vector3(show_cancel and CONFIRM_YES_X or CONFIRM_YES_CENTERED_X, CONFIRM_BUTTON_Y, 0)
+	gui.set_position(self.confirm_nodes.yes, yes_pos)
+	gui.set_position(self.confirm_nodes.yes_label, yes_pos)
 end
 
 local function hide_confirm(self)
@@ -1881,7 +2149,7 @@ function on_input(self, action_id, action)
 				hide_confirm(self)
 				on_confirm()
 				refresh_currency(self) -- Confirm is the only thing that can ever change the Scrip balance
-			elseif hits(self.confirm_nodes.no, action) then
+			elseif gui.is_enabled(self.confirm_nodes.no) and hits(self.confirm_nodes.no, action) then
 				hide_confirm(self)
 			end
 		end
@@ -1966,6 +2234,11 @@ function on_input(self, action_id, action)
 			gui.set_position(self.ghost.box, pos)
 			gui.set_position(self.ghost.icon, pos)
 			update_hover(self, action)
+			hide_weapon_arc(self) -- mid-drag already has its own hover feedback (the border highlight above)
+		elseif self.active_page == "fitting" then
+			update_weapon_arc_hover(self, action)
+		else
+			hide_weapon_arc(self)
 		end
 		-- Ships-For-Sale drag-to-scroll (direct instruction) - see
 		-- self.forsale_press's own comment (init) and the "ships" tab press
@@ -2036,6 +2309,9 @@ function on_input(self, action_id, action)
 			return true
 		elseif hits(self.tab_nodes.ships, action) then
 			set_page(self, "ships")
+			return true
+		elseif hits(self.tab_nodes.map, action) then
+			set_page(self, "map")
 			return true
 		elseif hits(self.launch_node, action) then
 			print("[outpost] Launch pressed -- flight mode not built yet")
@@ -2147,11 +2423,28 @@ function on_input(self, action_id, action)
 	elseif action.released and self.dragging then
 		local drag = self.dragging
 		local dropped_on_slot = nil
+		local dropped_on_locked_slot = nil
 		for slot_id, marker in pairs(self.markers) do
 			if marker.type == drag.type and hits(marker.box, action) then
-				dropped_on_slot = slot_id
+				if marker.locked then
+					dropped_on_locked_slot = slot_id
+				else
+					dropped_on_slot = slot_id
+				end
 				break
 			end
+		end
+		-- Dropped on a same-type slot that's only there for the ship's
+		-- advanced tier (direct instruction) - explain why nothing happened
+		-- rather than the plain silent no-op every other invalid drop gets
+		-- (dropped on empty space, wrong type, etc. - those stay silent).
+		if dropped_on_locked_slot then
+			end_drag(self)
+			-- Direct instruction: purely informational, no actual choice to
+			-- make, so show only the one acknowledge button (show_cancel=false).
+			show_confirm(self, "Slot " .. dropped_on_locked_slot
+				.. " is only available once this ship has been advanced.", function() end, false)
+			return true
 		end
 		if dropped_on_slot then
 			-- Any PURCHASE (shop-sourced) or SWAP (displacing whatever's

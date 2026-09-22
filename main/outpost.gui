@@ -154,7 +154,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_overview"
-  position { x: 720.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 600.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.22 y: 0.38 z: 0.5 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -172,7 +172,7 @@ nodes {
   id: "tab_overview_label"
   text: "Overview"
   font: "default_font"
-  position { x: 720.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 600.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -192,7 +192,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_fitting"
-  position { x: 960.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 840.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -210,7 +210,7 @@ nodes {
   id: "tab_fitting_label"
   text: "Fitting"
   font: "default_font"
-  position { x: 960.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 840.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -230,7 +230,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_ships"
-  position { x: 1200.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 1080.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -248,7 +248,45 @@ nodes {
   id: "tab_ships_label"
   text: "Ships"
   font: "default_font"
-  position { x: 1200.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 1080.0 y: 968.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "tab_map"
+  position { x: 1320.0 y: 968.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
+  color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "tab_map_label"
+  text: "Map"
+  font: "default_font"
+  position { x: 1320.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -1290,6 +1328,66 @@ nodes {
   line_break: false
   text_leading: 1.0
   text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "map_heading"
+  text: "Sector Map"
+  font: "default_font"
+  position { x: 960.0 y: 845.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 50.0 z: 0.0 w: 1.0 }
+  color { x: 0.7 y: 0.75 z: 0.8 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "map_current_text"
+  text: "Current system: -"
+  font: "default_font"
+  position { x: 960.0 y: 805.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.4 y: 0.9 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "map_panel"
+  position { x: 960.0 y: 460.0 z: 0.0 w: 1.0 }
+  size { x: 1720.0 y: 620.0 z: 0.0 w: 1.0 }
+  color { x: 0.08 y: 0.09 z: 0.14 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
   parent: ""
   layer: ""
 }

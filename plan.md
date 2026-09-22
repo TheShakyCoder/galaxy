@@ -924,6 +924,35 @@ classes/tiers from §2.1 — exact fitting-slot counts per class still TBD, see 
 So Hull/Engine/Computer modules are each *either* passive *or* one-shot-active (never
 a toggle); Weapons are always toggle-type.
 
+**Weapon firing arc (decided — schema only, per direct instruction)**: a weapon
+mount doesn't fire in every direction — it can only hit a target somewhere within a
+cone centered on a specific bearing. Two halves, split the same way slot geometry
+already is between the ship (`ships.lua`) and the item (`weapons_autocannons.lua`/
+`weapons_launchers.lua`):
+- **Where the cone points is a per-slot, per-ship fact**, not a weapon fact — the
+  same weapon dropped into a bow slot vs. a side-mounted slot on the same hull
+  points a different direction. So it lives alongside `slot_positions` in
+  `ships.lua`'s chassis table: each **weapon** slot entry (`W1`, `W2`, ... — Hull/
+  Engine/Computer slots don't fire, so they don't get this field) gains an
+  `angle_deg` field — degrees from the ship's own bow/forward axis (0° = dead
+  ahead), positive rotating clockwise toward starboard (+x in `slot_positions`'
+  own screen-space convention), matching the "forward = +y" sense `E1`/`E3`'s
+  stern-ward *negative* y already implies.
+- **How wide the cone is is a per-weapon fact**, not a slot fact — a
+  wide-traverse turret and a fixed forward gun differ by weapon, not by which
+  ship they're bolted to. So it lives on the module entry itself (`arc`, total
+  cone width in degrees, centered on whichever slot's own `angle_deg` it's
+  fitted into — e.g. `arc = 60` covers ±30° either side of center). **Decided,
+  per direct instruction**: every auto cannon in `weapons_autocannons.lua`
+  (`auto_cannon_basic`, `mining_cannon_basic/escort/frigate/carrier`) now
+  defaults to `arc = 75`, applied uniformly rather than tuned per weapon.
+- **Implemented as a schema provision** — `patrol_interceptor`'s `W1`-`W4`
+  slots in `main/data/ships.lua` now carry a placeholder `angle_deg` (same
+  "real numbers TBD, structure isn't" treatment `slot_positions` itself already
+  got — see that field's own "STILL PLACEHOLDER" note above). No targeting/
+  firing/line-of-sight code reads either field yet — combat resolution doesn't
+  exist yet at all (§4) — this just gets the data shape in place ahead of that.
+
 **Universal module rules** (apply to every module, regardless of type/behavior):
 - **Power**: every module draws on the ship's power pool — it can only be
   activated/toggled on if the ship currently has enough spare power.
@@ -2272,6 +2301,54 @@ world origin, `(1,1,1,1)`), unchanged since the preview feature was first built.
   Defold-specific shader change even if re-opened; there is still no way to
   launch the actual Defold engine this session to see the real result.
 
+#### 2.8.10 Sector Map tab (decided — 4th outpost tab, ported from the reference project)
+
+A 4th tab, **Map**, alongside Overview/Fitting/Ships (direct instruction) - plots
+every one of `main/data/star_systems.lua`'s 58 systems and highlights whichever one
+the player is currently in.
+
+- **Ported approach, per direct instruction**: same "create the 58 dot+label node
+  pairs once, just show/hide/recolor them on tab open" pattern as the reference
+  project's own `main/map.gui_script` + `main/sector_map.lua` - a UX/rendering
+  technique, not creative expression, so reuse is fine per §0 (same reasoning
+  already applied to `input/game.input_binding`, §2.10). Unlike the reference's
+  in-flight overlay (opened with N, closable, click-to-select a destination and arm
+  an FTL jump preset), this is a plain outpost-screen tab with no interactivity -
+  flight mode doesn't exist yet (§2.10/§4), so there's no jump to arm and nowhere
+  else a player's ship could even be located.
+- **"Current system" = the player's own home system** (`star_systems.HOME_SYSTEM[faction]`)
+  - the only location a ship can ever be at right now, same reason the Overview
+    tab's "Sol Outpost"/"Home system" text already only ever shows the home
+    system (`ship_overview_text`). Highlighted cyan and enlarged (`MAP_CURRENT_COLOR`/
+    `MAP_DOT_SIZE_CURRENT`), same "grow, don't just recolor" idea `SELECTED_DOT_SIZE`
+    used in the reference and `MARKER_SIZE`'s own locked/filled states already use
+    elsewhere on this screen. Every other system stays a uniform neutral grey - the
+    reference's additional reachable/out-of-range/restricted color-coding (which
+    needs FTL range + affordability + `can_enter`, all real concepts in
+    `star_systems.lua` already) was deliberately NOT ported, since nothing was asked
+    for beyond "all systems + highlight current" and there's no jump/travel action
+    here yet for that distinction to inform.
+- **Scale-to-fit computed from real data bounds, not hardcoded**: `main/outpost.gui_script`
+  scans `star_systems.SYSTEMS` once (in `init()`) for `map_x`/`map_y`'s actual
+  min/max (`[-385.5, 372.5]` x, `[-230.5, 180.5]` y - found via a one-off `luajit`
+  scan), then derives a scale factor that fits that bounding box inside
+  `map_panel`'s 1720x620 area (minus a fixed margin) - same "derive from real
+  geometry" approach `slot_positions`' own px/meter conversion already uses,
+  rather than reusing the reference's map_x/map_y-as-literal-screen-pixels shortcut
+  (which only worked there because that project's smaller map overlay happened to
+  already be roughly the right scale for its own data, per that file's own
+  comment - not something to assume holds for a differently-sized panel here).
+- **Tab bar re-centered for 4 tabs**: Overview/Fitting/Ships shifted from
+  600/840/1080/1320's *predecessor* positions (720/960/1200) to 600/840/1080, Map
+  added at 1320 - same 220px-wide/240px-spacing pattern as before, just recentered
+  as a group of 4 under the screen's own horizontal center (960) instead of 3.
+- **Verified live**: real engine build via the Defold editor's `/command/build`
+  HTTP API (zero issues), then driven with synthetic mouse clicks (Play as Guest →
+  The Accord → Map tab) and screenshotted - confirms all 58 systems render with
+  name labels, Sol renders visibly larger and cyan versus every other system's
+  neutral grey, and the existing Overview/Fitting/Ships tabs still work correctly
+  after the tab-bar recentering.
+
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 
 - **Guest** (§1.1): always spawns at the **outpost of their chosen faction's home
@@ -2671,6 +2748,14 @@ project:
    reapplying steps 1–2, resolved it when a reload alone didn't.
 
 ## 4. Open Questions / TODO
+- [ ] Tune real weapon firing-arc numbers (§2.8): `ships.lua`'s per-weapon-slot
+      `angle_deg` (bearing the mount points, still placeholder on Patrol
+      Interceptor's W1-W4) is still undecided real layout. `weapons_autocannons.lua`'s
+      per-weapon `arc` (cone width) now defaults every auto cannon to a uniform
+      `75` (decided, per direct instruction) rather than a value tuned per weapon -
+      revisit once individual weapons need to differ. No targeting/firing/
+      line-of-sight code reads either field yet (combat resolution doesn't exist
+      at all yet, see below).
 - [ ] Give the four card-list panels a scroll-position indicator (e.g. a simple
       scrollbar thumb or "3/6" counter) — §2.8.4's new scrolling has no visual cue
       yet that a list has more rows below/above the visible area, only the mouse

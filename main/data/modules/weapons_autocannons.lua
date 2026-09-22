@@ -42,6 +42,12 @@
 -- Carrier-only, but with no ships in those classes yet AND no
 -- enforcement, they're currently draggable onto the Patrol ship anyway.
 --
+-- `arc` (plan.md §2.8's firing-arc provision): total width, in degrees, of
+-- this weapon's firing cone - centered on whichever slot's own `angle_deg`
+-- (main/data/ships.lua's `slot_positions`) it ends up fitted into. Per direct
+-- instruction, every auto cannon below defaults to `arc = 75` for now.
+-- No targeting/firing code reads it yet either way (plan.md §4).
+--
 -- `icon`: the region name (image filename, no extension) within
 -- main/images/icons.atlas, shown on the outpost screen's ship visual slot
 -- markers instead of the item's name text (plan.md §4/§2.8's
@@ -64,6 +70,7 @@ M.AUTOCANNONS = {
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Patrol", -- see the ship_class comment above
 		icon = "Octagon Cannon Spaceship", -- normal (ordinance) combat cannon, see the icon comment above
+		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_basic"] = {
 		name = "Digger", -- Patrol-tier mining cannon, see the mining naming-scale comment above
@@ -73,6 +80,7 @@ M.AUTOCANNONS = {
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Patrol", -- see the ship_class comment above
 		icon = "Octagon Cannon Asteroid", -- mining cannon, see the icon comment above
+		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_escort"] = {
 		name = "Miner", -- Escort-tier mining cannon, see the mining naming-scale comment above
@@ -82,6 +90,7 @@ M.AUTOCANNONS = {
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Escort", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
 		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_frigate"] = {
 		name = "Speculator", -- Frigate-tier mining cannon, see the mining naming-scale comment above
@@ -91,6 +100,7 @@ M.AUTOCANNONS = {
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Frigate", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
 		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_carrier"] = {
 		name = "Prospector", -- Carrier-tier mining cannon, see the mining naming-scale comment above
@@ -100,6 +110,7 @@ M.AUTOCANNONS = {
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Carrier", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
 		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 }
 

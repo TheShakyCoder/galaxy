@@ -92,21 +92,31 @@ M.SHIPS = {
 		-- "build_patrol_interceptor_model.py" if this ever needs regenerating), so a
 		-- point at ship-space (x, z) meters maps to a screen offset of
 		-- roughly (x * 49.17, z * 49.17).
+		--
+		-- `angle_deg` (weapon slots only, plan.md §2.8's new firing-arc
+		-- provision): the bearing this mount's firing arc is centered on,
+		-- in degrees from the ship's own bow/forward axis - 0 = dead ahead,
+		-- positive rotates clockwise toward starboard (+x), matching this
+		-- table's own "+y = forward" sense (E1/E3's stern sit at negative
+		-- y). Same "STILL PLACEHOLDER, structure not real design" caveat as
+		-- the {x, y} coordinates themselves - no targeting/firing code reads
+		-- this yet (plan.md §4).
 		slot_positions = {
-			W1 = { x = 0, y = 250 },     -- bow-mounted gun
-			W2 = { x = -70, y = 100 },   -- port midships gun, forward of the cabin
-			W3 = { x = 70, y = 100 },    -- starboard midships gun, forward of the cabin
+			W1 = { x = 0, y = 250, angle_deg = 0 },     -- bow-mounted gun, fires dead ahead
+			W2 = { x = -90, y = 100, angle_deg = -15 }, -- port midships gun, forward of the cabin, angled slightly to port
+			W3 = { x = 90, y = 100, angle_deg = 15 },   -- starboard midships gun, forward of the cabin, angled slightly to starboard
+			W4 = { x = 0, y = 150, angle_deg = 0 },     -- centerline, forward-facing
 			-- C1/C2 (repositioned per direct instruction - manually adjusted
 			-- in the editor, not by a script): side-by-side across the cabin
 			-- at the same y, rather than stacked fore/aft at the same x.
-			C1 = { x = -70, y = -70 },   -- computer, port side of the cabin
-			C2 = { x = 70, y = -70 },     -- computer, centerline of the cabin
+			C1 = { x = -50, y = -90 },   -- computer, por	t side of the cabin
+			C2 = { x = 50, y = -90 },     -- computer, centerline of the cabin
 			-- H1/H2 (repositioned per direct instruction, same manual
 			-- adjustment as C1/C2 above): H1 stays amidships but moved to
 			-- the port side; H2 moved from stacked-below-H1 to its own
 			-- centerline spot just aft of amidships.
-			H1 = { x = -70, y = 20 },    -- hull/armor, port side amidships
-			H2 = { x = 70, y = 20 },     -- hull/armor, centerline, just aft of amidships
+			H1 = { x = -50, y = 0 },    -- hull/armor, port side amidships
+			H2 = { x = 50, y = 0 },     -- hull/armor, centerline, just aft of amidships
 			-- Per direct instruction: all three engines moved down (further
 			-- stern-ward, more negative y) by ~50px; E2 specifically (the
 			-- bottom-middle slot - centerline, lowest y of all 9 slots) then
@@ -116,9 +126,11 @@ M.SHIPS = {
 			-- flag if that reads as hanging off the back of the hull once
 			-- seen against the real ship_visual image; still well within the
 			-- ship_visual panel's own bounds (+-320) either way.
-			E1 = { x = -50, y = -310 },  -- port engine, stern
-			E2 = { x = 0, y = -230 },    -- centerline engine, stern
-			E3 = { x = 50, y = -310 },   -- starboard engine, stern
+			E1 = { x = -70, y = -340 },  
+			E2 = { x = -70, y = -250 },   
+			E3 = { x = 70, y = -340 },  
+			E4 = { x = 70, y = -250 },   
+			E5 = { x = 0, y = -180 },
 		},
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2): real-world animal species
