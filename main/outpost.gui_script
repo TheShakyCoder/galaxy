@@ -131,6 +131,14 @@ local FILTER_ACTIVE_COLOR = {
 local FILTER_TYPE_ORDER = { "weapon", "computer", "engine", "hull" }
 local CARD_SIZE = vmath.vector3(820, 50, 0)
 local CARD_SPACING = 58
+-- Shop/Owned module list rows (direct instruction: show each module's icon
+-- next to its name) - a small square icon at the card's own left edge,
+-- same ICON_TEXTURE atlas the fitting slot markers already use, with the
+-- label left-aligned right after it rather than centered across the whole
+-- card.
+local ROW_ICON_SIZE = vmath.vector3(36, 36, 0)
+local ROW_ICON_MARGIN = 14
+local ROW_ICON_GAP = 10
 -- Small "Sell" button pinned to the right edge of a sellable card (Owned
 -- spares, Owned Ships - never Shop/For Sale, §2.8/§4's "there needs to be
 -- an option to sell a ship or sell a component" instruction). Its own
@@ -138,9 +146,19 @@ local CARD_SPACING = 58
 -- with that card's existing click behavior (dragging a module card,
 -- clicking a ship card to select it).
 local SELL_BUTTON_SIZE = vmath.vector3(90, 36, 0)
+-- Ship detail modal's bottom button row (direct instruction: up to 4 can
+-- apply at once now - Select/Purchase, Advance, Sell, Cancel) - laid out
+-- dynamically each time show_ship_detail runs (evenly spaced, centered on
+-- the panel) rather than four fixed authored positions, so 1-4 visible
+-- buttons never leaves an awkward gap where a hidden one would've been.
+local DETAIL_BUTTON_W = 220
+local DETAIL_BUTTON_H = 80
+local DETAIL_BUTTON_GAP = 20
+local DETAIL_BUTTON_Y = 260
+local DETAIL_BUTTON_CENTER_X = 960
 local SELL_BUTTON_COLOR = vmath.vector4(0.5, 0.2, 0.22, 1.0)
--- Shared by all four card-list panels (shop/owned/forsale/ownedships) -
--- all four are authored at this same height in main/outpost.gui. Used to
+-- Shared by the Fitting tab's two card-list panels (shop/owned) - both are
+-- authored at this same height in main/outpost.gui. Used to
 -- clip each list to its own panel and to figure out how far it's allowed
 -- to scroll (plan.md §4 - the catalog outgrew the old unscrollable,
 -- always-show-everything panel, e.g. once the mining naming-scale
@@ -157,6 +175,11 @@ local SCROLL_STEP = CARD_SPACING -- one row per wheel notch
 -- neon red (plus a big red "X" text on top of everything) when it
 -- doesn't.
 local BORDER_SIZE = vmath.vector3(MARKER_SIZE.x + 20, MARKER_SIZE.y + 20, 0)
+-- Drag ghost (direct instruction: show the dragged module's icon, not its
+-- name) - a small square backdrop plus the icon on top, same layered
+-- pattern as a fitting slot marker's own box+icon.
+local GHOST_SIZE = vmath.vector3(64, 64, 0)
+local GHOST_ICON_SIZE = GHOST_SIZE
 local BORDER_VALID_COLOR = vmath.vector4(0.3, 1.0, 0.9, 1.0)
 local BORDER_INVALID_COLOR = vmath.vector4(1.0, 0.15, 0.2, 1.0)
 local INVALID_MARK_COLOR = vmath.vector4(1.0, 0.1, 0.1, 1.0)
@@ -164,28 +187,48 @@ local INVALID_MARK_COLOR = vmath.vector4(1.0, 0.1, 0.1, 1.0)
 local TAB_COLOR_ACTIVE = vmath.vector4(0.22, 0.38, 0.5, 1.0)
 local TAB_COLOR_INACTIVE = vmath.vector4(0.15, 0.17, 0.22, 1.0)
 local SHIP_CARD_CURRENT_COLOR = vmath.vector4(0.2, 0.45, 0.3, 1.0) -- the ship you're currently flying/fitting
+-- Owned but not currently active (direct instruction: the merged Ships grid
+-- highlights any owned hull, not just the active one, since it's now the
+-- only place to see - and swap to - the rest of your fleet). A cooler blue
+-- than SHIP_CARD_CURRENT_COLOR's green so "owned" and "owned AND active"
+-- stay visually distinct at a glance.
+local SHIP_CARD_OWNED_COLOR = vmath.vector4(0.2, 0.32, 0.48, 1.0)
 
--- Ships-For-Sale grid (direct instruction: grid layout with a live 3D
--- preview per cell, replacing the old single-column text list - just for
--- this one panel; Owned Ships keeps the original build_card_list list).
--- Column count/cell size are derived from forsale_panel's own known size
--- (1200x220, main/outpost.gui, same PANEL_HEIGHT every card-list panel
--- shares) rather than a fresh independent guess - same footing as
--- CARD_SIZE/CARD_SPACING above being sized against that panel's own 820px
--- width.
+-- Ships grid (direct instruction: grid layout with a live 3D preview per
+-- cell, replacing the old single-column text list - just for this one
+-- panel). Column count/cell size are derived from forsale_panel's own
+-- known size (main/outpost.gui) rather than a fresh independent guess -
+-- same footing as CARD_SIZE/CARD_SPACING above being sized against that
+-- panel's own 820px width.
 --
--- Two rows visible at once (direct instruction, follow-up polish pass) -
--- the original 1-row version made a single wheel notch replace basically
--- everything on screen at once, which read as "sensitive"/jumpy rather than
--- a smooth scroll; two rows means a notch only ever changes about half the
--- visible content. GRID_GUTTER/GRID_LABEL_H trimmed slightly from their
--- original 1-row values to keep each cell's 3D preview area reasonable at
--- the smaller cell height this produces.
-local GRID_COLS = 6
-local GRID_ROWS_VISIBLE = 2
+-- One row per ship CLASS, one column per ROLE (direct instruction): rather
+-- than packing for-sale ships sequentially into a column wrap, each ship's
+-- cell position is looked up directly from its own ship_id (every id in
+-- main/data/ships.lua is exactly "<class>_<role>", e.g. "frigate_tactical")
+-- via CLASS_ROW/ROLE_COL below - so a ship always sits in the same cell
+-- regardless of purchase order. 3 classes x 4 roles = GRID_COLS/
+-- CLASS_ORDER's own length.
+local CLASS_ORDER = { "patrol", "escort", "frigate" }
+local ROLE_ORDER = { "interceptor", "support", "assault", "tactical" }
+local CLASS_ROW, ROLE_COL = {}, {}
+for i, key in ipairs(CLASS_ORDER) do CLASS_ROW[key] = i end
+for i, key in ipairs(ROLE_ORDER) do ROLE_COL[key] = i end
+
+local GRID_COLS = #ROLE_ORDER
+-- All 3 class rows visible at once, no scrolling (direct instruction: with
+-- the separate Owned Ships section gone, this one panel now owns the whole
+-- middle of the screen - forsale_panel grew from 220 to 620px tall,
+-- main/outpost.gui, specifically so every row fits without a scroll step).
+-- SHIPS_PANEL_HEIGHT is deliberately its own constant, not the shared
+-- PANEL_HEIGHT every other card-list panel (shop/owned/fitting) still uses
+-- at the original 220px.
+local GRID_ROWS_VISIBLE = #CLASS_ORDER
+-- Shrunk from 620 to make room for the column-header strip just above the
+-- panel (direct instruction: label each column/row with its role/class).
+local SHIPS_PANEL_HEIGHT = 575
 local GRID_GUTTER = 10
 local GRID_CELL_W = (1200 - (GRID_COLS + 1) * GRID_GUTTER) / GRID_COLS
-local GRID_CELL_H = (PANEL_HEIGHT - (GRID_ROWS_VISIBLE + 1) * GRID_GUTTER) / GRID_ROWS_VISIBLE
+local GRID_CELL_H = (SHIPS_PANEL_HEIGHT - (GRID_ROWS_VISIBLE + 1) * GRID_GUTTER) / GRID_ROWS_VISIBLE
 local GRID_LABEL_H = 26 -- bottom strip of each cell reserved for name+price text
 -- Half a row per wheel notch (not a full row) - finer-grained on top of the
 -- two-row change above, and further smoothed by the animated scroll below
@@ -233,7 +276,7 @@ function init(self)
 	-- count - and therefore how far a list is even allowed to scroll -
 	-- can change between rebuilds (an item gets bought, a ship gets
 	-- added to the roster, etc.).
-	self.scroll = { shop = 0, owned = 0, forsale = 0, ownedships = 0 }
+	self.scroll = { shop = 0, owned = 0, forsale = 0 }
 	-- Currently-DISPLAYED scroll position for the Ships-For-Sale grid, kept
 	-- separate from self.scroll.forsale (the TARGET) - update()'s own
 	-- per-frame lerp eases this toward the target on wheel-scroll (direct
@@ -301,32 +344,43 @@ function init(self)
 		self.filter_nodes.hull, gui.get_node("filter_hull_label"),
 	}
 
-	-- Ships tab's static nodes
+	-- Ships tab's static nodes. Single merged panel (direct instruction: no
+	-- more separate "Owned Ships" section - owned ships now just appear
+	-- highlighted, in place, inside this same grid; see ship_forsale_rows).
 	self.forsale_panel_node = gui.get_node("forsale_panel")
-	self.ownedships_panel_node = gui.get_node("ownedships_panel")
 	-- Ships-For-Sale grid's scroll affordances (direct instruction) - static
 	-- chrome authored in main/outpost.gui, shown/hidden and repositioned by
 	-- refresh_forsale_scrollbar rather than rebuilt per-refresh like the
-	-- cards themselves.
+	-- cards themselves. Sized to fit all 3 class rows at once now (see
+	-- GRID_ROWS_VISIBLE below), so these stay hidden in practice - kept
+	-- rather than removed in case a future ship added mid-row-matrix ever
+	-- needs scrolling again.
 	self.forsale_scrollbar_track = gui.get_node("forsale_scrollbar_track")
 	self.forsale_scrollbar_thumb = gui.get_node("forsale_scrollbar_thumb")
 	self.forsale_scroll_up = gui.get_node("forsale_scroll_up")
 	self.forsale_scroll_down = gui.get_node("forsale_scroll_down")
 	self.ships_static_nodes = {
 		gui.get_node("forsale_heading"), self.forsale_panel_node,
-		gui.get_node("ownedships_heading"), self.ownedships_panel_node,
 		self.forsale_scrollbar_track, self.forsale_scrollbar_thumb,
 		self.forsale_scroll_up, self.forsale_scroll_down,
+		-- Column (role) / row (class) headers (direct instruction) - purely
+		-- static labels, positions hand-computed to match GRID_CELL_W/H's own
+		-- formula (main/outpost.gui) since the panel's size never changes at
+		-- runtime; no per-refresh rebuild needed the way the cards themselves get.
+		gui.get_node("col_header_interceptor"), gui.get_node("col_header_support"),
+		gui.get_node("col_header_assault"), gui.get_node("col_header_tactical"),
+		gui.get_node("row_header_patrol"), gui.get_node("row_header_escort"),
+		gui.get_node("row_header_frigate"),
 	}
 
-	-- Each of the four card-list panels clips its own cards (stencil,
+	-- Each of the three card-list panels clips its own cards (stencil,
 	-- so cards scrolled past the panel's edge are actually hidden, not
 	-- just positioned off the visible list) - set once here since these
 	-- are the same static authored panel nodes for the screen's whole
 	-- lifetime, unlike the cards themselves which get rebuilt constantly.
 	for _, panel_node in ipairs({
 		self.shop_panel_node, self.owned_panel_node,
-		self.forsale_panel_node, self.ownedships_panel_node,
+		self.forsale_panel_node,
 	}) do
 		gui.set_clipping_mode(panel_node, gui.CLIPPING_MODE_STENCIL)
 		gui.set_clipping_visible(panel_node, true)
@@ -369,6 +423,18 @@ function init(self)
 		primary_label = gui.get_node("ship_detail_primary_label"),
 		cancel = gui.get_node("ship_detail_cancel"),
 		cancel_label = gui.get_node("ship_detail_cancel_label"),
+		-- Sell (direct instruction: with the separate Owned Ships list gone,
+		-- selling a ship - other than your last one, session.sell_ship's own
+		-- guard - now happens from here instead of a card's own inline Sell
+		-- button) - only shown when show_ship_detail decides it applies.
+		sell = gui.get_node("ship_detail_sell"),
+		sell_label = gui.get_node("ship_detail_sell_label"),
+		-- Advance (direct instruction): upgrades an owned ship to its
+		-- `advanced` component-slot tier (main/data/ships.lua) in place,
+		-- one-way - only shown for an owned, not-yet-advanced ship whose
+		-- data actually has an `advanced` table (not every ship gets one).
+		advance = gui.get_node("ship_detail_advance"),
+		advance_label = gui.get_node("ship_detail_advance_label"),
 	}
 	for _, node in pairs(self.ship_detail_nodes) do
 		gui.set_enabled(node, false)
@@ -379,6 +445,25 @@ local function ship_display_name(ship_id, faction)
 	local ship = ships.SHIPS[ship_id]
 	local skin = ship and ship.faction_skins[faction]
 	return (skin and skin.name ~= "<TBD>") and skin.name or ship_id
+end
+
+-- The component slot counts actually in effect for `ship_id` right now:
+-- `ship.advanced` once session.is_ship_advanced(ship_id) is true, otherwise
+-- the normal `ship.components` - the single place this swap happens, so
+-- every reader (Overview tab's fitting breakdown, the ship detail modal's
+-- stats text) stays in sync automatically rather than each needing its own
+-- is_ship_advanced check. Falls back to `ship.components` (or {}) for a
+-- ship with no `advanced` table at all - not every ship has one yet (direct
+-- instruction: only some ships get an advanced option).
+local function effective_components(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return {}
+	end
+	if session.is_ship_advanced(ship_id) and ship.advanced then
+		return ship.advanced
+	end
+	return ship.components or {}
 end
 
 local function ship_overview_text(faction)
@@ -432,9 +517,10 @@ local function overview_text()
 	end
 
 	-- Fitting completeness for the ACTIVE ship: filled vs. total slots,
-	-- broken down by type - straight from ships.lua's `components` (the
-	-- total per type) and session.get_loadout() (what's actually filled).
-	local components = (active_ship and active_ship.components) or {}
+	-- broken down by type - straight from ships.lua's `components` (or
+	-- `advanced`, once upgraded - effective_components picks whichever
+	-- applies) and session.get_loadout() (what's actually filled).
+	local components = effective_components(active_ship_id)
 	local filled_by_type = {}
 	for _, entry in ipairs(session.get_loadout() or {}) do
 		local prefix = entry.slot:sub(1, 1)
@@ -470,7 +556,8 @@ local function overview_text()
 		"Faction: " .. faction_label,
 		"Home system: " .. home_name,
 		"",
-		"Active ship: " .. active_ship_name .. " (" .. active_ship_class .. ")",
+		"Active ship: " .. active_ship_name .. " (" .. active_ship_class .. ")"
+			.. (session.is_ship_advanced(active_ship_id) and "  [Advanced]" or ""),
 		"Fleet: " .. #owned_ship_ids .. (#owned_ship_ids == 1 and " ship" or " ships")
 			.. (#owned_ship_names > 0 and ("  --  " .. table.concat(owned_ship_names, ", ")) or ""),
 		"",
@@ -682,6 +769,9 @@ local function clear_card_list(list)
 		if card.box then
 			gui.delete_node(card.box)
 		end
+		if card.icon then
+			gui.delete_node(card.icon)
+		end
 		gui.delete_node(card.label)
 		-- sell_box/sell_label only exist on sellable rows (Owned spares,
 		-- Owned Ships) - see build_card_list.
@@ -832,15 +922,32 @@ local function build_card_list(out_list, panel_node, rows, list_source, scroll_o
 		gui.set_color(box, row.color or CARD_COLOR)
 		gui.set_parent(box, panel_node, true)
 
+		-- Module icon (direct instruction: the Shop/Owned lists should show
+		-- each module's icon next to its name, not just text) - same
+		-- per-type "Octagon" fallback SLOT_EMPTY_ICON already uses for an
+		-- empty fitting slot, so a row without its own catalog icon still
+		-- shows something meaningful for its type rather than nothing.
+		local icon
+		local module_for_icon = row.item_key and catalog.get(row.item_key)
+		if module_for_icon then
+			local icon_pos = vmath.vector3(pos.x - CARD_SIZE.x / 2 + ROW_ICON_MARGIN + ROW_ICON_SIZE.x / 2, pos.y, 0)
+			icon = gui.new_box_node(icon_pos, ROW_ICON_SIZE)
+			gui.set_pivot(icon, gui.PIVOT_CENTER)
+			gui.set_texture(icon, ICON_TEXTURE)
+			gui.set_size_mode(icon, gui.SIZE_MODE_MANUAL)
+			gui.play_flipbook(icon, module_for_icon.icon or SLOT_EMPTY_ICON[module_for_icon.type])
+			gui.set_parent(icon, panel_node, true)
+		end
+
 		-- Sellable rows (Owned spares, Owned Ships, §2.8/§4) shift their
 		-- own label left to make room for a "Sell" button pinned to the
-		-- right edge, so the two never visually overlap.
-		local label_pos = pos
-		if row.sellable then
-			label_pos = vmath.vector3(pos.x - SELL_BUTTON_SIZE.x / 2 - 10, pos.y, 0)
-		end
-		local label = gui.new_text_node(label_pos, row.label)
-		gui.set_pivot(label, gui.PIVOT_CENTER)
+		-- right edge, so the two never visually overlap. Left-pivoted and
+		-- positioned right after the icon (direct instruction: icon next to
+		-- the name, not just floating at the card's own left edge
+		-- separately) rather than the old card-wide centered label.
+		local label_x = pos.x - CARD_SIZE.x / 2 + ROW_ICON_MARGIN + (icon and (ROW_ICON_SIZE.x + ROW_ICON_GAP) or 0)
+		local label = gui.new_text_node(vmath.vector3(label_x, pos.y, 0), row.label)
+		gui.set_pivot(label, gui.PIVOT_W)
 		gui.set_font(label, "default_font")
 		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
 		gui.set_parent(label, panel_node, true)
@@ -861,7 +968,7 @@ local function build_card_list(out_list, panel_node, rows, list_source, scroll_o
 		end
 
 		table.insert(out_list, {
-			box = box, label = label,
+			box = box, label = label, icon = icon,
 			item_key = row.item_key, instance_id = row.instance_id, source = row.source,
 			sell_box = sell_box, sell_label = sell_label,
 		})
@@ -922,25 +1029,52 @@ local function refresh_module_cards(self)
 	build_card_list(self.cards, self.owned_panel_node, owned, "owned", self.scroll.owned)
 end
 
+-- Every named ship in the roster, owned or not (direct instruction: the
+-- Ships grid now shows the whole class/role matrix at once - an owned hull
+-- just renders highlighted in place rather than being pulled into a
+-- separate list, see ship_forsale_rows below).
 local function ship_forsale_keys()
 	local keys = {}
 	for ship_id, _ in pairs(ships.SHIPS) do
-		if not session.is_ship_owned(ship_id) then
-			table.insert(keys, ship_id)
-		end
+		table.insert(keys, ship_id)
 	end
 	table.sort(keys)
 	return keys
 end
 
-local function ship_forsale_rows(faction)
+-- `active_ship`: session.get_ship_id(), needed here (not just in the modal)
+-- so the currently-flown hull's cell gets its own distinct highlight -
+-- SHIP_CARD_CURRENT_COLOR for "this is what you're flying", the cooler
+-- SHIP_CARD_OWNED_COLOR for "you own this, click to swap to it", or no
+-- override (falls back to build_ship_forsale_grid's own CARD_COLOR) for a
+-- hull that's still purchasable. `sellable` mirrors the old Owned Ships
+-- list's "can't sell your last ship" rule - session.sell_ship itself also
+-- refuses to go below one, this is just the UI-level courtesy on top.
+local function ship_forsale_rows(faction, active_ship)
+	local owned_count = #(session.get_owned_ships() or {})
 	local rows = {}
 	for _, ship_id in ipairs(ship_forsale_keys()) do
 		local ship = ships.SHIPS[ship_id]
 		local skin = ship and faction and ship.faction_skins[faction]
+		local owned = session.is_ship_owned(ship_id)
+		local is_active = ship_id == active_ship
+		local name = ship_display_name(ship_id, faction)
+		local advanced_tag = session.is_ship_advanced(ship_id) and "  [Advanced]" or ""
+		local label, color
+		if is_active then
+			label = name .. "  (current)" .. advanced_tag
+			color = SHIP_CARD_CURRENT_COLOR
+		elseif owned then
+			label = name .. "  (owned)" .. advanced_tag
+			color = SHIP_CARD_OWNED_COLOR
+		else
+			label = name .. "  (" .. session.get_ship_price() .. " Scrip)"
+			color = nil
+		end
 		table.insert(rows, {
 			item_key = ship_id,
-			label = ship_display_name(ship_id, faction) .. "  (" .. session.get_ship_price() .. " Scrip)",
+			label = label,
+			color = color,
 			source = "ship_forsale",
 			-- Carried through to build_ship_forsale_grid's own card entries
 			-- so compute_forsale_preview_items doesn't need to re-derive
@@ -949,43 +1083,24 @@ local function ship_forsale_rows(faction)
 			-- honest "no preview available" fallback the ship detail modal
 			-- already uses.
 			model_path = skin and skin.model,
+			owned = owned,
+			sellable = owned and owned_count > 1,
 		})
 	end
 	return rows
 end
 
-local function owned_ship_rows(faction, active_ship)
-	local owned_ships = session.get_owned_ships() or {}
-	-- "You cannot sell all ships" (direct instruction) - a Sell button on
-	-- every ship card would let a player sell their way down to zero one
-	-- click at a time, so it only appears at all once there's more than
-	-- one owned ship to spare. session.sell_ship itself also refuses to
-	-- go below one, so this is a UI-level courtesy (don't show a button
-	-- that would just fail) on top of that real guard, not a substitute
-	-- for it.
-	local sellable = #owned_ships > 1
-	local rows = {}
-	for _, ship_id in ipairs(owned_ships) do
-		local name = ship_display_name(ship_id, faction)
-		local color = nil
-		if ship_id == active_ship then
-			name = name .. "  (current)"
-			color = SHIP_CARD_CURRENT_COLOR
-		end
-		table.insert(rows, { item_key = ship_id, label = name, color = color, source = "owned_ship", sellable = sellable })
-	end
-	return rows
-end
-
 -- Grid version of max_scroll_for above, for the Ships-For-Sale panel only -
--- rows wrap every GRID_COLS items instead of one item per row.
-local function max_scroll_for_grid(item_count)
-	local grid_rows = math.ceil(item_count / GRID_COLS)
+-- a fixed #CLASS_ORDER rows regardless of how many ships are actually for
+-- sale right now (each class always occupies its own row, even with an
+-- empty cell or two where an owned ship's column would be).
+local function max_scroll_for_grid()
+	local grid_rows = #CLASS_ORDER
 	if grid_rows <= 1 then
 		return 0
 	end
 	local content_height = (grid_rows - 1) * (GRID_CELL_H + GRID_GUTTER) + GRID_CELL_H
-	return math.max(0, content_height - PANEL_HEIGHT)
+	return math.max(0, content_height - SHIPS_PANEL_HEIGHT)
 end
 
 -- Grid variant of build_card_list, used ONLY for the Ships-For-Sale panel
@@ -1025,15 +1140,16 @@ local function build_ship_forsale_grid(out_list, panel_node, rows)
 		return
 	end
 
-	for i, row in ipairs(rows) do
-		local col = (i - 1) % GRID_COLS
-		local grid_row = math.floor((i - 1) / GRID_COLS)
+	for _, row in ipairs(rows) do
+		local class_key, role_key = row.item_key:match("^(%a+)_(%a+)$")
+		local col = (ROLE_COL[role_key] or 1) - 1
+		local grid_row = (CLASS_ROW[class_key] or 1) - 1
 		local cx = left + col * (GRID_CELL_W + GRID_GUTTER) + GRID_CELL_W * 0.5
 		local base_cy = top - grid_row * (GRID_CELL_H + GRID_GUTTER) - GRID_CELL_H * 0.5
 
 		local box = gui.new_box_node(vmath.vector3(cx, base_cy, 0), vmath.vector3(GRID_CELL_W, GRID_CELL_H, 0))
 		gui.set_pivot(box, gui.PIVOT_CENTER)
-		gui.set_color(box, CARD_COLOR)
+		gui.set_color(box, row.color or CARD_COLOR)
 		gui.set_parent(box, panel_node, true)
 
 		-- Name+price strip along the bottom edge of the cell. The render
@@ -1076,13 +1192,23 @@ end
 -- target, and immediately (no lerp) while actively drag-scrolling.
 local function apply_forsale_scroll_display(self)
 	local offset = self.scroll_display.forsale
+	-- card.box/label/strip are reparented under forsale_panel_node (purely
+	-- for its stencil clipping, see init()), so gui.set_position on them
+	-- takes a position relative to that panel, NOT the absolute screen
+	-- coordinates card.cell_x/base_cy/base_strip_cy were computed in
+	-- (build_ship_forsale_grid records those before the reparent happens).
+	-- Subtracting the panel's own position here converts back to that
+	-- relative space - omitting this double-applies the panel's offset and
+	-- flings every cell (and its click hit-target) off-screen, since a
+	-- prior version of this function set the absolute coordinates directly.
+	local panel_pos = gui.get_position(self.forsale_panel_node)
 	for _, card in ipairs(self.ship_cards) do
 		if card.source == "ship_forsale" and card.box and card.base_cy then
-			gui.set_position(card.box, vmath.vector3(card.cell_x, card.base_cy + offset, 0))
-			local strip_y = card.base_strip_cy + offset
-			gui.set_position(card.label, vmath.vector3(card.cell_x, strip_y, 0))
+			gui.set_position(card.box, vmath.vector3(card.cell_x - panel_pos.x, card.base_cy + offset - panel_pos.y, 0))
+			local strip_y = card.base_strip_cy + offset - panel_pos.y
+			gui.set_position(card.label, vmath.vector3(card.cell_x - panel_pos.x, strip_y, 0))
 			if card.strip then
-				gui.set_position(card.strip, vmath.vector3(card.cell_x, strip_y, 0))
+				gui.set_position(card.strip, vmath.vector3(card.cell_x - panel_pos.x, strip_y, 0))
 			end
 		end
 	end
@@ -1094,8 +1220,7 @@ end
 -- Nothing to scroll at all (every for-sale ship fits on screen at once)
 -- hides all four rather than showing a scrollbar that can't move.
 local function refresh_forsale_scrollbar(self)
-	local count = #ship_forsale_rows(session.get_faction())
-	local max_scroll = max_scroll_for_grid(count)
+	local max_scroll = max_scroll_for_grid()
 	local scrollable = max_scroll > 0
 	gui.set_enabled(self.forsale_scrollbar_track, scrollable)
 	gui.set_enabled(self.forsale_scrollbar_thumb, scrollable)
@@ -1104,11 +1229,11 @@ local function refresh_forsale_scrollbar(self)
 	if not scrollable then
 		return
 	end
-	local grid_rows = math.ceil(count / GRID_COLS)
+	local grid_rows = #CLASS_ORDER
 	local content_height = (grid_rows - 1) * (GRID_CELL_H + GRID_GUTTER) + GRID_CELL_H
 	local track_pos = gui.get_position(self.forsale_scrollbar_track)
 	local track_size = gui.get_size(self.forsale_scrollbar_track)
-	local visible_fraction = math.min(1, PANEL_HEIGHT / content_height)
+	local visible_fraction = math.min(1, SHIPS_PANEL_HEIGHT / content_height)
 	local thumb_h = math.max(20, track_size.y * visible_fraction)
 	local scroll_fraction = self.scroll_display.forsale / max_scroll
 	local thumb_travel = track_size.y - thumb_h
@@ -1122,17 +1247,14 @@ local function refresh_ship_cards(self)
 	self.ship_cards = {}
 	local faction = session.get_faction()
 	local active_ship = session.get_ship_id()
-	local forsale = ship_forsale_rows(faction)
-	local owned_ships = owned_ship_rows(faction, active_ship)
-	self.scroll.forsale = math.min(self.scroll.forsale, max_scroll_for_grid(#forsale))
+	local forsale = ship_forsale_rows(faction, active_ship)
+	self.scroll.forsale = math.min(self.scroll.forsale, max_scroll_for_grid())
 	-- A data-driven rebuild (ship bought/sold, tab reopened) snaps straight
 	-- to the target - no animation here, only actual user-scroll-input
 	-- (wheel/drag) eases via update()'s own per-frame lerp.
 	self.scroll_display.forsale = self.scroll.forsale
-	self.scroll.ownedships = math.min(self.scroll.ownedships, max_scroll_for(#owned_ships))
 	build_ship_forsale_grid(self.ship_cards, self.forsale_panel_node, forsale)
 	apply_forsale_scroll_display(self)
-	build_card_list(self.ship_cards, self.ownedships_panel_node, owned_ships, "owned_ship", self.scroll.ownedships)
 	refresh_forsale_preview(self)
 	refresh_forsale_scrollbar(self)
 end
@@ -1205,7 +1327,6 @@ local function panel_for_card(self, card)
 	if card.source == "shop" then return self.shop_panel_node end
 	if card.source == "owned" then return self.owned_panel_node end
 	if card.source == "ship_forsale" then return self.forsale_panel_node end
-	if card.source == "owned_ship" then return self.ownedships_panel_node end
 	return nil
 end
 
@@ -1229,18 +1350,22 @@ local function start_drag(self, source, ref, from_slot, action)
 		from_slot = from_slot, type = module and module.type,
 	}
 	local pos = vmath.vector3(action.x, action.y, 0)
-	local box = gui.new_box_node(pos, vmath.vector3(220, 50, 0))
+	local box = gui.new_box_node(pos, GHOST_SIZE)
 	gui.set_pivot(box, gui.PIVOT_CENTER)
 	gui.set_color(box, vmath.vector4(0.95, 0.85, 0.3, 0.85))
-	local label_text = module and module.name or item_key
-	if inst and inst.level > 0 then
-		label_text = label_text .. "  +" .. inst.level
+	-- Icon, not the item's name as text (direct instruction) - same
+	-- ICON_TEXTURE atlas and per-type SLOT_EMPTY_ICON fallback every other
+	-- icon in this file already uses, so a module with no catalog icon of
+	-- its own still shows something meaningful while being dragged.
+	local icon = gui.new_box_node(pos, GHOST_ICON_SIZE)
+	gui.set_pivot(icon, gui.PIVOT_CENTER)
+	gui.set_texture(icon, ICON_TEXTURE)
+	gui.set_size_mode(icon, gui.SIZE_MODE_MANUAL)
+	local icon_id = (module and module.icon) or (module and SLOT_EMPTY_ICON[module.type])
+	if icon_id then
+		gui.play_flipbook(icon, icon_id)
 	end
-	local label = gui.new_text_node(pos, label_text)
-	gui.set_pivot(label, gui.PIVOT_CENTER)
-	gui.set_font(label, "default_font")
-	gui.set_color(label, vmath.vector4(0.05, 0.05, 0.05, 1.0))
-	self.ghost = { box = box, label = label }
+	self.ghost = { box = box, icon = icon }
 end
 
 -- Opens the confirmation dialog with `message`, deferring the actual
@@ -1315,6 +1440,7 @@ local PREVIEW_WORLD_POS = {
 	["/assets/models/escort_assault/goshawk.model"] = vmath.vector3(100000, 21000, 0),
 	["/assets/models/patrol_support/pilotfish.model"] = vmath.vector3(100000, 22000, 0),
 	["/assets/models/patrol_tactical/anglerfish.model"] = vmath.vector3(100000, 23000, 0),
+	["/assets/models/escort_tactical/lionfish.model"] = vmath.vector3(100000, 24000, 0),
 }
 
 -- Per-model camera distance/far-plane, sent alongside PREVIEW_WORLD_POS's
@@ -1338,10 +1464,10 @@ local PREVIEW_WORLD_POS = {
 -- ship with no entry here just uses the render script's own built-in
 -- (also zoomed-out) defaults.
 local PREVIEW_CAMERA = {
-	-- sardine.glb (the mesh this .model actually wraps) was replaced with
-	-- viper_mk2.glb (§0-flagged, see ships.lua's patrol_interceptor entry) -
-	-- recomputed for its own ~5.1-unit bounding radius.
-	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0, 3.61, 9.63), far = 65.37 },
+	-- sardine.glb (tools/build_sardine_model.py, ORIGINAL hand-authored hull,
+	-- not SuperShips-sourced - see ships.lua's patrol_interceptor entry) has an
+	-- ~8.32-unit bounding radius.
+	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0.00, 5.90, 15.74), far = 75.12 },
 	["/assets/models/escort_interceptor/escort_interceptor.model"] = { eye_offset = vmath.vector3(0, 8.15, 21.74), far = 84.71 },
 	-- hummingbird.glb was replaced with raider.glb (§0-flagged, see ships.lua's
 	-- patrol_interceptor entry) - recomputed for its own ~6.7-unit bounding
@@ -1368,10 +1494,10 @@ local PREVIEW_CAMERA = {
 	-- entry) has a ~349-unit world-space bounding radius, no node-level scale
 	-- transform on this asset - the biggest model in this table so far.
 	["/assets/models/frigate_tactical/hammerhead.model"] = { eye_offset = vmath.vector3(0, 247.67, 660.44), far = 1104.29 },
-	-- pelican.glb (hel.glb, §0-flagged, see ships.lua's frigate_support entry)
-	-- has a ~310-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/frigate_support/pelican.model"] = { eye_offset = vmath.vector3(0, 220.36, 587.64), far = 988.07 },
+	-- pelican.glb (tools/build_pelican_model.py, ORIGINAL hand-authored hull,
+	-- not SuperShips-sourced - see ships.lua's frigate_support entry) has an
+	-- ~22.2-unit bounding radius.
+	["/assets/models/frigate_support/pelican.model"] = { eye_offset = vmath.vector3(0.00, 15.77, 42.05), far = 117.13 },
 	-- moray.glb (maul.glb, §0-flagged, see ships.lua's escort_assault entry)
 	-- has a ~99-unit world-space bounding radius, no node-level scale
 	-- transform on this asset.
@@ -1390,10 +1516,10 @@ local PREVIEW_CAMERA = {
 	-- entry) has a ~339-unit world-space bounding radius, no node-level scale
 	-- transform on this asset.
 	["/assets/models/frigate_tactical/harpy_eagle.model"] = { eye_offset = vmath.vector3(0, 240.39, 641.05), far = 1073.33 },
-	-- golden_eagle.glb (jormung.glb, §0-flagged, see ships.lua's frigate_assault
-	-- entry) has a ~400-unit world-space bounding radius - the largest model in
-	-- the roster so far, no node-level scale transform.
-	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0, 284.22, 757.93), far = 1259.91 },
+	-- golden_eagle.glb (tools/build_golden_eagle_model.py, ORIGINAL
+	-- hand-authored hull, not SuperShips-sourced - see ships.lua's
+	-- frigate_assault entry) has an ~24.6-unit bounding radius.
+	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0.00, 17.45, 46.53), far = 124.28 },
 	-- marlin.glb (fenrir.glb, §0-flagged, see ships.lua's frigate_interceptor
 	-- entry) has a ~300-unit world-space bounding radius, no node-level scale
 	-- transform on this asset.
@@ -1434,6 +1560,10 @@ local PREVIEW_CAMERA = {
 	-- patrol_tactical entry) has a ~5.9-unit world-space bounding radius, no
 	-- node-level scale transform on this asset.
 	["/assets/models/patrol_tactical/anglerfish.model"] = { eye_offset = vmath.vector3(0, 4.16, 11.1), far = 67.72 },
+	-- lionfish.glb (tools/build_lionfish_model.py, ORIGINAL hand-authored hull, not
+	-- SuperShips-sourced - see ships.lua's escort_tactical entry) has an ~11.73-unit
+	-- bounding radius, computed directly from its own generated geometry.
+	["/assets/models/escort_tactical/lionfish.model"] = { eye_offset = vmath.vector3(0.00, 8.33, 22.20), far = 85.44 },
 }
 
 -- Real stat block for the detail modal - straight from main/data/ships.lua's
@@ -1447,7 +1577,7 @@ local function ship_stats_text(ship_id)
 		return ""
 	end
 	local d = ship.data or {}
-	local c = ship.components or {}
+	local c = effective_components(ship_id)
 	local lines = {
 		"Class: " .. (ship.class or "?"),
 		"",
@@ -1458,7 +1588,8 @@ local function ship_stats_text(ship_id)
 		"Power: " .. (d.power or "?"),
 		"Sensor Range: " .. (d.sensor_range_m or "?") .. " m",
 		"",
-		"Slots: W" .. (c.W or 0) .. "  C" .. (c.C or 0) .. "  E" .. (c.E or 0) .. "  H" .. (c.H or 0),
+		"Slots: W" .. (c.W or 0) .. "  C" .. (c.C or 0) .. "  E" .. (c.E or 0) .. "  H" .. (c.H or 0)
+			.. (session.is_ship_advanced(ship_id) and "  (Advanced)" or ""),
 	}
 	return table.concat(lines, "\n")
 end
@@ -1474,7 +1605,8 @@ local function show_ship_detail(self, ship_id)
 	local is_active = ship_id == session.get_ship_id()
 
 	self.ship_detail = { ship_id = ship_id }
-	gui.set_text(self.ship_detail_nodes.name, ship_display_name(ship_id, faction) .. "  (" .. (ship and ship.class or "?") .. ")")
+	gui.set_text(self.ship_detail_nodes.name, ship_display_name(ship_id, faction) .. "  (" .. (ship and ship.class or "?") .. ")"
+		.. (session.is_ship_advanced(ship_id) and "  [Advanced]" or ""))
 
 	local stats = ship_stats_text(ship_id)
 	local model_path = ship and faction and ship.faction_skins[faction] and ship.faction_skins[faction].model
@@ -1497,6 +1629,20 @@ local function show_ship_detail(self, ship_id)
 		show_primary = false
 	end
 
+	-- Sell (direct instruction: with the separate Owned Ships list gone,
+	-- this is the only place left to sell a ship) - any owned hull, active
+	-- or not, same "can't sell your last ship" rule the old Owned Ships
+	-- list's inline Sell button enforced.
+	local sellable = owned and #(session.get_owned_ships() or {}) > 1
+
+	-- Advance (direct instruction) - only offered for an owned ship that
+	-- HAS an `advanced` table (not every ship gets one - "some of the other
+	-- ships will also receive an advanced option") and isn't already there.
+	local advanceable = owned and ship and ship.advanced ~= nil and not session.is_ship_advanced(ship_id)
+	if advanceable then
+		gui.set_text(self.ship_detail_nodes.advance_label, "Advance (" .. session.get_ship_advance_price() .. " Scrip)")
+	end
+
 	-- Open the modal FIRST, before touching the preview below - keeps the
 	-- fix from §2.8.9's click-through bug (a bad texture/flipbook call must
 	-- never leave the whole modal invisible just because its preview art
@@ -1507,6 +1653,36 @@ local function show_ship_detail(self, ship_id)
 	end
 	gui.set_enabled(self.ship_detail_nodes.primary, show_primary)
 	gui.set_enabled(self.ship_detail_nodes.primary_label, show_primary)
+	gui.set_enabled(self.ship_detail_nodes.sell, sellable)
+	gui.set_enabled(self.ship_detail_nodes.sell_label, sellable)
+	gui.set_enabled(self.ship_detail_nodes.advance, advanceable)
+	gui.set_enabled(self.ship_detail_nodes.advance_label, advanceable)
+
+	-- Lay out whichever of {primary, advance, sell, cancel} are actually
+	-- visible this time, evenly spaced and centered - rather than 4 fixed
+	-- authored slots that'd leave an awkward gap whenever fewer apply.
+	-- Cancel always shows, always last (rightmost).
+	local slots = {}
+	if show_primary then
+		table.insert(slots, { self.ship_detail_nodes.primary, self.ship_detail_nodes.primary_label })
+	end
+	if advanceable then
+		table.insert(slots, { self.ship_detail_nodes.advance, self.ship_detail_nodes.advance_label })
+	end
+	if sellable then
+		table.insert(slots, { self.ship_detail_nodes.sell, self.ship_detail_nodes.sell_label })
+	end
+	table.insert(slots, { self.ship_detail_nodes.cancel, self.ship_detail_nodes.cancel_label })
+	local row_w = #slots * DETAIL_BUTTON_W + (#slots - 1) * DETAIL_BUTTON_GAP
+	local left_x = DETAIL_BUTTON_CENTER_X - row_w / 2 + DETAIL_BUTTON_W / 2
+	for i, pair in ipairs(slots) do
+		local cx = left_x + (i - 1) * (DETAIL_BUTTON_W + DETAIL_BUTTON_GAP)
+		local pos = vmath.vector3(cx, DETAIL_BUTTON_Y, 0)
+		gui.set_position(pair[1], pos)
+		gui.set_size(pair[1], vmath.vector3(DETAIL_BUTTON_W, DETAIL_BUTTON_H, 0))
+		gui.set_position(pair[2], pos)
+		gui.set_size(pair[2], vmath.vector3(DETAIL_BUTTON_W, DETAIL_BUTTON_H, 0))
+	end
 
 	-- No static 2D image anymore (removed per direct instruction, once every
 	-- ship had its own live 3D preview) - `ship_detail_preview` is a plain
@@ -1573,7 +1749,12 @@ local function compute_forsale_preview_items(self)
 		if card.source == "ship_forsale" and card.box and card.model_path then
 			local world_pos = PREVIEW_WORLD_POS[card.model_path]
 			if world_pos then
-				local pos = gui.get_position(card.box)
+				-- card.box is a child of forsale_panel_node (clipping, see
+				-- init()), so gui.get_position returns a position relative
+				-- to that panel - add the panel's own position back to get
+				-- the absolute screen rect this render-script overlay needs.
+				local local_pos = gui.get_position(card.box)
+				local pos = vmath.vector3(local_pos.x + panel_pos.x, local_pos.y + panel_pos.y, 0)
 				local size = gui.get_size(card.box)
 				local cell_top = pos.y + size.y * 0.5
 				local cell_bottom = pos.y - size.y * 0.5
@@ -1606,18 +1787,38 @@ end
 -- page at all. Called from refresh_ship_cards (data/scroll changed),
 -- show_ship_detail/hide_ship_detail (modal opened/closed), and set_page
 -- (tab switched away).
+-- Sent in small batches, not as one single message - msg.post's ad-hoc
+-- Lua-table payload has a small fixed buffer, and the full 12-ship grid's
+-- worth of items (each a {rect, target_pos, eye_offset, far} table)
+-- overflows it in one shot: "buffer (26 bytes) too small for table,
+-- exceeded at 'y' for element #2", which silently dropped the WHOLE
+-- message - every grid preview went blank, not just the overflowing item.
+-- The render script (render/custom.render_script) accumulates batches
+-- itself, keyed by `reset` on the first one.
+local FORSALE_PREVIEW_BATCH_SIZE = 4
+
 function refresh_forsale_preview(self)
 	local items = {}
 	if self.active_page == "ships" and not self.ship_detail then
 		items = compute_forsale_preview_items(self)
 	end
-	msg.post("@render:", "set_ship_preview_grid", { items = items })
+	if #items == 0 then
+		msg.post("@render:", "set_ship_preview_grid", { items = {}, reset = true })
+		return
+	end
+	for i = 1, #items, FORSALE_PREVIEW_BATCH_SIZE do
+		local batch = {}
+		for j = i, math.min(i + FORSALE_PREVIEW_BATCH_SIZE - 1, #items) do
+			table.insert(batch, items[j])
+		end
+		msg.post("@render:", "set_ship_preview_grid", { items = batch, reset = (i == 1) })
+	end
 end
 
 local function end_drag(self)
 	if self.ghost then
 		gui.delete_node(self.ghost.box)
-		gui.delete_node(self.ghost.label)
+		gui.delete_node(self.ghost.icon)
 		self.ghost = nil
 	end
 	self.dragging = nil
@@ -1695,7 +1896,7 @@ function on_input(self, action_id, action)
 	-- confirm dialog (closing this one first).
 	if self.ship_detail then
 		if action_id == hash("touch") and action.pressed then
-			if hits(self.ship_detail_nodes.primary, action) then
+			if gui.is_enabled(self.ship_detail_nodes.primary) and hits(self.ship_detail_nodes.primary, action) then
 				local ship_id = self.ship_detail.ship_id
 				local owned = session.is_ship_owned(ship_id)
 				hide_ship_detail(self)
@@ -1720,6 +1921,34 @@ function on_input(self, action_id, action)
 						refresh_currency(self)
 					end
 				end
+			elseif gui.is_enabled(self.ship_detail_nodes.advance) and hits(self.ship_detail_nodes.advance, action) then
+				local ship_id = self.ship_detail.ship_id
+				local name = ship_display_name(ship_id, session.get_faction())
+				local price = session.get_ship_advance_price()
+				hide_ship_detail(self)
+				if session.get_scrip() < price then
+					show_confirm(self, "Not enough Scrip to advance " .. name
+						.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
+				else
+					show_confirm(self, "Advance " .. name .. " for " .. price
+						.. " Scrip? This cannot be undone.", function()
+						session.advance_ship(ship_id)
+						refresh_ship_cards(self)
+						refresh_currency(self)
+					end)
+				end
+			elseif gui.is_enabled(self.ship_detail_nodes.sell) and hits(self.ship_detail_nodes.sell, action) then
+				local ship_id = self.ship_detail.ship_id
+				local name = ship_display_name(ship_id, session.get_faction())
+				local refund = session.get_ship_sell_refund()
+				hide_ship_detail(self)
+				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Scrip?", function()
+					session.sell_ship(ship_id)
+					refresh_ship_cards(self)
+					local faction = session.get_faction()
+					local home_name, faction_label, ship_name = ship_overview_text(faction)
+					gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+				end)
 			elseif hits(self.ship_detail_nodes.cancel, action) then
 				hide_ship_detail(self)
 			end
@@ -1735,7 +1964,7 @@ function on_input(self, action_id, action)
 		if self.dragging and self.ghost then
 			local pos = vmath.vector3(action.x, action.y, 0)
 			gui.set_position(self.ghost.box, pos)
-			gui.set_position(self.ghost.label, pos)
+			gui.set_position(self.ghost.icon, pos)
 			update_hover(self, action)
 		end
 		-- Ships-For-Sale drag-to-scroll (direct instruction) - see
@@ -1753,7 +1982,7 @@ function on_input(self, action_id, action)
 				self.forsale_press.dragged = true
 			end
 			if self.forsale_press.dragged then
-				local max_scroll = max_scroll_for_grid(#ship_forsale_rows(session.get_faction()))
+				local max_scroll = max_scroll_for_grid()
 				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta, max_scroll))
 				self.scroll_display.forsale = self.scroll.forsale
 				apply_forsale_scroll_display(self)
@@ -1788,10 +2017,7 @@ function on_input(self, action_id, action)
 				-- displayed position toward it (direct instruction: smooth
 				-- animated scrolling instead of an instant snap/rebuild).
 				local delta_grid = (action_id == hash("zoom_in")) and -SCROLL_STEP_GRID or SCROLL_STEP_GRID
-				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta_grid, max_scroll_for_grid(#ship_forsale_rows(session.get_faction()))))
-			elseif hits(self.ownedships_panel_node, action) then
-				self.scroll.ownedships = math.max(0, math.min(self.scroll.ownedships + delta, max_scroll_for(#owned_ship_rows(session.get_faction(), session.get_ship_id()))))
-				refresh_ship_cards(self)
+				self.scroll.forsale = math.max(0, math.min(self.scroll.forsale + delta_grid, max_scroll_for_grid()))
 			end
 		end
 		return true
@@ -1824,18 +2050,16 @@ function on_input(self, action_id, action)
 		end
 
 		if self.active_page == "ships" then
-			-- Ships-For-Sale grid: press-and-drag-to-scroll (direct
-			-- instruction), checked BEFORE the click-to-act loop below so a
-			-- press anywhere in this one panel is never acted on immediately
-			-- - it's resolved on release (on_input's action.released branch)
-			-- as either a click (opens whichever card, if any, was under the
-			-- initial press) or a drag-scroll, depending on how far the
-			-- cursor moved in between (DRAG_CLICK_THRESHOLD). This is what
-			-- lets the grid be scrolled by dragging its own content, not
-			-- just the mouse wheel, without a drag ever accidentally
-			-- opening a ship's detail modal mid-scroll. Owned Ships (the
-			-- other list on this tab) is unaffected - still click-on-press,
-			-- same as every other card list on this whole screen.
+			-- Single merged panel now (direct instruction: no separate Owned
+			-- Ships list) - press-and-drag-to-scroll, resolved on release
+			-- (on_input's action.released branch) as either a click (opens
+			-- whichever card, if any, was under the initial press) or a
+			-- drag-scroll, depending on how far the cursor moved in between
+			-- (DRAG_CLICK_THRESHOLD). In practice the grid fits all 3 rows
+			-- without scrolling (SHIPS_PANEL_HEIGHT), so this almost always
+			-- resolves as a plain click. Selling now happens from inside the
+			-- detail modal itself (show_ship_detail/on_input's modal branch),
+			-- not a card's own inline button.
 			if hits(self.forsale_panel_node, action) then
 				local hit_item_key = nil
 				for _, card in ipairs(self.ship_cards) do
@@ -1846,37 +2070,6 @@ function on_input(self, action_id, action)
 				end
 				self.forsale_press = { item_key = hit_item_key, start_y = action.y, last_y = action.y, dragged = false }
 				return true
-			end
-
-			-- Click-to-act, no drag, for everything else on this tab.
-			-- Clicking a card opens the ship detail modal (§2.8.9, per
-			-- direct instruction) instead of going straight to a confirm
-			-- dialog - that modal figures out its own Purchase/Select/
-			-- just-Cancel state and performs the action immediately on its
-			-- own button. Selling is unchanged: still the card's own inline
-			-- Sell button + the plain confirm dialog (§2.8.7), checked
-			-- first so it doesn't also open the detail modal for the same
-			-- click.
-			for _, card in ipairs(self.ship_cards) do
-				local panel_node = panel_for_card(self, card)
-
-				if card.sell_box and hits(card.sell_box, action) and hits(panel_node, action) then
-					local name = ship_display_name(card.item_key, session.get_faction())
-					local refund = session.get_ship_sell_refund()
-					show_confirm(self, "Sell " .. name .. " for " .. refund .. " Scrip?", function()
-						session.sell_ship(card.item_key)
-						refresh_ship_cards(self)
-						local faction = session.get_faction()
-						local home_name, faction_label, ship_name = ship_overview_text(faction)
-						gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
-					end)
-					return true
-				end
-
-				if card.box and hits(card.box, action) and hits(panel_node, action) then
-					show_ship_detail(self, card.item_key)
-					return true
-				end
 			end
 			return false
 		end

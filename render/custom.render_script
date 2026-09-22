@@ -234,19 +234,28 @@ end
 -- the cross-product term then nudges it slightly sideways/up off that exact
 -- axis - a small three-quarter key-light offset rather than a perfectly
 -- flat on-camera light, which would flatten out the model's own shape.
--- TEMPORARY DIAGNOSTIC (direct instruction): simplified to sit EXACTLY at
--- the camera's own eye position - the simplest possible "does the override
--- even reach the shader at all" test, with no offset-direction math that
--- could itself be wrong. An on-axis camera light like this must illuminate
--- whatever's currently visible on screen if `constants.light` is actually
--- being received by model.fp; if the ship still looks just as flat/dark as
--- before with this in place, the override isn't taking effect at all
--- (rather than the source meshes having inverted normals, the other
--- candidate explanation). Revert to the real behind-and-offset version
--- (see git history / this comment block's own prior contents) once this
--- test tells us which it is.
+-- Resolved (§2.8.9's lighting diagnostic): the `constants` override does
+-- reach model.fp/model.vp, confirmed by the earlier on-axis-light and
+-- forced-tint tests both taking visible effect. Restored to the real
+-- three-quarter key light this was always meant to be - offset behind the
+-- camera along its own view axis (so it doesn't flatten the model's shape
+-- the way a dead-on camera light does) plus a small sideways/up nudge off
+-- that axis, both scaled to the camera's own distance so it scales
+-- sensibly across the huge range of model sizes PREVIEW_CAMERA covers.
 local function light_pos_for(target_pos, eye_offset)
-    return target_pos + eye_offset
+    local dist = vmath.length(eye_offset)
+    if dist < 0.0001 then
+        return target_pos + eye_offset
+    end
+    local dir = eye_offset / dist
+    local side = vmath.cross(dir, vmath.vector3(0, 1, 0))
+    if vmath.length(side) < 0.0001 then
+        side = vmath.vector3(1, 0, 0)
+    else
+        side = side / vmath.length(side)
+    end
+    local behind = target_pos + eye_offset + dir * (dist * 0.6)
+    return behind + side * (dist * 0.35) + vmath.vector3(0, dist * 0.25, 0)
 end
 
 -- Draws the `model` predicate once, restricted to a small on-screen
@@ -286,37 +295,9 @@ local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, pr
     local constants = render.constant_buffer()
     local light_pos = light_pos_for(target_pos, eye_offset)
     constants.light = vmath.vector4(light_pos.x, light_pos.y, light_pos.z, 1.0)
-    -- TEMPORARY DIAGNOSTIC, ROUND 2: `light` (a vertex_constants entry)
-    -- overriding with no visible effect, despite render.draw succeeding with
-    -- the right computed value, points at either (a) render.draw's
-    -- `constants` option not actually reaching vertex-stage user constants
-    -- in this engine version, or (b) something wrong with predicate/object
-    -- targeting more broadly. `tint` is a fragment_constants entry on this
-    -- same material, the standard textbook example for this exact mechanism
-    -- - overriding it this loudly (5x red, past 1.0 to survive any clamping)
-    -- should be unmistakable if constants override is working AT ALL here.
-    -- If ships still don't turn red, the bug is broader than just `light`.
-    constants.tint = vmath.vector4(5.0, 0.0, 0.0, 1.0)
-    -- TEMPORARY DIAGNOSTIC (direct instruction): the on-camera-light test
-    -- produced no visible change at all, which shouldn't be possible if this
-    -- override is really reaching the shader - print() pipes to the browser
-    -- console on HTML5 builds, so this confirms whether the function even
-    -- runs and with what values, and surfaces any error render.draw itself
-    -- throws (a render-script error can fail silently per-frame without
-    -- crashing the whole engine or showing up as a JS console error).
-    -- Remove once this is diagnosed.
-    DEBUG_LIGHT_PRINT_COUNT = (DEBUG_LIGHT_PRINT_COUNT or 0) + 1
-    local should_print = DEBUG_LIGHT_PRINT_COUNT <= 5
-    if should_print then
-        print("[light debug] target=" .. tostring(target_pos) .. " eye_offset=" .. tostring(eye_offset)
-            .. " light_pos=" .. tostring(light_pos))
-    end
-    local ok, err = pcall(render.draw, predicates.model, { constants = constants })
+    local ok = pcall(render.draw, predicates.model, { constants = constants })
     if not ok then
-        print("[light debug] render.draw with constants FAILED: " .. tostring(err))
         render.draw(predicates.model)
-    elseif should_print then
-        print("[light debug] render.draw with constants succeeded")
     end
     render.disable_state(graphics.STATE_CULL_FACE)
     render.disable_state(graphics.STATE_DEPTH_TEST)
@@ -489,7 +470,19 @@ function on_message(self, message_id, message)
     elseif message_id == MSG_SET_SHIP_PREVIEW_GRID then
         -- Ships-For-Sale grid previews (direct instruction) - see
         -- draw_ship_preview_grid_overlay's own comment above for the full
-        -- shape/rationale. An absent or empty list just draws nothing.
-        self.preview_grid = message.items or {}
+        -- shape/rationale. Sent in small batches, not as one single message
+        -- (main/outpost.gui_script's own refresh_forsale_preview) - msg.post's
+        -- ad-hoc Lua-table payload has a small fixed buffer (hit in practice
+        -- once the roster grew to 12 ships: "buffer (26 bytes) too small for
+        -- table, exceeded at 'y' for element #2" - the whole message was
+        -- silently dropped, blanking every grid preview, not just the
+        -- overflowing item). `reset` (true on a batch's first message) clears
+        -- the accumulated list; every batch's items then get appended onto it.
+        if message.reset then
+            self.preview_grid = {}
+        end
+        for _, item in ipairs(message.items or {}) do
+            table.insert(self.preview_grid, item)
+        end
     end
 end

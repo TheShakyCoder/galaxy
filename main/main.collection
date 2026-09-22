@@ -691,6 +691,33 @@ embedded_instances {
   }
 }
 embedded_instances {
+  id: "lionfish_preview"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/escort_tactical/lionfish.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ship_preview.script\"\n"
+  "}\n"
+  position {
+    x: 100000.0
+    y: 24000.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
   id: "anglerfish_preview"
   data: "components {\n"
   "  id: \"model\"\n"

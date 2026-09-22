@@ -11,6 +11,16 @@ local M = {}
 M.faction = nil -- "accord" | "swarm" | nil (not chosen yet)
 M.owned_ships = nil -- list of ship ids owned (main/data/ships.lua's M.SHIPS)
 M.active_ship_id = nil -- which owned ship is currently selected/fitted
+-- Set of owned ship ids that have been upgraded to their ADVANCED tier
+-- (main/data/ships.lua's per-ship `advanced` component-slot table, an
+-- alternative to `components` for a ship that's been upgraded) - a plain
+-- { [ship_id] = true } set, not a list, since a ship is either advanced or
+-- it isn't. One-way: a player upgrades their existing ship in place and
+-- can't revert to the basic tier afterward (direct instruction) - there's
+-- deliberately no "un-advance" function. Cleared for a ship_id on
+-- M.sell_ship so a later re-purchase of that same ship starts fresh at the
+-- basic tier, same as a brand-new copy would.
+M.advanced_ships = nil
 -- `owned`: list of OWNED INSTANCES, NOT catalog type-keys — decided (§4) that
 -- module upgrades are per PHYSICAL COPY, not a shared per-type "blueprint"
 -- upgrade, so two owned Gnats need to be distinguishable and independently
@@ -42,6 +52,7 @@ local MODULE_PRICE = 100
 local MODULE_SELL_REFUND = 50
 local SHIP_PRICE = 500
 local SHIP_SELL_REFUND = 250
+local SHIP_ADVANCE_PRICE = 500
 
 -- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
 -- (§2.6) - distinct from Scrip/Valor, which are the two CURRENCIES. Per
@@ -100,6 +111,7 @@ function M.choose_faction(faction)
 	M.faction = faction
 	M.owned_ships = { STARTING_SHIP_ID }
 	M.active_ship_id = STARTING_SHIP_ID
+	M.advanced_ships = {}
 	next_instance_id = 1
 	M.owned = {}
 	M.loadout = {}
@@ -154,6 +166,10 @@ function M.get_ship_sell_refund()
 	return SHIP_SELL_REFUND
 end
 
+function M.get_ship_advance_price()
+	return SHIP_ADVANCE_PRICE
+end
+
 -- Spends `amount` Scrip if (and only if) the player can afford it —
 -- returns false and changes nothing otherwise. The balance never goes
 -- negative.
@@ -188,6 +204,38 @@ function M.is_ship_owned(ship_id)
 		end
 	end
 	return false
+end
+
+-- Has `ship_id` been upgraded to its advanced tier? False for a ship not
+-- even owned, same as every other per-ship query here.
+function M.is_ship_advanced(ship_id)
+	return M.advanced_ships[ship_id] == true
+end
+
+-- Upgrades an OWNED ship to its advanced tier in place - one-way (direct
+-- instruction: "once a ship has been advanced it cannot be returned back
+-- to the basic model"), so there's no M.revert_ship counterpart. Spends
+-- get_ship_advance_price() Scrip (a flat placeholder, see STARTING_SCRIP's
+-- comment). Refuses (returns false, spending nothing) if the ship isn't
+-- owned, is already advanced, or the player can't afford it. Deliberately
+-- does NOT check whether main/data/ships.lua even has an `advanced` table
+-- for this ship_id - same division of responsibility as every other
+-- session function here (M.purchase_ship doesn't check ships.SHIPS either):
+-- session.lua tracks state by id only, the outpost screen (which already
+-- `require`s ships.lua) is what decides whether the Advance option is
+-- even offered for a given ship.
+function M.advance_ship(ship_id)
+	if not M.is_ship_owned(ship_id) then
+		return false
+	end
+	if M.is_ship_advanced(ship_id) then
+		return false
+	end
+	if not spend_scrip(SHIP_ADVANCE_PRICE) then
+		return false
+	end
+	M.advanced_ships[ship_id] = true
+	return true
 end
 
 -- Switches the active ship to `ship_id`, if owned. No-op otherwise.
@@ -408,6 +456,7 @@ function M.sell_ship(ship_id)
 	if M.active_ship_id == ship_id then
 		M.active_ship_id = M.owned_ships[1]
 	end
+	M.advanced_ships[ship_id] = nil
 	add_scrip(SHIP_SELL_REFUND)
 	return true
 end
