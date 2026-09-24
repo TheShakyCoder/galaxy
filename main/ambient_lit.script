@@ -1,0 +1,15 @@
+-- Applies the same ambient-lighting boost every model this project renders
+-- during flight gets (per direct instruction: "increase the general
+-- ambient light in all the systems") - see main/player_ship.script's own
+-- AMBIENT_TINT for the full explanation of what this actually does to
+-- model.material's shader and why `tint` is the only real lever. Used on
+-- main/main.collection's accord_outpost/swarm_outpost instances - the
+-- only rendered flight-scene objects with no other script of their own to
+-- piggyback this onto (player_ship.script/asteroid_hub.script already
+-- touch every ship hull/asteroid they spawn, so they just set this
+-- directly instead of needing a copy of this file).
+local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
+
+function init(self)
+	go.set("#model", "tint", AMBIENT_TINT)
+end

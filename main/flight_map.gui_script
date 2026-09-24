@@ -1,11 +1,10 @@
 -- In-flight sector map overlay (N key - main/player_ship.script's
 -- toggle_map()/on_input "toggle_map" handler). Lets the player VIEW the
--- map and ARM a destination system as a jump preset WITHOUT actually
--- jumping there (per direct instruction) - actually executing a jump
--- (the system-transition itself) is explicitly out of scope for this
--- pass ("we will sort out the rest"), so there's no [JUMP] button here,
--- unlike the source this is ported from - just selection, the
--- description panel, and arming.
+-- map, ARM a destination system as a jump preset, and (per direct
+-- instruction: "implement [the SuperShips jump mechanic] here") actually
+-- EXECUTE it - clicking [JUMP] here calls player_ship.script's same
+-- execute_jump() immediately (via "execute_jump_preset") instead of
+-- waiting for J, exactly mirroring the source's own map.gui_script.
 --
 -- Structurally ported (§0 - mechanics, not creative expression, "use
 -- everything from superships as it is") from the other local reference
@@ -60,7 +59,13 @@ local function set_desc_visible(visible)
 	for _, id in ipairs(DESC_TEXT_NODE_IDS) do
 		gui.set_enabled(gui.get_node(id), visible)
 	end
+	-- jump_button_*/desc_status_text are handled separately by
+	-- select_system() below, which picks exactly one of the two - hiding
+	-- both here so closing the whole map (or deselecting) never leaves
+	-- either one stuck showing.
 	gui.set_enabled(gui.get_node("desc_status_text"), false)
+	gui.set_enabled(gui.get_node("jump_button_bg"), false)
+	gui.set_enabled(gui.get_node("jump_button_text"), false)
 end
 
 local function screen_pos(sys)
@@ -173,17 +178,21 @@ local function select_system(self, id)
 	gui.set_text(gui.get_node("desc_threat"), string.format("Threat: %d", sys.threat or 0))
 
 	local status_node = gui.get_node("desc_status_text")
-	gui.set_enabled(status_node, true)
 	if id == self.current_system_id then
+		gui.set_enabled(status_node, true)
 		gui.set_text(status_node, "You are here")
 	elseif reachable then
-		gui.set_text(status_node, "Destination armed - [J] to jump later")
-		-- arm the preset the moment it's selected, not on some separate
-		-- confirm step - see this file's header comment (§0/direct
-		-- instruction: set a destination WITHOUT having to jump)
+		-- Shows [JUMP] instead of the status line - arms the preset the
+		-- moment it's selected, not on some separate confirm step (per
+		-- direct instruction: a destination can be set WITHOUT having to
+		-- jump), but [JUMP] is right there too now if the player wants to
+		-- go immediately instead of closing the map and pressing J later.
+		gui.set_enabled(gui.get_node("jump_button_bg"), true)
+		gui.set_enabled(gui.get_node("jump_button_text"), true)
 		msg.post("player_ship#script", "set_jump_preset", { system_id = id })
 	else
 		local reason = not can_enter and "Restricted - enemy home/buffer zone" or not in_range and "Out of FTL range" or "Not enough Hydrogen"
+		gui.set_enabled(status_node, true)
 		gui.set_text(status_node, reason)
 	end
 
@@ -234,6 +243,23 @@ end
 function on_input(self, action_id, action)
 	if action_id ~= hash("touch") or not action.pressed then
 		return false
+	end
+
+	if gui.is_enabled(gui.get_node("jump_button_bg")) and gui.pick_node(gui.get_node("jump_button_bg"), action.x, action.y) then
+		-- self.selected_system_id was already armed as the preset the
+		-- moment it was selected (see select_system() above) - this just
+		-- executes it immediately instead of waiting for J.
+		msg.post("player_ship#script", "execute_jump_preset")
+		-- self-close: execute_jump()/arrive_at_system() also handle
+		-- player_ship.script's own self.map_open on that end, but neither
+		-- has any way to reach back into this gui component's own
+		-- visibility/focus - without this, the overlay would stay open
+		-- (and focused) after confirming a jump, and the next N/J press
+		-- would re-open it instead of closing it, since the shared flag
+		-- would already read false.
+		set_map_visible(self, false)
+		msg.post(".", "release_input_focus")
+		return true
 	end
 
 	for id, d in pairs(self.dots) do

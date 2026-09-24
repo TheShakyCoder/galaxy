@@ -16,6 +16,12 @@
 --    once main/flight_map.gui's sector map arms a jump destination -
 --    persists after the map closes, same as the source project's own
 --    hud.gui_script "jump_preset_changed" indicator
+--  - "system_changed" - a text string ("SYSTEM: <name>") whenever the
+--    player's current system changes (initial launch, or an FTL jump
+--    landing - see player_ship.script's start_flight()/arrive_at_system()) -
+--    same source-project hud.gui_script "system_changed" indicator, just
+--    always left showing (no hide case - there's always a current system
+--    while flying)
 --  - "contacts" - { own_pos, range, contacts } for the radar below (per
 --    direct instruction: "each ship has its own visible range... a radar
 --    indicating all ships within visible range") - `range` is that
@@ -50,6 +56,7 @@ function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
 	self.jump_preset_node = gui.get_node("jump_preset")
+	self.system_name_node = gui.get_node("system_name")
 	self.scrip_node = gui.get_node("scrip_value")
 	self.water_node = gui.get_node("water_value")
 	self.iron_node = gui.get_node("iron_value")
@@ -130,6 +137,8 @@ function on_message(self, message_id, message)
 		if message.text then
 			gui.set_text(self.jump_preset_node, message.text)
 		end
+	elseif message_id == hash("system_changed") then
+		gui.set_text(self.system_name_node, message.text)
 	elseif message_id == hash("currency") then
 		gui.set_text(self.scrip_node, "Scrip: " .. message.scrip)
 		gui.set_text(self.water_node, "Water: " .. message.water)

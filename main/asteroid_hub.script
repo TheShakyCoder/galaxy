@@ -16,6 +16,17 @@
 
 local asteroids = require("main.data.asteroids")
 
+-- Same ambient-lighting boost applied to every model this project renders
+-- during flight (per direct instruction: "increase the general ambient
+-- light in all the systems") - see main/player_ship.script's own
+-- AMBIENT_TINT for the full explanation of what this actually does to
+-- model.material's shader and why `tint` is the only real lever.
+-- Duplicated here rather than required from that file since it's a plain
+-- numeric constant, not shared logic (same "small shared constant,
+-- mirrored with a cross-reference comment" precedent FACTION_OUTPOST/
+-- DOCK_RANGE already follow elsewhere in this project).
+local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
+
 local spawned_ids = {}
 
 local function despawn_all()
@@ -30,6 +41,7 @@ local function spawn_field(system_id)
 	for _, a in ipairs(asteroids.field_for(system_id)) do
 		local pos = vmath.vector3(a.x, a.y, a.z)
 		local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
+		go.set(msg.url(nil, id, "model"), "tint", AMBIENT_TINT)
 		table.insert(spawned_ids, id)
 	end
 end

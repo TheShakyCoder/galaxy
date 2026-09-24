@@ -113,6 +113,11 @@ local CONFIRM_YES_X = 820
 local CONFIRM_YES_CENTERED_X = 960
 local CONFIRM_BUTTON_Y = 460
 
+-- Launch countdown (per direct instruction: "when in an outpost and launch
+-- is triggered, countdown five seconds before launching") - see the
+-- launch_node handler in on_input and the countdown tick in update() below.
+local LAUNCH_COUNTDOWN_SEC = 5
+
 -- Sector Map tab (new) - all 58 main/data/star_systems.lua systems plotted
 -- as dot+label pairs, ported from the reference project's own
 -- main/map.gui_script + main/sector_map.lua (per direct instruction) -
@@ -346,6 +351,10 @@ function init(self)
 	self.title_node = gui.get_node("title")
 	self.ship_node = gui.get_node("ship_overview")
 	self.launch_node = gui.get_node("launch_button")
+	self.launch_countdown_node = gui.get_node("launch_countdown")
+	gui.set_enabled(self.launch_countdown_node, false)
+	self.launching = false -- true during the LAUNCH_COUNTDOWN_SEC delay between clicking Launch and actually starting flight - see on_input's launch_node handler and update() below
+	self.launch_countdown_time_left = 0
 	-- Currency/resource balance readouts (plan.md §4/§2.6, per direct
 	-- instruction: "always show what currency the player has" - later
 	-- expanded to "show all currencies ... script, water, iron, and
@@ -2169,6 +2178,13 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash("show_outpost") then
 		self.active = true
 		msg.post("#gui", "enable")
+		-- Reset any launch countdown left over from a PREVIOUS visit (docking
+		-- always re-fires show_outpost) - without this, self.launching would
+		-- still read true from before, and on_input's own modal guard for it
+		-- would swallow every input forever.
+		self.launching = false
+		self.launch_countdown_time_left = 0
+		gui.set_enabled(self.launch_countdown_node, false)
 		local faction = session.get_faction()
 		local home_name, faction_label, ship_name = ship_overview_text(faction)
 		gui.set_text(self.title_node, home_name .. " Outpost")
@@ -2178,6 +2194,35 @@ function on_message(self, message_id, message, sender)
 	end
 end
 
+-- Actually starts flight - called once the LAUNCH_COUNTDOWN_SEC delay
+-- armed by the launch_node click handler in on_input reaches zero (see
+-- update() below). Was previously the click handler's own immediate
+-- effect, before the countdown existed (per direct instruction: "when...
+-- launch is triggered, countdown five seconds before launching").
+local function do_launch(self)
+	-- Launch is clickable from ANY tab (checked above the active_page-
+	-- specific branches in on_input), including Ships with its live
+	-- For-Sale grid/detail-modal previews - real bug found via direct
+	-- instruction ("when I purchase and launch... I also see the grid of
+	-- ships"): unlike an ordinary tab switch (set_page(), which always
+	-- ends with refresh_forsale_preview()), arming the launch countdown
+	-- never goes through set_page() at all, so render/custom.render_script's
+	-- own "set_ship_preview"/"set_ship_preview_grid" state (a persistent
+	-- overlay, entirely separate from this gui's own enable/disable) would
+	-- otherwise just keep rendering through flight. Cleared directly here
+	-- rather than via refresh_forsale_preview(self) - that function
+	-- repopulates instead of clearing whenever self.active_page is still
+	-- "ships" (the exact case that needs to become empty).
+	self.ship_detail = nil
+	msg.post("@render:", "set_ship_preview", { visible = false })
+	msg.post("@render:", "set_ship_preview_grid", { items = {}, reset = true })
+	self.launching = false
+	gui.set_enabled(self.launch_countdown_node, false)
+	self.active = false
+	msg.post("#gui", "disable")
+	msg.post("player_ship#script", "start_flight")
+end
+
 -- Animates the Ships-For-Sale grid's scroll position (direct instruction:
 -- smooth scrolling instead of an instant snap) - eases self.scroll_display
 -- toward self.scroll.forsale (set immediately by wheel/drag input,
@@ -2185,8 +2230,27 @@ end
 -- frame, snapping the rest of the way once close enough that the lerp would
 -- otherwise never quite finish. Only touches anything while the Ships tab
 -- is actually open and there's an actual gap to close - otherwise a no-op.
+--
+-- Also ticks the launch countdown (self.launching, armed by on_input's
+-- launch_node handler) down to zero regardless of which tab is active,
+-- then hands off to do_launch() above - checked first, before the
+-- Ships-tab-only early return below.
 function update(self, dt)
-	if not self.active or self.active_page ~= "ships" then
+	if not self.active then
+		return
+	end
+
+	if self.launching then
+		self.launch_countdown_time_left = self.launch_countdown_time_left - dt
+		if self.launch_countdown_time_left <= 0 then
+			do_launch(self)
+			return -- self.active is now false - nothing below has anything left to do
+		else
+			gui.set_text(self.launch_countdown_node, string.format("Launching in %d...", math.ceil(self.launch_countdown_time_left)))
+		end
+	end
+
+	if self.active_page ~= "ships" then
 		return
 	end
 	local target = self.scroll.forsale
@@ -2208,6 +2272,17 @@ end
 function on_input(self, action_id, action)
 	if not self.active then
 		return false
+	end
+
+	-- Modal: while the launch countdown is running, it's the only thing
+	-- that can be interacted with - swallow every other input until it
+	-- actually launches (update() below ticks it down and starts flight
+	-- once it reaches zero). Checked first, same footing as self.confirm/
+	-- self.ship_detail below - Launch already refuses to arm a second
+	-- countdown on top of a running one (see its own handler), so this is
+	-- mostly a belt-and-braces guard against clicks during the delay.
+	if self.launching then
+		return true
 	end
 
 	-- Modal: while the confirmation dialog is open, it's the only thing
@@ -2392,28 +2467,20 @@ function on_input(self, action_id, action)
 			-- to a plain game object's script (player_ship.script) instead of
 			-- another gui_script, since flight needs go.*/camera.* access a
 			-- gui_script doesn't have (same limitation the reference project's
-			-- own hud.gui_script header comment notes).
-			--
-			-- Launch is clickable from ANY tab (checked above the
-			-- active_page-specific branches below), including Ships with its
-			-- live For-Sale grid/detail-modal previews - real bug found via
-			-- direct instruction ("when I purchase and launch... I also see
-			-- the grid of ships"): unlike an ordinary tab switch (set_page(),
-			-- which always ends with refresh_forsale_preview()), Launch never
-			-- went through set_page() at all, so render/custom.render_script's
-			-- own "set_ship_preview"/"set_ship_preview_grid" state (a
-			-- persistent overlay, entirely separate from this gui's own
-			-- enable/disable) just kept rendering through flight. Cleared
-			-- directly here rather than via refresh_forsale_preview(self) -
-			-- that function repopulates instead of clearing whenever
-			-- self.active_page is still "ships" (true here), the exact case
-			-- that needs to become empty.
-			self.ship_detail = nil
-			msg.post("@render:", "set_ship_preview", { visible = false })
-			msg.post("@render:", "set_ship_preview_grid", { items = {}, reset = true })
-			self.active = false
-			msg.post("#gui", "disable")
-			msg.post("player_ship#script", "start_flight")
+			-- own hud.gui_script header comment notes). Arms the
+			-- LAUNCH_COUNTDOWN_SEC delay (per direct instruction) rather than
+			-- launching immediately - do_launch() above is what actually does
+			-- that, called from update() once the countdown below reaches
+			-- zero. Guarded against re-arming a second countdown on top of a
+			-- running one - shouldn't be reachable anyway (on_input's own
+			-- self.launching modal guard swallows this click first), but
+			-- cheap to also check directly here.
+			if not self.launching then
+				self.launching = true
+				self.launch_countdown_time_left = LAUNCH_COUNTDOWN_SEC
+				gui.set_enabled(self.launch_countdown_node, true)
+				gui.set_text(self.launch_countdown_node, string.format("Launching in %d...", LAUNCH_COUNTDOWN_SEC))
+			end
 			return true
 		end
 

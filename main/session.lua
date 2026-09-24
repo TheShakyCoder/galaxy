@@ -57,19 +57,17 @@ local SHIP_ADVANCE_PRICE = 500
 -- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
 -- (§2.6) - distinct from Scrip/Valor, which are the two CURRENCIES. Per
 -- direct instruction, the outpost screen always shows all four of these
--- balances together. Unlike `scrip` above, none of these three has a real
--- transaction wired up anywhere yet - no mining, repair, or FTL/boost
--- mechanic exists in code to actually earn or spend them (`repair_cost_iron`
--- and `boost_cost_hydrogen_per_sec`/`ftl_cost_hydrogen_per_ly` in
--- ships.lua are stat FIELDS a future mechanic will read, not something
--- anything currently deducts against). So these three are honestly STATIC
--- for now - set once here and never touched again - rather than faking
--- transactions just to make the display look alive. STARTING_WATER/IRON/
--- HYDROGEN are flat placeholder values with no economy-balancing behind
--- them yet (same caveat as STARTING_SCRIP above); note they're not even
--- scaled against the existing repair_cost_iron = 10000 placeholder stat,
--- since nothing spends against either number yet - reconciling that scale
--- is open work, plan.md §4.
+-- balances together. Water/Iron are still honestly STATIC - no mining or
+-- repair mechanic exists yet to earn or spend them. Hydrogen is now the
+-- exception: main/player_ship.script's FTL jump (per direct instruction,
+-- "implement [the SuperShips jump mechanic] here") is the first real
+-- Hydrogen transaction - see M.spend_hydrogen/M.add_hydrogen below,
+-- mirroring M.spend_scrip's own shape. STARTING_WATER/IRON/HYDROGEN are
+-- flat placeholder values with no economy-balancing behind them yet (same
+-- caveat as STARTING_SCRIP above); note they're not even scaled against
+-- the existing repair_cost_iron = 10000 placeholder stat, since nothing
+-- spends against that one yet - reconciling that scale is open work,
+-- plan.md §4.
 M.water = nil
 M.iron = nil
 M.hydrogen = nil
@@ -144,6 +142,23 @@ end
 
 function M.get_hydrogen()
 	return M.hydrogen
+end
+
+-- Exported (unlike the local spend_scrip/add_scrip below, only ever called
+-- from within this module's own purchase functions) - main/player_ship.script
+-- is a different module and needs to spend/refund Hydrogen directly for its
+-- own FTL jump mechanic (per direct instruction). Same "never goes
+-- negative" shape as spend_scrip.
+function M.spend_hydrogen(amount)
+	if M.hydrogen < amount then
+		return false
+	end
+	M.hydrogen = M.hydrogen - amount
+	return true
+end
+
+function M.add_hydrogen(amount)
+	M.hydrogen = M.hydrogen + amount
 end
 
 -- The flat placeholder price/refund a caller (e.g. the outpost screen's

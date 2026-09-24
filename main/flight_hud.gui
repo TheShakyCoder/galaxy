@@ -97,6 +97,28 @@ nodes {
 }
 nodes {
   type: TYPE_TEXT
+  id: "system_name"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 990.0 z: 0.0 w: 1.0 }
+  size { x: 700.0 y: 34.0 z: 0.0 w: 1.0 }
+  color { x: 0.7 y: 0.78 z: 0.85 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
   id: "jump_preset"
   text: ""
   font: "default_font"

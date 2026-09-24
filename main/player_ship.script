@@ -48,7 +48,55 @@ local session = require("main.session")
 local SHIP_FORWARD = vmath.vector3(0, 0, 1)
 local CAMERA_FORWARD = vmath.vector3(0, 0, -1)
 local UP = vmath.vector3(0, 1, 0)
+local RIGHT = vmath.vector3(1, 0, 0)
 local YAW_180 = vmath.quat_axis_angle(UP, math.pi)
+
+-- Auto-level assist (per direct instruction: "port" the reference
+-- project's own bank/roll system - §0, mechanics not creative
+-- expression). Measures how far the ship's CURRENT bank angle has
+-- drifted from level (wings horizontal for its current heading), in
+-- radians, so update()'s body-frame rotation block can apply a simple
+-- proportional "spring back to zero" target once AUTO_LEVEL_DELAY has
+-- passed with no pitch/yaw input. Ported from the reference's own
+-- level_roll_angle() - same idea (derive a "level" right/up basis for the
+-- ship's current forward, measure where its actual up vector sits within
+-- that basis via atan2), but right_level's cross product ARGUMENT ORDER
+-- is swapped (cross(UP, forward), not the reference's cross(forward, UP))
+-- to match this hull's own +Z-forward convention (the reference's is
+-- -Z) - verified this swap (and the correction sign in update() below)
+-- numerically, not just re-derived by hand: cross(forward,UP) instead
+-- would silently make the correction UNSTABLE (roll error growing
+-- instead of shrinking) rather than throwing any error, so this was
+-- checked against a small standalone Lua/Python simulation before
+-- landing, not just symbolically.
+local function level_roll_angle(rot)
+	local forward = vmath.rotate(rot, SHIP_FORWARD)
+	local right_level
+	if math.abs(forward.y) < 0.999 then
+		right_level = vmath.normalize(vmath.cross(UP, forward))
+	else
+		-- Degenerate only when forward is (near-)vertical, where "level"
+		-- has no meaningful heading to measure roll against - freezes on
+		-- the ship's own current right vector that one frame rather than
+		-- producing a NaN from a zero-length cross product.
+		right_level = vmath.rotate(rot, RIGHT)
+	end
+	local up_level = vmath.cross(forward, right_level)
+	local up_world = vmath.rotate(rot, UP)
+	return math.atan2(vmath.dot(up_world, right_level), vmath.dot(up_world, up_level))
+end
+
+-- Auto-level only kicks in this long after the player's last pitch/yaw
+-- input (there's no manual roll key - see update()'s own comment) - give
+-- an active maneuver room to bank into a turn without the assist fighting
+-- it mid-turn, only easing the ship back level once they've actually let
+-- go. AUTO_LEVEL_SPEED is the proportional "spring" strength (how much
+-- target angular velocity per radian of roll error) - both flat
+-- placeholder constants (matching the reference project's own
+-- AUTO_LEVEL_DELAY/auto_level_speed go.property defaults, 3.0/2.0) since
+-- main/data/ships.lua has no per-ship fields for either yet.
+local AUTO_LEVEL_DELAY = 3.0
+local AUTO_LEVEL_SPEED = 2.0
 
 -- Which ship this slice flies - main/session.lua's own session.get_ship_id()
 -- (whatever the player last selected at the outpost), falling back to the
@@ -90,6 +138,35 @@ local FACTION_OUTPOST = {
 	swarm = vmath.vector3(4000, 0, 4000),
 }
 
+-- Ambient lighting (per direct instruction: "increase the general ambient
+-- light in all the systems"). /builtins/materials/model.material's
+-- compiled fragment shader (extracted and read directly from the build
+-- output - build/default/_generated_b1605dbb.spc, the only way to see its
+-- actual source, since it's a Defold builtin with no .fp file in this
+-- project's own tree) is:
+--   out_fragColor = (texture_color * tint.rgb * tint.a)
+--                    * clamp(max(dot(normal, light_dir), 0.0) + 0.2, 0, 1)
+-- The 0.2 ambient floor is a FIXED CONSTANT BAKED INTO THE COMPILED
+-- SHADER, not a uniform - `light` (a world-space position, already used
+-- above for crude sun-direction faking) and `tint` are the ONLY two
+-- constants actually exposed to go.set (confirmed by the compiled
+-- material's own reflection data: mtx_worldview/mtx_view/mtx_proj/
+-- mtx_normal/light/tint/tex0 - no separate "ambient"). Scaling `light`
+-- does nothing for this purpose either - it only ever feeds a
+-- normalize()'d direction, so its magnitude is irrelevant, only its
+-- direction is. `tint` is consequently the only real lever: a flat
+-- multiply applied to the texture BEFORE the light factor, so raising it
+-- brightens the ambient-only (unlit-facing) 0.2 floor right along with
+-- the fully-lit 1.0 side (the latter simply clips back down at the
+-- framebuffer, same visual effect a genuinely higher ambient floor would
+-- have). 1.4 is a moderate, clearly-noticeable placeholder multiplier,
+-- not a lighting-design decision (plan.md §4) - applied to every model
+-- component this project ever renders during flight (this file's own
+-- ship hulls below, main/asteroid_hub.script's spawned asteroids,
+-- main/ambient_lit.script's outposts) so the boost reads as one
+-- consistent scene-wide change, not just brighter ships.
+local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
+
 -- Docking (per direct instruction): a ship may only dock within DOCK_RANGE
 -- of its own faction's outpost, and launching drops it back at a random
 -- point on the surface of that same DOCK_RANGE sphere (not a filled ball -
@@ -97,6 +174,15 @@ local FACTION_OUTPOST = {
 -- below.
 local DOCK_RANGE = 500
 local DOCK_COUNTDOWN_SEC = 5
+
+-- FTL jump (per direct instruction: "implement [the SuperShips jump
+-- mechanic] here" - see the SuperShips research findings this ports).
+-- COMBAT_JUMP_MULTIPLIER quadruples charge time while self.in_combat -
+-- an inert, documented hook, not enforced: there's no weapon-fire system
+-- in this project yet to ever set self.in_combat true, same "flag as a
+-- future hook rather than pretend to enforce it" footing the reference
+-- project's own identical constant has (§0).
+local COMBAT_JUMP_MULTIPLIER = 4
 
 -- Uniform-on-sphere-surface point at radius DOCK_RANGE around
 -- outpost_pos, facing the system origin from there - same
@@ -137,11 +223,14 @@ end
 -- the case the selected ship_id ever points at a ship with no `data` block
 -- yet - same fallback shape as camera_distance_height()'s own DEFAULT pair.
 local DEFAULT_TURN_SPEED_DEG = 60
+local DEFAULT_TURN_ACCELERATION_DEG = 60 -- deg/sec^2, how fast pitch/yaw ramp up to turning_speed_deg_per_sec - see update()'s body-frame rotation block
 local DEFAULT_MAX_SPEED = 20 -- m/sec, unboosted
 local DEFAULT_BOOST_SPEED = 40 -- m/sec, boosted
 local DEFAULT_ACCELERATION = 12 -- m/sec^2, how fast throttle ramps the actual speed
 local DEFAULT_VISUAL_RANGE = 500 -- m, radar range - see update()'s "contacts" block below
 local DEFAULT_FTL_RANGE = 4.5 -- ly, matches patrol_interceptor's own ftl_range_ly - converted to star_systems.lua's own map-unit scale via M.ly_to_map_units() at each use site below (toggle_map()/on_message's "set_jump_preset" handler), not compared directly
+
+local DEFAULT_JUMP_TIMER_SEC = 15 -- sec, fallback for a ship with no ftl_charge_sec of its own - matches the reference project's own DEFAULT_JUMP_TIMER_SEC (§0)
 
 local function flight_stats(ship_id)
 	local ship = ships.SHIPS[ship_id]
@@ -152,7 +241,9 @@ local function flight_stats(ship_id)
 		(d and d.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED,
 		(d and d.acceleration_m_per_sec2) or DEFAULT_ACCELERATION,
 		(d and d.visual_range_m) or DEFAULT_VISUAL_RANGE,
-		(d and d.ftl_range_ly) or DEFAULT_FTL_RANGE
+		(d and d.ftl_range_ly) or DEFAULT_FTL_RANGE,
+		(d and d.ftl_charge_sec) or DEFAULT_JUMP_TIMER_SEC,
+		(d and d.turning_acceleration_deg_per_sec2) or DEFAULT_TURN_ACCELERATION_DEG
 end
 
 -- Chase camera - ported subset (chase mode only; the reference project's
@@ -200,12 +291,19 @@ function init(self)
 	self.input = default_input()
 	self.throttle = 1.0
 	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
+	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
+	self.time_since_rotation_input = 0 -- seconds since the last pitch/yaw input - see AUTO_LEVEL_DELAY
 	self.camera_rot = nil -- nil = "snap on next update", same convention the reference uses
 	self.near_outpost = false
 	self.docking = false
 	self.dock_time_left = 0
 	self.map_open = false
 	self.jump_preset_system = nil
+	self.jumping = false
+	self.jump_time_left = 0
+	self.jump_target_system = nil
+	self.jump_hydrogen_spent = 0 -- refunded if K cancels the countdown - see on_input's "dock" handler
+	self.in_combat = false -- see COMBAT_JUMP_MULTIPLIER's own comment - always false, nothing sets this true yet
 	self.current_system_id = nil
 	self.ship_id = nil -- resolved from session.get_ship_id() in start_flight() - not known yet here (faction/ship selection hasn't happened this early)
 	self.model_component_id = nil
@@ -217,6 +315,8 @@ local function start_flight(self)
 	self.input = default_input()
 	self.throttle = 1.0
 	self.speed = 0 -- ship starts at rest and spools up to cruise, same as any other launch - see update()
+	self.angular_velocity = vmath.vector3()
+	self.time_since_rotation_input = 0
 	self.camera_rot = nil
 	self.near_outpost = false
 	self.docking = false
@@ -224,9 +324,12 @@ local function start_flight(self)
 	self.map_open = false
 	-- self.jump_preset_system is deliberately NOT reset here - same
 	-- "survives everything except actually being consumed/reselected"
-	-- persistence the source project's own version describes (a no-op in
-	-- practice today either way, since there's only the one system to
-	-- ever be in).
+	-- persistence the source project's own version describes.
+	self.jumping = false
+	self.jump_time_left = 0
+	self.jump_target_system = nil
+	self.jump_hydrogen_spent = 0
+	self.in_combat = false
 
 	-- Which of main/main.collection's 24 pre-embedded model components to
 	-- show (per direct instruction: the ship actually flown must match
@@ -253,6 +356,11 @@ local function start_flight(self)
 	-- Set on the CURRENTLY VISIBLE model component specifically, not a
 	-- fixed "#model" (only ever true back when there was exactly one).
 	go.set("#" .. self.model_component_id, "light", vmath.vector4(4000, 6000, 4000, 1.0))
+	-- `tint` (per direct instruction: "increase the general ambient light
+	-- in all the systems") - see AMBIENT_TINT's own comment above for why
+	-- this, not `light`, is the lever that actually reaches the shader's
+	-- fixed 0.2 ambient floor.
+	go.set("#" .. self.model_component_id, "tint", AMBIENT_TINT)
 
 	local outpost_pos = FACTION_OUTPOST[faction]
 	local pos, rot = random_spawn(outpost_pos)
@@ -262,14 +370,64 @@ local function start_flight(self)
 	msg.post("flight_camera#camera", "enable")
 	msg.post("flight_hud#gui", "show_flight_hud")
 
-	-- "Current system" is always just the player's own home system, same
-	-- convention main/outpost.gui_script's refresh_map() already uses -
-	-- flight mode isn't tied to main/data/star_systems.lua's actual
-	-- per-system data yet (§4), so this is the only sensible choice.
-	-- Stored on self (not just a local) so toggle_map()/on_input, called
-	-- at any later point during flight, can still reach it.
+	-- Every flight starts at the player's own home system, same convention
+	-- main/outpost.gui_script's refresh_map() already uses (and the
+	-- reference project's own init()-time apply_system() call) - jumping
+	-- elsewhere during flight is arrive_at_system()'s job below. Stored on
+	-- self (not just a local) so toggle_map()/on_input, called at any
+	-- later point during flight, can still reach it.
 	self.current_system_id = star_systems.HOME_SYSTEM[faction]
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
+	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[self.current_system_id].name })
+end
+
+-- Makes `system_id` the player's current system - the Galaxy-appropriate
+-- slice of the reference project's own apply_system() (§0): repositions
+-- the ship, respawns the asteroid field, and updates the HUD's system-name
+-- readout. Called once from execute_jump()'s countdown-complete handler in
+-- update() below (never from start_flight(), which always goes home - see
+-- that function's own comment).
+--
+-- What this does NOT do, unlike the source: enable/disable per-system
+-- outpost meshes, or switch any multiplayer room - main/main.collection
+-- only has the ONE physical accord/swarm outpost pair (fixed-position,
+-- used for docking), not a real per-system 3D world/outpost per
+-- main/data/star_systems.lua's own M.has_outpost - flight mode is still
+-- one generic scene regardless of which system_id is "current" (§4, a
+-- known, larger, un-built gap - not this feature's job to invent a
+-- multi-world architecture). Docking still degrades sensibly despite
+-- this: jumping to a non-home system spawns you at the map origin
+-- (jump_in_spawn below), physically far from FACTION_OUTPOST's fixed
+-- position, so self.near_outpost's own plain distance check already
+-- reads false there without any extra system-aware logic - the "no
+-- outpost to dock at outside your own home system" behavior falls out of
+-- the existing physical-distance check as a side effect, not a deliberate
+-- per-system rule.
+local function arrive_at_system(self, system_id)
+	self.current_system_id = system_id
+	local faction = session.get_faction()
+	local home = star_systems.faction_home_of(system_id)
+
+	local pos, rot
+	if home == faction then
+		pos, rot = random_spawn(FACTION_OUTPOST[faction])
+	else
+		-- Same ring-spawn as random_spawn(), just centered on the map
+		-- origin instead of an outpost - ported technique from the
+		-- reference project's own jump_in_spawn() (§0), used whenever the
+		-- destination has no outpost of the player's own faction to
+		-- arrive near. Also conveniently right where main/data/asteroids.lua's
+		-- own field is centered, unlike the source (whose ambient drone
+		-- pool just happens to roam near its own map origin too, per that
+		-- function's own comment).
+		pos, rot = random_spawn(vmath.vector3(0, 0, 0))
+	end
+	go.set_position(pos)
+	go.set_rotation(rot)
+	self.camera_rot = nil -- snap the chase camera to the new position/rotation instead of slerping from wherever it was before the jump (same convention start_flight() already uses for the exact same "ship just teleported" case)
+
+	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
+	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[system_id].name })
 end
 
 -- Mirror image of start_flight() - returns to the outpost menu the same
@@ -296,6 +454,13 @@ end
 -- Ported technique from the reference project's own ship.script
 -- toggle_map() (§0).
 local function toggle_map(self)
+	if self.jumping then
+		-- mid-countdown - nothing to browse, and there's no [X]/close
+		-- affordance needed since the map can't be open right now anyway
+		-- (execute_jump() below force-closes it the moment the countdown
+		-- starts) - matches the reference project's own toggle_map() guard.
+		return
+	end
 	self.map_open = not self.map_open
 	local _, _, _, _, _, ftl_range_ly = flight_stats(self.ship_id)
 	msg.post("flight_map#gui", "toggle", {
@@ -304,6 +469,53 @@ local function toggle_map(self)
 		ftl_range = star_systems.ly_to_map_units(ftl_range_ly), -- flight_map.gui_script/star_systems.in_ftl_range both work in map units, not light-years
 		preset_system_id = self.jump_preset_system, -- lets flight_map.gui_script re-highlight whatever's already armed when reopening, rather than forgetting it visually
 	})
+end
+
+-- Actually starts the FTL countdown for whatever's currently armed in
+-- self.jump_preset_system - shared by the J key (on_input below) and
+-- main/flight_map.gui's [JUMP] button (via on_message's
+-- "execute_jump_preset" below), same "preset selects, J/[JUMP] commits"
+-- split the sector map's own header comment describes. No-ops quietly if
+-- nothing's armed, a jump is already underway, or docking is (can't do
+-- both at once) - all easy to hit legitimately (J out of habit with
+-- nothing preset, or twice in a row), matching the reference project's
+-- own execute_jump_preset() (§0). Re-validates independently rather than
+-- trusting whatever armed the preset (same reasoning as on_message's
+-- "set_jump_preset" handler).
+local function execute_jump(self)
+	if self.jumping or self.docking or not self.jump_preset_system then
+		return
+	end
+	local faction = session.get_faction()
+	if not star_systems.can_enter(self.jump_preset_system, faction) then
+		self.jump_preset_system = nil
+		return
+	end
+	local dist = self.current_system_id and star_systems.distance(self.current_system_id, self.jump_preset_system)
+	local _, _, _, _, _, ftl_range_ly, ftl_charge_sec = flight_stats(self.ship_id)
+	if not star_systems.in_ftl_range(dist, star_systems.ly_to_map_units(ftl_range_ly)) then
+		return
+	end
+	-- Hydrogen is real fuel, not just displayed - main/flight_map.gui_script
+	-- already checks affordability before ever describing this system as
+	-- reachable, but re-checked here too for the same "don't just trust
+	-- the sender" reason as the checks above.
+	local cost = star_systems.hydrogen_cost(dist)
+	if not session.spend_hydrogen(cost) then
+		return
+	end
+
+	self.jumping = true
+	self.jump_time_left = ftl_charge_sec * (self.in_combat and COMBAT_JUMP_MULTIPLIER or 1)
+	self.jump_target_system = self.jump_preset_system
+	self.jump_hydrogen_spent = cost
+	self.jump_preset_system = nil
+	msg.post("flight_hud#gui", "jump_preset", { text = nil })
+
+	if self.map_open then
+		self.map_open = false
+		msg.post("flight_map#gui", "toggle", { open = false })
+	end
 end
 
 -- Selecting a system on main/flight_map.gui arms it as a preset -
@@ -324,6 +536,9 @@ function on_message(self, message_id, message)
 				msg.post("flight_hud#gui", "jump_preset", { text = "PRESET: " .. name .. " [J]" })
 			end
 		end
+	elseif message_id == hash("execute_jump_preset") then
+		-- main/flight_map.gui's [JUMP] button - same effect as pressing J
+		execute_jump(self)
 	end
 end
 
@@ -366,9 +581,32 @@ function on_input(self, action_id, action)
 			self.throttle = 1.0
 		end
 	elseif action_id == hash("dock") then
-		if action.pressed and self.near_outpost and not self.docking then
-			self.docking = true
-			self.dock_time_left = DOCK_COUNTDOWN_SEC
+		-- "Pressing K will cancel your FTL jump" - checked first, same key
+		-- docking's own countdown already uses to commit, so jump-cancel
+		-- takes priority (mirrors the reference project's own on_input
+		-- "dock" handler): the two countdowns can never really overlap in
+		-- practice (execute_jump() above refuses to start while docking,
+		-- and starting to dock requires near_outpost, which a jump's own
+		-- arrival spawn point away from any outpost already rules out),
+		-- but checking self.jumping first keeps K's meaning unambiguous
+		-- regardless.
+		if action.pressed then
+			if self.jumping then
+				self.jumping = false
+				self.jump_target_system = nil
+				session.add_hydrogen(self.jump_hydrogen_spent)
+				self.jump_hydrogen_spent = 0
+			elseif self.near_outpost and not self.docking then
+				self.docking = true
+				self.dock_time_left = DOCK_COUNTDOWN_SEC
+			end
+		end
+	elseif action_id == hash("execute_jump") then
+		-- "This is very handy when you need to FTL away rather than die" -
+		-- fires whatever's currently armed in self.jump_preset_system
+		-- without needing the map open at all, see execute_jump() above.
+		if action.pressed then
+			execute_jump(self)
 		end
 	else
 		return false
@@ -381,20 +619,74 @@ function update(self, dt)
 		return
 	end
 
-	local turn_speed_deg, max_speed, boost_speed, acceleration, visual_range = flight_stats(self.ship_id)
+	local turn_speed_deg, max_speed, boost_speed, acceleration, visual_range, _, _, turn_accel_deg = flight_stats(self.ship_id)
+	local turn_speed_rad = math.rad(turn_speed_deg)
+	local turn_accel_rad = math.rad(turn_accel_deg)
 
 	local pitch_delta = (self.input.pitch_up and 1 or 0) - (self.input.pitch_down and 1 or 0)
 	local yaw_delta = (self.input.yaw_left and 1 or 0) - (self.input.yaw_right and 1 or 0)
 
+	-- Full body-frame rotation (per direct instruction: "port" the
+	-- reference project's own arcade flight model - see this project's own
+	-- research findings on it) - pitch/yaw torque coasts under angular
+	-- "drag" (here: eases toward a target angular velocity bounded by
+	-- turn_accel_rad, same acceleration-bounded-target technique
+	-- self.speed below already uses, rather than the reference's own
+	-- exponential 1/(1+drag*dt) decay - a cleaner fit for this project's
+	-- existing turning_speed_deg_per_sec/turning_acceleration_deg_per_sec2
+	-- stat PAIR, which was already sitting unused in main/data/ships.lua
+	-- - not the reference's own single turn_rate/drag pair) - and, unlike
+	-- the WORLD-frame yaw this replaces, pitch+yaw now compose in the
+	-- ship's own LOCAL frame each frame (rot = rot * delta, not delta *
+	-- rot), which is what lets bank/roll emerge organically from combined
+	-- pitch+yaw the same way a real aircraft's does - there is still no
+	-- manual roll key (matching the reference project's own default
+	-- scheme exactly - bank is never directly flown, only ever drifted
+	-- into and auto-leveled back out of).
+	if pitch_delta ~= 0 or yaw_delta ~= 0 then
+		self.time_since_rotation_input = 0
+	else
+		self.time_since_rotation_input = self.time_since_rotation_input + dt
+	end
+
 	local rot = go.get_rotation()
-	if pitch_delta ~= 0 then
-		local right = vmath.rotate(rot, vmath.vector3(1, 0, 0))
-		rot = vmath.quat_axis_angle(right, math.rad(turn_speed_deg) * pitch_delta * dt) * rot
+	local target_angular_velocity = vmath.vector3(
+		turn_speed_rad * pitch_delta,
+		turn_speed_rad * yaw_delta,
+		0)
+	if pitch_delta == 0 and yaw_delta == 0 and self.time_since_rotation_input >= AUTO_LEVEL_DELAY then
+		-- Auto-level (per direct instruction) - a proportional "spring
+		-- back to level" target for roll ALONE, only once the player's
+		-- genuinely let go for AUTO_LEVEL_DELAY seconds, same "don't
+		-- fight an active maneuver" reasoning the reference project's own
+		-- version has. See level_roll_angle()'s own comment for why the
+		-- sign here is the OPPOSITE of the reference project's own
+		-- `torque.z - roll_angle*speed` - this hull's nose is at local
+		-- +Z, not the reference's -Z, which flips which rotation SENSE
+		-- around the forward axis counts as "banking right" (verified
+		-- numerically via a standalone quaternion simulation before
+		-- landing, not just re-derived by hand - flag if this ever needs
+		-- re-checking, e.g. if SHIP_FORWARD's own sign ever changes).
+		local roll_angle = level_roll_angle(rot)
+		target_angular_velocity.z = math.max(-turn_speed_rad, math.min(turn_speed_rad, AUTO_LEVEL_SPEED * roll_angle))
 	end
-	if yaw_delta ~= 0 then
-		rot = vmath.quat_axis_angle(UP, math.rad(turn_speed_deg) * yaw_delta * dt) * rot
+
+	local max_angular_delta = turn_accel_rad * dt
+	for _, axis in ipairs({ "x", "y", "z" }) do
+		local diff = target_angular_velocity[axis] - self.angular_velocity[axis]
+		if diff > max_angular_delta then
+			self.angular_velocity[axis] = self.angular_velocity[axis] + max_angular_delta
+		elseif diff < -max_angular_delta then
+			self.angular_velocity[axis] = self.angular_velocity[axis] - max_angular_delta
+		else
+			self.angular_velocity[axis] = target_angular_velocity[axis]
+		end
 	end
-	rot = vmath.normalize(rot)
+
+	local rotation_delta = vmath.quat_axis_angle(RIGHT, self.angular_velocity.x * dt)
+		* vmath.quat_axis_angle(UP, self.angular_velocity.y * dt)
+		* vmath.quat_axis_angle(SHIP_FORWARD, self.angular_velocity.z * dt)
+	rot = vmath.normalize(rot * rotation_delta)
 	go.set_rotation(rot)
 
 	-- self.throttle is the CONTROL position (0..1, what the stick/lever is
@@ -453,6 +745,32 @@ function update(self, dt)
 		hydrogen = session.get_hydrogen(),
 	})
 
+	-- FTL jump countdown - started by execute_jump() above (J key, or
+	-- main/flight_map.gui's [JUMP] button), cancelable with K (see
+	-- on_input's "dock" handler, which checks self.jumping first and
+	-- refunds the spent Hydrogen). Unlike docking, nothing here cancels it
+	-- automatically once started - there's no "drifted out of range"
+	-- equivalent for a jump already underway. Reaching zero hands off to
+	-- arrive_at_system() above. Ported technique from the reference
+	-- project's own ship.script (§0).
+	if self.jumping then
+		self.jump_time_left = self.jump_time_left - dt
+		if self.jump_time_left <= 0 then
+			self.jumping = false
+			local target = self.jump_target_system
+			self.jump_target_system = nil
+			self.jump_hydrogen_spent = 0 -- already spent, not refundable now that it's landed
+			arrive_at_system(self, target)
+			-- arrive_at_system() just teleported/reoriented the ship -
+			-- refresh `pos`/`rot` (computed earlier this frame, now stale)
+			-- so the docking check/radar post/chase-camera math below all
+			-- use where the ship actually is now, not wherever it was a
+			-- moment before landing.
+			pos = go.get_position()
+			rot = go.get_rotation()
+		end
+	end
+
 	-- Docking (per direct instruction: only within DOCK_RANGE of the
 	-- player's own faction's outpost) - K (on_input's "dock" case above)
 	-- starts a DOCK_COUNTDOWN_SEC countdown; drifting back out of range
@@ -476,7 +794,10 @@ function update(self, dt)
 	end
 
 	local dock_text = nil
-	if self.docking then
+	if self.jumping then
+		dock_text = string.format("Jumping to %s in %d... [K] to cancel",
+			star_systems.SYSTEMS[self.jump_target_system].name, math.ceil(self.jump_time_left))
+	elseif self.docking then
 		dock_text = string.format("Docking in %d...", math.ceil(self.dock_time_left))
 	elseif self.near_outpost then
 		dock_text = "Press [K] to dock"

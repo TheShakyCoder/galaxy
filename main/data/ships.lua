@@ -665,38 +665,55 @@ M.SHIPS = {
 		class = "Escort",
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Tactical.
 		role = "Tactical",
-		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
-		-- every other Escort/Frigate-tier ship so far.
+		-- Full stat block sourced from https://bsgo.fandom.com/wiki/Liche (per
+		-- direct instruction: "apply the stats from the liche to the Osprey") -
+		-- Liche is the wiki's own Cylon-faction Escort-class counterpart this
+		-- chassis' Swarm skin (Osprey) already visually reinterprets (this
+		-- ship's model was tools/build_osprey_model.py's own original design,
+		-- not sourced - only these NUMBERS come from the wiki page). Stats are
+		-- per-CHASSIS, not per-faction-skin (§2.1.2's own "only name/model/
+		-- weapon_gui differ per faction, every stat is identical" data model -
+		-- there is no separate Lionfish stat block to leave at the baseline),
+		-- so this replaces the shared universal-baseline block below for BOTH
+		-- Lionfish and Osprey, not Osprey alone. `repair_cost_iron` is left at
+		-- its existing baseline value - the wiki page's own stats don't include
+		-- a repair cost, only a 75,000-cubit PURCHASE price (not a Scrip
+		-- conversion this project has decided yet, so not applied either -
+		-- §0/§4, don't invent unconfirmed numbers). Equipment Slots (Liche:
+		-- Weapon 6/Hull 3/Engine 3/Computer 3) also NOT applied here - that's
+		-- component/slot-position data, not this stat block, and this chassis
+		-- has no slot_positions layout to pair real counts with yet (still
+		-- empty below); flag if that should be filled in too.
 		data = {
 			-- Hull Systems
-			hull_points = 650,
-			hull_recovery_per_sec = 5,
-			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-			armor = 5,
+			hull_points = 1950,
+			hull_recovery_per_sec = 15,
+			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6) - NOT from the Liche page, see this entry's own header comment
+			armor = 25,
 			critical_defense = 100,
 
 			-- Engine Systems
-			avoidance = 500,
-			turning_speed_deg_per_sec = 47.5,
-			turning_acceleration_deg_per_sec2 = 47.5,
-			inertial_compensation_m_per_sec = 100,
-			acceleration_m_per_sec2 = 10,
-			speed_m_per_sec = 52.5,
-			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			avoidance = 260,
+			turning_speed_deg_per_sec = 25,
+			turning_acceleration_deg_per_sec2 = 25,
+			inertial_compensation_m_per_sec = 50,
+			acceleration_m_per_sec2 = 5,
+			speed_m_per_sec = 40,
+			boost_speed_m_per_sec = 60,
+			boost_cost_hydrogen_per_sec = 2.7, -- renamed from the wiki's own Tylium unit (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
-			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_range_ly = 7.5,
+			ftl_charge_sec = 20,
+			ftl_cost_hydrogen_per_ly = 80, -- renamed from the wiki's own Tylium unit (§2.6)
 
 			-- Computer Systems
-			power = 175,
-			power_recharge_per_sec = 6,
-			firewall_rating = 200,
-			emitter_rating = 200,
-			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-			visual_range_m = 500,
+			power = 300,
+			power_recharge_per_sec = 10,
+			firewall_rating = 150,
+			emitter_rating = 150,
+			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0) - unchanged, the wiki's own value matches the baseline exactly
+			visual_range_m = 300,
 		},
 		-- No confirmed slot-count number exists yet for this ship, so left
 		-- empty rather than guessed (§0/§4).

@@ -958,6 +958,10 @@ embedded_instances {
   "  id: \"model\"\n"
   "  component: \"/assets/models/outposts/accord_outpost.model\"\n"
   "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ambient_lit.script\"\n"
+  "}\n"
   position {
     x: -4000.0
     y: 0.0
@@ -980,6 +984,10 @@ embedded_instances {
   data: "components {\n"
   "  id: \"model\"\n"
   "  component: \"/assets/models/outposts/swarm_outpost.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/ambient_lit.script\"\n"
   "}\n"
   position {
     x: 4000.0

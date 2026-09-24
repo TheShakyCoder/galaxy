@@ -958,6 +958,28 @@ nodes {
   layer: ""
 }
 nodes {
+  type: TYPE_TEXT
+  id: "launch_countdown"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 158.0 z: 0.0 w: 1.0 }
+  size { x: 460.0 y: 34.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 0.78 z: 0.3 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
   type: TYPE_BOX
   id: "ship_detail_scrim"
   position { x: 960.0 y: 540.0 z: 0.0 w: 1.0 }
