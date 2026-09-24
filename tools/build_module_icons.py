@@ -256,9 +256,42 @@ MANUAL_ICONS = [
 # (module_key, slot_type, draw_fn, fill_color) - mining_cannon_basic is
 # handled separately in main() (draw_mining_badge builds a whole Image,
 # not a draw-onto-shared-canvas function like the others need).
+#
+# Hull/Engine entries below (plan.md S2.8.11, per direct instruction:
+# "create an icon for all the recently added modules") reuse the same
+# per-type silhouette (draw_hull_silhouette's plate, draw_engine_silhouette's
+# thruster bell) every module of that type already shares - same "one shape
+# family per slot type, distinguished by fill color" convention the two
+# existing weapon/computer icons above already establish, not a bespoke
+# shape per module. Colors loosely group by what each one actually does
+# rather than being arbitrary: Hull's 6 passive plating tiers move through a
+# bronze/steel/olive/teal/mauve range roughly tracking which of
+# armor/critical_defense/hull_points (main/data/modules/hull_modules.lua's
+# own `stats` field) each one boosts, brightening to gold for the one
+# tier that boosts all three; the two ACTIVE abilities (Emergency Hull
+# Repair, Slide Thrusters) each get a distinctly brighter/more saturated
+# color than their type's passive siblings, so they read as "different kind
+# of module" at a glance even before checking behavior.
 MODULE_ICONS = [
     ("auto_cannon_basic", "weapon", draw_weapon_silhouette, (235, 95, 60, 255)),   # combat orange-red
     ("asteroid_analyser", "computer", draw_computer_silhouette, (150, 110, 235, 255)),  # scanner purple
+
+    # Hull - passive plating (bronze/steel/olive/teal/mauve, brightening to
+    # gold for the all-three-stats top tier)
+    ("armor_plating_patrol", "hull", draw_hull_silhouette, (210, 150, 70, 255)),            # bronze - armor only
+    ("reinforced_plating_patrol", "hull", draw_hull_silhouette, (90, 170, 210, 255)),        # steel blue - critical_defense only
+    ("composite_plating_patrol", "hull", draw_hull_silhouette, (150, 180, 90, 255)),         # olive - hull_points + armor
+    ("reinforced_hull_plating_patrol", "hull", draw_hull_silhouette, (100, 190, 150, 255)),  # teal - hull_points + critical_defense
+    ("reinforced_armor_plating_patrol", "hull", draw_hull_silhouette, (180, 130, 150, 255)), # mauve - armor + critical_defense
+    ("reinforced_composite_plating_patrol", "hull", draw_hull_silhouette, (220, 200, 100, 255)), # gold - all three stats
+    # Hull - active ability
+    ("emergency_hull_repair_patrol", "hull", draw_hull_silhouette, (230, 80, 80, 255)),      # red - emergency/medical association
+
+    # Engine - passive boosters
+    ("engine_gyros_patrol", "engine", draw_engine_silhouette, (120, 170, 230, 255)),   # blue - turning/navigation
+    ("thruster_array_patrol", "engine", draw_engine_silhouette, (240, 140, 60, 255)),  # orange - speed/thrust, flame association
+    # Engine - active ability
+    ("slide_thrusters_patrol", "engine", draw_engine_silhouette, (80, 230, 210, 255)), # bright cyan - distinct energetic color
 ]
 
 

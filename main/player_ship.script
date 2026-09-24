@@ -1,0 +1,383 @@
+-- Minimal flight-mode slice (plan.md §4's "Build flight mode" TODO - first
+-- piece only, per direct instruction): a player ship that actually moves,
+-- plus a third-person chase camera that follows it with a lerp delay.
+-- Deliberately NOT real flight physics - simple kinematic pitch/yaw +
+-- constant forward thrust, just enough to exercise and tune the camera.
+-- Turning/acceleration/speed now read from ships.lua's real per-ship stats
+-- (§2.1.1, see flight_stats() below) rather than flat placeholders - the
+-- DEFAULT_* constants there are only a fallback for a ship with no `data`
+-- block, same "flag as not final" footing as other placeholder numbers
+-- elsewhere in this project (plan.md §4).
+--
+-- Both this game object ("player_ship") and the camera-only sibling
+-- ("flight_camera", main/flight_camera.camera) are embedded directly in
+-- main/main.collection, always enabled from load (same "always-on script,
+-- gated by an internal active/flying flag" pattern outpost.gui_script and
+-- main/ship_preview.script's off-world preview rigs already use) - the
+-- outpost's Launch button (main/outpost.gui_script) posts "start_flight"
+-- here to actually begin - see complete_dock() below for the reverse trip
+-- (K near the player's own outpost, docking countdown, back to the
+-- outpost menu).
+
+local ships = require("main.data.ships")
+local star_systems = require("main.data.star_systems")
+local session = require("main.session")
+
+-- Two DIFFERENT "forward" concepts, deliberately kept separate - conflating
+-- them into one shared FORWARD constant was a real bug, found via live
+-- testing (per direct instruction: "the camera needs to be rotated 180
+-- degrees and moved to the other end of the ship"):
+--
+-- 1. SHIP_FORWARD - this hull's own nose direction, an ASSET fact.
+--    tools/build_sardine_model.py's own header comment is explicit the hull
+--    is built "nose at +Z" - the opposite of the reference project's own
+--    ship.script FORWARD constant (0,0,-1), which was wrongly copied
+--    verbatim without checking. Used for movement only.
+-- 2. CAMERA_FORWARD - Defold's own ENGINE convention that a camera looks
+--    down its local -Z, unrelated to any particular ship's nose direction.
+--    Used for the chase camera's position/rotation math only.
+--
+-- Since these two are opposite on this hull (+Z nose vs. a camera that
+-- looks down -Z), the camera's rotation needs an extra 180-degree yaw
+-- relative to the ship's own rotation - see camera_target_rot in update()
+-- below - so that the camera's native "look down -Z" ends up pointing at
+-- the ship's own +Z nose (i.e. at the ship), not away from it. Using the
+-- ship's raw rotation for the camera directly (no 180 flip) is exactly what
+-- caused the reported symptom: camera on the nose end looking backward at
+-- the tail while the ship itself moved tail-first.
+local SHIP_FORWARD = vmath.vector3(0, 0, 1)
+local CAMERA_FORWARD = vmath.vector3(0, 0, -1)
+local UP = vmath.vector3(0, 1, 0)
+local YAW_180 = vmath.quat_axis_angle(UP, math.pi)
+
+-- Which ship this minimal slice flies (plan.md §4 - not yet tied to the
+-- player's actual session.get_ship_id(), since there's no ship-selection
+-- flow into flight yet, just the one hardcoded model main/main.collection's
+-- "player_ship" embedded instance uses).
+local PLAYER_SHIP_ID = "patrol_interceptor"
+
+-- Must match main/main.collection's own accord_outpost/swarm_outpost
+-- embedded instance positions exactly - same "hardcoded mirror, kept in
+-- sync by hand" approach (and same reasoning) as the other local reference
+-- project's own ship.script FACTION_OUTPOST table, which this is ported
+-- from (§0 - mechanics, not creative expression). Used for both the
+-- launch spawn point and the docking proximity check below.
+local FACTION_OUTPOST = {
+	accord = vmath.vector3(-4000, 0, -4000),
+	swarm = vmath.vector3(4000, 0, 4000),
+}
+
+-- Docking (per direct instruction): a ship may only dock within DOCK_RANGE
+-- of its own faction's outpost, and launching drops it back at a random
+-- point on the surface of that same DOCK_RANGE sphere (not a filled ball -
+-- "any point ON a sphere") - see random_spawn()/update()'s docking block
+-- below.
+local DOCK_RANGE = 500
+local DOCK_COUNTDOWN_SEC = 5
+
+-- Uniform-on-sphere-surface point at radius DOCK_RANGE around
+-- outpost_pos, facing the system origin from there - same
+-- acos(2u-1)-for-polar-angle technique main/data/asteroids.lua already
+-- uses to avoid bunching at the poles (there it's for a filled ball; here
+-- radius is fixed, only the direction is randomized). Rotation technique
+-- (quat_from_to with a same-axis fallback for the exactly-opposite case,
+-- which quat_from_to can't itself handle - it returns NaN) is ported from
+-- the reference project's own random_spawn() (§0).
+local function random_spawn(outpost_pos)
+	local theta = math.acos(2 * math.random() - 1)
+	local phi = math.random() * 2 * math.pi
+	local offset = vmath.vector3(
+		DOCK_RANGE * math.sin(theta) * math.cos(phi),
+		DOCK_RANGE * math.cos(theta),
+		DOCK_RANGE * math.sin(theta) * math.sin(phi))
+	local pos = outpost_pos + offset
+
+	local to_center = -pos
+	local rot
+	if vmath.length(to_center) < 0.0001 then
+		rot = vmath.quat()
+	else
+		local dir = vmath.normalize(to_center)
+		if vmath.dot(SHIP_FORWARD, dir) < -0.9999 then
+			rot = vmath.quat_axis_angle(UP, math.pi)
+		else
+			rot = vmath.quat_from_to(SHIP_FORWARD, dir)
+		end
+	end
+	return pos, rot
+end
+
+-- Turning/acceleration/speed now read from this ship's own real stat block
+-- (main/data/ships.lua's `data` table, plan.md §2.1.1's Engine Systems -
+-- previously flat placeholders here, per direct instruction: the Patrol
+-- Interceptor "should do more than 20 m/s"). DEFAULT_* below only cover
+-- the case PLAYER_SHIP_ID ever points at a ship with no `data` block yet -
+-- same fallback shape as camera_distance_height()'s own DEFAULT pair.
+local DEFAULT_TURN_SPEED_DEG = 60
+local DEFAULT_MAX_SPEED = 20 -- m/sec, unboosted
+local DEFAULT_BOOST_SPEED = 40 -- m/sec, boosted
+local DEFAULT_ACCELERATION = 12 -- m/sec^2, how fast throttle ramps the actual speed
+
+local function flight_stats()
+	local ship = ships.SHIPS[PLAYER_SHIP_ID]
+	local d = ship and ship.data
+	return
+		(d and d.turning_speed_deg_per_sec) or DEFAULT_TURN_SPEED_DEG,
+		(d and d.speed_m_per_sec) or DEFAULT_MAX_SPEED,
+		(d and d.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED,
+		(d and d.acceleration_m_per_sec2) or DEFAULT_ACCELERATION
+end
+
+-- Chase camera - ported subset (chase mode only; the reference project's
+-- front/target-view modes aren't built here, not asked for) of
+-- ~/Defold/SuperShips/main/ship.script's own chase-camera math (§0 - UX/
+-- mechanics technique, not creative expression). Two key ideas carried
+-- over directly from that file's own header comment on this exact logic:
+-- (1) frame-rate-independent lag via `1 - exp(-speed*dt)`, not a fixed
+-- per-frame lerp fraction; (2) camera POSITION is derived from the
+-- already-lagged ROTATION each frame, not lerped on its own - lerping
+-- position independently would cut a straight chord across a sustained
+-- turn instead of swinging around it, so the camera would visibly drift
+-- off-axis mid-turn even while correctly converging on the final target.
+--
+-- `distance`/`height` are per-ship-chassis now (plan.md §2.10.1, per direct
+-- instruction - "each ship chassis will have its own coordinates/zoom for
+-- where the camera should be looking from"): main/data/ships.lua's
+-- `flight_camera` field, falling back to this DEFAULT pair (still the old
+-- hand-picked values) for any ship with no entry of its own yet.
+local CAMERA_DEFAULT_DISTANCE = 12
+local CAMERA_DEFAULT_HEIGHT = 4
+local CAMERA_FOLLOW_SPEED = 3.0
+
+local function camera_distance_height()
+	local ship = ships.SHIPS[PLAYER_SHIP_ID]
+	local fc = ship and ship.flight_camera
+	return (fc and fc.distance) or CAMERA_DEFAULT_DISTANCE, (fc and fc.height) or CAMERA_DEFAULT_HEIGHT
+end
+
+-- Throttle starts at full (1.0) rather than 0 - matches this slice's
+-- previous always-move-at-MAX_SPEED behavior as the default, with
+-- throttle_up/throttle_down (input/game.input_binding's =/- and numpad
+-- +/-) now able to pull it down from there, stop_throttle (Q) zeroing it,
+-- and full_throttle (E) snapping it back to 1.0 - see update()'s throttle
+-- handling below.
+local function default_input()
+	return {
+		pitch_up = false, pitch_down = false, yaw_left = false, yaw_right = false, boost = false,
+		throttle_up = false, throttle_down = false,
+	}
+end
+
+function init(self)
+	self.flying = false
+	self.input = default_input()
+	self.throttle = 1.0
+	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
+	self.camera_rot = nil -- nil = "snap on next update", same convention the reference uses
+	self.near_outpost = false
+	self.docking = false
+	self.dock_time_left = 0
+	msg.post("flight_camera#camera", "disable")
+end
+
+local function start_flight(self)
+	self.flying = true
+	self.input = default_input()
+	self.throttle = 1.0
+	self.speed = 0 -- ship starts at rest and spools up to cruise, same as any other launch - see update()
+	self.camera_rot = nil
+	self.near_outpost = false
+	self.docking = false
+	self.dock_time_left = 0
+	-- `light` is a world-space POINT LIGHT POSITION on model.material (see
+	-- main/ship_preview.script's own header comment on this exact constant),
+	-- not a color - model.material's
+	-- undocumented DEFAULT of (1,1,1,1) is a light sitting almost exactly where
+	-- the ship spawns, which rendered near-black. A large fixed offset acts as a
+	-- crude stand-in directional light for this minimal slice - real lighting
+	-- design (sun direction, ambient, etc.) is plan.md §4 territory, not solved here.
+	go.set("#model", "light", vmath.vector4(4000, 6000, 4000, 1.0))
+
+	local outpost_pos = FACTION_OUTPOST[session.get_faction()]
+	local pos, rot = random_spawn(outpost_pos)
+	go.set_position(pos)
+	go.set_rotation(rot)
+	msg.post(".", "acquire_input_focus")
+	msg.post("flight_camera#camera", "enable")
+	msg.post("flight_hud#gui", "show_flight_hud")
+
+	-- "Current system" is always just the player's own home system, same
+	-- convention main/outpost.gui_script's refresh_map() already uses -
+	-- flight mode isn't tied to main/data/star_systems.lua's actual
+	-- per-system data yet (§4), so this is the only sensible choice.
+	local system_id = star_systems.HOME_SYSTEM[session.get_faction()]
+	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
+end
+
+-- Mirror image of start_flight() - returns to the outpost menu the same
+-- way Launch left it (main/outpost.gui_script's "show_outpost" handler
+-- already does the "reset to Overview tab, refresh currency/ship text"
+-- work, same as when faction_select first hands off there). Called once
+-- update()'s docking countdown reaches zero, see below.
+local function complete_dock(self)
+	self.flying = false
+	self.docking = false
+	self.dock_time_left = 0
+	msg.post("flight_camera#camera", "disable")
+	msg.post("flight_hud#gui", "hide_flight_hud")
+	msg.post("outpost#gui", "show_outpost")
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("start_flight") then
+		start_flight(self)
+	end
+end
+
+function on_input(self, action_id, action)
+	if not self.flying then
+		return false
+	end
+	if action_id == hash("pitch_up") then
+		self.input.pitch_up = not action.released
+	elseif action_id == hash("pitch_down") then
+		self.input.pitch_down = not action.released
+	elseif action_id == hash("yaw_left") then
+		self.input.yaw_left = not action.released
+	elseif action_id == hash("yaw_right") then
+		self.input.yaw_right = not action.released
+	elseif action_id == hash("boost") then
+		self.input.boost = not action.released
+	elseif action_id == hash("throttle_up") then
+		self.input.throttle_up = not action.released
+	elseif action_id == hash("throttle_down") then
+		self.input.throttle_down = not action.released
+	elseif action_id == hash("stop_throttle") then
+		if action.pressed then
+			self.throttle = 0.0
+		end
+	elseif action_id == hash("full_throttle") then
+		if action.pressed then
+			self.throttle = 1.0
+		end
+	elseif action_id == hash("dock") then
+		if action.pressed and self.near_outpost and not self.docking then
+			self.docking = true
+			self.dock_time_left = DOCK_COUNTDOWN_SEC
+		end
+	else
+		return false
+	end
+	return true
+end
+
+function update(self, dt)
+	if not self.flying then
+		return
+	end
+
+	local turn_speed_deg, max_speed, boost_speed, acceleration = flight_stats()
+
+	local pitch_delta = (self.input.pitch_up and 1 or 0) - (self.input.pitch_down and 1 or 0)
+	local yaw_delta = (self.input.yaw_left and 1 or 0) - (self.input.yaw_right and 1 or 0)
+
+	local rot = go.get_rotation()
+	if pitch_delta ~= 0 then
+		local right = vmath.rotate(rot, vmath.vector3(1, 0, 0))
+		rot = vmath.quat_axis_angle(right, math.rad(turn_speed_deg) * pitch_delta * dt) * rot
+	end
+	if yaw_delta ~= 0 then
+		rot = vmath.quat_axis_angle(UP, math.rad(turn_speed_deg) * yaw_delta * dt) * rot
+	end
+	rot = vmath.normalize(rot)
+	go.set_rotation(rot)
+
+	-- self.throttle is the CONTROL position (0..1, what the stick/lever is
+	-- set to) - this ramp is how fast holding +/- moves that lever, same
+	-- acceleration-derived rate as before (e.g. 10 m/sec^2 on a 52.5
+	-- m/sec ship sweeps the lever 0 -> full in ~5.25 sec). Q/E (on_input)
+	-- can still snap it straight to 0/1.0. Boost (main/data/ships.lua's
+	-- boost_speed_m_per_sec) raises what "full throttle" MEANS rather than
+	-- multiplying whatever the throttle happens to be - matches how the
+	-- reference stat block treats it as its own absolute top speed, not a
+	-- flat multiplier.
+	local throttle_delta = (self.input.throttle_up and 1 or 0) - (self.input.throttle_down and 1 or 0)
+	if throttle_delta ~= 0 then
+		self.throttle = self.throttle + (acceleration / max_speed) * throttle_delta * dt
+		self.throttle = math.max(0.0, math.min(1.0, self.throttle))
+	end
+
+	-- self.speed is the ACTUAL current speed - per direct instruction, it
+	-- no longer jumps straight to whatever target_speed the controls
+	-- above imply (that used to happen instantly on every Q/E press and
+	-- every boost toggle, even though the throttle-lever ramp above only
+	-- ever smoothed +/-). It now always chases target_speed, accelerating
+	-- or decelerating at the ship's own acceleration_m_per_sec2 (the same
+	-- stat the lever ramp above uses), regardless of how abruptly the
+	-- target itself moves - a plain move-toward-target bounded by
+	-- acceleration*dt each frame, not an exponential lerp (acceleration
+	-- is a constant rate, not a "close the gap by a fraction" one).
+	local target_speed = self.throttle * (self.input.boost and boost_speed or max_speed)
+	local max_speed_delta = acceleration * dt
+	local speed_delta = target_speed - self.speed
+	if speed_delta > max_speed_delta then
+		self.speed = self.speed + max_speed_delta
+	elseif speed_delta < -max_speed_delta then
+		self.speed = self.speed - max_speed_delta
+	else
+		self.speed = target_speed
+	end
+
+	local forward = vmath.rotate(rot, SHIP_FORWARD)
+	local pos = go.get_position() + forward * self.speed * dt
+	go.set_position(pos)
+	msg.post("flight_hud#gui", "set_speed", { speed = self.speed })
+
+	-- Docking (per direct instruction: only within DOCK_RANGE of the
+	-- player's own faction's outpost) - K (on_input's "dock" case above)
+	-- starts a DOCK_COUNTDOWN_SEC countdown; drifting back out of range
+	-- mid-countdown cancels it rather than completing from wherever the
+	-- ship happens to be once it elapses. Reaching zero hands off to the
+	-- outpost menu via complete_dock() above - same "one script owns the
+	-- transition" shape start_flight()'s own Launch hand-off uses, just
+	-- reversed. Ported technique from the reference project's own
+	-- ship.script (§0).
+	local outpost_pos = FACTION_OUTPOST[session.get_faction()]
+	self.near_outpost = outpost_pos and vmath.length(pos - outpost_pos) <= DOCK_RANGE or false
+	if self.docking then
+		if not self.near_outpost then
+			self.docking = false
+		else
+			self.dock_time_left = self.dock_time_left - dt
+			if self.dock_time_left <= 0 then
+				complete_dock(self)
+			end
+		end
+	end
+
+	local dock_text = nil
+	if self.docking then
+		dock_text = string.format("Docking in %d...", math.ceil(self.dock_time_left))
+	elseif self.near_outpost then
+		dock_text = "Press [K] to dock"
+	end
+	msg.post("flight_hud#gui", "dock_prompt", { text = dock_text })
+
+	-- Chase camera - see this file's header comment for why position is
+	-- derived from camera_rot rather than lerped independently, and for why
+	-- camera_target_rot needs the extra YAW_180 (this hull's nose is at
+	-- local +Z, but a Defold camera looks down its own local -Z - without
+	-- the flip the camera would face away from the ship it's chasing).
+	local camera_target_rot = rot * YAW_180
+	if self.camera_rot == nil then
+		self.camera_rot = camera_target_rot
+	else
+		local t = 1.0 - math.exp(-CAMERA_FOLLOW_SPEED * dt)
+		self.camera_rot = vmath.slerp(t, self.camera_rot, camera_target_rot)
+	end
+	local camera_distance, camera_height = camera_distance_height()
+	local camera_pos = pos - vmath.rotate(self.camera_rot, CAMERA_FORWARD) * camera_distance
+		+ vmath.rotate(self.camera_rot, UP) * camera_height
+	go.set_position(camera_pos, "flight_camera")
+	go.set_rotation(self.camera_rot, "flight_camera")
+end

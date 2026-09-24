@@ -744,3 +744,142 @@ embedded_instances {
     z: 1.0
   }
 }
+embedded_instances {
+  id: "player_ship"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/patrol_interceptor/patrol_interceptor.model\"\n"
+  "}\n"
+  "components {\n"
+  "  id: \"script\"\n"
+  "  component: \"/main/player_ship.script\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "flight_camera"
+  data: "components {\n"
+  "  id: \"camera\"\n"
+  "  component: \"/main/flight_camera.camera\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 4.0
+    z: 12.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "flight_hud"
+  data: "components {\n"
+  "  id: \"gui\"\n"
+  "  component: \"/main/flight_hud.gui\"\n"
+  "}\n"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+instances {
+  id: "asteroid_hub"
+  prototype: "/main/asteroid_hub.go"
+  position {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "accord_outpost"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/outposts/accord_outpost.model\"\n"
+  "}\n"
+  position {
+    x: -4000.0
+    y: 0.0
+    z: -4000.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}
+embedded_instances {
+  id: "swarm_outpost"
+  data: "components {\n"
+  "  id: \"model\"\n"
+  "  component: \"/assets/models/outposts/swarm_outpost.model\"\n"
+  "}\n"
+  position {
+    x: 4000.0
+    y: 0.0
+    z: 4000.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale3 {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+}

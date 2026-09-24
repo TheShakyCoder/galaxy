@@ -132,6 +132,22 @@ M.SHIPS = {
 			E4 = { x = 70, y = -250 },   
 			E5 = { x = 0, y = -180 },
 		},
+		-- Third-person flight camera (plan.md §2.10.1, per direct instruction:
+		-- "each ship chassis will have its own coordinates/zoom for where the
+		-- camera should be looking from") - `distance` behind the ship's stern
+		-- and `height` above, both along the ship's own local axes, wide
+		-- enough that the WHOLE hull stays in frame rather than cropping it.
+		-- Reuses outpost.gui_script's own PREVIEW_CAMERA entry for this exact
+		-- model (sardine.glb, patrol_interceptor.model) rather than
+		-- recomputing from scratch - same hull, same ~8.32-unit bounding
+		-- radius, same already-tuned "whole ship visible, not claustrophobic"
+		-- 1.5x zoom-out factor that entry's own comment documents, just
+		-- reused for a different camera (flight instead of the ship-detail
+		-- preview). A ship with no `flight_camera` entry falls back to
+		-- player_ship.script's own hardcoded default (plan.md §4 - other
+		-- ships don't get their own tuned entry yet since none of them are
+		-- flyable at all currently, just this one).
+		flight_camera = { distance = 22, height = 4.5 },
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2): real-world animal species
 			-- sized to roughly match the ship's class - fish for The Accord,

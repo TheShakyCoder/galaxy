@@ -1,0 +1,4 @@
+mesh: "/assets/models/outposts/accord_outpost.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/outposts/accord_outpost_palette.png"
+name: "accord_outpost"

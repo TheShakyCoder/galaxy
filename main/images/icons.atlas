@@ -5,6 +5,36 @@ images {
   image: "/main/images/icons/asteroid_analyser.png"
 }
 images {
+  image: "/main/images/icons/armor_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/reinforced_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/composite_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/reinforced_hull_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/reinforced_armor_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/reinforced_composite_plating_patrol.png"
+}
+images {
+  image: "/main/images/icons/emergency_hull_repair_patrol.png"
+}
+images {
+  image: "/main/images/icons/engine_gyros_patrol.png"
+}
+images {
+  image: "/main/images/icons/thruster_array_patrol.png"
+}
+images {
+  image: "/main/images/icons/slide_thrusters_patrol.png"
+}
+images {
   image: "/main/images/icons/mining_cannon_basic.png"
 }
 images {

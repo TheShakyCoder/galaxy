@@ -402,8 +402,20 @@ function init(self)
 		engine = gui.get_node("filter_engine"),
 		hull = gui.get_node("filter_hull"),
 	}
+	-- Ship Statistics panel (per direct instruction: the Fitting tab's
+	-- left-hand side - previously just the ship visual, centered in an
+	-- 880px-wide zone with a lot of unused margin either side of the
+	-- 260px-wide visual itself - splits into two 420px-wide halves, visual
+	-- on the left (main/outpost.gui repositioned its x from 480 to 260,
+	-- the left half's own center) and this new stats readout on the
+	-- right). ship_stats_content_node's text is set by refresh_ship_stats
+	-- further down this file - called on every Fitting-tab (re)entry and
+	-- loadout change (from refresh_markers), and with a live highlight
+	-- while a drag hovers a vacant matching slot (from update_hover).
+	self.ship_stats_content_node = gui.get_node("ship_stats_content")
 	self.fitting_static_nodes = {
 		gui.get_node("ship_visual_heading"), self.ship_visual_node,
+		gui.get_node("ship_stats_heading"), gui.get_node("ship_stats_panel"), self.ship_stats_content_node,
 		gui.get_node("shop_heading"), self.shop_panel_node,
 		gui.get_node("owned_heading"), self.owned_panel_node,
 		self.filter_nodes.weapon, gui.get_node("filter_weapon_label"),
@@ -586,6 +598,72 @@ local function effective_components(ship_id)
 		return ship.advanced
 	end
 	return ship.components or {}
+end
+
+-- Real stat block, shared by the Ships tab's ship detail modal and the
+-- Fitting tab's Ship Statistics panel (below) - straight from
+-- main/data/ships.lua's `data` (Hull/Engine/FTL/Computer baseline,
+-- §2.1.1) and `components` (W/C/E/H slot counts, §2.8), same numbers the
+-- Overview tab's fitting breakdown already reads. A curated subset, not
+-- every field in `data` - legible in a fixed-size panel rather than a
+-- full engineering dump - covering every stat any current Hull/Engine
+-- module can affect (main/data/modules/hull_modules.lua/engine_modules.lua's
+-- own `stats` field) so `highlight` below always has a real line to flag.
+--
+-- `highlight` (optional): a set {stat_field = true, ...} of these same
+-- `data` field names - per direct instruction ("when a component is
+-- hovered over a vacant slot show the revised statistics"), flags
+-- whichever stats a hovered drag would affect with a trailing "(+)"
+-- marker. NOT a numeric delta - no Hull/Engine module has a real bonus
+-- AMOUNT yet (plan.md §2.8.11's own "don't invent unconfirmed numbers"
+-- finding - BSGO never published real numbers for these two module
+-- types), so this can only show WHICH stats would change, not by how
+-- much yet.
+local function ship_stats_text(ship_id, highlight)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return ""
+	end
+	local d = ship.data or {}
+	local c = effective_components(ship_id)
+	local function mark(...)
+		if not highlight then
+			return ""
+		end
+		for _, field in ipairs({...}) do
+			if highlight[field] then
+				return " (+)"
+			end
+		end
+		return ""
+	end
+	local lines = {
+		"Class: " .. (ship.class or "?"),
+		"",
+		"Hull Points: " .. (d.hull_points or "?") .. mark("hull_points"),
+		"Armor: " .. (d.armor or "?") .. mark("armor"),
+		"Critical Defense: " .. (d.critical_defense or "?") .. mark("critical_defense"),
+		"Speed: " .. (d.speed_m_per_sec or "?") .. " m/s  (Boost: " .. (d.boost_speed_m_per_sec or "?") .. " m/s)"
+			.. mark("speed_m_per_sec", "boost_speed_m_per_sec"),
+		"Turning Speed: " .. (d.turning_speed_deg_per_sec or "?") .. " deg/s" .. mark("turning_speed_deg_per_sec"),
+		"FTL Range: " .. (d.ftl_range_ly or "?") .. " ly",
+		"Power: " .. (d.power or "?"),
+		"Sensor Range: " .. (d.sensor_range_m or "?") .. " m",
+		"",
+		"Slots: W" .. (c.W or 0) .. "  C" .. (c.C or 0) .. "  E" .. (c.E or 0) .. "  H" .. (c.H or 0)
+			.. (session.is_ship_advanced(ship_id) and "  (Advanced)" or ""),
+	}
+	return table.concat(lines, "\n")
+end
+
+-- Refreshes the Fitting tab's Ship Statistics panel (main/outpost.gui's
+-- ship_stats_content) - called on every Fitting-tab (re)entry and loadout
+-- change (from refresh_markers, since that's already the single place
+-- that re-syncs visual state with session.get_loadout()), and with a live
+-- `highlight` while a drag hovers a vacant matching slot (from
+-- update_hover) or with none when that hover ends (clear_hover).
+local function refresh_ship_stats(self, highlight)
+	gui.set_text(self.ship_stats_content_node, ship_stats_text(session.get_ship_id(), highlight))
 end
 
 local function ship_overview_text(faction)
@@ -847,6 +925,7 @@ local function clear_hover(self)
 		gui.set_enabled(marker.invalid_mark, false)
 	end
 	self.hovered_slot = nil
+	refresh_ship_stats(self) -- drop any hover-preview highlight, back to the ship's real stats
 end
 
 -- Drag-over feedback: highlights whichever slot the cursor is currently
@@ -861,6 +940,7 @@ local function update_hover(self, action)
 			break
 		end
 	end
+	local stats_highlight = nil
 	for slot_id, marker in pairs(self.markers) do
 		if slot_id == hit_slot then
 			-- Locked (advanced-only, not unlocked yet) slots are never a
@@ -870,12 +950,30 @@ local function update_hover(self, action)
 			gui.set_enabled(marker.border, true)
 			gui.set_color(marker.border, valid and BORDER_VALID_COLOR or BORDER_INVALID_COLOR)
 			gui.set_enabled(marker.invalid_mark, not valid)
+			-- Stats hover-preview (per direct instruction: "when a
+			-- component is hovered over a vacant slot show the revised
+			-- statistics") - VACANT only, not a swap: a swap's "revised"
+			-- stats would need to subtract the DISPLACED module's own
+			-- stats too, which none of these modules have a numeric
+			-- amount for anyway yet (see ship_stats_text's own comment) -
+			-- out of scope for now, see plan.md §4.
+			local occupied = self.installed_by_slot and self.installed_by_slot[slot_id]
+			if valid and not occupied then
+				local module = catalog.get(self.dragging.item_key)
+				if module and module.stats then
+					stats_highlight = {}
+					for _, stat in ipairs(module.stats) do
+						stats_highlight[stat] = true
+					end
+				end
+			end
 		else
 			gui.set_enabled(marker.border, false)
 			gui.set_enabled(marker.invalid_mark, false)
 		end
 	end
 	self.hovered_slot = hit_slot
+	refresh_ship_stats(self, stats_highlight)
 end
 
 -- Recolors every marker and swaps its icon from session.get_loadout()'s
@@ -914,6 +1012,7 @@ local function refresh_markers(self)
 		end
 		gui.set_text(marker.level_label, (inst and inst.level > 0) and ("+" .. inst.level) or "")
 	end
+	refresh_ship_stats(self) -- keep the Ship Statistics panel in sync with whatever just changed
 end
 
 local function hide_weapon_arc(self)
@@ -1834,34 +1933,6 @@ local PREVIEW_CAMERA = {
 	["/assets/models/escort_tactical/lionfish.model"] = { eye_offset = vmath.vector3(0.00, 8.33, 22.20), far = 85.44 },
 }
 
--- Real stat block for the detail modal - straight from main/data/ships.lua's
--- `data` (Hull/Engine/FTL/Computer baseline, §2.1.1) and `components` (W/C/E/H
--- slot counts, §2.8), same numbers the Overview tab's fitting breakdown
--- already reads. A curated subset, not every field in `data` - legible in the
--- modal's fixed-size panel rather than a full engineering dump.
-local function ship_stats_text(ship_id)
-	local ship = ships.SHIPS[ship_id]
-	if not ship then
-		return ""
-	end
-	local d = ship.data or {}
-	local c = effective_components(ship_id)
-	local lines = {
-		"Class: " .. (ship.class or "?"),
-		"",
-		"Hull Points: " .. (d.hull_points or "?"),
-		"Armor: " .. (d.armor or "?"),
-		"Speed: " .. (d.speed_m_per_sec or "?") .. " m/s  (Boost: " .. (d.boost_speed_m_per_sec or "?") .. " m/s)",
-		"FTL Range: " .. (d.ftl_range_ly or "?") .. " ly",
-		"Power: " .. (d.power or "?"),
-		"Sensor Range: " .. (d.sensor_range_m or "?") .. " m",
-		"",
-		"Slots: W" .. (c.W or 0) .. "  C" .. (c.C or 0) .. "  E" .. (c.E or 0) .. "  H" .. (c.H or 0)
-			.. (session.is_ship_advanced(ship_id) and "  (Advanced)" or ""),
-	}
-	return table.concat(lines, "\n")
-end
-
 -- Opens the ship detail modal (§2.8.9) for `ship_id` - replaces the old
 -- straight-to-confirm-dialog behavior on a Ships tab card click. Figures out
 -- its own button state (Purchase/Select/just-Cancel) from real session state
@@ -2314,7 +2385,16 @@ function on_input(self, action_id, action)
 			set_page(self, "map")
 			return true
 		elseif hits(self.launch_node, action) then
-			print("[outpost] Launch pressed -- flight mode not built yet")
+			-- Minimal flight-mode slice (plan.md §4/§2.8.10-adjacent, per
+			-- direct instruction) - same "disable self, tell the next screen
+			-- to show" hand-off start_screen/faction_select already use, just
+			-- to a plain game object's script (player_ship.script) instead of
+			-- another gui_script, since flight needs go.*/camera.* access a
+			-- gui_script doesn't have (same limitation the reference project's
+			-- own hud.gui_script header comment notes).
+			self.active = false
+			msg.post("#gui", "disable")
+			msg.post("player_ship#script", "start_flight")
 			return true
 		end
 

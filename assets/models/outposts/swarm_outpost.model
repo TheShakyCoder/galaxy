@@ -1,0 +1,4 @@
+mesh: "/assets/models/outposts/swarm_outpost.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/outposts/swarm_outpost_palette.png"
+name: "swarm_outpost"

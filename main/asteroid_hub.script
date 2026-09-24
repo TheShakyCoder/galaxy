@@ -1,0 +1,41 @@
+-- Spawns/despawns the current system's asteroid field
+-- (main/data/asteroids.lua's static, deterministic-per-system data) as
+-- real, visible world objects - reacts to the "spawn_field" message
+-- main/player_ship.script's start_flight() sends. Same "one hub owns
+-- spawning" pattern the other local reference project's own
+-- main/asteroid_hub.script establishes (§0 - mechanics, not creative
+-- expression, reuse is fine), simplified down to just position/size since
+-- there's no mining/resource/HP system here (yet, per direct instruction
+-- - "for now").
+--
+-- Each asteroid is main/asteroid.go's shared unit-diameter sphere
+-- (assets/models/asteroids/asteroid.model), spawned at a uniform scale of
+-- that asteroid's own diameter_m - see tools/build_asteroid_model.py's
+-- header comment on why the prototype is built at unit size rather than
+-- baking a separate mesh per size.
+
+local asteroids = require("main.data.asteroids")
+
+local spawned_ids = {}
+
+local function despawn_all()
+	for _, id in ipairs(spawned_ids) do
+		go.delete(id)
+	end
+	spawned_ids = {}
+end
+
+local function spawn_field(system_id)
+	despawn_all()
+	for _, a in ipairs(asteroids.field_for(system_id)) do
+		local pos = vmath.vector3(a.x, a.y, a.z)
+		local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
+		table.insert(spawned_ids, id)
+	end
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("spawn_field") then
+		spawn_field(message.system_id)
+	end
+end

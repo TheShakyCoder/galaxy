@@ -828,9 +828,32 @@ capital-ship siege" already is.
 - **General rule**: every one of the 58 systems has an outpost for **each** faction
   by default (not just the two home systems) — these are the in-system dock/spawn
   points §2.9's spawn rules refer to.
-- **Default position**: "approximately opposite corners" of the system's in-flight
-  world space, computed generically from `size_m` (80%-to-edge placeholder inset) —
-  not hand-placed per system.
+- **Default position (revised, per direct instruction)**: opposite diagonal
+  corners of the system's horizontal extent, on the **Y=0 plane** (Y is up,
+  matching `main/player_ship.script`'s own `UP = (0,1,0)` convention — X/Z are
+  the horizontal plane), inset a **flat 1000 units** from each corner
+  (`M.OUTPOST_CORNER_INSET`) — not a fraction of the system's size like the
+  earlier 80%-to-edge placeholder, a fixed absolute margin regardless of how
+  big the system is. Still computed generically, not hand-placed per system,
+  for any system that doesn't need to deviate.
+- **Explicit per-system override (new, per direct instruction: "allow for
+  coordinates for each of the outposts to be sent explicitly")**: a system
+  entry's own `outposts = { accord = {x,y,z}, swarm = {x,y,z} }` table, when
+  present, is returned as-is for that faction instead of the generic default
+  above. No system uses this yet — it's a provision, same "schema now, real
+  values later where needed" footing as other per-entry overrides in this
+  project (e.g. ships.lua's `flight_camera`, §2.10.1).
+- **Per-system world extent (new, per direct instruction)**: systems now
+  specify `width_m`/`height_m`/`depth_m` independently (was a single uniform
+  `size_m`) — defaults to `M.DEFAULT_SYSTEM_SIZE_M` (10,000) in each
+  direction when a system entry doesn't set its own; only the 3 systems that
+  actually deviate (antares/fomalhaut/deneb, still a uniform 40,000 cube
+  each) set all three explicitly. Spawn points (below) derive from the same
+  width/depth-based corner geometry, always following the DEFAULT corners
+  regardless of whether a system's actual outpost position was overridden —
+  no per-system spawn-point override exists yet, only for the outpost itself
+  (flag if a system's overridden outpost ever needs its spawns to follow it
+  too, §4).
 - **Exception**: a faction's home system, **plus the 6 systems nearest to it**, deny
   the *opposing* faction an outpost entirely. This is a wider zone than §2.7's
   entry-blocking `HOME_BUFFER` (nearest 3, "can't even enter") — the nearest-3 list
@@ -841,11 +864,55 @@ capital-ship siege" already is.
     Gliese 667, 70 Virginis, Acrux, Spica
 - **Implemented** in `main/data/star_systems.lua`: `M.OUTPOST_DENIED`,
   `M.has_outpost(system_id, faction)`, `M.outpost_position(system_id, faction)`.
-  Verified working (denied systems correctly return no outpost/position; open
-  systems get correct opposite-corner coordinates scaled to each system's own
-  `size_m`, including the two 40,000m systems).
+  Verified working via a standalone `luajit` check (not just code review): a
+  default 10,000-unit system returns `(±4000, 0, ±4000)` (width/2 − 1000
+  inset, Y=0), the 40,000-unit systems return `(±19000, 0, ±19000)`, setting
+  a system's own `outposts.accord` override returns that exact table for
+  Accord while Swarm still falls through to the computed default on the same
+  system, and `M.spawn_points` returns the two expected corner-adjacent
+  midpoints. No external code calls either function yet (no docking/travel
+  system exists to call them from) - purely a data-layer provision ahead of
+  that, same footing as `M.reachable_from`/`M.hydrogen_cost` already were.
 - **Future gameplay, explicitly deferred**: how outposts can be attacked and what
   defenses they have is not designed yet — flagged in §4, not invented here.
+
+**Outpost 3D models (decided, first pass — basic placeholder shapes, per direct
+instruction: "let's begin by building two basic shapes")**:
+- **Accord**: a cuboid that "vaguely represents a fish tank" (fits the Accord's
+  own fish naming theme, §2.1.2) — a dark stand (the faction's own established
+  blue, `main/faction_select.gui`'s `accord_button` color) under a lighter
+  cyan/teal "glass" volume. `tools/build_accord_outpost_model.py` →
+  `assets/models/outposts/accord_outpost.glb`/`.model`. Overall bounding box:
+  300w × 360h × 1000 long.
+- **Swarm**: a cylinder, "similar size" to the Accord shape — read as matching
+  its overall ~1000-unit extent (here, height, standing upright rather than
+  lying on its side) rather than its footprint. A dark flared base under a
+  taller main body, both in the faction's own established purple
+  (`swarm_button` color). `tools/build_swarm_outpost_model.py` →
+  `assets/models/outposts/swarm_outpost.glb`/`.model`. Overall bounding box:
+  380 diameter × 1000 tall.
+- Same low-poly/flat-shaded/vertex-color GLB-writing technique as every ship
+  hull builder (e.g. `build_sardine_model.py`) — an ORIGINAL design each,
+  hand-authored, not sourced from anywhere (§0). Deliberately basic per direct
+  instruction - two stacked primitive volumes each, no greebling/detail.
+- **Placed at each system's own real `M.outpost_position()` coordinates**
+  (per direct instruction: "render them in the position set in each system") —
+  `main/main.collection` gained two new embedded instances, `accord_outpost` at
+  Sol's own outpost position `(-4000, 0, -4000)` and `swarm_outpost` at
+  Polaris's own `(4000, 0, 4000)` (both computed from §2.7's own default-corner
+  formula above, confirmed via a standalone `luajit` check against the real
+  `star_systems.lua` function, not hand-typed). Only these two exist in-world
+  so far — there's no per-system scene separation yet (§4, flight mode is
+  still the single shared collection §2.10.1 describes), so Sol/Polaris (the
+  two home systems, the only ones actually reachable in the current minimal
+  flight slice) are what's actually renderable right now, not the other 56
+  systems' outposts.
+- **Verified live**: real engine build (`/command/build`, zero issues), driven
+  with synthetic mouse clicks into flight, with a temporary debug spawn
+  override (reverted after) placing the ship in front of each outpost in turn
+  and screenshotting - confirms both render at their correct world position,
+  correct relative scale against the ship, and the intended silhouette (a
+  tank-like stand+glass box for Accord, a tower-like stand+cylinder for Swarm).
 
 **Spawn points (decided)** — 2 per faction per system, not 1, specifically to avoid
 spawn-camping:
@@ -2349,6 +2416,157 @@ the player is currently in.
   neutral grey, and the existing Overview/Fitting/Ships tabs still work correctly
   after the tab-bar recentering.
 
+#### 2.8.11 Hull and Engine modules (decided — Patrol-tier first pass, from real BSGO research)
+
+Per direct instruction ("research all the bsgo components for hull, engine & computer,
+concentrate primarily on patrol class as we can extrapolate to the other classes",
+then "build the two files"). Computer already had one real module
+(`asteroid_analyser`, §2.8) - this fills in the other two types.
+
+**Research findings** (fresh web research this pass, corroborating and extending
+`~/Defold/SuperShips/main/config.lua`'s own prior finding that it had to "model"
+- invent - every Hull/Engine passive stat item since "no Hull-type/Engine-type
+data exists on the source wiki page at all"; only Weapons had real published
+numbers):
+- **Hull**: a real confirmed taxonomy of 6 plating types - single-stat (Armor
+  Value only, or Critical Defense only) and combo variants (Hull Points+Armor,
+  Hull Points+Crit Defense, Armor+Crit Defense, all three), with combo variants
+  giving LESS of each individual stat than a single-stat item (a real
+  breadth-vs-magnitude trade-off). A separate real capability - in-flight hull
+  repair - is also confirmed, distinct from the passive items.
+- **Engine**: confirmed to affect speed, boost speed, or turning rate. One real
+  confirmed name found: **"Engine Gyros"** (a turning-speed booster). A separate
+  real capability - **Slide Thrusters** (decouples heading from the flight path
+  for a few seconds) - is also confirmed, ties into `input/game.input_binding`'s
+  already-reserved `slide` action (§2.10).
+- **Role/slot-emphasis pattern** (real, from the same research pass): Interceptor-role
+  ships get more Engine slots, Command-role ships get more Computer slots - directly
+  confirms Patrol Interceptor's own already-decided `E=4` (the largest of its four
+  slot counts, §2.1.2) lines up with real BSGO design intent rather than being
+  arbitrary.
+- No exact numeric values (bonus amounts, costs, durations) were ever published
+  anywhere findable for Hull/Engine modules specifically - same conclusion
+  SuperShips' own research reached. The BSGO Fandom wiki returns HTTP 402 on every
+  direct fetch attempt (confirmed again this pass, several subdomains/paths) -
+  matches SuperShips' own prior note; only search-snippet indexing surfaced the
+  real taxonomy/name findings above.
+
+**Implemented**: `main/data/modules/hull_modules.lua` (7 entries) and
+`main/data/modules/engine_modules.lua` (3 entries), Patrol-tier only per direct
+instruction - other classes deferred until they're extrapolated later, same
+"Patrol implemented, other tiers reserved" shape `weapons_autocannons.lua`'s own
+combat-cannon naming scale already has.
+- **Naming**: the source wiki's own combo-tier Hull names use an unexplained "HT"
+  prefix ("HT Plating", "HT Composite Plating", ...) - no source found actually
+  expands what it stands for, so rather than carry an unexplained acronym into
+  this project, those tiers are named "Reinforced <X>" instead (same real
+  taxonomy/structure, an original label - §0, same treatment
+  weapons_autocannons.lua's Gnat/Digger and computer_modules.lua's Asteroid
+  Analyser already gave their own real BSGO counterparts). "Engine Gyros" and
+  "Slide Thrusters" are kept as-is (already plain, non-flavor-text names, real
+  and confirmed). "Thruster Array" (the speed/boost booster) is this project's
+  own label for a real confirmed CATEGORY with no specific real name found.
+- **Schema, not numbers**: each passive entry carries a `stats` field naming
+  which of `ships.lua`'s own `data` fields it boosts (e.g. `{"armor"}`,
+  `{"hull_points", "armor"}`) but no bonus AMOUNT - same "provision now, real
+  balance numbers later" treatment `weapons_autocannons.lua`'s own `arc` field
+  got before a real value was supplied, per §0/§4's "don't invent unconfirmed
+  numbers" rule. The two real ACTIVE abilities (Emergency Hull Repair, Slide
+  Thrusters) carry no power_draw/cooldown/wear_per_use for the same reason.
+- **Icons**: each of the 10 entries now has its own dedicated icon (per direct
+  instruction: "create an icon for all the recently added modules"), generated
+  by `tools/build_module_icons.py` - extended with a new `MODULE_ICONS` block
+  reusing that script's own existing per-type silhouettes (`draw_hull_silhouette`'s
+  pentagon "armor plate", `draw_engine_silhouette`'s thruster bell - both
+  already existed, just weren't hooked up to any real module yet), one
+  fill color per entry so they're distinguishable from each other, same
+  "one shape per slot type, colors distinguish individual modules" convention
+  the existing weapon/computer icons already use. Colors loosely track what
+  each one does: Hull's 6 passive tiers move bronze→steel→olive→teal→mauve→gold
+  (gold for the one tier that boosts all three stats), and both ACTIVE
+  abilities (Emergency Hull Repair, Slide Thrusters) get a distinctly
+  brighter/more saturated color than their type's passive siblings.
+- **Real bug, found live and fixed before the icons above existed**: these 10
+  entries originally placeholder-shared "Octagon H"/"Octagon E" - the SAME
+  icons `SLOT_EMPTY_ICON.hull`/`.engine` (`main/outpost.gui_script`) already
+  use for an UNFILLED slot of that type. Reported after live testing: "when I
+  drag a hull component onto the ship, it deducted [Scrip] but it did not show
+  on the ship" - the purchase/install actually succeeded every time (Scrip
+  correctly spent, `session.install` correctly ran), but the installed
+  module's icon was visually IDENTICAL to the slot's own empty-state icon, so
+  nothing appeared to change. Fixed in two steps: first a same-session
+  stopgap to the shared neutral "Octagon Empty" placeholder (confirmed
+  distinct by reading the source PNGs directly), then superseded by the real
+  per-module icons described above once those were built.
+- `main/data/modules/catalog.lua` updated to aggregate both new tables alongside
+  the existing autocannons/computer_modules ones.
+- **Verified live**: real engine build (`/command/build`, zero issues), then a
+  standalone `luajit` check confirming all 16 total catalog entries resolve
+  correctly, then driven with synthetic mouse clicks into the Fitting tab -
+  confirms the Hull and Engine filter buttons each correctly show their own new
+  entries and nothing else, matching `module_fits_class`'s existing per-class
+  enforcement (§2.8.5). The icon fix was verified twice: once with the
+  "Octagon Empty" stopgap, then again after the real per-module icons replaced
+  it - both times via a real drag-and-drop (synthetic mouseDown/dragged/
+  mouseUp, not just a click) of Armor Plating onto H1, confirming the purchase
+  dialog, the Scrip deduction (500→400), and - the actual bug - that H1 now
+  renders visibly differently from the still-empty H2 slot next to it (the
+  final pass shows H1 with its own distinct bronze pentagon icon, not just a
+  color change).
+
+#### 2.8.12 Fitting tab: Ship Statistics panel + hover-preview (decided, per direct instruction)
+
+Per direct instruction: the Fitting tab's left-hand side (previously just the
+ship visual) splits into two halves - the visual on the left, a new **Ship
+Statistics** readout on the right - and hovering a dragged component over a
+vacant slot previews which stats it would affect.
+
+- **Layout**: `ship_visual_heading`'s own 880px-wide span (`main/outpost.gui`)
+  already defined the true "left-hand side" zone - the 260px-wide ship visual
+  itself only filled a small part of it, with wide unused margins either side.
+  Split that 880px zone into two 420px halves: `ship_visual` (and
+  `ship_visual_heading`) repositioned from the zone's center (x=480) to the
+  left half's own center (x=260) - slot markers/the weapon-arc wedge all
+  derive their position from `gui.get_position(ship_visual_node)` already, so
+  they follow automatically, no separate repositioning code needed. New
+  `ship_stats_heading`/`ship_stats_panel`/`ship_stats_content` nodes added at
+  the right half's center (x=700), matching `ship_visual`'s own height (640)
+  and the dark panel background every other panel on this screen already uses.
+- **Stats shown**: `ship_stats_text(ship_id, highlight)` - relocated from
+  further down the file (it used to exist only for the Ships tab's ship detail
+  modal) to right after `effective_components`, since the new hover-preview
+  path (`update_hover`) needs it defined earlier than its old position allowed
+  (this file's established local-function-ordering constraint - see
+  `new_octagon_node`'s own comment on this same constraint, §2.8.3). Now
+  shared by both the ship detail modal and this new panel. Expanded with two
+  more lines (Critical Defense, Turning Speed) so every stat any current
+  Hull/Engine module can affect has a real line in the readout - the original
+  7-line subset (built for the modal) didn't cover either.
+- **Hover-preview**: per direct instruction ("when a component is hovered
+  over a vacant slot show the revised statistics") - `update_hover` (already
+  the function that highlights the drop-target slot's border during a drag)
+  now also builds a `{stat_field = true, ...}` set from the hovered module's
+  own `stats` field (`main/data/modules/hull_modules.lua`/`engine_modules.lua`)
+  when the slot is VACANT and a valid drop target, and passes it to
+  `ship_stats_text` as `highlight` - each affected line gets a trailing
+  "(+)" marker. **Not a numeric delta** - no Hull/Engine module has a real
+  bonus AMOUNT yet (§2.8.11's own "don't invent unconfirmed numbers" finding),
+  so this can only show WHICH stats would change, not by how much. Only
+  VACANT slots preview - a swap's "revised" stats would need to subtract the
+  DISPLACED module's own stats too, which is the same missing-numbers problem
+  one level deeper; out of scope for now (§4). `clear_hover` (drag end) and
+  `refresh_markers` (loadout change, tab entry) both call the same
+  `refresh_ship_stats(self)` with no highlight, so the panel always resets to
+  the ship's real stats once a hover/drag actually resolves.
+- **Verified live**: real engine build (`/command/build`, zero issues), driven
+  with synthetic mouse clicks - confirms the split layout renders correctly
+  (ship visual and slot markers on the left, the full stat readout on the
+  right, Shop/Owned/filter buttons unaffected), and a real drag-and-drop
+  (synthetic mouseDown/dragged, held mid-drag rather than released) of Armor
+  Plating over vacant slot H1 shows "Armor: 5 (+)" appearing live in the
+  panel while hovering, then reverting to plain "Armor: 5" the moment the
+  drag resolved into the purchase-confirm dialog.
+
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 
 - **Guest** (§1.1): always spawns at the **outpost of their chosen faction's home
@@ -2409,7 +2627,7 @@ other two — containing a summary of the player's status and progress.
   the Overview content actually updates to reflect those changes rather than
   showing a stale snapshot. A real `bob.jar build` compiles cleanly.
 
-### 2.10 Controls (decided — key bindings; flight mode itself not built yet)
+### 2.10 Controls (decided — key bindings; flight mode itself mostly not built yet — see §2.10.1)
 
 **Implemented**: `input/game.input_binding` — ported from the other local reference
 project's own control scheme (`~/Defold/SuperShips/input/game.input_binding`). A
@@ -2442,13 +2660,121 @@ so reuse is fine per §0.
 | `toggle_map` | N | Open/close the star system map (§2.7) |
 | `touch` | Left-click | Already in use for the GUI screens (§3.2) |
 
-- Every action above is a **binding only** — none of the actual flight-mode
-  behavior (movement physics, targeting, weapon firing, docking, jump execution) is
-  implemented yet. That's the existing "Build flight mode" TODO (§4); this just
-  reserves the control scheme ahead of it so future flight-mode work has a
-  consistent, already-decided key layout to build against.
+- Every action above is a **binding only**, except `pitch_up`/`pitch_down`/
+  `yaw_left`/`yaw_right`/`boost` and the Launch button, which now drive a real
+  (if minimal) first slice — see §2.10.1. Targeting, weapon firing, docking, jump
+  execution, and everything else are still just reserved bindings with no
+  behavior wired up. That's the existing "Build flight mode" TODO (§4).
 - `esc`/`enter`/`backspace`/`text` are generic UI-focused bindings (menus/text
   input), not flight-specific.
+
+#### 2.10.1 Minimal flight slice: player ship + third-person chase camera (decided, per direct instruction)
+
+**Scope, per direct instruction**: not full flight mode - just enough to actually
+see and tune a third-person chase camera in-engine. Simple kinematic pitch/yaw +
+constant forward thrust, no real physics (ships.lua's per-ship Turning/
+Acceleration/Speed stats, §2.1.1, aren't wired in - `TURN_SPEED_DEG`/`MOVE_SPEED`
+in the new script are flagged placeholders, same footing as other TBC numbers,
+§4).
+
+- **New files**: `main/player_ship.script` (movement + camera-follow, both in one
+  script - see below for why) and `main/flight_camera.camera` (a plain camera
+  component resource, `aspect_ratio: 1.7778`/`fov: 0.7`/`near_z: 0.5`/
+  `far_z: 20000`). Both embedded directly in `main/main.collection` as
+  `"player_ship"` (model + script) and `"flight_camera"` (camera component only) -
+  same embedding style every other object in that file already uses, not separate
+  `.go` files.
+- **Camera logic ported from the reference project**, per direct instruction:
+  `~/Defold/SuperShips/main/ship.script`'s own chase-camera math (§0 - UX/
+  mechanics technique, not creative expression) - chase mode only, its front/
+  target-view modes weren't asked for and aren't built. Two ideas carried over
+  directly from that file's own header comment on this exact logic:
+  1. **Frame-rate-independent lag** via `t = 1 - exp(-follow_speed * dt)`, not a
+     fixed per-frame lerp fraction.
+  2. **Camera position is DERIVED from the already-lagged rotation** each frame
+     (`camera_pos = ship_pos - forward(lagged_rot)*distance + up(lagged_rot)*height`),
+     not lerped independently - lerping position on its own cuts a straight chord
+     across a sustained turn instead of swinging around it, which would make the
+     camera visibly drift off-axis mid-turn even while correctly converging on the
+     final target.
+- **Real bug, found via live testing and fixed (per direct instruction: "the
+  camera needs to be rotated 180 degrees and moved to the other end of the
+  ship")**: the first version used ONE shared `FORWARD` constant, copied
+  verbatim from the reference project's own `(0,0,-1)`, for both the ship's
+  own movement AND the camera's position/rotation math. Wrong on two counts
+  at once - `tools/build_sardine_model.py`'s own header comment says this
+  hull is built "nose at +Z" (the ship moved tail-first with the old
+  constant), and separately, a Defold camera always looks down its own local
+  -Z regardless of any ship's nose direction (an unrelated ENGINE
+  convention). The fix keeps these two "forward" concepts separate -
+  `SHIP_FORWARD = (0,0,1)` for movement, `CAMERA_FORWARD = (0,0,-1)` for the
+  camera math - and adds one extra 180-degree yaw (`YAW_180`) when deriving
+  the camera's target rotation from the ship's own rotation, so the camera's
+  native "look down -Z" ends up aimed at the ship's own +Z nose (i.e. at the
+  ship) instead of away from it.
+- **Per-ship-chassis camera distance/height (decided, per direct instruction:
+  "each ship chassis will have its own coordinates/zoom for where the camera
+  should be looking from")**: `main/data/ships.lua`'s `patrol_interceptor` entry
+  now carries a `flight_camera = { distance = 15.74, height = 5.90 }` field,
+  read by `player_ship.script`'s `camera_distance_height()` (falling back to a
+  hardcoded default pair for any ship without one). Reuses
+  `outpost.gui_script`'s own already-tuned `PREVIEW_CAMERA` entry for this same
+  model/hull rather than recomputing from scratch - same ~8.32-unit bounding
+  radius, same already-tuned "whole ship visible, not claustrophobic" 1.5x
+  zoom-out factor that entry's own comment documents, just reused for a
+  different camera (flight instead of the ship-detail preview). This also
+  directly satisfies the "whole ship should be visible" framing request - the
+  old flat `12`/`4` defaults were noticeably tighter than this hull's real
+  tuned fit. No other ship has a `flight_camera` entry yet since none of them
+  are flyable at all currently (plan.md §4).
+- **Movement and camera-follow live in the SAME script** (`player_ship.script`,
+  not a separate `flight_camera.script`) - same reasoning the reference project's
+  own header comment gives for doing the same thing: driving the camera
+  synchronously from this exact frame's fresh rotation, rather than having a
+  sibling script independently re-read `go.get_rotation()` in its own `update()`,
+  avoids depending on undefined sibling update-order (Defold doesn't guarantee
+  ship-before-camera) and the one-frame-stale-rotation bug that ordering
+  dependency would cause.
+- **Hand-off from the outpost, mirroring the existing screen-transition
+  pattern**: `main/outpost.gui_script`'s Launch button now does
+  `self.active = false; msg.post("#gui", "disable"); msg.post("player_ship#script", "start_flight")`
+  - the exact same "disable self, tell the next thing to show" shape
+  `start_screen`/`faction_select` already use between themselves, just aimed at a
+  plain game object's script instead of another `gui_script`, since flight needs
+  `go.*`/`camera.*` access a `gui_script` doesn't have (the reference project's own
+  `hud.gui_script` header comment notes the identical limitation). `player_ship`'s
+  script component stays enabled from load (same "always-on, gated by an internal
+  flag" pattern `outpost.gui_script`/`ship_preview.script`'s off-world preview
+  rigs already use) so it can actually receive that message - a fully disabled
+  game object would silently drop it.
+- **Default light fixed too, incidentally**: `model.material`'s undocumented
+  default `light` constant is `(1,1,1,1)` - a world-space POINT LIGHT POSITION
+  (see `ship_preview.script`'s own header comment on this same constant), not a
+  color, sitting almost exactly where the ship spawns. Left alone, the ship
+  rendered near-black. `start_flight()` now sets a large fixed offset
+  (`(4000, 6000, 4000)`) as a crude stand-in directional light - real lighting
+  design (sun direction, ambient, etc.) is separate, undecided §4 territory.
+- **Verified live, partially**: real engine build (`/command/build`, zero
+  issues), driven with synthetic mouse clicks through Play as Guest → The Accord →
+  Launch - confirms the hand-off actually fires and the ship renders correctly
+  lit, third-person, from behind (re-confirmed visually after the 180-degree fix
+  above: the screenshot shows the ship's stern/wings facing the camera, nose
+  pointed away, comfortably filling the frame - not the cropped nose-on view the
+  bug originally produced). Forward motion and the camera's position-follow were
+  confirmed numerically via a temporary debug print read back from the engine's
+  own log (not just code review): ship position advancing ~20 m/s along its
+  forward axis, camera position tracking exactly `distance=15.74` behind /
+  `height=5.90` above every frame (patrol_interceptor's own `flight_camera`
+  values, confirming the per-chassis lookup itself works, not just the
+  hardcoded fallback), moving in lockstep with the ship. **Not verified**:
+  the rotation-lag/turning behavior itself - synthetic keyboard events
+  (CGEventPost) reliably reached zero `on_input` calls in the engine's log across
+  several attempts, while synthetic mouse events worked throughout this whole
+  session without issue, pointing at a macOS Input Monitoring permission gap
+  (separate from the Accessibility permission mouse automation already has) for
+  whatever process is generating them - not a code issue, but still unconfirmed
+  in a real engine and worth the player testing directly (W/A/S/D or arrow keys
+  once in flight).
 
 ## 3. Technical Architecture
 

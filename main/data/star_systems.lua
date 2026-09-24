@@ -12,8 +12,17 @@
 --
 -- `map_x`/`map_y` are NOT meters - an abstract pixel-ish layout space,
 -- same spirit as the source project's own sector_map.lua (see plan.md
--- §2.7). `size_m` is the in-system world size: 10,000m for every system
--- except the 3 larger ones (40,000m), matching the source structure.
+-- §2.7).
+--
+-- `width_m`/`height_m`/`depth_m` (plan.md §2.7, per direct instruction) are
+-- the in-system world extent along each of the ship's own local axes (§0 -
+-- Y is up, matching main/player_ship.script's own UP = (0,1,0) convention;
+-- X/Z are the horizontal plane). Each defaults to `M.DEFAULT_SYSTEM_SIZE_M`
+-- (10,000) when a system entry doesn't set its own - only the 3 systems
+-- that actually deviate (still a uniform 40,000 cube each, matching the
+-- source structure) set all three explicitly below, rather than every
+-- entry repeating the same default triple 58 times.
+--
 -- `threat`/`threat_real` carried over as a design/balancing reference
 -- only (see plan.md §0 - don't copy source numbers 1:1 as a final
 -- design, treat as a starting point); `threat_real = true` marks the
@@ -80,33 +89,66 @@ function M.has_outpost(system_id, faction)
 	return true
 end
 
--- Default outpost position (decided): "approximately opposite corners" of
--- the system's in-flight world space, computed generically from size_m
--- rather than hand-placed per system - no per-system position data exists
--- or is needed for the default case. PLACEHOLDER inset fraction (0.8, i.e.
--- 80% of the way from center to edge) - not real level-design placement,
--- just a reasonable default corner. Returns nil if `faction` has no
--- outpost here at all (see M.has_outpost above).
-M.OUTPOST_CORNER_FRACTION = 0.8
+-- Per-system world extent (plan.md §2.7, per direct instruction) - see this
+-- file's header comment for the Y-up/X-Z-horizontal axis convention. A
+-- system entry only sets width_m/height_m/depth_m when it actually deviates
+-- from these defaults (currently just antares/fomalhaut/deneb).
+M.DEFAULT_SYSTEM_SIZE_M = 10000
+
+local function system_extent(sys)
+	return sys.width_m or M.DEFAULT_SYSTEM_SIZE_M,
+		sys.height_m or M.DEFAULT_SYSTEM_SIZE_M,
+		sys.depth_m or M.DEFAULT_SYSTEM_SIZE_M
+end
+
+-- Default outpost position (decided, per direct instruction): opposite
+-- diagonal corners of the system's horizontal (X/Z) extent, on the Y=0
+-- plane, inset a flat M.OUTPOST_CORNER_INSET (1000 units) from each corner
+-- - not a fraction of the system's size like the earlier placeholder, a
+-- fixed absolute margin regardless of how big the system is. No per-system
+-- position data is needed for this default case - only a system that
+-- actually needs to deviate sets its own `outposts` table (below).
+--
+-- Explicit per-system override (new, per direct instruction: "allow for
+-- coordinates for each of the outposts to be sent explicitly"): a system
+-- entry's own `outposts = { accord = {x,y,z}, swarm = {x,y,z} }`, when
+-- present, is returned as-is for that faction INSTEAD of the generic
+-- default below - same "explicit beats computed default" precedent
+-- width_m/height_m/depth_m above just established.
+--
+-- Returns nil if `faction` has no outpost here at all (see M.has_outpost
+-- above) - checked before either the explicit or default path.
+M.OUTPOST_CORNER_INSET = 1000
 function M.outpost_position(system_id, faction)
 	if not M.has_outpost(system_id, faction) then
 		return nil
 	end
 	local sys = M.SYSTEMS[system_id]
-	local offset = (sys.size_m / 2) * M.OUTPOST_CORNER_FRACTION
+	local explicit = sys.outposts and sys.outposts[faction]
+	if explicit then
+		return explicit
+	end
+	local width, _, depth = system_extent(sys)
+	local offset_x = width / 2 - M.OUTPOST_CORNER_INSET
+	local offset_z = depth / 2 - M.OUTPOST_CORNER_INSET
 	if faction == "accord" then
-		return { x = -offset, y = -offset, z = 0 }
+		return { x = -offset_x, y = 0, z = -offset_z }
 	elseif faction == "swarm" then
-		return { x = offset, y = offset, z = 0 }
+		return { x = offset_x, y = 0, z = offset_z }
 	end
 	return nil
 end
 
 -- Spawn points (decided): 2 per faction per system, spread around that
 -- faction's own outpost corner rather than a single point, specifically
--- to avoid spawn-camping. Reuses the same inset "corner" as
--- M.outpost_position above (M.OUTPOST_CORNER_FRACTION), not the system's
--- literal edge. For a faction's own corner, the 2 points are the
+-- to avoid spawn-camping. Reuses the same default corner geometry as
+-- M.outpost_position's own default case above (M.OUTPOST_CORNER_INSET),
+-- NOT the system's literal edge, and NOT any per-system `outposts`
+-- override - spawn points always follow the generic default corners
+-- regardless of whether a system's actual outpost position was overridden
+-- (no per-system spawn-point override exists, only for the outpost itself
+-- - flag if a system's overridden outpost ever needs its spawns to follow
+-- it too, plan.md §4). For a faction's own corner, the 2 points are the
 -- midpoints between that corner and each of its two adjacent corners
 -- (i.e. roughly the middle of each of the two nearest map edges) - NOT
 -- the diagonal corner, which is the opposing faction's own outpost.
@@ -121,18 +163,20 @@ function M.spawn_points(system_id, faction)
 		return nil
 	end
 	local sys = M.SYSTEMS[system_id]
-	local c = (sys.size_m / 2) * M.OUTPOST_CORNER_FRACTION
+	local width, _, depth = system_extent(sys)
+	local cx = width / 2 - M.OUTPOST_CORNER_INSET
+	local cz = depth / 2 - M.OUTPOST_CORNER_INSET
 	if faction == "accord" then
-		-- Accord's own corner: (-c,-c). Adjacent corners: (c,-c), (-c,c).
+		-- Accord's own corner: (-cx,-cz). Adjacent corners: (cx,-cz), (-cx,cz).
 		return {
-			{ x = 0, y = -c, z = 0 },  -- midpoint toward (c,-c)
-			{ x = -c, y = 0, z = 0 },  -- midpoint toward (-c,c)
+			{ x = 0, y = 0, z = -cz },  -- midpoint toward (cx,-cz)
+			{ x = -cx, y = 0, z = 0 },  -- midpoint toward (-cx,cz)
 		}
 	elseif faction == "swarm" then
-		-- Swarm's own corner: (c,c). Adjacent corners: (c,-c), (-c,c).
+		-- Swarm's own corner: (cx,cz). Adjacent corners: (cx,-cz), (-cx,cz).
 		return {
-			{ x = c, y = 0, z = 0 },   -- midpoint toward (c,-c)
-			{ x = 0, y = c, z = 0 },   -- midpoint toward (-c,c)
+			{ x = cx, y = 0, z = 0 },   -- midpoint toward (cx,-cz)
+			{ x = 0, y = 0, z = cz },   -- midpoint toward (-cx,cz)
 		}
 	end
 	return nil
@@ -169,64 +213,64 @@ function M.ship_cap(system_id, faction)
 end
 
 M.SYSTEMS = {
-	["hadar"]              = { name = "Hadar",              map_x = -68.5,  map_y = 180.5,  size_m = 10000, threat = 20,  threat_real = true },
-	["mira"]               = { name = "Mira",               map_x = -194.5, map_y = 150.5,  size_m = 10000, threat = 50 },
-	["wezen"]              = { name = "Wezen",               map_x = 90.5,   map_y = 163.5,  size_m = 10000, threat = 20,  threat_real = true },
-	["caph"]               = { name = "Caph",                map_x = 21.5,   map_y = 147.5,  size_m = 10000, threat = 20,  threat_real = true },
-	["61_cygni"]           = { name = "61 Cygni",            map_x = 180.5,  map_y = 147.5,  size_m = 10000, threat = 20,  threat_real = true },
-	["nihal"]              = { name = "Nihal",               map_x = 248.5,  map_y = 141.5,  size_m = 10000, threat = 44 },
-	["delta_aurigae"]      = { name = "Delta Aurigae",       map_x = -119.5, map_y = 121.5,  size_m = 10000, threat = 50 },
-	["beta_persei"]        = { name = "Beta Persei",         map_x = -250.5, map_y = 92.5,   size_m = 10000, threat = 18,  threat_real = true },
-	["muphrid"]            = { name = "Muphrid",             map_x = 64.5,   map_y = 84.5,   size_m = 10000, threat = 48 },
-	["70_ophiuchi"]        = { name = "70 Ophiuchi",         map_x = 156.5,  map_y = 60.5,   size_m = 10000, threat = 39 },
-	["36_ophiuchi"]        = { name = "36 Ophiuchi",         map_x = 242.5,  map_y = 67.5,   size_m = 10000, threat = 35 },
-	["albireo"]            = { name = "Albireo",             map_x = -127.5, map_y = 52.5,   size_m = 10000, threat = 42 },
-	["gamma_draconis"]     = { name = "Gamma Draconis",      map_x = -199.5, map_y = 32.5,   size_m = 10000, threat = 36 },
-	["asterope"]           = { name = "Asterope",            map_x = -298.5, map_y = 30.5,   size_m = 10000, threat = 17,  threat_real = true },
-	["82_eridani"]         = { name = "82 Eridani",          map_x = 96.5,   map_y = 22.5,   size_m = 10000, threat = 39 },
-	["zaurak"]             = { name = "Zaurak",              map_x = 305.5,  map_y = 38.5,   size_m = 10000, threat = 31 },
-	["47_ursae_majoris"]   = { name = "47 Ursae Majoris",    map_x = 167.5,  map_y = -8.5,   size_m = 10000, threat = 31 },
-	["canopus"]            = { name = "Canopus",             map_x = -365.5, map_y = -26.5,  size_m = 10000, threat = 0,   threat_real = true },
-	["kraz"]               = { name = "Kraz",                map_x = -180.5, map_y = -19.5,  size_m = 10000, threat = 31 },
-	["gienah"]             = { name = "Gienah",              map_x = -100.5, map_y = -19.5,  size_m = 10000, threat = 37 },
-	["antares"]            = { name = "Antares",             map_x = -20.5,  map_y = -30.5,  size_m = 40000, threat = 44 },
-	["epsilon_eridani"]    = { name = "Epsilon Eridani",     map_x = -259.5, map_y = -36.5,  size_m = 10000, threat = 25 },
-	["51_pegasi"]          = { name = "51 Pegasi",           map_x = 267.5,  map_y = -29.5,  size_m = 10000, threat = 23 },
-	["55_cancri"]          = { name = "55 Cancri",           map_x = 340.5,  map_y = -26.5,  size_m = 10000, threat = 23 },
-	["14_herculis"]        = { name = "14 Herculis",         map_x = 146.5,  map_y = -42.5,  size_m = 10000, threat = 29 },
-	["homam"]              = { name = "Homam",               map_x = -72.5,  map_y = -58.5,  size_m = 10000, threat = 37 },
-	["nashira"]            = { name = "Nashira",             map_x = 74.5,   map_y = -47.5,  size_m = 10000, threat = 36 },
-	["18_scorpii"]         = { name = "18 Scorpii",          map_x = 195.5,  map_y = -71.5,  size_m = 10000, threat = 22 },
-	["spica"]              = { name = "Spica",               map_x = 341.5,  map_y = -96.5,  size_m = 10000, threat = 10,  threat_real = true },
-	["omicron_persei"]     = { name = "Omicron Persei",      map_x = -385.5, map_y = -94.5,  size_m = 10000, threat = 19 },
-	["avior"]              = { name = "Avior",               map_x = -300.5, map_y = -98.5,  size_m = 10000, threat = 16 },
-	["miaplacidus"]        = { name = "Miaplacidus",         map_x = -234.5, map_y = -78.5,  size_m = 10000, threat = 21 },
-	["tau_bootis"]         = { name = "Tau Bo\195\182tis",   map_x = -134.5, map_y = -105.5, size_m = 10000, threat = 27 },
-	["fomalhaut"]          = { name = "Fomalhaut",           map_x = -49.5,  map_y = -110.5, size_m = 40000, threat = 36 },
-	["deneb"]              = { name = "Deneb",               map_x = 37.5,   map_y = -106.5, size_m = 40000, threat = 37 },
-	["40_eridani"]         = { name = "40 Eridani",          map_x = 141.5,  map_y = -110.5, size_m = 10000, threat = 25 },
-	["alnair"]             = { name = "Alnair",              map_x = 263.5,  map_y = -106.5, size_m = 10000, threat = 9,   threat_real = true },
-	["acrux"]              = { name = "Acrux",               map_x = 360.5,  map_y = -147.5, size_m = 10000, threat = 9 },
-	["rastaban"]           = { name = "Rastaban",            map_x = 7.5,    map_y = -155.5, size_m = 10000, threat = 39 },
-	["70_virginis"]        = { name = "70 Virginis",         map_x = 269.5,  map_y = -160.5, size_m = 10000, threat = 6,   threat_real = true },
-	["merak"]              = { name = "Merak",               map_x = 319.5,  map_y = -158.5, size_m = 10000, threat = 6 },
-	["tau_ceti"]           = { name = "Tau Ceti",            map_x = -340.5, map_y = -181.5, size_m = 10000, threat = 6 },
-	["epsilon_indi"]       = { name = "Epsilon Indi",        map_x = -225.5, map_y = -170.5, size_m = 10000, threat = 255, threat_real = true },
-	["furud"]              = { name = "Furud",               map_x = -180.5, map_y = -170.5, size_m = 10000, threat = 18 },
-	["omicron_andromedae"] = { name = "Omicron Andromedae",  map_x = -80.5,  map_y = -172.5, size_m = 10000, threat = 30 },
-	["hd_209458"]          = { name = "HD 209458",           map_x = 7.5,    map_y = -181.5, size_m = 10000, threat = 38 },
-	["groombridge_1618"]   = { name = "Groombridge 1618",    map_x = 156.5,  map_y = -189.5, size_m = 10000, threat = 20 },
-	["gliese_667"]         = { name = "Gliese 667",          map_x = 252.5,  map_y = -209.5, size_m = 10000, threat = 8 },
-	["polaris"]            = { name = "Polaris",             map_x = 316.5,  map_y = -209.5, size_m = 10000, threat = 1 }, -- Swarm home system
-	["ankaa"]              = { name = "Ankaa",               map_x = 372.5,  map_y = -185.5, size_m = 10000, threat = 7 },
-	["sigma_draconis"]     = { name = "Sigma Draconis",      map_x = -121.5, map_y = -202.5, size_m = 10000, threat = 24 },
-	["tarazed"]            = { name = "Tarazed",             map_x = 7.5,    map_y = -189.5, size_m = 10000, threat = 38 },
-	["wolf_359"]           = { name = "Wolf 359",            map_x = -354.5, map_y = -207.5, size_m = 10000, threat = 5 },
-	["beta_andromedae"]    = { name = "Beta Andromedae",     map_x = -221.5, map_y = -210.5, size_m = 10000, threat = 12 },
-	["sol"]                = { name = "Sol",                 map_x = -317.5, map_y = -230.5, size_m = 10000, threat = 1 }, -- Accord home system
-	["alpha_draconis"]     = { name = "Alpha Draconis",      map_x = -30.5,  map_y = -217.5, size_m = 10000, threat = 35 },
-	["barnards_star"]      = { name = "Barnard's Star",      map_x = -168.5, map_y = -230.5, size_m = 10000, threat = 18 },
-	["denebola"]           = { name = "Denebola",            map_x = 56.5,   map_y = -217.5, size_m = 10000, threat = 32 },
+	["hadar"]              = { name = "Hadar",              map_x = -68.5,  map_y = 180.5,  threat = 20,  threat_real = true },
+	["mira"]               = { name = "Mira",               map_x = -194.5, map_y = 150.5,  threat = 50 },
+	["wezen"]              = { name = "Wezen",               map_x = 90.5,   map_y = 163.5,  threat = 20,  threat_real = true },
+	["caph"]               = { name = "Caph",                map_x = 21.5,   map_y = 147.5,  threat = 20,  threat_real = true },
+	["61_cygni"]           = { name = "61 Cygni",            map_x = 180.5,  map_y = 147.5,  threat = 20,  threat_real = true },
+	["nihal"]              = { name = "Nihal",               map_x = 248.5,  map_y = 141.5,  threat = 44 },
+	["delta_aurigae"]      = { name = "Delta Aurigae",       map_x = -119.5, map_y = 121.5,  threat = 50 },
+	["beta_persei"]        = { name = "Beta Persei",         map_x = -250.5, map_y = 92.5,   threat = 18,  threat_real = true },
+	["muphrid"]            = { name = "Muphrid",             map_x = 64.5,   map_y = 84.5,   threat = 48 },
+	["70_ophiuchi"]        = { name = "70 Ophiuchi",         map_x = 156.5,  map_y = 60.5,   threat = 39 },
+	["36_ophiuchi"]        = { name = "36 Ophiuchi",         map_x = 242.5,  map_y = 67.5,   threat = 35 },
+	["albireo"]            = { name = "Albireo",             map_x = -127.5, map_y = 52.5,   threat = 42 },
+	["gamma_draconis"]     = { name = "Gamma Draconis",      map_x = -199.5, map_y = 32.5,   threat = 36 },
+	["asterope"]           = { name = "Asterope",            map_x = -298.5, map_y = 30.5,   threat = 17,  threat_real = true },
+	["82_eridani"]         = { name = "82 Eridani",          map_x = 96.5,   map_y = 22.5,   threat = 39 },
+	["zaurak"]             = { name = "Zaurak",              map_x = 305.5,  map_y = 38.5,   threat = 31 },
+	["47_ursae_majoris"]   = { name = "47 Ursae Majoris",    map_x = 167.5,  map_y = -8.5,   threat = 31 },
+	["canopus"]            = { name = "Canopus",             map_x = -365.5, map_y = -26.5,  threat = 0,   threat_real = true },
+	["kraz"]               = { name = "Kraz",                map_x = -180.5, map_y = -19.5,  threat = 31 },
+	["gienah"]             = { name = "Gienah",              map_x = -100.5, map_y = -19.5,  threat = 37 },
+	["antares"]            = { name = "Antares",             map_x = -20.5,  map_y = -30.5,  width_m = 40000, height_m = 40000, depth_m = 40000, threat = 44 },
+	["epsilon_eridani"]    = { name = "Epsilon Eridani",     map_x = -259.5, map_y = -36.5,  threat = 25 },
+	["51_pegasi"]          = { name = "51 Pegasi",           map_x = 267.5,  map_y = -29.5,  threat = 23 },
+	["55_cancri"]          = { name = "55 Cancri",           map_x = 340.5,  map_y = -26.5,  threat = 23 },
+	["14_herculis"]        = { name = "14 Herculis",         map_x = 146.5,  map_y = -42.5,  threat = 29 },
+	["homam"]              = { name = "Homam",               map_x = -72.5,  map_y = -58.5,  threat = 37 },
+	["nashira"]            = { name = "Nashira",             map_x = 74.5,   map_y = -47.5,  threat = 36 },
+	["18_scorpii"]         = { name = "18 Scorpii",          map_x = 195.5,  map_y = -71.5,  threat = 22 },
+	["spica"]              = { name = "Spica",               map_x = 341.5,  map_y = -96.5,  threat = 10,  threat_real = true },
+	["omicron_persei"]     = { name = "Omicron Persei",      map_x = -385.5, map_y = -94.5,  threat = 19 },
+	["avior"]              = { name = "Avior",               map_x = -300.5, map_y = -98.5,  threat = 16 },
+	["miaplacidus"]        = { name = "Miaplacidus",         map_x = -234.5, map_y = -78.5,  threat = 21 },
+	["tau_bootis"]         = { name = "Tau Bo\195\182tis",   map_x = -134.5, map_y = -105.5, threat = 27 },
+	["fomalhaut"]          = { name = "Fomalhaut",           map_x = -49.5,  map_y = -110.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 36 },
+	["deneb"]              = { name = "Deneb",               map_x = 37.5,   map_y = -106.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 37 },
+	["40_eridani"]         = { name = "40 Eridani",          map_x = 141.5,  map_y = -110.5, threat = 25 },
+	["alnair"]             = { name = "Alnair",              map_x = 263.5,  map_y = -106.5, threat = 9,   threat_real = true },
+	["acrux"]              = { name = "Acrux",               map_x = 360.5,  map_y = -147.5, threat = 9 },
+	["rastaban"]           = { name = "Rastaban",            map_x = 7.5,    map_y = -155.5, threat = 39 },
+	["70_virginis"]        = { name = "70 Virginis",         map_x = 269.5,  map_y = -160.5, threat = 6,   threat_real = true },
+	["merak"]              = { name = "Merak",               map_x = 319.5,  map_y = -158.5, threat = 6 },
+	["tau_ceti"]           = { name = "Tau Ceti",            map_x = -340.5, map_y = -181.5, threat = 6 },
+	["epsilon_indi"]       = { name = "Epsilon Indi",        map_x = -225.5, map_y = -170.5, threat = 255, threat_real = true },
+	["furud"]              = { name = "Furud",               map_x = -180.5, map_y = -170.5, threat = 18 },
+	["omicron_andromedae"] = { name = "Omicron Andromedae",  map_x = -80.5,  map_y = -172.5, threat = 30 },
+	["hd_209458"]          = { name = "HD 209458",           map_x = 7.5,    map_y = -181.5, threat = 38 },
+	["groombridge_1618"]   = { name = "Groombridge 1618",    map_x = 156.5,  map_y = -189.5, threat = 20 },
+	["gliese_667"]         = { name = "Gliese 667",          map_x = 252.5,  map_y = -209.5, threat = 8 },
+	["polaris"]            = { name = "Polaris",             map_x = 316.5,  map_y = -209.5, threat = 1 }, -- Swarm home system
+	["ankaa"]              = { name = "Ankaa",               map_x = 372.5,  map_y = -185.5, threat = 7 },
+	["sigma_draconis"]     = { name = "Sigma Draconis",      map_x = -121.5, map_y = -202.5, threat = 24 },
+	["tarazed"]            = { name = "Tarazed",             map_x = 7.5,    map_y = -189.5, threat = 38 },
+	["wolf_359"]           = { name = "Wolf 359",            map_x = -354.5, map_y = -207.5, threat = 5 },
+	["beta_andromedae"]    = { name = "Beta Andromedae",     map_x = -221.5, map_y = -210.5, threat = 12 },
+	["sol"]                = { name = "Sol",                 map_x = -317.5, map_y = -230.5, threat = 1 }, -- Accord home system
+	["alpha_draconis"]     = { name = "Alpha Draconis",      map_x = -30.5,  map_y = -217.5, threat = 35 },
+	["barnards_star"]      = { name = "Barnard's Star",      map_x = -168.5, map_y = -230.5, threat = 18 },
+	["denebola"]           = { name = "Denebola",            map_x = 56.5,   map_y = -217.5, threat = 32 },
 }
 
 -- Straight-line "map distance" between two systems, same abstract units

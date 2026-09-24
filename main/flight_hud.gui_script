@@ -1,0 +1,36 @@
+-- Minimal flight HUD (plan.md §4's "Build flight mode" TODO) - the
+-- current-speed readout and the docking prompt/countdown, nothing else yet
+-- (no throttle bar, shields, targeting reticle, etc.). Same "starts
+-- disabled, hidden until told to show" pattern as main/faction_select.gui_script
+-- and main/outpost.gui_script, except the thing enabling/hiding it is a
+-- plain game object (main/player_ship.script's start_flight()/
+-- complete_dock()) rather than another gui_script - flight has no
+-- gui_script of its own to own this hand-off.
+--
+-- main/player_ship.script posts "set_speed" here every frame with the
+-- ship's current speed (in m/sec, its own MAX_SPEED-and-throttle-derived
+-- placeholder units - not a real physics speed yet, see that script's
+-- header comment) and "dock_prompt" with a text string ("Press [K] to
+-- dock" / "Docking in N..." / nil to hide) while docking is possible or
+-- underway - this gui_script just formats/shows whatever it's given.
+
+function init(self)
+	self.speed_node = gui.get_node("speed_value")
+	self.dock_prompt_node = gui.get_node("dock_prompt")
+	msg.post("#gui", "disable")
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("show_flight_hud") then
+		msg.post("#gui", "enable")
+	elseif message_id == hash("hide_flight_hud") then
+		msg.post("#gui", "disable")
+	elseif message_id == hash("set_speed") then
+		gui.set_text(self.speed_node, string.format("%.0f m/s", message.speed))
+	elseif message_id == hash("dock_prompt") then
+		gui.set_enabled(self.dock_prompt_node, message.text ~= nil)
+		if message.text then
+			gui.set_text(self.dock_prompt_node, message.text)
+		end
+	end
+end
