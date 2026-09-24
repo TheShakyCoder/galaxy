@@ -1,0 +1,249 @@
+-- In-flight sector map overlay (N key - main/player_ship.script's
+-- toggle_map()/on_input "toggle_map" handler). Lets the player VIEW the
+-- map and ARM a destination system as a jump preset WITHOUT actually
+-- jumping there (per direct instruction) - actually executing a jump
+-- (the system-transition itself) is explicitly out of scope for this
+-- pass ("we will sort out the rest"), so there's no [JUMP] button here,
+-- unlike the source this is ported from - just selection, the
+-- description panel, and arming.
+--
+-- Structurally ported (§0 - mechanics, not creative expression, "use
+-- everything from superships as it is") from the other local reference
+-- project's own main/map.gui_script: same layout (offsets transplanted
+-- onto this project's 1920x1080 canvas - the source's own 1280x720's
+-- worth of relative positions, not rescaled, since main/data/star_systems.lua's
+-- map_x/map_y (+-386/+-231) comfortably fits either canvas unscaled, same
+-- "already a screen-appropriate scale" reasoning that file's own header
+-- comment gives), same dot-pool-created-once approach, same click-to-
+-- select/arm-on-select flow, same 4-color reachability scheme. Ported
+-- onto main/data/star_systems.lua's own API instead of the source's
+-- sector_map.lua - the two are already near-identical in shape (M.distance/
+-- M.can_enter/M.in_ftl_range/M.reachable_from all exist on both with the
+-- same signatures) - and Hydrogen (main/session.lua's own fuel resource)
+-- in place of the source's Tylium.
+--
+-- main/data/ships.lua's ftl_range_ly (real light-years) and this map's own
+-- map_x/map_y distance scale used to be calibrated completely
+-- independently (nothing was ever in range) - now resolved, per direct
+-- instruction ("one light-year = 35 pixels"): main/data/star_systems.lua's
+-- own M.ly_to_map_units()/M.MAP_UNITS_PER_LY. That conversion happens
+-- upstream, in main/player_ship.script's toggle_map() (the "toggle"
+-- message's own `ftl_range` field) and its "set_jump_preset" handler -
+-- self.ftl_range below always arrives already in map units, same units
+-- M.distance()'s own output uses, so this file never needs to know the
+-- conversion factor itself.
+local RANGE_CIRCLE_SEGMENTS = 48 -- perimeter vertices - smooth enough to read as a circle, not a faceted polygon (same TYPE_PIE technique main/outpost.gui_script's new_octagon_node already established, just with many more vertices)
+local RANGE_CIRCLE_COLOR = vmath.vector4(0.3, 0.9, 0.4, 0.16) -- translucent COLOR_REACHABLE - a fill, not a stroke (Defold's TYPE_PIE has no outline-only mode), low alpha so dots/labels underneath/inside it stay legible
+
+local star_systems = require "main.data.star_systems"
+local session = require "main.session"
+
+local MAP_CENTER = vmath.vector3(960, 540, 0)
+local DOT_SIZE = 14
+local SELECTED_DOT_SIZE = DOT_SIZE * 1.6 -- box nodes have no outline property (TEXT-only in Defold's gui API) - grown size is the selection indicator instead, same as the source
+
+local COLOR_CURRENT = vmath.vector4(0.4, 0.9, 1.0, 1.0) -- cyan: where you are right now
+local COLOR_REACHABLE = vmath.vector4(0.3, 0.9, 0.4, 1.0) -- green: in FTL range, enterable, and affordable
+local COLOR_OUT_OF_RANGE = vmath.vector4(0.45, 0.45, 0.5, 1.0) -- gray: too far, or in range but unaffordable
+local COLOR_RESTRICTED = vmath.vector4(0.9, 0.25, 0.25, 1.0) -- red: the other faction's home/buffer zone - never enterable
+
+local STATIC_NODE_IDS = { "background", "title", "current_text", "legend_text" }
+local DESC_TEXT_NODE_IDS = { "desc_bg", "desc_title", "desc_distance", "desc_fuel", "desc_threat" }
+
+local function set_static_visible(visible)
+	for _, id in ipairs(STATIC_NODE_IDS) do
+		gui.set_enabled(gui.get_node(id), visible)
+	end
+end
+
+local function set_desc_visible(visible)
+	for _, id in ipairs(DESC_TEXT_NODE_IDS) do
+		gui.set_enabled(gui.get_node(id), visible)
+	end
+	gui.set_enabled(gui.get_node("desc_status_text"), false)
+end
+
+local function screen_pos(sys)
+	return vmath.vector3(MAP_CENTER.x + sys.map_x, MAP_CENTER.y + sys.map_y, 0)
+end
+
+function init(self)
+	-- Created BEFORE the dots loop below so it renders underneath every
+	-- dot/label (Defold gui draws nodes in creation order) - a filled
+	-- range ring behind the dots reads as "this area is in range" without
+	-- ever covering up what's inside it.
+	self.range_circle_node = gui.new_pie_node(MAP_CENTER, vmath.vector3(0, 0, 0))
+	gui.set_perimeter_vertices(self.range_circle_node, RANGE_CIRCLE_SEGMENTS)
+	gui.set_outer_bounds(self.range_circle_node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(self.range_circle_node, 360) -- NOTE: gui.set_fill_angle, NOT gui.set_pie_fill_angle - see main/outpost.gui_script's new_octagon_node comment on this exact API-name trap
+	gui.set_inner_radius(self.range_circle_node, 0)
+	gui.set_pivot(self.range_circle_node, gui.PIVOT_CENTER)
+	gui.set_color(self.range_circle_node, RANGE_CIRCLE_COLOR)
+	gui.set_enabled(self.range_circle_node, false)
+
+	self.dots = {} -- system_id -> { bg = node, label = node, sys = star_systems.SYSTEMS entry }
+	for id, sys in pairs(star_systems.SYSTEMS) do
+		local pos = screen_pos(sys)
+
+		local bg = gui.new_box_node(pos, vmath.vector3(DOT_SIZE, DOT_SIZE, 0))
+		gui.set_pivot(bg, gui.PIVOT_CENTER)
+		gui.set_enabled(bg, false)
+
+		local label = gui.new_text_node(pos + vmath.vector3(0, 13, 0), sys.name)
+		gui.set_font(label, "default_font")
+		gui.set_pivot(label, gui.PIVOT_CENTER)
+		gui.set_scale(label, vmath.vector3(0.35, 0.35, 1.0))
+		gui.set_enabled(label, false)
+
+		self.dots[id] = { bg = bg, label = label, sys = sys }
+	end
+
+	set_static_visible(false)
+	set_desc_visible(false)
+	self.current_system_id = nil
+	self.selected_system_id = nil
+	self.ftl_range = 0
+end
+
+local function dot_color(self, id)
+	local faction = session.get_faction()
+	if id == self.current_system_id then
+		return COLOR_CURRENT
+	elseif not star_systems.can_enter(id, faction) then
+		return COLOR_RESTRICTED
+	end
+	local dist = star_systems.distance(self.current_system_id, id)
+	if not star_systems.in_ftl_range(dist, self.ftl_range) then
+		return COLOR_OUT_OF_RANGE
+	end
+	-- in range, but affordability also gates green - "reachable" should
+	-- mean "you could actually jump here right now", not just "in range"
+	local cost = star_systems.hydrogen_cost(dist)
+	return session.get_hydrogen() >= cost and COLOR_REACHABLE or COLOR_OUT_OF_RANGE
+end
+
+local function refresh_dots(self)
+	local current = self.dots[self.current_system_id]
+	gui.set_text(gui.get_node("current_text"), "Current: " .. (current and current.sys.name or "-"))
+
+	-- FTL range ring, centered on the current system - see this file's
+	-- header comment on the circle's radius/known calibration gap.
+	if current and self.ftl_range and self.ftl_range > 0 then
+		gui.set_position(self.range_circle_node, screen_pos(current.sys))
+		local diameter = self.ftl_range * 2
+		gui.set_size(self.range_circle_node, vmath.vector3(diameter, diameter, 0))
+		gui.set_enabled(self.range_circle_node, true)
+	else
+		gui.set_enabled(self.range_circle_node, false)
+	end
+
+	for id, d in pairs(self.dots) do
+		local color = dot_color(self, id)
+		gui.set_color(d.bg, color)
+		gui.set_color(d.label, color)
+		local size = (id == self.selected_system_id) and SELECTED_DOT_SIZE or DOT_SIZE
+		gui.set_size(d.bg, vmath.vector3(size, size, 0))
+	end
+end
+
+-- Populates and shows the description panel for `id` (any system, not
+-- just a reachable one - the player can inspect anything on the map).
+-- Arms it as the jump preset (posted to player_ship#script, which
+-- re-validates independently - see that script's own "set_jump_preset"
+-- handler) only when it's actually reachable right now.
+local function select_system(self, id)
+	self.selected_system_id = id
+	local d = self.dots[id]
+	if not d then
+		return
+	end
+	local sys = d.sys
+	local faction = session.get_faction()
+	local dist = self.current_system_id and star_systems.distance(self.current_system_id, id)
+	local can_enter = star_systems.can_enter(id, faction)
+	local in_range = can_enter and star_systems.in_ftl_range(dist, self.ftl_range)
+	local cost = dist and star_systems.hydrogen_cost(dist)
+	local can_afford = cost and session.get_hydrogen() >= cost
+	local reachable = in_range and can_afford
+
+	set_desc_visible(true)
+	gui.set_text(gui.get_node("desc_title"), sys.name)
+	gui.set_text(gui.get_node("desc_distance"), string.format("Distance: %s", dist and string.format("%.0f", dist) or "-"))
+	gui.set_text(gui.get_node("desc_fuel"), string.format("Hydrogen to jump: %s", cost and tostring(cost) or "-"))
+	gui.set_text(gui.get_node("desc_threat"), string.format("Threat: %d", sys.threat or 0))
+
+	local status_node = gui.get_node("desc_status_text")
+	gui.set_enabled(status_node, true)
+	if id == self.current_system_id then
+		gui.set_text(status_node, "You are here")
+	elseif reachable then
+		gui.set_text(status_node, "Destination armed - [J] to jump later")
+		-- arm the preset the moment it's selected, not on some separate
+		-- confirm step - see this file's header comment (§0/direct
+		-- instruction: set a destination WITHOUT having to jump)
+		msg.post("player_ship#script", "set_jump_preset", { system_id = id })
+	else
+		local reason = not can_enter and "Restricted - enemy home/buffer zone" or not in_range and "Out of FTL range" or "Not enough Hydrogen"
+		gui.set_text(status_node, reason)
+	end
+
+	refresh_dots(self)
+end
+
+local function set_map_visible(self, visible)
+	set_static_visible(visible)
+	set_desc_visible(false)
+	self.selected_system_id = nil
+	gui.set_enabled(self.range_circle_node, false) -- refresh_dots() re-enables it once repositioned, if the current system is known
+	for _, d in pairs(self.dots) do
+		gui.set_enabled(d.bg, visible)
+		gui.set_enabled(d.label, visible)
+	end
+end
+
+-- Sent by main/player_ship.script's toggle_map()/on_input, which owns the
+-- open/closed flag (self.map_open there) since it's also the thing that
+-- needs to stop treating flight keys as flight keys while the map is
+-- open - this overlay just reacts to that state, same split as the
+-- source's own system_state.map_open/ship.script relationship.
+function on_message(self, message_id, message)
+	if message_id == hash("toggle") then
+		self.current_system_id = message.current_system_id or self.current_system_id
+		self.ftl_range = message.ftl_range or self.ftl_range
+		set_map_visible(self, message.open)
+		if message.open then
+			if message.preset_system_id then
+				-- re-highlight/re-describe whatever's already armed rather
+				-- than opening to a blank panel and making the player forget
+				-- what they preset earlier
+				select_system(self, message.preset_system_id)
+			else
+				refresh_dots(self)
+			end
+			msg.post(".", "acquire_input_focus")
+		else
+			msg.post(".", "release_input_focus")
+		end
+	end
+end
+
+-- Only acquires focus while open (see on_message above) - so a stray
+-- click can't hit this overlay's nodes while it's hidden, and so it
+-- doesn't compete with player_ship.script's own permanent focus during
+-- normal flight.
+function on_input(self, action_id, action)
+	if action_id ~= hash("touch") or not action.pressed then
+		return false
+	end
+
+	for id, d in pairs(self.dots) do
+		if gui.is_enabled(d.bg) and gui.pick_node(d.bg, action.x, action.y) then
+			select_system(self, id)
+			return true
+		end
+	end
+
+	-- swallow every other click while the map's open, rather than letting
+	-- it fall through to anything behind the overlay
+	return true
+end

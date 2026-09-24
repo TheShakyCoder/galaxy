@@ -12,7 +12,10 @@
 --
 -- `map_x`/`map_y` are NOT meters - an abstract pixel-ish layout space,
 -- same spirit as the source project's own sector_map.lua (see plan.md
--- §2.7).
+-- §2.7). Calibrated against main/data/ships.lua's own ftl_range_ly (real
+-- light-years, plan.md §2.1.1) via M.MAP_UNITS_PER_LY below, per direct
+-- instruction ("one light-year = 35 pixels") - resolves the gap
+-- main/flight_map.gui_script previously had to flag unfixed.
 --
 -- `width_m`/`height_m`/`depth_m` (plan.md §2.7, per direct instruction) are
 -- the in-system world extent along each of the ship's own local axes (§0 -
@@ -282,6 +285,20 @@ function M.distance(id_a, id_b)
 	end
 	local dx, dy = a.map_x - b.map_x, a.map_y - b.map_y
 	return math.sqrt(dx * dx + dy * dy)
+end
+
+-- Conversion factor between main/data/ships.lua's ftl_range_ly (real
+-- light-years) and this file's own map_x/map_y distance scale (decided,
+-- per direct instruction: "one light-year = 35 pixels"). Callers comparing
+-- a ship's FTL range against M.distance()'s own output (e.g.
+-- main/player_ship.script's toggle_map()/"set_jump_preset" handler) should
+-- convert through M.ly_to_map_units() first - M.distance()/M.in_ftl_range()
+-- themselves stay in plain map units, they don't do this conversion
+-- implicitly.
+M.MAP_UNITS_PER_LY = 30
+
+function M.ly_to_map_units(ly)
+	return ly * M.MAP_UNITS_PER_LY
 end
 
 -- Which faction (if any) this system is restricted to for entry purposes -

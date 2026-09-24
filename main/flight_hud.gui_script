@@ -1,23 +1,111 @@
 -- Minimal flight HUD (plan.md §4's "Build flight mode" TODO) - the
--- current-speed readout and the docking prompt/countdown, nothing else yet
--- (no throttle bar, shields, targeting reticle, etc.). Same "starts
+-- current-speed readout, the docking prompt/countdown, and a radar,
+-- nothing else yet (no shields/targeting reticle/etc.). Same "starts
 -- disabled, hidden until told to show" pattern as main/faction_select.gui_script
 -- and main/outpost.gui_script, except the thing enabling/hiding it is a
 -- plain game object (main/player_ship.script's start_flight()/
 -- complete_dock()) rather than another gui_script - flight has no
 -- gui_script of its own to own this hand-off.
 --
--- main/player_ship.script posts "set_speed" here every frame with the
--- ship's current speed (in m/sec, its own MAX_SPEED-and-throttle-derived
--- placeholder units - not a real physics speed yet, see that script's
--- header comment) and "dock_prompt" with a text string ("Press [K] to
--- dock" / "Docking in N..." / nil to hide) while docking is possible or
--- underway - this gui_script just formats/shows whatever it's given.
+-- main/player_ship.script posts, every frame:
+--  - "set_speed" - the ship's current speed (m/sec, see that script's
+--    header comment on why it's not a real physics speed yet)
+--  - "dock_prompt" - a text string ("Press [K] to dock" / "Docking in
+--    N..." / nil to hide) while docking is possible or underway
+--  - "jump_preset" - a text string ("PRESET: <system> [J]" / nil to hide)
+--    once main/flight_map.gui's sector map arms a jump destination -
+--    persists after the map closes, same as the source project's own
+--    hud.gui_script "jump_preset_changed" indicator
+--  - "contacts" - { own_pos, range, contacts } for the radar below (per
+--    direct instruction: "each ship has its own visible range... a radar
+--    indicating all ships within visible range") - `range` is that
+--    ship's own visual_range_m (NOT the longer sensor_range_m/"Dradis
+--    Range"), `contacts` a list of { pos = vmath.vector3 } for every
+--    other ship within it (always empty right now - no other ships exist
+--    anywhere in this project yet, see that script's own comment on this
+--    same block)
+--  - "currency" - { scrip, water, iron, hydrogen } (per direct instruction:
+--    "show the amount of currency for each resource that the player has")
+--    - same main/session.lua getters and "Name: N" text format
+--    main/outpost.gui_script's own refresh_currency() already uses, just
+--    read fresh every frame here instead of only on explicit changes -
+--    nothing in flight can spend/earn any of these yet either (same "no
+--    real mechanic wired up" status that script's own comment on Water/
+--    Iron/Hydrogen already flags), so today these values just sit static
+--    for the whole flight.
+-- this gui_script just formats/shows/positions whatever it's given -
+-- radar projection technique (flat world-fixed X/Z, doesn't rotate with
+-- the ship's own heading) ported from the other local reference
+-- project's own main/dradis.gui_script (§0 - mechanics, not creative
+-- expression), simplified down to a flat 2-D dot (no height cue/pseudo-3D
+-- dimming - there's nothing populating it yet to verify that against).
+
+local RADAR_CENTER = vmath.vector3(1760, 150, 0)
+local RADAR_RADIUS = 110 -- px, half of radar_panel's own 220x220 size in main/flight_hud.gui
+local DOT_POOL_SIZE = 16
+local DOT_SIZE = vmath.vector3(6, 6, 0)
+local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
 
 function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
+	self.jump_preset_node = gui.get_node("jump_preset")
+	self.scrip_node = gui.get_node("scrip_value")
+	self.water_node = gui.get_node("water_value")
+	self.iron_node = gui.get_node("iron_value")
+	self.hydrogen_node = gui.get_node("hydrogen_value")
+	self.radar_range_node = gui.get_node("radar_range")
+	self.radar_range_m = nil
+
+	-- Pool created once, just repositioned/shown-or-hidden per "contacts"
+	-- message (same pooling reasoning as the reference project's own
+	-- dot_pool - avoids create/destroy churn every frame).
+	self.dot_pool = {}
+	for _ = 1, DOT_POOL_SIZE do
+		local node = gui.new_box_node(RADAR_CENTER, DOT_SIZE)
+		gui.set_pivot(node, gui.PIVOT_CENTER)
+		gui.set_color(node, DOT_COLOR)
+		gui.set_enabled(node, false)
+		table.insert(self.dot_pool, node)
+	end
+
 	msg.post("#gui", "disable")
+end
+
+-- Projects a contact's world-space X/Z offset from the player onto the
+-- flat radar - world-fixed (not rotating with the ship's own heading,
+-- same convention the reference project's own project() uses). Contacts
+-- are only ever sent within `range` in the first place (player_ship.script
+-- filters that), so the edge-clamp below is just a safety margin against
+-- float error, not a real "friendly past range" case like the reference
+-- has (no faction-based always-shown exception here).
+local function project(dx, dz, range)
+	local px, py = dx * (RADAR_RADIUS / range), -dz * (RADAR_RADIUS / range)
+	local len = math.sqrt(px * px + py * py)
+	if len > RADAR_RADIUS then
+		px, py = px / len * RADAR_RADIUS, py / len * RADAR_RADIUS
+	end
+	return px, py
+end
+
+local function refresh_radar(self, message)
+	local range = message.range or 1
+	if range ~= self.radar_range_m then
+		self.radar_range_m = range
+		gui.set_text(self.radar_range_node, string.format("%.0f m", range))
+	end
+	local own_pos = message.own_pos
+	local contacts = message.contacts or {}
+	for i, node in ipairs(self.dot_pool) do
+		local c = contacts[i]
+		if not c then
+			gui.set_enabled(node, false)
+		else
+			local px, py = project(c.pos.x - own_pos.x, c.pos.z - own_pos.z, range)
+			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
+			gui.set_enabled(node, true)
+		end
+	end
 end
 
 function on_message(self, message_id, message)
@@ -32,5 +120,22 @@ function on_message(self, message_id, message)
 		if message.text then
 			gui.set_text(self.dock_prompt_node, message.text)
 		end
+	elseif message_id == hash("jump_preset") then
+		-- Persistent readout of main/player_ship.script's own
+		-- self.jump_preset_system (set by main/flight_map.gui_script
+		-- selecting a reachable system) - stays visible after the map
+		-- closes, same as the source project's own hud.gui_script
+		-- "jump_preset_changed" indicator.
+		gui.set_enabled(self.jump_preset_node, message.text ~= nil)
+		if message.text then
+			gui.set_text(self.jump_preset_node, message.text)
+		end
+	elseif message_id == hash("currency") then
+		gui.set_text(self.scrip_node, "Scrip: " .. message.scrip)
+		gui.set_text(self.water_node, "Water: " .. message.water)
+		gui.set_text(self.iron_node, "Iron: " .. message.iron)
+		gui.set_text(self.hydrogen_node, "Hydrogen: " .. message.hydrogen)
+	elseif message_id == hash("contacts") then
+		refresh_radar(self, message)
 	end
 end

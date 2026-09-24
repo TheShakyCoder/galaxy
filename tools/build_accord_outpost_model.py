@@ -49,15 +49,17 @@ def write_glb(path, gltf_dict, binary_data):
 		f.write(bin_chunk)
 
 
-# ---- Dimensions (meters) - overall length ~1000 (per direct instruction),
-# a plain rectangular footprint (no taper/hull shaping - a "basic shape",
-# not a ship). ----
-LENGTH = 1000.0        # Z extent (the stand's own length - the widest part)
-STAND_WIDTH = 300.0     # X extent of the stand
-STAND_HEIGHT = 60.0     # Y extent of the stand (0 to STAND_HEIGHT)
-BODY_LENGTH = 960.0     # Z extent of the glass-tinted main volume, slightly inset from the stand's own ends
-BODY_WIDTH = 260.0      # X extent of the main volume, slightly inset from the stand's own sides
-BODY_HEIGHT = 300.0     # Y extent of the main volume, sits on top of the stand
+# ---- Dimensions (meters) - overall length 750 (per direct instruction:
+# "scale the outpost down to a length of 750" - a uniform 0.75x of the
+# original ~1000-unit size, every dimension below scaled together, not
+# just LENGTH on its own), a plain rectangular footprint (no taper/hull
+# shaping - a "basic shape", not a ship). ----
+LENGTH = 750.0         # Z extent (the stand's own length - the widest part)
+STAND_WIDTH = 225.0     # X extent of the stand
+STAND_HEIGHT = 45.0     # Y extent of the stand (0 to STAND_HEIGHT)
+BODY_LENGTH = 720.0     # Z extent of the glass-tinted main volume, slightly inset from the stand's own ends
+BODY_WIDTH = 195.0      # X extent of the main volume, slightly inset from the stand's own sides
+BODY_HEIGHT = 225.0     # Y extent of the main volume, sits on top of the stand
 
 HALF_L = LENGTH / 2.0
 HALF_SW = STAND_WIDTH / 2.0

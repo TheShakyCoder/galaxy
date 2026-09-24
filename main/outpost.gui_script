@@ -1875,10 +1875,11 @@ local PREVIEW_CAMERA = {
 	-- Patrol Interceptor's own ~6.3-unit hull than any of the capital/escort-
 	-- scale ones above.
 	["/assets/models/patrol_assault/piranha.model"] = { eye_offset = vmath.vector3(0, 5.0, 13.33), far = 71.28 },
-	-- osprey.glb (liche.glb, §0-flagged, see ships.lua's escort_tactical entry)
-	-- has a ~123-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/escort_tactical/osprey.model"] = { eye_offset = vmath.vector3(0, 87.14, 232.37), far = 420.94 },
+	-- osprey.glb (tools/build_osprey_model.py, ORIGINAL hand-authored hull,
+	-- replacing the former liche.glb SuperShips/§0-flagged asset - see
+	-- ships.lua's escort_tactical entry) has a ~12.15-unit bounding radius,
+	-- sized to roughly match its own sibling Lionfish's ~11.73.
+	["/assets/models/escort_tactical/osprey.model"] = { eye_offset = vmath.vector3(0.00, 8.62, 23.00), far = 86.71 },
 	-- harpy_eagle.glb (nidhogg.glb, §0-flagged, see ships.lua's frigate_tactical
 	-- entry) has a ~339-unit world-space bounding radius, no node-level scale
 	-- transform on this asset.
@@ -2392,6 +2393,24 @@ function on_input(self, action_id, action)
 			-- another gui_script, since flight needs go.*/camera.* access a
 			-- gui_script doesn't have (same limitation the reference project's
 			-- own hud.gui_script header comment notes).
+			--
+			-- Launch is clickable from ANY tab (checked above the
+			-- active_page-specific branches below), including Ships with its
+			-- live For-Sale grid/detail-modal previews - real bug found via
+			-- direct instruction ("when I purchase and launch... I also see
+			-- the grid of ships"): unlike an ordinary tab switch (set_page(),
+			-- which always ends with refresh_forsale_preview()), Launch never
+			-- went through set_page() at all, so render/custom.render_script's
+			-- own "set_ship_preview"/"set_ship_preview_grid" state (a
+			-- persistent overlay, entirely separate from this gui's own
+			-- enable/disable) just kept rendering through flight. Cleared
+			-- directly here rather than via refresh_forsale_preview(self) -
+			-- that function repopulates instead of clearing whenever
+			-- self.active_page is still "ships" (true here), the exact case
+			-- that needs to become empty.
+			self.ship_detail = nil
+			msg.post("@render:", "set_ship_preview", { visible = false })
+			msg.post("@render:", "set_ship_preview_grid", { items = {}, reset = true })
 			self.active = false
 			msg.post("#gui", "disable")
 			msg.post("player_ship#script", "start_flight")

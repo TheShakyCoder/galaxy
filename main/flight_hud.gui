@@ -95,3 +95,205 @@ nodes {
   parent: ""
   layer: ""
 }
+nodes {
+  type: TYPE_TEXT
+  id: "jump_preset"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 1030.0 z: 0.0 w: 1.0 }
+  size { x: 700.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.4 y: 0.9 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "radar_panel"
+  position { x: 1760.0 y: 150.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 220.0 z: 0.0 w: 1.0 }
+  color { x: 0.05 y: 0.1 z: 0.07 w: 0.55 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "radar_caption"
+  text: "RADAR"
+  font: "default_font"
+  position { x: 1760.0 y: 270.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.55 y: 0.6 z: 0.65 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "radar_range"
+  text: "0 m"
+  font: "default_font"
+  position { x: 1760.0 y: 33.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 24.0 z: 0.0 w: 1.0 }
+  color { x: 0.4 y: 0.55 z: 0.45 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "radar_center"
+  position { x: 1760.0 y: 150.0 z: 0.0 w: 1.0 }
+  size { x: 8.0 y: 8.0 z: 0.0 w: 1.0 }
+  color { x: 0.4 y: 0.95 z: 0.5 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "currency_panel"
+  position { x: 160.0 y: 970.0 z: 0.0 w: 1.0 }
+  size { x: 280.0 y: 150.0 z: 0.0 w: 1.0 }
+  color { x: 0.05 y: 0.06 z: 0.1 w: 0.55 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "scrip_value"
+  text: "Scrip: 0"
+  font: "default_font"
+  position { x: 160.0 y: 1020.0 z: 0.0 w: 1.0 }
+  size { x: 260.0 y: 28.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 0.85 z: 0.3 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "water_value"
+  text: "Water: 0"
+  font: "default_font"
+  position { x: 160.0 y: 990.0 z: 0.0 w: 1.0 }
+  size { x: 260.0 y: 28.0 z: 0.0 w: 1.0 }
+  color { x: 0.5 y: 0.8 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "iron_value"
+  text: "Iron: 0"
+  font: "default_font"
+  position { x: 160.0 y: 960.0 z: 0.0 w: 1.0 }
+  size { x: 260.0 y: 28.0 z: 0.0 w: 1.0 }
+  color { x: 0.75 y: 0.65 z: 0.6 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "hydrogen_value"
+  text: "Hydrogen: 0"
+  font: "default_font"
+  position { x: 160.0 y: 930.0 z: 0.0 w: 1.0 }
+  size { x: 260.0 y: 28.0 z: 0.0 w: 1.0 }
+  color { x: 0.55 y: 0.9 z: 0.75 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}

@@ -25,9 +25,10 @@ M.SHIPS = {
 		class = "Patrol",
 		-- Full stat block (plan.md §2.1.1's Hull/Engine/FTL/Computer Systems
 		-- baseline), populated directly on this ship rather than left as pure
-		-- inheritance. `hull_points` is a deliberate override (600 vs. the
-		-- class baseline's 650) - every other field below currently matches
-		-- the baseline as-is, pending real per-ship tuning.
+		-- inheritance. Three deliberate overrides vs. the class baseline: `hull_points`
+		-- (600 vs. 650), `ftl_range_ly` (4.5 vs. 5.5 LY), and
+		-- `ftl_cost_hydrogen_per_ly` (20 vs. 30 Hydrogen/LY) - every other field
+		-- below currently matches the baseline as-is, pending real per-ship tuning.
 		data = {
 			-- Hull Systems
 			hull_points = 600,
@@ -47,9 +48,9 @@ M.SHIPS = {
 			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
+			ftl_range_ly = 4.5, -- override vs. class baseline's 5.5 LY, per direct instruction
 			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_cost_hydrogen_per_ly = 20, -- override vs. class baseline's 30, per direct instruction - Hydrogen fuel (§2.6)
 
 			-- Computer Systems
 			power = 175,
@@ -499,6 +500,17 @@ M.SHIPS = {
 		-- plan.md §4 pending real Escort-tier fitting design.
 		components = {},
 		slot_positions = {},
+		-- Third-person flight camera (per direct instruction: "escort class
+		-- ships the camera needs to be zoomed out slightly more") - both
+		-- faction skins' own hulls (barracuda.glb ~114-unit and falcon.glb
+		-- ~128-unit world-space bounding radius, outpost.gui_script's own
+		-- PREVIEW_CAMERA table) are ~14-15x patrol_interceptor's own
+		-- ~8.32-unit hull, so the fallback camera (tuned for that much
+		-- smaller ship) sat almost inside this one. Distance/height scaled
+		-- by the SAME ratio patrol_interceptor's own tuned entry already
+		-- established (distance = radius*2.64, height = radius*0.54),
+		-- applied to this pair's ~121-unit average radius.
+		flight_camera = { distance = 320, height = 65 },
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2): real-world animal species
 			-- sized to roughly match the ship's class - fish for The Accord,
@@ -602,6 +614,16 @@ M.SHIPS = {
 		-- number exists yet, so left empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
+		-- Third-person flight camera (per direct instruction: "escort class
+		-- ships the camera needs to be zoomed out slightly more") - both
+		-- faction skins' own hulls (remora.glb ~119-unit and egret.glb
+		-- ~146-unit world-space bounding radius, outpost.gui_script's own
+		-- PREVIEW_CAMERA table) dwarf patrol_interceptor's own ~8.32-unit
+		-- hull. Distance/height scaled by the same ratio patrol_interceptor's
+		-- own tuned entry already established (distance = radius*2.64,
+		-- height = radius*0.54), applied to this pair's ~132.5-unit average
+		-- radius.
+		flight_camera = { distance = 350, height = 72 },
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2's Support row): Accord = Remora,
 			-- Swarm = Egret - both proposed, same confirm-or-correct pattern as
@@ -680,33 +702,41 @@ M.SHIPS = {
 		-- empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
+		-- Third-person flight camera (per direct instruction: "escort class
+		-- ships the camera needs to be zoomed out slightly more"). Both
+		-- faction skins are ORIGINAL hand-authored hulls of similar scale now
+		-- (lionfish.glb ~11.73-unit, osprey.glb ~12.15-unit bounding radius,
+		-- per direct instruction: "make [Osprey] roughly the same size as the
+		-- lionfish" - replacing the old liche.glb asset's own wildly
+		-- mismatched ~123-unit scale), so a single shared value fits both
+		-- comfortably. Same distance = radius*2.64 / height = radius*0.54
+		-- ratio patrol_interceptor's own tuned entry already established,
+		-- applied to the pair's ~11.94-unit average radius.
+		flight_camera = { distance = 32, height = 6.5 },
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2's Tactical row): Accord =
 			-- Lionfish, Swarm = Osprey - both proposed, same confirm-or-correct
 			-- pattern as every other name in this file.
 			--
-			-- Swarm's `model`: sourced from ~/Defold/SuperShips's
-			-- `assets/models/bsgo_ships_improved/hd/liche/liche.glb` (copied to
-			-- `assets/models/escort_tactical/osprey.glb`, real binary GLB,
-			-- baseColorFactor materials only, no textures). BSGO-identifying
-			-- internal metadata stripped on copy (node/mesh "Liche" ->
-			-- "osprey_hull", "cylon_*" materials -> "osprey_*", extras removed).
-			-- FLAGGED, same "Cylon" pattern as Pelican's hel.glb: source asset's
-			-- own manifest tags it `"faction": "Cylon"` - the explicitly-named
-			-- banned term in §0 - referenced from playbsgo.com/fleet.html,
-			-- "reference-guided interpretation" of a canon Cylon ship (vertically
-			-- separated upper/lower forward blades, bone-white/metallic look,
-			-- same bio-mechanical Cylon design language as Pelican's source).
-			-- Used anyway per direct instruction after being shown the render -
-			-- not a §0-compliant asset, kept here as an explicit, acknowledged
-			-- exception rather than a silent one.
-			-- Accord's `model`: an ORIGINAL hand-authored hull (tools/build_lionfish_model.py),
-			-- not sourced from anywhere - the roster's last remaining `<TBD>` model, filled in
-			-- without the BSG-derived-asset tradeoff every other exception in this file carries.
-			-- Leans into the ship's own namesake rather than copying any existing craft: a
-			-- tapered body, a raised head crest, a fan of dorsal spines (tallest just aft of the
-			-- crest, tapering toward the tail), two swept pectoral fin panels near the bow, and a
-			-- small tail fin - the spines/fins double as a sensor-array silhouette, fitting the
+			-- Both `model`s are ORIGINAL hand-authored hulls, not sourced from
+			-- anywhere - Osprey's own tools/build_osprey_model.py replaces the
+			-- former liche.glb (a SuperShips-sourced, BSG-flagged "Cylon" asset,
+			-- same exception class as Pelican's former hel.glb), per direct
+			-- instruction, once shown the alternative. Leans into the ship's own
+			-- real-world namesake: a pale head patch with a dark eye-stripe (an
+			-- osprey's single most recognizable field mark), long wings with a
+			-- visible CROOK at the wrist (two swept segments per side, distinct
+			-- from Golden Eagle's straight dihedral wing), a small single-notch
+			-- tail fan, and two prominent hooked talons - a real osprey hunts
+			-- fish almost exclusively with them. ~12.15-unit bounding radius,
+			-- sized to roughly match Lionfish's own ~11.73 (per direct
+			-- instruction).
+			-- Accord's `model` (tools/build_lionfish_model.py): leans into the
+			-- ship's own namesake rather than copying any existing craft: a
+			-- tapered body, a raised head crest, a fan of dorsal spines (tallest
+			-- just aft of the crest, tapering toward the tail), two swept
+			-- pectoral fin panels near the bow, and a small tail fin - the
+			-- spines/fins double as a sensor-array silhouette, fitting the
 			-- Tactical row this ship occupies. ~11.7-unit bounding radius.
 			accord = { name = "Lionfish", model = "/assets/models/escort_tactical/lionfish.model", weapon_gui = "<TBD>" },
 			swarm  = { name = "Osprey", model = "/assets/models/escort_tactical/osprey.model", weapon_gui = "<TBD>" },
@@ -754,6 +784,16 @@ M.SHIPS = {
 		-- number exists yet, so left empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
+		-- Third-person flight camera (per direct instruction: "escort class
+		-- ships the camera needs to be zoomed out slightly more") - both
+		-- faction skins' own hulls (moray.glb ~99-unit and goshawk.glb
+		-- ~146-unit world-space bounding radius, outpost.gui_script's own
+		-- PREVIEW_CAMERA table) dwarf patrol_interceptor's own ~8.32-unit
+		-- hull. Distance/height scaled by the same ratio patrol_interceptor's
+		-- own tuned entry already established (distance = radius*2.64,
+		-- height = radius*0.54), applied to this pair's ~122.5-unit average
+		-- radius.
+		flight_camera = { distance = 324, height = 66 },
 		faction_skins = {
 			-- Naming convention (plan.md §2.1.2's Assault row): Accord = Moray,
 			-- Swarm = Goshawk - both proposed, same confirm-or-correct pattern as

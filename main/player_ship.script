@@ -50,11 +50,34 @@ local CAMERA_FORWARD = vmath.vector3(0, 0, -1)
 local UP = vmath.vector3(0, 1, 0)
 local YAW_180 = vmath.quat_axis_angle(UP, math.pi)
 
--- Which ship this minimal slice flies (plan.md §4 - not yet tied to the
--- player's actual session.get_ship_id(), since there's no ship-selection
--- flow into flight yet, just the one hardcoded model main/main.collection's
--- "player_ship" embedded instance uses).
-local PLAYER_SHIP_ID = "patrol_interceptor"
+-- Which ship this slice flies - main/session.lua's own session.get_ship_id()
+-- (whatever the player last selected at the outpost), falling back to the
+-- same starting ship session.lua itself defaults to (M.STARTING_SHIP_ID,
+-- not exported, so mirrored here as a literal) for the case flight somehow
+-- starts before a ship is ever selected. Determines BOTH the stat block
+-- (flight_stats()/camera_distance_height() below) AND which of
+-- main/main.collection's 24 pre-embedded "model_<ship_id>_<faction>"
+-- components (one per ships.lua chassis x faction skin - see
+-- model_component_id()/start_flight()'s own enable/disable loop below) is
+-- shown - previously always the Patrol Interceptor/Sardine model
+-- regardless of what was actually purchased/selected, a real bug (per
+-- direct instruction: "no matter what ship I purchase and select... I only
+-- see the Sardine").
+local DEFAULT_SHIP_ID = "patrol_interceptor"
+
+-- main/main.collection's "player_ship" instance embeds one model component
+-- per (ship_id, faction) combination in ships.lua, all named this way -
+-- exactly one is enabled at a time (start_flight() below), the other 23
+-- disabled, rather than trying to swap a single component's underlying
+-- mesh at runtime (Defold's Model component doesn't expose that as a
+-- settable resource property the way e.g. a Sprite's image can be
+-- swapped) - same "pre-instantiate every possibility, toggle visibility"
+-- shape main/outpost.gui_script's own ship-preview rigs already use for
+-- the exact same reason, just via component enable/disable here instead
+-- of camera targeting.
+local function model_component_id(ship_id, faction)
+	return "model_" .. ship_id .. "_" .. faction
+end
 
 -- Must match main/main.collection's own accord_outpost/swarm_outpost
 -- embedded instance positions exactly - same "hardcoded mirror, kept in
@@ -111,21 +134,25 @@ end
 -- (main/data/ships.lua's `data` table, plan.md §2.1.1's Engine Systems -
 -- previously flat placeholders here, per direct instruction: the Patrol
 -- Interceptor "should do more than 20 m/s"). DEFAULT_* below only cover
--- the case PLAYER_SHIP_ID ever points at a ship with no `data` block yet -
--- same fallback shape as camera_distance_height()'s own DEFAULT pair.
+-- the case the selected ship_id ever points at a ship with no `data` block
+-- yet - same fallback shape as camera_distance_height()'s own DEFAULT pair.
 local DEFAULT_TURN_SPEED_DEG = 60
 local DEFAULT_MAX_SPEED = 20 -- m/sec, unboosted
 local DEFAULT_BOOST_SPEED = 40 -- m/sec, boosted
 local DEFAULT_ACCELERATION = 12 -- m/sec^2, how fast throttle ramps the actual speed
+local DEFAULT_VISUAL_RANGE = 500 -- m, radar range - see update()'s "contacts" block below
+local DEFAULT_FTL_RANGE = 4.5 -- ly, matches patrol_interceptor's own ftl_range_ly - converted to star_systems.lua's own map-unit scale via M.ly_to_map_units() at each use site below (toggle_map()/on_message's "set_jump_preset" handler), not compared directly
 
-local function flight_stats()
-	local ship = ships.SHIPS[PLAYER_SHIP_ID]
+local function flight_stats(ship_id)
+	local ship = ships.SHIPS[ship_id]
 	local d = ship and ship.data
 	return
 		(d and d.turning_speed_deg_per_sec) or DEFAULT_TURN_SPEED_DEG,
 		(d and d.speed_m_per_sec) or DEFAULT_MAX_SPEED,
 		(d and d.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED,
-		(d and d.acceleration_m_per_sec2) or DEFAULT_ACCELERATION
+		(d and d.acceleration_m_per_sec2) or DEFAULT_ACCELERATION,
+		(d and d.visual_range_m) or DEFAULT_VISUAL_RANGE,
+		(d and d.ftl_range_ly) or DEFAULT_FTL_RANGE
 end
 
 -- Chase camera - ported subset (chase mode only; the reference project's
@@ -149,8 +176,8 @@ local CAMERA_DEFAULT_DISTANCE = 12
 local CAMERA_DEFAULT_HEIGHT = 4
 local CAMERA_FOLLOW_SPEED = 3.0
 
-local function camera_distance_height()
-	local ship = ships.SHIPS[PLAYER_SHIP_ID]
+local function camera_distance_height(ship_id)
+	local ship = ships.SHIPS[ship_id]
 	local fc = ship and ship.flight_camera
 	return (fc and fc.distance) or CAMERA_DEFAULT_DISTANCE, (fc and fc.height) or CAMERA_DEFAULT_HEIGHT
 end
@@ -177,6 +204,11 @@ function init(self)
 	self.near_outpost = false
 	self.docking = false
 	self.dock_time_left = 0
+	self.map_open = false
+	self.jump_preset_system = nil
+	self.current_system_id = nil
+	self.ship_id = nil -- resolved from session.get_ship_id() in start_flight() - not known yet here (faction/ship selection hasn't happened this early)
+	self.model_component_id = nil
 	msg.post("flight_camera#camera", "disable")
 end
 
@@ -189,6 +221,28 @@ local function start_flight(self)
 	self.near_outpost = false
 	self.docking = false
 	self.dock_time_left = 0
+	self.map_open = false
+	-- self.jump_preset_system is deliberately NOT reset here - same
+	-- "survives everything except actually being consumed/reselected"
+	-- persistence the source project's own version describes (a no-op in
+	-- practice today either way, since there's only the one system to
+	-- ever be in).
+
+	-- Which of main/main.collection's 24 pre-embedded model components to
+	-- show (per direct instruction: the ship actually flown must match
+	-- whatever's purchased/selected, not always the Patrol Interceptor) -
+	-- see model_component_id()'s own comment above for why toggling
+	-- enabled state on 24 pre-built components, not a runtime mesh swap.
+	local faction = session.get_faction()
+	self.ship_id = session.get_ship_id() or DEFAULT_SHIP_ID
+	self.model_component_id = model_component_id(self.ship_id, faction)
+	for ship_id, _ in pairs(ships.SHIPS) do
+		for _, f in ipairs({ "accord", "swarm" }) do
+			local id = model_component_id(ship_id, f)
+			msg.post("#" .. id, (id == self.model_component_id) and "enable" or "disable")
+		end
+	end
+
 	-- `light` is a world-space POINT LIGHT POSITION on model.material (see
 	-- main/ship_preview.script's own header comment on this exact constant),
 	-- not a color - model.material's
@@ -196,9 +250,11 @@ local function start_flight(self)
 	-- the ship spawns, which rendered near-black. A large fixed offset acts as a
 	-- crude stand-in directional light for this minimal slice - real lighting
 	-- design (sun direction, ambient, etc.) is plan.md §4 territory, not solved here.
-	go.set("#model", "light", vmath.vector4(4000, 6000, 4000, 1.0))
+	-- Set on the CURRENTLY VISIBLE model component specifically, not a
+	-- fixed "#model" (only ever true back when there was exactly one).
+	go.set("#" .. self.model_component_id, "light", vmath.vector4(4000, 6000, 4000, 1.0))
 
-	local outpost_pos = FACTION_OUTPOST[session.get_faction()]
+	local outpost_pos = FACTION_OUTPOST[faction]
 	local pos, rot = random_spawn(outpost_pos)
 	go.set_position(pos)
 	go.set_rotation(rot)
@@ -210,8 +266,10 @@ local function start_flight(self)
 	-- convention main/outpost.gui_script's refresh_map() already uses -
 	-- flight mode isn't tied to main/data/star_systems.lua's actual
 	-- per-system data yet (§4), so this is the only sensible choice.
-	local system_id = star_systems.HOME_SYSTEM[session.get_faction()]
-	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
+	-- Stored on self (not just a local) so toggle_map()/on_input, called
+	-- at any later point during flight, can still reach it.
+	self.current_system_id = star_systems.HOME_SYSTEM[faction]
+	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
 end
 
 -- Mirror image of start_flight() - returns to the outpost menu the same
@@ -223,20 +281,67 @@ local function complete_dock(self)
 	self.flying = false
 	self.docking = false
 	self.dock_time_left = 0
+	if self.map_open then
+		self.map_open = false
+		msg.post("flight_map#gui", "toggle", { open = false })
+	end
 	msg.post("flight_camera#camera", "disable")
 	msg.post("flight_hud#gui", "hide_flight_hud")
 	msg.post("outpost#gui", "show_outpost")
 end
 
+-- Shared by on_input's "toggle_map" key (N) handler below - flight_map.gui_script
+-- owns showing/hiding itself and acquiring its own input focus while open
+-- (see that file), this just flips the shared flag and tells it to react.
+-- Ported technique from the reference project's own ship.script
+-- toggle_map() (§0).
+local function toggle_map(self)
+	self.map_open = not self.map_open
+	local _, _, _, _, _, ftl_range_ly = flight_stats(self.ship_id)
+	msg.post("flight_map#gui", "toggle", {
+		open = self.map_open,
+		current_system_id = self.current_system_id,
+		ftl_range = star_systems.ly_to_map_units(ftl_range_ly), -- flight_map.gui_script/star_systems.in_ftl_range both work in map units, not light-years
+		preset_system_id = self.jump_preset_system, -- lets flight_map.gui_script re-highlight whatever's already armed when reopening, rather than forgetting it visually
+	})
+end
+
+-- Selecting a system on main/flight_map.gui arms it as a preset -
+-- re-validated independently here rather than trusting that gui_script's
+-- own reachability check outright (same "don't just trust the sender"
+-- reasoning the source project's own identically-named handler gives).
 function on_message(self, message_id, message)
 	if message_id == hash("start_flight") then
 		start_flight(self)
+	elseif message_id == hash("set_jump_preset") then
+		local faction = session.get_faction()
+		if star_systems.can_enter(message.system_id, faction) then
+			local _, _, _, _, _, ftl_range_ly = flight_stats(self.ship_id)
+			local dist = self.current_system_id and star_systems.distance(self.current_system_id, message.system_id)
+			if star_systems.in_ftl_range(dist, star_systems.ly_to_map_units(ftl_range_ly)) then
+				self.jump_preset_system = message.system_id
+				local name = star_systems.SYSTEMS[message.system_id].name
+				msg.post("flight_hud#gui", "jump_preset", { text = "PRESET: " .. name .. " [J]" })
+			end
+		end
 	end
 end
 
 function on_input(self, action_id, action)
 	if not self.flying then
 		return false
+	end
+	if action_id == hash("toggle_map") and action.pressed then
+		-- Checked first, and unconditionally (even while the map's
+		-- already open - this is also how it closes again).
+		toggle_map(self)
+		return true
+	end
+	if self.map_open then
+		-- swallow everything else (flight keys, dock, throttle, camera,
+		-- ...) while the map's open, rather than letting any of it fall
+		-- through to the normal handling below.
+		return true
 	end
 	if action_id == hash("pitch_up") then
 		self.input.pitch_up = not action.released
@@ -276,7 +381,7 @@ function update(self, dt)
 		return
 	end
 
-	local turn_speed_deg, max_speed, boost_speed, acceleration = flight_stats()
+	local turn_speed_deg, max_speed, boost_speed, acceleration, visual_range = flight_stats(self.ship_id)
 
 	local pitch_delta = (self.input.pitch_up and 1 or 0) - (self.input.pitch_down and 1 or 0)
 	local yaw_delta = (self.input.yaw_left and 1 or 0) - (self.input.yaw_right and 1 or 0)
@@ -296,28 +401,33 @@ function update(self, dt)
 	-- set to) - this ramp is how fast holding +/- moves that lever, same
 	-- acceleration-derived rate as before (e.g. 10 m/sec^2 on a 52.5
 	-- m/sec ship sweeps the lever 0 -> full in ~5.25 sec). Q/E (on_input)
-	-- can still snap it straight to 0/1.0. Boost (main/data/ships.lua's
-	-- boost_speed_m_per_sec) raises what "full throttle" MEANS rather than
-	-- multiplying whatever the throttle happens to be - matches how the
-	-- reference stat block treats it as its own absolute top speed, not a
-	-- flat multiplier.
+	-- can still snap it straight to 0/1.0.
 	local throttle_delta = (self.input.throttle_up and 1 or 0) - (self.input.throttle_down and 1 or 0)
 	if throttle_delta ~= 0 then
 		self.throttle = self.throttle + (acceleration / max_speed) * throttle_delta * dt
 		self.throttle = math.max(0.0, math.min(1.0, self.throttle))
 	end
 
-	-- self.speed is the ACTUAL current speed - per direct instruction, it
-	-- no longer jumps straight to whatever target_speed the controls
-	-- above imply (that used to happen instantly on every Q/E press and
-	-- every boost toggle, even though the throttle-lever ramp above only
-	-- ever smoothed +/-). It now always chases target_speed, accelerating
-	-- or decelerating at the ship's own acceleration_m_per_sec2 (the same
-	-- stat the lever ramp above uses), regardless of how abruptly the
-	-- target itself moves - a plain move-toward-target bounded by
-	-- acceleration*dt each frame, not an exponential lerp (acceleration
-	-- is a constant rate, not a "close the gap by a fraction" one).
-	local target_speed = self.throttle * (self.input.boost and boost_speed or max_speed)
+	-- self.speed is the ACTUAL current speed - it always chases
+	-- target_speed, accelerating/decelerating at the ship's own
+	-- acceleration_m_per_sec2 (the same stat the lever ramp above uses),
+	-- regardless of how abruptly the target itself moves - a plain
+	-- move-toward-target bounded by acceleration*dt each frame, not an
+	-- exponential lerp (acceleration is a constant rate, not a "close the
+	-- gap by a fraction" one).
+	--
+	-- Boost (per direct instruction: "no matter what speed the ship is
+	-- travelling at... boost [pushes] the ship to the boost maximum
+	-- speed... [releasing] the speed should revert [to] what it was
+	-- previous[ly]") is the ship's own absolute boost_speed_m_per_sec
+	-- UNSCALED by throttle while held - not self.throttle*boost_speed
+	-- (that earlier version only ever reached the full boost speed at
+	-- full throttle, contradicting "no matter what speed"). Releasing it
+	-- drops target_speed straight back to whatever the throttle lever
+	-- alone commands (self.throttle*max_speed) - "what it was previous" -
+	-- with self.speed easing back down/up to that the same
+	-- acceleration-bounded way as any other target change.
+	local target_speed = self.input.boost and boost_speed or (self.throttle * max_speed)
 	local max_speed_delta = acceleration * dt
 	local speed_delta = target_speed - self.speed
 	if speed_delta > max_speed_delta then
@@ -332,6 +442,16 @@ function update(self, dt)
 	local pos = go.get_position() + forward * self.speed * dt
 	go.set_position(pos)
 	msg.post("flight_hud#gui", "set_speed", { speed = self.speed })
+
+	-- Currency (per direct instruction: "show the amount of currency for
+	-- each resource that the player has") - same four main/session.lua
+	-- getters main/outpost.gui_script's own refresh_currency() reads.
+	msg.post("flight_hud#gui", "currency", {
+		scrip = session.get_scrip(),
+		water = session.get_water(),
+		iron = session.get_iron(),
+		hydrogen = session.get_hydrogen(),
+	})
 
 	-- Docking (per direct instruction: only within DOCK_RANGE of the
 	-- player's own faction's outpost) - K (on_input's "dock" case above)
@@ -363,6 +483,19 @@ function update(self, dt)
 	end
 	msg.post("flight_hud#gui", "dock_prompt", { text = dock_text })
 
+	-- Radar (per direct instruction: "each ship has its own visible
+	-- range" / "a gooey that shows a radar indicating all ships within
+	-- visible range") - visual_range above, NOT the longer
+	-- sensor_range_m/"Dradis Range" main/data/ships.lua's own comment
+	-- already distinguishes it from. `contacts` is always empty right now
+	-- - there are no other ships anywhere in this project yet (no NPCs,
+	-- no multiplayer) - but the radar display itself
+	-- (main/flight_hud.gui's dot pool) and this message contract are both
+	-- real and ready for whichever of those lands first, same
+	-- "build the real system even though nothing populates it yet"
+	-- footing main/data/asteroids.lua's own M.OVERRIDES already has.
+	msg.post("flight_hud#gui", "contacts", { own_pos = pos, range = visual_range, contacts = {} })
+
 	-- Chase camera - see this file's header comment for why position is
 	-- derived from camera_rot rather than lerped independently, and for why
 	-- camera_target_rot needs the extra YAW_180 (this hull's nose is at
@@ -375,7 +508,7 @@ function update(self, dt)
 		local t = 1.0 - math.exp(-CAMERA_FOLLOW_SPEED * dt)
 		self.camera_rot = vmath.slerp(t, self.camera_rot, camera_target_rot)
 	end
-	local camera_distance, camera_height = camera_distance_height()
+	local camera_distance, camera_height = camera_distance_height(self.ship_id)
 	local camera_pos = pos - vmath.rotate(self.camera_rot, CAMERA_FORWARD) * camera_distance
 		+ vmath.rotate(self.camera_rot, UP) * camera_height
 	go.set_position(camera_pos, "flight_camera")

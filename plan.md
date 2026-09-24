@@ -213,8 +213,9 @@ class, per direct instruction.
   project deliberately unified onto one shared roster too.
 - **Patrol 1**'s full stat block (§2.1.1's Hull/Engine/FTL/Computer Systems) is now
   populated directly on its own entry (`data`), rather than left as pure inheritance
-  from `ship_classes.lua` — with one deliberate override: **Hull Points 600** (vs.
-  the class baseline's 650). Every other field currently matches the baseline as-is,
+  from `ship_classes.lua` — with three deliberate overrides: **Hull Points 600** (vs.
+  the class baseline's 650), **FTL Range 4.5 LY** (vs. 5.5 LY), and **FTL Cost 20
+  Hydrogen/LY** (vs. 30). Every other field currently matches the baseline as-is,
   pending real per-ship tuning. This is the intended pattern going forward: a ship
   carries its own full stat data, and only fields that need to differ from its
   class's baseline are actually changed.

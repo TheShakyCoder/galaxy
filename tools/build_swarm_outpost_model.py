@@ -52,12 +52,14 @@ def write_glb(path, gltf_dict, binary_data):
 		f.write(bin_chunk)
 
 
-# ---- Dimensions (meters) - overall length ~1000 (per direct instruction,
-# "similar size" to the Accord outpost's own 1000-unit length). ----
-LENGTH = 1000.0           # Z extent, 0 to LENGTH
-BASE_LENGTH = 60.0        # Z extent of the flared end band (0 to BASE_LENGTH)
-BASE_RADIUS = 190.0       # slightly wider than the main body, a flared foot
-BODY_RADIUS = 160.0       # main cylinder radius
+# ---- Dimensions (meters) - overall length 750 (per direct instruction:
+# "scale the outpost down to a length of 750" - a uniform 0.75x of the
+# original ~1000-unit size, matching the Accord outpost's own equally-
+# scaled-down length, every dimension below scaled together). ----
+LENGTH = 750.0            # Z extent, 0 to LENGTH
+BASE_LENGTH = 45.0        # Z extent of the flared end band (0 to BASE_LENGTH)
+BASE_RADIUS = 142.5       # slightly wider than the main body, a flared foot
+BODY_RADIUS = 120.0       # main cylinder radius
 SIDES = 16                # perimeter segment count - enough to read as a cylinder, not a faceted polygon
 AXIS_Y = BASE_RADIUS      # constant centerline height - the wider band's own radius, so the widest band's lowest point touches Y=0
 
