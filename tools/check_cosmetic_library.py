@@ -137,7 +137,7 @@ def main():
                 files.extend(ROOT/p.lstrip('/') for p in (row['glb'],row['texture'],row['model']))
             for file in files:
                 assert file.read_bytes()==(Path(folder)/file.relative_to(ROOT)).read_bytes(),'Rebuild mismatch: '+str(file)
-    report=dict(result='PASS',validation_base_commit=BASE,cosmetics=96,recolors=72,clockwork_models=24,source_fleet_revision='Symmetrical Moray; all other ships unchanged',
+    report=dict(result='PASS',validation_base_commit=BASE,cosmetics=96,recolors=72,clockwork_models=24,source_fleet_revision='Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged',
                 recolor_geometry_exact=True,clockwork_base_geometry_exact=True,unique_textures=96,
                 preview_yaws_per_variant=120,rebuild_verified=args.rebuild,rows=results,
                 not_tested=['Defold runtime rendering/performance','shop/ownership/equip integration','live multiplayer'])

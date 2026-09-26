@@ -46,65 +46,65 @@
       "ship": "Barracuda",
       "result": "PASS",
       "triangles": 9584,
-      "extent_m": 40.0,
+      "extent_m": 64.8,
       "preview_max_ndc": 0.8156,
-      "sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88"
+      "sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689"
     },
     {
       "ship": "Remora",
       "result": "PASS",
       "triangles": 11076,
-      "extent_m": 38.0,
+      "extent_m": 64.0,
       "preview_max_ndc": 0.8168,
-      "sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa"
+      "sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473"
     },
     {
       "ship": "Moray",
       "result": "PASS",
       "triangles": 10164,
-      "extent_m": 42.0,
+      "extent_m": 60.0,
       "preview_max_ndc": 0.8128,
-      "sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01"
+      "sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad"
     },
     {
       "ship": "Lionfish",
       "result": "PASS",
       "triangles": 9692,
-      "extent_m": 38.0,
+      "extent_m": 68.0,
       "preview_max_ndc": 0.8131,
-      "sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4"
+      "sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488"
     },
     {
       "ship": "Marlin",
       "result": "PASS",
       "triangles": 9076,
-      "extent_m": 84.0,
+      "extent_m": 259.2,
       "preview_max_ndc": 0.8117,
-      "sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba"
+      "sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324"
     },
     {
       "ship": "Manta Ray",
       "result": "PASS",
       "triangles": 9156,
-      "extent_m": 82.0,
+      "extent_m": 256.0,
       "preview_max_ndc": 0.8116,
-      "sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c"
+      "sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81"
     },
     {
       "ship": "Tiger Shark",
       "result": "PASS",
       "triangles": 10192,
-      "extent_m": 80.0,
+      "extent_m": 240.0,
       "preview_max_ndc": 0.8069,
-      "sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358"
+      "sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64"
     },
     {
       "ship": "Hammerhead",
       "result": "PASS",
       "triangles": 11280,
-      "extent_m": 78.0,
+      "extent_m": 272.0,
       "preview_max_ndc": 0.8103,
-      "sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86"
+      "sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b"
     },
     {
       "ship": "Hummingbird",
@@ -142,65 +142,65 @@
       "ship": "Falcon",
       "result": "PASS",
       "triangles": 13148,
-      "extent_m": 40.0,
+      "extent_m": 68.0,
       "preview_max_ndc": 0.8126,
-      "sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023"
+      "sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1"
     },
     {
       "ship": "Egret",
       "result": "PASS",
       "triangles": 14036,
-      "extent_m": 40.0,
+      "extent_m": 64.0,
       "preview_max_ndc": 0.8151,
-      "sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3"
+      "sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d"
     },
     {
       "ship": "Goshawk",
       "result": "PASS",
       "triangles": 13840,
-      "extent_m": 42.0,
+      "extent_m": 66.0,
       "preview_max_ndc": 0.815,
-      "sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c"
+      "sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d"
     },
     {
       "ship": "Osprey",
       "result": "PASS",
       "triangles": 13524,
-      "extent_m": 41.0,
+      "extent_m": 68.0,
       "preview_max_ndc": 0.8081,
-      "sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265"
+      "sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c"
     },
     {
       "ship": "Frigatebird",
       "result": "PASS",
       "triangles": 13204,
-      "extent_m": 88.0,
+      "extent_m": 272.0,
       "preview_max_ndc": 0.8106,
-      "sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a"
+      "sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa"
     },
     {
       "ship": "Pelican",
       "result": "PASS",
       "triangles": 15628,
-      "extent_m": 86.0,
+      "extent_m": 256.0,
       "preview_max_ndc": 0.816,
-      "sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff"
+      "sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187"
     },
     {
       "ship": "Golden Eagle",
       "result": "PASS",
       "triangles": 13752,
-      "extent_m": 84.0,
+      "extent_m": 264.0,
       "preview_max_ndc": 0.8146,
-      "sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0"
+      "sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93"
     },
     {
       "ship": "Harpy Eagle",
       "result": "PASS",
       "triangles": 13604,
-      "extent_m": 82.0,
+      "extent_m": 272.0,
       "preview_max_ndc": 0.814,
-      "sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff"
+      "sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a"
     }
   ],
   "flight_max_ndc": {
@@ -208,14 +208,14 @@
     "patrol_support": 0.7568,
     "patrol_assault": 0.7575,
     "patrol_tactical": 0.7556,
-    "escort_interceptor": 0.7802,
-    "escort_support": 0.7777,
-    "escort_assault": 0.774,
-    "escort_tactical": 0.7807,
-    "frigate_interceptor": 0.7915,
-    "frigate_support": 0.7873,
-    "frigate_assault": 0.7906,
-    "frigate_tactical": 0.7902
+    "escort_interceptor": 0.788,
+    "escort_support": 0.7866,
+    "escort_assault": 0.7826,
+    "escort_tactical": 0.7889,
+    "frigate_interceptor": 0.7972,
+    "frigate_support": 0.7959,
+    "frigate_assault": 0.7969,
+    "frigate_tactical": 0.7971
   },
   "not_tested": [
     "Defold runtime",

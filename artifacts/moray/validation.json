@@ -1,13 +1,13 @@
 {
   "result": "PASS",
-  "revision_base": "63d8a53",
+  "revision_base": "fc7279db211d5a0f3415bb4e72fcd6fe899260fd",
   "default_bilateral_symmetry_tolerance_m": 0.0001,
   "straight_hull_rings": true,
-  "extent_m": 42,
+  "extent_m": 60,
   "cosmetics_checked": 4,
   "all_cosmetics_retain_revised_hull": true,
-  "other_ship_resources_unchanged": true,
-  "other_catalog_entries_unchanged": true,
+  "other_ship_shapes_preserved": true,
+  "patrol_resources_unchanged": true,
   "gameplay_unchanged": true,
   "note": "Cosmetic ornament such as the Toybox key remains intentionally asymmetric; every hull is symmetrical."
 }
