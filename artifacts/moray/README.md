@@ -1,12 +1,19 @@
-# Straight, symmetrical Moray
+# Moray symmetry revision
 
-Replaces the bent Moray centerline with a straight, bilaterally symmetrical hull.
-The dorsal fin is a centered, closed ribbon and the jaw trim is mirrored.
-The 42m size is retained in this PR. All four existing Moray skins (Aurora,
-Solar Regatta, Royal Amethyst, Clockwork) are rebuilt with the new hull and
-refitted attachments. The eight optional theme PRs carry this revised shape too.
+Requested follow-up to the theme library: replace the Moray's bent centerline
+with a straight, bilaterally symmetrical eel hull. The centered dorsal ribbon
+is continuous and closed; the jaw trim is explicitly mirrored. All twelve
+Moray cosmetic variants were regenerated from the revised default GLB, retaining
+their texture designs and refitting the existing decorative attachments.
 
-Merge this PR before the separate class-size PR. No other hull changes here.
-Fleet and cosmetic rebuilds, binary checks, symmetry, camera framing and
-preservation of other ships are checked. Actual Moray renders are refreshed.
-Defold runtime and multiplayer remain untested.
+At this checkpoint the base hull remains 42m long; the subsequently requested
+fleet-size revision is a separate change. `validation.json` checks every default
+vertex has a reflected partner to 0.0001m, each body ring is centered, all twelve
+variants retain the new hull, and other ships' resources/catalog entries match
+the preceding commit. Fleet, cosmetics and theme rebuild checks also passed.
+
+The actual exported Moray models were rerendered and visually reviewed in three
+angles for geometry collections and three-quarter views for paint collections.
+`perspective.jpg` compares all thirteen finishes. The top/side contact sheets
+reuse three-quarter images for paint-only collections, matching their galleries.
+Defold runtime and live multiplayer remain untested.

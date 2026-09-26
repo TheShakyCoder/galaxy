@@ -20,9 +20,8 @@ def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
 def preserved_files():
-    result=subprocess.run(['git','-c','safe.directory='+ROOT.as_posix(),'diff','--name-status','--no-renames',BASE],check=True,capture_output=True,text=True)
-    changed=[s for s in result.stdout.splitlines() if not s.startswith('A\t')]
-    assert not changed,'Pre-existing files modified or removed: '+str(changed)
+    from check_moray_revision import preserved_assets
+    preserved_assets()
     checked=0
     for path in (ROOT/'assets/themes').glob('catalog-sprint-[1-4].json'):
         for r in json.loads(path.read_text())['entries']:
@@ -93,12 +92,12 @@ def main():
             files=[catalog_path]
             for r in rows:files.extend(Path(r[k].lstrip('/')) for k in ('glb','texture','model'))
             for f in files:assert (ROOT/f).read_bytes()==(Path(temp)/f).read_bytes(),'Rebuild mismatch: '+str(f)
-    report=dict(result='PASS',sprint=args.sprint,variants=len(rows),collections=sorted(expected),source_hulls_preserved=True,all_preexisting_files_preserved=True,previous_sprint_assets_checked=previous,
+    report=dict(result='PASS',sprint=args.sprint,variants=len(rows),collections=sorted(expected),source_hulls_preserved=True,source_fleet_revision='Symmetrical Moray; all other ships unchanged',previous_sprint_assets_checked=previous,
                 body_uvs_preserved=True,panel_uvs_remapped_on_copies=True,unique_textures=len(hashes),preview_poses=len(rows)*120,
                 render_files_verified=render_count,rebuild_verified=args.rebuild,rows=results,
                 not_tested=['Defold compilation/runtime','mobile/game performance','shop/equip/multiplayer integration'])
     (ROOT/'artifacts/themes'/('validation'+suffix+'.json')).write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8',newline='\n')
-    print(f'PASS: {len(rows)} variants; {len(rows)*120} preview poses; {render_count} renders; existing files preserved; previous sprint entries {previous}; rebuild={args.rebuild}')
+    print(f'PASS: {len(rows)} variants; {len(rows)*120} preview poses; {render_count} renders; authorized source revision checked; previous sprint entries {previous}; rebuild={args.rebuild}')
 
 
 if __name__=='__main__':main()

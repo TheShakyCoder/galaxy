@@ -13,7 +13,7 @@
     "toybox"
   ],
   "source_hulls_preserved": true,
-  "all_preexisting_files_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray; all other ships unchanged",
   "previous_sprint_assets_checked": 192,
   "body_uvs_preserved": true,
   "panel_uvs_remapped_on_copies": true,
@@ -408,66 +408,66 @@
     },
     {
       "id": "moray.porcelain_dynasty",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.starlight",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.grand_prix",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.abyssal",
-      "triangles": 12456,
+      "triangles": 13156,
       "added_triangles": 2992,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.crystalborn",
-      "triangles": 10008,
+      "triangles": 10708,
       "added_triangles": 544,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.corsair",
-      "triangles": 14388,
+      "triangles": 15088,
       "added_triangles": 4924,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.overgrown",
-      "triangles": 14360,
+      "triangles": 15060,
       "added_triangles": 4896,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.toybox",
-      "triangles": 12828,
+      "triangles": 13528,
       "added_triangles": 3364,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
@@ -1179,7 +1179,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1187,7 +1187,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1195,7 +1195,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1203,7 +1203,7 @@
       "triangles": 18368,
       "added_triangles": 4528,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1211,7 +1211,7 @@
       "triangles": 14460,
       "added_triangles": 620,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1219,7 +1219,7 @@
       "triangles": 20792,
       "added_triangles": 6952,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1227,7 +1227,7 @@
       "triangles": 20004,
       "added_triangles": 6164,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -1235,7 +1235,7 @@
       "triangles": 17612,
       "added_triangles": 3772,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {

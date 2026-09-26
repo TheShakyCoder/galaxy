@@ -400,17 +400,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/toybox/model.glb",
       "texture": "/assets/themes/moray/toybox/albedo.png",
       "model": "/assets/themes/moray/toybox/ship.model",
-      "sha256": "1802a4a8c934c23d0dfce47729f8324a4f43520fb32ac512b3714f8288c92dc5",
+      "sha256": "297dc8a73863afb2582b8f106db11912446643b2d7a5ef1b404c6cea03ce81f9",
       "texture_sha256": "26e8f33eec920671e3f0a581e1a0bbf2cea06dacec918724de0635526d3b181c",
-      "vertices": 9134,
-      "triangles": 12828,
+      "vertices": 9638,
+      "triangles": 13528,
       "added_vertices": 2482,
       "added_triangles": 3364,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -3.777285575866699,
@@ -418,14 +418,14 @@
           -23.661972045898438
         ],
         [
-          6.603131157878237,
-          4.714197158813477,
+          4.671771644827278,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        10.38042,
-        7.96769,
+        8.44906,
+        7.55681,
         42.0
       ],
       "features": [
@@ -438,10 +438,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-toybox-perspective.jpg"
     },

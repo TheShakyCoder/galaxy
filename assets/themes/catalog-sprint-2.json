@@ -771,17 +771,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/abyssal/model.glb",
       "texture": "/assets/themes/moray/abyssal/albedo.png",
       "model": "/assets/themes/moray/abyssal/ship.model",
-      "sha256": "1e9ad72591fa185f2dfa2fef7672d253da93670cc4d29f46cd2f3adce678188a",
+      "sha256": "a4a028ad32baa134be39e973e6024e46d26d5c6a283656e1f6bb9bbf0151d166",
       "texture_sha256": "cdc175ec0c2b1f935870764850bbc8e244923b97ee0c5aea8a8dddf712915903",
-      "vertices": 9024,
-      "triangles": 12456,
+      "vertices": 9528,
+      "triangles": 13156,
       "added_vertices": 2372,
       "added_triangles": 2992,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -4.257794467624586,
@@ -789,14 +789,14 @@
           -23.661972045898438
         ],
         [
-          4.868405592978,
-          4.714197158813477,
+          4.257794467624586,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        9.1262,
-        7.96769,
+        8.51559,
+        7.55681,
         42.0
       ],
       "features": [
@@ -808,10 +808,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-abyssal-perspective.jpg"
     },
@@ -827,32 +827,32 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/crystalborn/model.glb",
       "texture": "/assets/themes/moray/crystalborn/albedo.png",
       "model": "/assets/themes/moray/crystalborn/ship.model",
-      "sha256": "47959bc068c13ac8d2bd5445d74552423595c2d2ba9c2498d380843a8ebdd83f",
+      "sha256": "0edbc34f9c566703857be916423286b659112a3b415ee4ce3218f6cb289f04c6",
       "texture_sha256": "5a8a321ecee891823a140003b1b72b5566adbb00a1d898e591da628997ae94f8",
-      "vertices": 7852,
-      "triangles": 10008,
+      "vertices": 8356,
+      "triangles": 10708,
       "added_vertices": 1200,
       "added_triangles": 544,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -4.092830770222363,
+          -3.8060552646584105,
           -3.2534923553466797,
           -23.661972045898438
         ],
         [
-          5.725651023686613,
-          5.215288630264407,
+          3.8060552646584105,
+          5.212148386283438,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        9.81848,
-        8.46878,
+        7.61211,
+        8.46564,
         42.0
       ],
       "features": [
@@ -864,10 +864,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-crystalborn-perspective.jpg"
     },

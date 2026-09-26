@@ -1,7 +1,8 @@
 # Galaxy: eight-theme expansion
 
-This library adds eight collections for the 24 existing ships. Original fleet
-files and the four earlier cosmetic collections are preserved. Each completed
+This library adds eight collections for the 24 existing ships. The requested
+Moray follow-up revises its default hull and all twelve cosmetic variants;
+other ship assets are preserved. Each completed
 sprint has a separate catalog, preview and verification report.
 
 | Sprint | Collections | Preview |

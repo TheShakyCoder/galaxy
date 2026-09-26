@@ -1058,17 +1058,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/porcelain_dynasty/model.glb",
       "texture": "/assets/themes/moray/porcelain_dynasty/albedo.png",
       "model": "/assets/themes/moray/porcelain_dynasty/ship.model",
-      "sha256": "5a522862978be9eb106b6062b3f6fc279a67d9aa478c058f0ad708efd112461a",
+      "sha256": "3f2df14c071485a8631e1f1ab8707d359d113700161ae606d781c200bc9513a4",
       "texture_sha256": "8c17d08e6f9f38fe750d40ef9e4b973423c996de050bc7b0276726a15a32cd5f",
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -3.777285575866699,
@@ -1076,24 +1076,24 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
       "features": [],
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-porcelain_dynasty-perspective.jpg"
     },
@@ -1109,17 +1109,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/starlight/model.glb",
       "texture": "/assets/themes/moray/starlight/albedo.png",
       "model": "/assets/themes/moray/starlight/ship.model",
-      "sha256": "714205aae99739d582ab098c22603181750b21ea00ffef20d66c7ae5341fc18a",
+      "sha256": "d897b4f8fafeb18acb324b62d895ed5b53b5ee36fefdb618a1b55e9f67d93665",
       "texture_sha256": "49a6f4e6e1ef11cd4f6da8227a1d4b873fe38092c1b96ff3953ccd2374373627",
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -3.777285575866699,
@@ -1127,24 +1127,24 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
       "features": [],
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-starlight-perspective.jpg"
     },
@@ -1160,17 +1160,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/grand_prix/model.glb",
       "texture": "/assets/themes/moray/grand_prix/albedo.png",
       "model": "/assets/themes/moray/grand_prix/ship.model",
-      "sha256": "654b57703f4cd2e418770cd0261841b286ce634e0bba475ed676598feeae7545",
+      "sha256": "5d3940df77753901f485bfdc1aafe88af06ef2456884e87e73aea8bf9e189dfa",
       "texture_sha256": "875b8d4814215d38581372b928f70396cbf6d26b278eb1ab5a84182b5cc6af81",
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -3.777285575866699,
@@ -1178,24 +1178,24 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
       "features": [],
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-grand_prix-perspective.jpg"
     },

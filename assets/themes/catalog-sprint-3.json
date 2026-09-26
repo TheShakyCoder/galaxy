@@ -783,32 +783,32 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/corsair/model.glb",
       "texture": "/assets/themes/moray/corsair/albedo.png",
       "model": "/assets/themes/moray/corsair/ship.model",
-      "sha256": "a5998e0143bb1594333c8fe68121f6678622d91ff0efbcb5d413457d239aeb98",
+      "sha256": "91c7b4f2f4ae1e1426707768cf09e16e67737718df090f9390672b0784231d88",
       "texture_sha256": "08bebec412f38c938d88a3465f85c4666fc4126af03e73f36cd167df14b86b88",
-      "vertices": 10520,
-      "triangles": 14388,
+      "vertices": 11024,
+      "triangles": 15088,
       "added_vertices": 3868,
       "added_triangles": 4924,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -3.777285575866699,
+          -4.986618954180135,
           -3.2534923553466797,
           -23.661972045898438
         ],
         [
-          6.801625977246418,
-          4.714197158813477,
+          4.986618954180135,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        10.57891,
-        7.96769,
+        9.97324,
+        7.55681,
         42.0
       ],
       "features": [
@@ -821,10 +821,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -841,17 +841,17 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "glb": "assets/themes/moray/overgrown/model.glb",
       "texture": "/assets/themes/moray/overgrown/albedo.png",
       "model": "/assets/themes/moray/overgrown/ship.model",
-      "sha256": "e21ff8a119792f4ac0935dd99e7b371245266880184136c50ce7a1e05a627fa9",
+      "sha256": "38e333eed602e361187c5ae28583c5f5449fb52be2463848b5df580762b74fe0",
       "texture_sha256": "753f02316a79e0b026adbe55a9afe9f4445eaea0e7c6c18ae996efa92bfbe35a",
-      "vertices": 11128,
-      "triangles": 14360,
+      "vertices": 11632,
+      "triangles": 15060,
       "added_vertices": 4476,
       "added_triangles": 4896,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
           -3.777285575866699,
@@ -859,14 +859,14 @@
           -23.661972045898438
         ],
         [
-          4.5013827893137925,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        8.27867,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
       "features": [
@@ -878,10 +878,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "thumbnail": "artifacts/themes/renders/moray-overgrown-perspective.jpg"
     },

@@ -1,5 +1,10 @@
 # Eight-theme expansion: sprint plan and evidence
 
+Follow-up: the user subsequently requested a symmetrical Moray. The historical
+additions-only sprint results below describe the initial delivery. The later
+Moray commit explicitly revises its default hull, all twelve skins, corresponding
+catalogs, previews and cameras. See `../moray/README.md` for the revision gate.
+
 Baseline: merged cosmetic-library PR #3, upstream `b63ffcc`.
 Scope: eight additional collections for all 24 existing species, 192 variants.
 All original fleet resources and all four prior cosmetic collections stay intact.

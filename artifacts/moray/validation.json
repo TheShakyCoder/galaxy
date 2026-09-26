@@ -1,10 +1,10 @@
 {
   "result": "PASS",
-  "revision_base": "63d8a53",
+  "revision_base": "754a5ca6f47b60cd09f9e6caa7c4d434955f0339",
   "default_bilateral_symmetry_tolerance_m": 0.0001,
   "straight_hull_rings": true,
   "extent_m": 42,
-  "cosmetics_checked": 4,
+  "cosmetics_checked": 12,
   "all_cosmetics_retain_revised_hull": true,
   "other_ship_resources_unchanged": true,
   "other_catalog_entries_unchanged": true,
