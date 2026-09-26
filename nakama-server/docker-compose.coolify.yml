@@ -39,7 +39,8 @@ services:
       - NAKAMA_HTTP_KEY=${NAKAMA_HTTP_KEY:?}
     entrypoint:
       - "/bin/sh"
-      - "-ecx"
+      # -e only, not -x: tracing would print every secret below into the logs.
+      - "-ec"
       - >
           /nakama/nakama migrate up --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama &&
           exec /nakama/nakama --name nakama1
