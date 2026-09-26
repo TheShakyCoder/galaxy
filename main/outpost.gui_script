@@ -1842,8 +1842,10 @@ local PREVIEW_WORLD_POS = {
 local PREVIEW_CAMERA = {
 	-- sardine.glb (tools/build_sardine_model.py, ORIGINAL hand-authored hull,
 	-- not SuperShips-sourced - see ships.lua's patrol_interceptor entry) has an
-	-- ~8.32-unit bounding radius.
-	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0.00, 5.90, 15.74), far = 75.12 },
+	-- ~8.35-unit centered bounding radius (9.41 about the rotation origin).
+	-- Frame the whole vertical forked tail throughout a full rotation in the
+	-- square detail preview; the wider sale-grid previews use this too.
+	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0.00, 9.20, 24.60), far = 90.00 },
 	["/assets/models/escort_interceptor/escort_interceptor.model"] = { eye_offset = vmath.vector3(0, 8.15, 21.74), far = 84.71 },
 	-- hummingbird.glb was replaced with raider.glb (§0-flagged, see ships.lua's
 	-- patrol_interceptor entry) - recomputed for its own ~6.7-unit bounding

@@ -163,18 +163,16 @@ M.SHIPS = {
 			-- `patrol_interceptor.model` already pointed at) - the old
 			-- SuperShips-sourced viper_mk2.glb (this file's own former
 			-- HIGHEST-SEVERITY §0 exception, see git history) is gone. The new
-			-- hull leans into the ship's own real-world namesake: a slender
-			-- fusiform (torpedo-shaped) body - a small schooling fish's own
-			-- classic silhouette, not a fighter-craft wedge - a forked tail
-			-- (two swept lobes with a V-notch, the defining herring-family
-			-- shape), a small dorsal fin, and a pair of pectoral fins near the
-			-- head. Two-tone countershaded coloring (darker blue-green back over
-			-- a lighter silver belly, split at the hull's own centerline) - a
-			-- real sardine's actual coloring, visible now that
-			-- render/custom.render_script's leftover diagnostic red tint
-			-- override has been removed. Deliberately the smallest hull built so
-			-- far, matching Patrol's own place as the smallest class in the
-			-- roster. ~8.3-unit bounding radius.
+			-- detailed hull preserves a small sardine's slender, rounded body,
+			-- blue-green back and silver flanks. Equal vertical tail lobes,
+			-- small rayed fins, round optical eyes and a single curved gill
+			-- cover establish the fish identity. Scale-like armor, a conformal
+			-- cockpit and compact tail thrusters provide spacecraft detail.
+			-- Single mesh/material with a 1024px base-color atlas, smooth hull
+			-- normals and 16-bit indices; no custom shader required. Nose +Z,
+			-- same 16.2m total length, ~8.35m centered bounding radius. The
+			-- generator also rebuilds the separate Sardine top-down image;
+			-- the shared fitting schematic still uses patrol_interceptor.atlas.
 			--
 			-- The OTHER hand-authored hull this file's comments used to mention
 			-- here (assets/models/patrol_interceptor/patrol_interceptor.glb,

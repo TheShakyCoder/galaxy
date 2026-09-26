@@ -1,0 +1,30 @@
+{
+  "result": "PASS",
+  "triangles": 14252,
+  "vertices": 9742,
+  "glb_bytes": 443080,
+  "texture_px": [
+    1024,
+    1024
+  ],
+  "preview_max_ndc": 0.922,
+  "preview_yaw_samples": 120,
+  "deterministic_outputs": 3,
+  "glb_sha256": "8462e94f72a15c7c55677ed92c2ba8201f5816d33b82a45ee57db968c77eec32",
+  "checks": [
+    "binary layout and buffer bounds",
+    "finite geometry and unit normals",
+    "triangle area and winding",
+    "16-bit indices and 20k triangle budget",
+    "embedded/external texture equality",
+    "uncropped transparent top-down image",
+    "game asset references",
+    "full-rotation preview framing",
+    "byte-identical regeneration"
+  ],
+  "not_tested": [
+    "Defold runtime rendering",
+    "HTML5 device performance",
+    "live multiplayer"
+  ]
+}
