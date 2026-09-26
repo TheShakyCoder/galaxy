@@ -1,0 +1,216 @@
+{
+  "result": "PASS",
+  "theme": "abyssal",
+  "variants": 24,
+  "collections": [
+    "abyssal"
+  ],
+  "source_hulls_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged",
+  "installed_theme_assets_checked": 96,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 24,
+  "preview_poses": 2880,
+  "render_files_verified": 72,
+  "rebuild_verified": true,
+  "rows": [
+    {
+      "id": "sardine.abyssal",
+      "triangles": 17244,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.abyssal",
+      "triangles": 12736,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.abyssal",
+      "triangles": 12436,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.abyssal",
+      "triangles": 12200,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.abyssal",
+      "triangles": 12576,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.788,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.abyssal",
+      "triangles": 14068,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7866,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.abyssal",
+      "triangles": 13156,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.abyssal",
+      "triangles": 12684,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7889,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.abyssal",
+      "triangles": 12068,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7972,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.abyssal",
+      "triangles": 12148,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7959,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.abyssal",
+      "triangles": 13184,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7969,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.abyssal",
+      "triangles": 14272,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7971,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.abyssal",
+      "triangles": 17720,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.abyssal",
+      "triangles": 19068,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.abyssal",
+      "triangles": 18148,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.abyssal",
+      "triangles": 17712,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.abyssal",
+      "triangles": 17676,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.6173,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.abyssal",
+      "triangles": 18564,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6636,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.abyssal",
+      "triangles": 18368,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7826,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.abyssal",
+      "triangles": 18052,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5421,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.abyssal",
+      "triangles": 17732,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.5621,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.abyssal",
+      "triangles": 20156,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.6783,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.abyssal",
+      "triangles": 18280,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.abyssal",
+      "triangles": 18132,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6056,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}
