@@ -32,6 +32,16 @@ normals or triangles changed. Copy-only panel UV remapping is intentional.
 Binary/resource checks and isolated rebuild passed. 8,640 preview rotations fit.
 See `validation-sprint-1.json` for the gate results. No deviations.
 
+### Sprint 2 — complete
+
+48 Abyssal and Crystalborn variants built, with 144 renders. All twelve faction
+and angle contact sheets reviewed. Enlarged the crystal clusters after the first
+visual pass, refined their facet normals, then rerendered and revalidated all 48.
+Binary/resource checks, 5,760 preview rotations, flight framing, isolated rebuild,
+and preservation of Sprint 1 passed. See `validation-sprint-2.json`.
+The Sprint 1 and Sprint 2 galleries provide separate review checkpoints.
+No scope deviations.
+
 ### Sprint 3 steering
 
 User specified **triangle insignias for Corsair fish** and **circle insignias for

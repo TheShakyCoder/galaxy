@@ -1,0 +1,409 @@
+{
+  "result": "PASS",
+  "sprint": 2,
+  "variants": 48,
+  "collections": [
+    "abyssal",
+    "crystalborn"
+  ],
+  "source_hulls_preserved": true,
+  "all_preexisting_files_preserved": true,
+  "previous_sprint_assets_checked": 120,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 48,
+  "preview_poses": 5760,
+  "render_files_verified": 144,
+  "rebuild_verified": true,
+  "rows": [
+    {
+      "id": "sardine.abyssal",
+      "triangles": 17244,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.crystalborn",
+      "triangles": 14796,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.abyssal",
+      "triangles": 12736,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.crystalborn",
+      "triangles": 10288,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.abyssal",
+      "triangles": 12436,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.crystalborn",
+      "triangles": 9988,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.abyssal",
+      "triangles": 12200,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.crystalborn",
+      "triangles": 9752,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.abyssal",
+      "triangles": 12576,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.7802,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.crystalborn",
+      "triangles": 10128,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.7802,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.abyssal",
+      "triangles": 14068,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7777,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.crystalborn",
+      "triangles": 11620,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7777,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.abyssal",
+      "triangles": 12456,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7741,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.crystalborn",
+      "triangles": 10008,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7741,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.abyssal",
+      "triangles": 12684,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7807,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.crystalborn",
+      "triangles": 10236,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7807,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.abyssal",
+      "triangles": 12068,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7915,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.crystalborn",
+      "triangles": 9620,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7915,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.abyssal",
+      "triangles": 12148,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7873,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.crystalborn",
+      "triangles": 9700,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7873,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.abyssal",
+      "triangles": 13184,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7906,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.crystalborn",
+      "triangles": 10736,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7906,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.abyssal",
+      "triangles": 14272,
+      "added_triangles": 2992,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7902,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.crystalborn",
+      "triangles": 11824,
+      "added_triangles": 544,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7902,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.abyssal",
+      "triangles": 17720,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.crystalborn",
+      "triangles": 13812,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.abyssal",
+      "triangles": 19068,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.crystalborn",
+      "triangles": 15160,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.abyssal",
+      "triangles": 18148,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.crystalborn",
+      "triangles": 14240,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.abyssal",
+      "triangles": 17712,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.crystalborn",
+      "triangles": 13804,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.abyssal",
+      "triangles": 17676,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.5933,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.crystalborn",
+      "triangles": 13768,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.5933,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.abyssal",
+      "triangles": 18564,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6802,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.crystalborn",
+      "triangles": 14656,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6802,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.abyssal",
+      "triangles": 18368,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7388,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.crystalborn",
+      "triangles": 14460,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7388,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.abyssal",
+      "triangles": 18052,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5759,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.crystalborn",
+      "triangles": 14144,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5759,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.abyssal",
+      "triangles": 17732,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.558,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.crystalborn",
+      "triangles": 13824,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.558,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.abyssal",
+      "triangles": 20156,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.7137,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.crystalborn",
+      "triangles": 16248,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.7137,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.abyssal",
+      "triangles": 18280,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6009,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.crystalborn",
+      "triangles": 14372,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6009,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.abyssal",
+      "triangles": 18132,
+      "added_triangles": 4528,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.crystalborn",
+      "triangles": 14224,
+      "added_triangles": 620,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}

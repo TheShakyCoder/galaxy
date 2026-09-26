@@ -1,0 +1,4 @@
+mesh: "/assets/themes/remora/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/remora/crystalborn/albedo.png"
+name: "remora_crystalborn"
