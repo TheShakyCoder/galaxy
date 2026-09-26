@@ -288,11 +288,11 @@ local function camera_distance_height(ship_id)
 	return (fc and fc.distance) or CAMERA_DEFAULT_DISTANCE, (fc and fc.height) or CAMERA_DEFAULT_HEIGHT
 end
 
--- Throttle starts at full (1.0) rather than 0 - matches this slice's
--- previous always-move-at-MAX_SPEED behavior as the default, with
--- throttle_up/throttle_down (input/game.input_binding's =/- and numpad
--- +/-) now able to pull it down from there, stop_throttle (Q) zeroing it,
--- and full_throttle (E) snapping it back to 1.0 - see update()'s throttle
+-- Throttle (target speed as a fraction of max speed) starts at 0 on game
+-- load and on every launch from an outpost, so the ship sits still until the
+-- player throttles up - throttle_up/throttle_down (input/game.input_binding's
+-- =/- and numpad +/-) move it, stop_throttle (Q) zeroes it, and
+-- full_throttle (E) snaps it to 1.0 - see update()'s throttle
 -- handling below.
 local function default_input()
 	return {
@@ -304,7 +304,7 @@ end
 function init(self)
 	self.flying = false
 	self.input = default_input()
-	self.throttle = 1.0
+	self.throttle = 0.0
 	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
 	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
 	self.time_since_rotation_input = 0 -- seconds since the last pitch/yaw input - see AUTO_LEVEL_DELAY
@@ -331,8 +331,8 @@ end
 local function start_flight(self)
 	self.flying = true
 	self.input = default_input()
-	self.throttle = 1.0
-	self.speed = 0 -- ship starts at rest and spools up to cruise, same as any other launch - see update()
+	self.throttle = 0.0
+	self.speed = 0 -- ship starts at rest and stays there until the player throttles up - see update()
 	self.angular_velocity = vmath.vector3()
 	self.time_since_rotation_input = 0
 	self.camera_rot = nil
