@@ -1,0 +1,4 @@
+mesh: "/assets/themes/lionfish/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/lionfish/toybox/albedo.png"
+name: "lionfish_toybox"

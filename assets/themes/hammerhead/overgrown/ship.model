@@ -1,0 +1,4 @@
+mesh: "/assets/themes/hammerhead/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/hammerhead/overgrown/albedo.png"
+name: "hammerhead_overgrown"

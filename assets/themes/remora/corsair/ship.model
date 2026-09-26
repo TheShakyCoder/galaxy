@@ -1,0 +1,4 @@
+mesh: "/assets/themes/remora/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/remora/corsair/albedo.png"
+name: "remora_corsair"

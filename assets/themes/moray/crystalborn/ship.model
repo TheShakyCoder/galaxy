@@ -1,0 +1,4 @@
+mesh: "/assets/themes/moray/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/moray/crystalborn/albedo.png"
+name: "moray_crystalborn"

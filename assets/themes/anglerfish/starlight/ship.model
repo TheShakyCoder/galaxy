@@ -1,0 +1,4 @@
+mesh: "/assets/themes/anglerfish/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/anglerfish/starlight/albedo.png"
+name: "anglerfish_starlight"

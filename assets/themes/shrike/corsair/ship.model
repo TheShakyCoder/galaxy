@@ -1,0 +1,4 @@
+mesh: "/assets/themes/shrike/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/shrike/corsair/albedo.png"
+name: "shrike_corsair"

@@ -1,0 +1,11 @@
+"""Authored art direction and bounded sprint membership."""
+THEMES={
+ 'porcelain_dynasty':dict(name='Porcelain Dynasty',sprint=1,kind='surface',back=(195,210,222),flank=(242,237,219),accent=(69,116,187),trim=(195,153,62),fin=(222,229,228),light=(249,245,226),ink=(24,58,126),description='Ivory ceramic, cobalt botanical scrollwork and fine gold repair seams.'),
+ 'starlight':dict(name='Starlight',sprint=1,kind='surface',back=(11,20,58),flank=(45,64,115),accent=(143,215,245),trim=(180,204,224),fin=(19,31,74),light=(86,104,159),ink=(202,227,248),description='Midnight enamel, authored constellations, silver edging and scattered starlight.'),
+ 'grand_prix':dict(name='Grand Prix',sprint=1,kind='surface',back=(16,57,92),flank=(227,229,216),accent=(245,98,28),trim=(245,112,34),fin=(19,71,112),light=(238,232,208),ink=(15,45,74),description='Navy racing panels, ivory stripes, orange accents, checkerboards and individual hull numbers.'),
+ 'abyssal':dict(name='Abyssal',sprint=2,kind='model',back=(12,21,39),flank=(33,66,84),accent=(77,238,212),trim=(51,154,176),fin=(21,66,83),light=(76,157,169),ink=(55,180,176),description='Deep-ocean armor, pearl lenses, bright photophore chains and delicate sensory tendrils.'),
+ 'crystalborn':dict(name='Crystalborn',sprint=2,kind='model',back=(50,27,89),flank=(144,116,190),accent=(158,237,232),trim=(172,191,230),fin=(88,58,132),light=(194,184,235),ink=(208,223,245),description='Faceted amethyst armor, mint-quartz growths and angular crystal crownlets.'),
+ 'corsair':dict(name='Corsair',sprint=3,kind='model',back=(56,34,26),flank=(125,80,43),accent=(222,163,67),trim=(181,130,60),fin=(185,159,111),light=(230,211,162),ink=(54,32,23),description='Timber plating, canvas fin panels, braided rigging, portholes and broadside cannon housings.'),
+ 'overgrown':dict(name='Overgrown',sprint=3,kind='model',back=(28,65,48),flank=(116,151,93),accent=(246,151,131),trim=(128,95,58),fin=(51,102,71),light=(167,187,114),ink=(27,75,55),description='Living armor: coral and barnacles on fish, climbing vines and blossoms on birds.'),
+ 'toybox':dict(name='Toybox',sprint=4,kind='model',back=(22,109,144),flank=(234,173,77),accent=(235,77,63),trim=(208,59,49),fin=(27,137,164),light=(244,212,129),ink=(15,86,116),description='Painted tin animals with candy-colored panels, chunky fasteners, decorative axles and a wind-up key.'),
+}

@@ -1,0 +1,4 @@
+mesh: "/assets/themes/moray/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/moray/toybox/albedo.png"
+name: "moray_toybox"

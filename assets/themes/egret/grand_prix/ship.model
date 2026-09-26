@@ -1,0 +1,4 @@
+mesh: "/assets/themes/egret/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/egret/grand_prix/albedo.png"
+name: "egret_grand_prix"

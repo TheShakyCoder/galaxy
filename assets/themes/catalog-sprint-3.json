@@ -1,0 +1,2827 @@
+{
+  "schema_version": 1,
+  "source_commit": "b63ffcc",
+  "scope": "Optional art resources. No shop/equip integration.",
+  "collections": {
+    "corsair": {
+      "name": "Corsair",
+      "sprint": 3,
+      "kind": "model",
+      "back": [
+        56,
+        34,
+        26
+      ],
+      "flank": [
+        125,
+        80,
+        43
+      ],
+      "accent": [
+        222,
+        163,
+        67
+      ],
+      "trim": [
+        181,
+        130,
+        60
+      ],
+      "fin": [
+        185,
+        159,
+        111
+      ],
+      "light": [
+        230,
+        211,
+        162
+      ],
+      "ink": [
+        54,
+        32,
+        23
+      ],
+      "description": "Timber plating, canvas fin panels, braided rigging, portholes and broadside cannon housings."
+    },
+    "overgrown": {
+      "name": "Overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "back": [
+        28,
+        65,
+        48
+      ],
+      "flank": [
+        116,
+        151,
+        93
+      ],
+      "accent": [
+        246,
+        151,
+        131
+      ],
+      "trim": [
+        128,
+        95,
+        58
+      ],
+      "fin": [
+        51,
+        102,
+        71
+      ],
+      "light": [
+        167,
+        187,
+        114
+      ],
+      "ink": [
+        27,
+        75,
+        55
+      ],
+      "description": "Living armor: coral and barnacles on fish, climbing vines and blossoms on birds."
+    }
+  },
+  "entries": [
+    {
+      "id": "sardine.corsair",
+      "ship": "sardine",
+      "name": "Sardine",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "interceptor",
+      "base_glb": "assets/models/patrol_interceptor/sardine.glb",
+      "base_model": "/assets/models/patrol_interceptor/patrol_interceptor.model",
+      "base_sha256": "8462e94f72a15c7c55677ed92c2ba8201f5816d33b82a45ee57db968c77eec32",
+      "glb": "assets/themes/sardine/corsair/model.glb",
+      "texture": "/assets/themes/sardine/corsair/albedo.png",
+      "model": "/assets/themes/sardine/corsair/ship.model",
+      "sha256": "f2e8c3072428ca5d2b9c0da21b84734015271dd5701bfe93c800ff08683b786d",
+      "texture_sha256": "06dfe65910af0948081007c84d5d1b684ae5c1eb1d6e07ec944e389d78f3df4e",
+      "vertices": 13610,
+      "triangles": 19176,
+      "added_vertices": 3868,
+      "added_triangles": 4924,
+      "remapped_panel_vertices": 1224,
+      "bounds_m": [
+        [
+          -2.4000000953674316,
+          -2.0299999713897705,
+          -9.199999809265137
+        ],
+        [
+          2.4000000953674316,
+          2.2200000286102295,
+          7.0
+        ]
+      ],
+      "dimensions_m": [
+        4.8,
+        4.25,
+        16.2
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.27,
+          27.486
+        ],
+        "far": 88.747
+      },
+      "thumbnail": "artifacts/themes/renders/sardine-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "sardine.overgrown",
+      "ship": "sardine",
+      "name": "Sardine",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "interceptor",
+      "base_glb": "assets/models/patrol_interceptor/sardine.glb",
+      "base_model": "/assets/models/patrol_interceptor/patrol_interceptor.model",
+      "base_sha256": "8462e94f72a15c7c55677ed92c2ba8201f5816d33b82a45ee57db968c77eec32",
+      "glb": "assets/themes/sardine/overgrown/model.glb",
+      "texture": "/assets/themes/sardine/overgrown/albedo.png",
+      "model": "/assets/themes/sardine/overgrown/ship.model",
+      "sha256": "bde7ce7e811ace3d04f0f65b072e199c5db0858cac9afee8cfaca006f5d37e0b",
+      "texture_sha256": "f835f7e399575b95dd522d07f96c5ff0cd565e6e7ad7ad2f823b443db5c51eef",
+      "vertices": 14218,
+      "triangles": 19148,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 1224,
+      "bounds_m": [
+        [
+          -2.4000000953674316,
+          -2.0299999713897705,
+          -9.199999809265137
+        ],
+        [
+          2.4000000953674316,
+          2.2200000286102295,
+          7.0
+        ]
+      ],
+      "dimensions_m": [
+        4.8,
+        4.25,
+        16.2
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.27,
+          27.486
+        ],
+        "far": 88.747
+      },
+      "thumbnail": "artifacts/themes/renders/sardine-overgrown-perspective.jpg"
+    },
+    {
+      "id": "pilotfish.corsair",
+      "ship": "pilotfish",
+      "name": "Pilotfish",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "support",
+      "base_glb": "assets/models/patrol_support/pilotfish.glb",
+      "base_model": "/assets/models/patrol_support/pilotfish.model",
+      "base_sha256": "64e1e06d4ceccb3f53fafa1bd23d2a0edb373fb12cfec5843561eccd38173fdc",
+      "glb": "assets/themes/pilotfish/corsair/model.glb",
+      "texture": "/assets/themes/pilotfish/corsair/albedo.png",
+      "model": "/assets/themes/pilotfish/corsair/ship.model",
+      "sha256": "d6e2c99cd3739f57eec969938e30ef2e65d6b82d02ce01874eec69994521cf99",
+      "texture_sha256": "760eb1ba4cc81aeff7db68cd49f1fed8982374f64168d8f9b66c700426d66c70",
+      "vertices": 10656,
+      "triangles": 14476,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -2.620208978652954,
+          -2.0069687366485596,
+          -8.97560977935791
+        ],
+        [
+          2.620208978652954,
+          2.1525685787200928,
+          7.02439022064209
+        ]
+      ],
+      "dimensions_m": [
+        5.24042,
+        4.15954,
+        16.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.02,
+          26.818
+        ],
+        "far": 87.805
+      },
+      "thumbnail": "artifacts/themes/renders/pilotfish-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "pilotfish.overgrown",
+      "ship": "pilotfish",
+      "name": "Pilotfish",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "support",
+      "base_glb": "assets/models/patrol_support/pilotfish.glb",
+      "base_model": "/assets/models/patrol_support/pilotfish.model",
+      "base_sha256": "64e1e06d4ceccb3f53fafa1bd23d2a0edb373fb12cfec5843561eccd38173fdc",
+      "glb": "assets/themes/pilotfish/overgrown/model.glb",
+      "texture": "/assets/themes/pilotfish/overgrown/albedo.png",
+      "model": "/assets/themes/pilotfish/overgrown/ship.model",
+      "sha256": "82242e2ceea1934c38678d6932554413c6446fc81b83ab1ffc2c61cdc6919c8d",
+      "texture_sha256": "c8dde007ff561930b5febf12535ba996660bb63a57449def1bc9588aba8e0761",
+      "vertices": 11360,
+      "triangles": 14640,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -2.620208978652954,
+          -2.0069687366485596,
+          -8.97560977935791
+        ],
+        [
+          2.620208978652954,
+          2.1525685787200928,
+          7.02439022064209
+        ]
+      ],
+      "dimensions_m": [
+        5.24042,
+        4.15954,
+        16.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.02,
+          26.818
+        ],
+        "far": 87.805
+      },
+      "thumbnail": "artifacts/themes/renders/pilotfish-overgrown-perspective.jpg"
+    },
+    {
+      "id": "piranha.corsair",
+      "ship": "piranha",
+      "name": "Piranha",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "assault",
+      "base_glb": "assets/models/patrol_assault/piranha.glb",
+      "base_model": "/assets/models/patrol_assault/piranha.model",
+      "base_sha256": "897f56958488737310e76c11b14b3faa2b50a6aef392c229f2e726154dd4810b",
+      "glb": "assets/themes/piranha/corsair/model.glb",
+      "texture": "/assets/themes/piranha/corsair/albedo.png",
+      "model": "/assets/themes/piranha/corsair/ship.model",
+      "sha256": "4a0207f1dde54fb3ebb3a3a4b66edcb46418f23786b8184d0c1374c331c4e660",
+      "texture_sha256": "f40082bad41c8f131eab5241f809aba7e72e03578fc4adb801bcb3af1c52f1e6",
+      "vertices": 10585,
+      "triangles": 14176,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 750,
+      "bounds_m": [
+        [
+          -3.209876537322998,
+          -2.9626781940460205,
+          -7.9012346267700195
+        ],
+        [
+          3.209876537322998,
+          3.9737441539764404,
+          7.0987653732299805
+        ]
+      ],
+      "dimensions_m": [
+        6.41975,
+        6.93642,
+        15.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          8.899,
+          23.817
+        ],
+        "far": 83.574
+      },
+      "thumbnail": "artifacts/themes/renders/piranha-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "piranha.overgrown",
+      "ship": "piranha",
+      "name": "Piranha",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "assault",
+      "base_glb": "assets/models/patrol_assault/piranha.glb",
+      "base_model": "/assets/models/patrol_assault/piranha.model",
+      "base_sha256": "897f56958488737310e76c11b14b3faa2b50a6aef392c229f2e726154dd4810b",
+      "glb": "assets/themes/piranha/overgrown/model.glb",
+      "texture": "/assets/themes/piranha/overgrown/albedo.png",
+      "model": "/assets/themes/piranha/overgrown/ship.model",
+      "sha256": "be3429e8f039c6bd12c179cd4216ede54cbe8b2ad6c17b60bc7257a745139402",
+      "texture_sha256": "7be883e5698dcd15c57b7aa087cf37a3a363e7ab2df8d7ae2d032ec72cd48d8b",
+      "vertices": 11289,
+      "triangles": 14340,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 750,
+      "bounds_m": [
+        [
+          -3.209876537322998,
+          -2.9626781940460205,
+          -7.9012346267700195
+        ],
+        [
+          3.209876537322998,
+          3.9737441539764404,
+          7.0987653732299805
+        ]
+      ],
+      "dimensions_m": [
+        6.41975,
+        6.93642,
+        15.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          8.899,
+          23.817
+        ],
+        "far": 83.574
+      },
+      "thumbnail": "artifacts/themes/renders/piranha-overgrown-perspective.jpg"
+    },
+    {
+      "id": "anglerfish.corsair",
+      "ship": "anglerfish",
+      "name": "Anglerfish",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "tactical",
+      "base_glb": "assets/models/patrol_tactical/anglerfish.glb",
+      "base_model": "/assets/models/patrol_tactical/anglerfish.model",
+      "base_sha256": "f2ca233c9b73c2dc77ff3b5bef3b2af876c972002247b1d7dc9e03320001502f",
+      "glb": "assets/themes/anglerfish/corsair/model.glb",
+      "texture": "/assets/themes/anglerfish/corsair/albedo.png",
+      "model": "/assets/themes/anglerfish/corsair/ship.model",
+      "sha256": "65fd86aa84921db30a6843a130555f8aa1871c4c40e60507e761b77d712bdcec",
+      "texture_sha256": "812874199a79b43fd9d8b4b533c9c53a2fb1923410fe2de3d978a4f14c3b4d9b",
+      "vertices": 10595,
+      "triangles": 13940,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 750,
+      "bounds_m": [
+        [
+          -4.538858413696289,
+          -2.8168087677154743,
+          -8.527552604675293
+        ],
+        [
+          4.538858413696289,
+          4.970817565917969,
+          8.472447395324707
+        ]
+      ],
+      "dimensions_m": [
+        9.07772,
+        7.78763,
+        17.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.524,
+          25.491
+        ],
+        "far": 85.934
+      },
+      "thumbnail": "artifacts/themes/renders/anglerfish-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "anglerfish.overgrown",
+      "ship": "anglerfish",
+      "name": "Anglerfish",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "patrol",
+      "role": "tactical",
+      "base_glb": "assets/models/patrol_tactical/anglerfish.glb",
+      "base_model": "/assets/models/patrol_tactical/anglerfish.model",
+      "base_sha256": "f2ca233c9b73c2dc77ff3b5bef3b2af876c972002247b1d7dc9e03320001502f",
+      "glb": "assets/themes/anglerfish/overgrown/model.glb",
+      "texture": "/assets/themes/anglerfish/overgrown/albedo.png",
+      "model": "/assets/themes/anglerfish/overgrown/ship.model",
+      "sha256": "7dfe58c77cea72c3ac00e50d0e711a8136368e4b44915b919eeb43c40365e05f",
+      "texture_sha256": "61fc8b33031cf12e78878ba6b218a336ee2201d42b1953261efe115db5faf97c",
+      "vertices": 11299,
+      "triangles": 14104,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 750,
+      "bounds_m": [
+        [
+          -4.538858413696289,
+          -2.7508232593536377,
+          -8.527552604675293
+        ],
+        [
+          4.538858413696289,
+          4.970817565917969,
+          8.472447395324707
+        ]
+      ],
+      "dimensions_m": [
+        9.07772,
+        7.72164,
+        17.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.524,
+          25.491
+        ],
+        "far": 85.934
+      },
+      "thumbnail": "artifacts/themes/renders/anglerfish-overgrown-perspective.jpg"
+    },
+    {
+      "id": "barracuda.corsair",
+      "ship": "barracuda",
+      "name": "Barracuda",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "interceptor",
+      "base_glb": "assets/models/escort_interceptor/barracuda.glb",
+      "base_model": "/assets/models/escort_interceptor/barracuda.model",
+      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "glb": "assets/themes/barracuda/corsair/model.glb",
+      "texture": "/assets/themes/barracuda/corsair/albedo.png",
+      "model": "/assets/themes/barracuda/corsair/ship.model",
+      "sha256": "2d124dc28487cbf2093d9778df3e84c12d37e012d40a51fdd4c7b8fa26071a5a",
+      "texture_sha256": "a0322f82e430c37643ced1d48fcdabc58accd47371e0e9ff6cb9adb2fa29ad94",
+      "vertices": 10737,
+      "triangles": 14316,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 636,
+      "bounds_m": [
+        [
+          -5.495207786560059,
+          -3.8338658809661865,
+          -21.725238800048828
+        ],
+        [
+          5.495207786560059,
+          4.413938045501709,
+          18.274761199951172
+        ]
+      ],
+      "dimensions_m": [
+        10.99042,
+        8.2478,
+        40.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          24.055,
+          64.383
+        ],
+        "far": 140.758
+      },
+      "thumbnail": "artifacts/themes/renders/barracuda-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "barracuda.overgrown",
+      "ship": "barracuda",
+      "name": "Barracuda",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "interceptor",
+      "base_glb": "assets/models/escort_interceptor/barracuda.glb",
+      "base_model": "/assets/models/escort_interceptor/barracuda.model",
+      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "glb": "assets/themes/barracuda/overgrown/model.glb",
+      "texture": "/assets/themes/barracuda/overgrown/albedo.png",
+      "model": "/assets/themes/barracuda/overgrown/ship.model",
+      "sha256": "d9e9b522b555d4f84158041368fd22d2053963d02084bcc02683095a5d862bde",
+      "texture_sha256": "0a07ae9c542d34162ccbe2a4b68b603b7c35e67c6eb7c975bf9bce17415c06e8",
+      "vertices": 11441,
+      "triangles": 14480,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 636,
+      "bounds_m": [
+        [
+          -5.495207786560059,
+          -3.8338658809661865,
+          -21.725238800048828
+        ],
+        [
+          5.495207786560059,
+          4.413938045501709,
+          18.274761199951172
+        ]
+      ],
+      "dimensions_m": [
+        10.99042,
+        8.2478,
+        40.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          24.055,
+          64.383
+        ],
+        "far": 140.758
+      },
+      "thumbnail": "artifacts/themes/renders/barracuda-overgrown-perspective.jpg"
+    },
+    {
+      "id": "remora.corsair",
+      "ship": "remora",
+      "name": "Remora",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "support",
+      "base_glb": "assets/models/escort_support/remora.glb",
+      "base_model": "/assets/models/escort_support/remora.model",
+      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "glb": "assets/themes/remora/corsair/model.glb",
+      "texture": "/assets/themes/remora/corsair/albedo.png",
+      "model": "/assets/themes/remora/corsair/ship.model",
+      "sha256": "e65bef4fea4801450e4589f0503ef6fa4fed963860034e35253c394788a69df3",
+      "texture_sha256": "0f531deae4a67e6a67127d28c2018ac2fab21ec6b70f11ffb85db457e4e34a50",
+      "vertices": 11565,
+      "triangles": 15808,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 524,
+      "bounds_m": [
+        [
+          -5.390070915222168,
+          -2.829787254333496,
+          -21.290781021118164
+        ],
+        [
+          5.390070915222168,
+          2.829787254333496,
+          16.709218978881836
+        ]
+      ],
+      "dimensions_m": [
+        10.78014,
+        5.65957,
+        38.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.435,
+          62.721
+        ],
+        "far": 138.416
+      },
+      "thumbnail": "artifacts/themes/renders/remora-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "remora.overgrown",
+      "ship": "remora",
+      "name": "Remora",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "support",
+      "base_glb": "assets/models/escort_support/remora.glb",
+      "base_model": "/assets/models/escort_support/remora.model",
+      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "glb": "assets/themes/remora/overgrown/model.glb",
+      "texture": "/assets/themes/remora/overgrown/albedo.png",
+      "model": "/assets/themes/remora/overgrown/ship.model",
+      "sha256": "2e248c05a842e8c9295001aea8498a23c226811af98182de64cf493bb73654c2",
+      "texture_sha256": "c7fe82972fa1f6f4d99e9cedf7d192143628af8e342cd7735b1fd35abd7034dd",
+      "vertices": 12269,
+      "triangles": 15972,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 524,
+      "bounds_m": [
+        [
+          -5.390070915222168,
+          -2.829787254333496,
+          -21.290781021118164
+        ],
+        [
+          5.390070915222168,
+          2.829787254333496,
+          16.709218978881836
+        ]
+      ],
+      "dimensions_m": [
+        10.78014,
+        5.65957,
+        38.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.435,
+          62.721
+        ],
+        "far": 138.416
+      },
+      "thumbnail": "artifacts/themes/renders/remora-overgrown-perspective.jpg"
+    },
+    {
+      "id": "moray.corsair",
+      "ship": "moray",
+      "name": "Moray",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "assault",
+      "base_glb": "assets/models/escort_assault/moray.glb",
+      "base_model": "/assets/models/escort_assault/moray.model",
+      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "glb": "assets/themes/moray/corsair/model.glb",
+      "texture": "/assets/themes/moray/corsair/albedo.png",
+      "model": "/assets/themes/moray/corsair/ship.model",
+      "sha256": "a5998e0143bb1594333c8fe68121f6678622d91ff0efbcb5d413457d239aeb98",
+      "texture_sha256": "08bebec412f38c938d88a3465f85c4666fc4126af03e73f36cd167df14b86b88",
+      "vertices": 10520,
+      "triangles": 14388,
+      "added_vertices": 3868,
+      "added_triangles": 4924,
+      "remapped_panel_vertices": 224,
+      "bounds_m": [
+        [
+          -3.777285575866699,
+          -3.2534923553466797,
+          -23.661972045898438
+        ],
+        [
+          6.801625977246418,
+          4.714197158813477,
+          18.338027954101562
+        ]
+      ],
+      "dimensions_m": [
+        10.57891,
+        7.96769,
+        42.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          25.9,
+          69.319
+        ],
+        "far": 147.717
+      },
+      "thumbnail": "artifacts/themes/renders/moray-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "moray.overgrown",
+      "ship": "moray",
+      "name": "Moray",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "assault",
+      "base_glb": "assets/models/escort_assault/moray.glb",
+      "base_model": "/assets/models/escort_assault/moray.model",
+      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "glb": "assets/themes/moray/overgrown/model.glb",
+      "texture": "/assets/themes/moray/overgrown/albedo.png",
+      "model": "/assets/themes/moray/overgrown/ship.model",
+      "sha256": "e21ff8a119792f4ac0935dd99e7b371245266880184136c50ce7a1e05a627fa9",
+      "texture_sha256": "753f02316a79e0b026adbe55a9afe9f4445eaea0e7c6c18ae996efa92bfbe35a",
+      "vertices": 11128,
+      "triangles": 14360,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 224,
+      "bounds_m": [
+        [
+          -3.777285575866699,
+          -3.2534923553466797,
+          -23.661972045898438
+        ],
+        [
+          4.5013827893137925,
+          4.714197158813477,
+          18.338027954101562
+        ]
+      ],
+      "dimensions_m": [
+        8.27867,
+        7.96769,
+        42.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          25.9,
+          69.319
+        ],
+        "far": 147.717
+      },
+      "thumbnail": "artifacts/themes/renders/moray-overgrown-perspective.jpg"
+    },
+    {
+      "id": "lionfish.corsair",
+      "ship": "lionfish",
+      "name": "Lionfish",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "tactical",
+      "base_glb": "assets/models/escort_tactical/lionfish.glb",
+      "base_model": "/assets/models/escort_tactical/lionfish.model",
+      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "glb": "assets/themes/lionfish/corsair/model.glb",
+      "texture": "/assets/themes/lionfish/corsair/albedo.png",
+      "model": "/assets/themes/lionfish/corsair/ship.model",
+      "sha256": "6d51743deafe537af167017199f65b8a247b4ee8264c00d64483dd92913389ec",
+      "texture_sha256": "70174f66d7d608a455d2d64b00696a1f2fbd1ca7e9c774db5a1cd5d9a930ee31",
+      "vertices": 11648,
+      "triangles": 14424,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 1464,
+      "bounds_m": [
+        [
+          -12.613083839416504,
+          -4.965818642349029,
+          -20.52554702758789
+        ],
+        [
+          12.613083839416504,
+          8.857233047485352,
+          17.47445297241211
+        ]
+      ],
+      "dimensions_m": [
+        25.22617,
+        13.82305,
+        38.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          22.882,
+          61.243
+        ],
+        "far": 136.332
+      },
+      "thumbnail": "artifacts/themes/renders/lionfish-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "lionfish.overgrown",
+      "ship": "lionfish",
+      "name": "Lionfish",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "escort",
+      "role": "tactical",
+      "base_glb": "assets/models/escort_tactical/lionfish.glb",
+      "base_model": "/assets/models/escort_tactical/lionfish.model",
+      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "glb": "assets/themes/lionfish/overgrown/model.glb",
+      "texture": "/assets/themes/lionfish/overgrown/albedo.png",
+      "model": "/assets/themes/lionfish/overgrown/ship.model",
+      "sha256": "3970aba8ebef65cb5c0cba25a98fcce7dcd840b9574afa9cf99c753020fb74a1",
+      "texture_sha256": "0350bb72b61683179ffa315a6704091db98ec17f96d0f2230635c1fe23c803f5",
+      "vertices": 12352,
+      "triangles": 14588,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 1464,
+      "bounds_m": [
+        [
+          -12.613083839416504,
+          -4.856085777282715,
+          -20.52554702758789
+        ],
+        [
+          12.613083839416504,
+          8.857233047485352,
+          17.47445297241211
+        ]
+      ],
+      "dimensions_m": [
+        25.22617,
+        13.71332,
+        38.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          22.882,
+          61.243
+        ],
+        "far": 136.332
+      },
+      "thumbnail": "artifacts/themes/renders/lionfish-overgrown-perspective.jpg"
+    },
+    {
+      "id": "marlin.corsair",
+      "ship": "marlin",
+      "name": "Marlin",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "interceptor",
+      "base_glb": "assets/models/frigate_interceptor/marlin.glb",
+      "base_model": "/assets/models/frigate_interceptor/marlin.model",
+      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "glb": "assets/themes/marlin/corsair/model.glb",
+      "texture": "/assets/themes/marlin/corsair/albedo.png",
+      "model": "/assets/themes/marlin/corsair/ship.model",
+      "sha256": "fcb31bee98dd064000db86c2abb4581032e0432a672dd8df1a7aef59be676bf9",
+      "texture_sha256": "c95c3b904ff777e140ea6abbb48d7abdc457ffbec1c58df669ecf5384a9ad2e3",
+      "vertices": 10404,
+      "triangles": 13808,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -14.955489158630371,
+          -11.465875625610352,
+          -37.88724136352539
+        ],
+        [
+          14.955489158630371,
+          14.76002311706543,
+          46.11275863647461
+        ]
+      ],
+      "dimensions_m": [
+        29.91098,
+        26.2259,
+        84.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.356,
+          134.774
+        ],
+        "far": 239.988
+      },
+      "thumbnail": "artifacts/themes/renders/marlin-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "marlin.overgrown",
+      "ship": "marlin",
+      "name": "Marlin",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "interceptor",
+      "base_glb": "assets/models/frigate_interceptor/marlin.glb",
+      "base_model": "/assets/models/frigate_interceptor/marlin.model",
+      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "glb": "assets/themes/marlin/overgrown/model.glb",
+      "texture": "/assets/themes/marlin/overgrown/albedo.png",
+      "model": "/assets/themes/marlin/overgrown/ship.model",
+      "sha256": "1ab58e4c112dc227df7e703c570e485a27984d4e50e09c0cbc7a516f8f628eef",
+      "texture_sha256": "6baae0775a5499f1fb7ac677630ff66e8b3f1567f56ff8724fc75a1114ecd79a",
+      "vertices": 11108,
+      "triangles": 13972,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -14.955489158630371,
+          -11.465875625610352,
+          -37.88724136352539
+        ],
+        [
+          14.955489158630371,
+          14.76002311706543,
+          46.11275863647461
+        ]
+      ],
+      "dimensions_m": [
+        29.91098,
+        26.2259,
+        84.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.356,
+          134.774
+        ],
+        "far": 239.988
+      },
+      "thumbnail": "artifacts/themes/renders/marlin-overgrown-perspective.jpg"
+    },
+    {
+      "id": "manta_ray.corsair",
+      "ship": "manta_ray",
+      "name": "Manta Ray",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "support",
+      "base_glb": "assets/models/frigate_support/manta_ray.glb",
+      "base_model": "/assets/models/frigate_support/manta_ray.model",
+      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "glb": "assets/themes/manta_ray/corsair/model.glb",
+      "texture": "/assets/themes/manta_ray/corsair/albedo.png",
+      "model": "/assets/themes/manta_ray/corsair/ship.model",
+      "sha256": "dab8e7edeee8cce3e6fe6c7acd28be3b9b7b1275137f4f6af4d10141ad96257d",
+      "texture_sha256": "32f743dbb8d7792130e4da853ba191b7bcc2736297d51896d72667da45bffa80",
+      "vertices": 9895,
+      "triangles": 13888,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 312,
+      "bounds_m": [
+        [
+          -40.82953643798828,
+          -4.422461032867432,
+          -51.036922454833984
+        ],
+        [
+          40.82953643798828,
+          4.760469436645508,
+          30.963077545166016
+        ]
+      ],
+      "dimensions_m": [
+        81.65907,
+        9.18293,
+        82.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          55.733,
+          149.165
+        ],
+        "far": 260.274
+      },
+      "thumbnail": "artifacts/themes/renders/manta_ray-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "manta_ray.overgrown",
+      "ship": "manta_ray",
+      "name": "Manta Ray",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "support",
+      "base_glb": "assets/models/frigate_support/manta_ray.glb",
+      "base_model": "/assets/models/frigate_support/manta_ray.model",
+      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "glb": "assets/themes/manta_ray/overgrown/model.glb",
+      "texture": "/assets/themes/manta_ray/overgrown/albedo.png",
+      "model": "/assets/themes/manta_ray/overgrown/ship.model",
+      "sha256": "3ac977f1cffaee5cbb053a2a90e7eeb5c0079be1b6bf18fa1d93a5ae8e5cf92a",
+      "texture_sha256": "89d45db4151ef87630d3d5595ad9da10092eef3b290ba948e9a9bffcc8094894",
+      "vertices": 10599,
+      "triangles": 14052,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 312,
+      "bounds_m": [
+        [
+          -40.82953643798828,
+          -4.422461032867432,
+          -51.036922454833984
+        ],
+        [
+          40.82953643798828,
+          5.306577730098164,
+          30.963077545166016
+        ]
+      ],
+      "dimensions_m": [
+        81.65907,
+        9.72904,
+        82.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          55.733,
+          149.165
+        ],
+        "far": 260.274
+      },
+      "thumbnail": "artifacts/themes/renders/manta_ray-overgrown-perspective.jpg"
+    },
+    {
+      "id": "tiger_shark.corsair",
+      "ship": "tiger_shark",
+      "name": "Tiger Shark",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "assault",
+      "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
+      "base_model": "/assets/models/frigate_assault/tiger_shark.model",
+      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "glb": "assets/themes/tiger_shark/corsair/model.glb",
+      "texture": "/assets/themes/tiger_shark/corsair/albedo.png",
+      "model": "/assets/themes/tiger_shark/corsair/ship.model",
+      "sha256": "2692c69796f2b7ddcb6c20963b03a670b076106d217dfd4a92e53355a38b17ea",
+      "texture_sha256": "baba1e1452348420387fb5543f3f997ca10d4d760f4a16ef5b9a684f5a60214d",
+      "vertices": 10952,
+      "triangles": 14924,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 636,
+      "bounds_m": [
+        [
+          -17.560976028442383,
+          -8.780488014221191,
+          -44.878047943115234
+        ],
+        [
+          17.560976028442383,
+          17.740633010864258,
+          35.121952056884766
+        ]
+      ],
+      "dimensions_m": [
+        35.12195,
+        26.52112,
+        80.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.706,
+          135.711
+        ],
+        "far": 241.308
+      },
+      "thumbnail": "artifacts/themes/renders/tiger_shark-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "tiger_shark.overgrown",
+      "ship": "tiger_shark",
+      "name": "Tiger Shark",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "assault",
+      "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
+      "base_model": "/assets/models/frigate_assault/tiger_shark.model",
+      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "glb": "assets/themes/tiger_shark/overgrown/model.glb",
+      "texture": "/assets/themes/tiger_shark/overgrown/albedo.png",
+      "model": "/assets/themes/tiger_shark/overgrown/ship.model",
+      "sha256": "292656e87b9dc6851470e15689f500c9bdd476d272933e2dc9a3b29a084eb38e",
+      "texture_sha256": "8541ffbed4967c9efc839cce5862fbcfc85abe949ef8ddb3a1d9a184c501572f",
+      "vertices": 11656,
+      "triangles": 15088,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 636,
+      "bounds_m": [
+        [
+          -17.560976028442383,
+          -8.780488014221191,
+          -44.878047943115234
+        ],
+        [
+          17.560976028442383,
+          17.740633010864258,
+          35.121952056884766
+        ]
+      ],
+      "dimensions_m": [
+        35.12195,
+        26.52112,
+        80.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.706,
+          135.711
+        ],
+        "far": 241.308
+      },
+      "thumbnail": "artifacts/themes/renders/tiger_shark-overgrown-perspective.jpg"
+    },
+    {
+      "id": "hammerhead.corsair",
+      "ship": "hammerhead",
+      "name": "Hammerhead",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "tactical",
+      "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
+      "base_model": "/assets/models/frigate_tactical/hammerhead.model",
+      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "glb": "assets/themes/hammerhead/corsair/model.glb",
+      "texture": "/assets/themes/hammerhead/corsair/albedo.png",
+      "model": "/assets/themes/hammerhead/corsair/ship.model",
+      "sha256": "2290c39298eeb0e95d29df8fbfdc854c2e72bd95b58adfac9cb024836ee22941",
+      "texture_sha256": "5130c530df7d1d2225881fae5a367238839fbfa084a363c2023656080128e432",
+      "vertices": 11285,
+      "triangles": 16012,
+      "added_vertices": 3772,
+      "added_triangles": 4732,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -17.068418502807617,
+          -7.609755992889404,
+          -43.75609588623047
+        ],
+        [
+          17.068418502807617,
+          13.677961349487305,
+          34.24390411376953
+        ]
+      ],
+      "dimensions_m": [
+        34.13684,
+        21.28772,
+        78.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Triangle faction insignias in texture and raised geometry",
+        "Triangle marks on both forward flanks"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          49.095,
+          131.4
+        ],
+        "far": 235.231
+      },
+      "thumbnail": "artifacts/themes/renders/hammerhead-corsair-perspective.jpg",
+      "insignia": "triangle"
+    },
+    {
+      "id": "hammerhead.overgrown",
+      "ship": "hammerhead",
+      "name": "Hammerhead",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "accord",
+      "size": "frigate",
+      "role": "tactical",
+      "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
+      "base_model": "/assets/models/frigate_tactical/hammerhead.model",
+      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "glb": "assets/themes/hammerhead/overgrown/model.glb",
+      "texture": "/assets/themes/hammerhead/overgrown/albedo.png",
+      "model": "/assets/themes/hammerhead/overgrown/ship.model",
+      "sha256": "ea1ef28f2902028fc22d021eb655759a019b65b507b427172f0a354d486dd77f",
+      "texture_sha256": "e80ec2dc149c38a53f955a1e51ecf61e32183f0327e5c971dc3a2ce31bb94824",
+      "vertices": 11989,
+      "triangles": 16176,
+      "added_vertices": 4476,
+      "added_triangles": 4896,
+      "remapped_panel_vertices": 580,
+      "bounds_m": [
+        [
+          -17.068418502807617,
+          -7.609755992889404,
+          -43.75609588623047
+        ],
+        [
+          17.068418502807617,
+          13.677961349487305,
+          34.24390411376953
+        ]
+      ],
+      "dimensions_m": [
+        34.13684,
+        21.28772,
+        78.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Paired branching coral gardens follow the fish shoulders",
+        "Raised barnacle colonies with recessed openings",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          49.095,
+          131.4
+        ],
+        "far": 235.231
+      },
+      "thumbnail": "artifacts/themes/renders/hammerhead-overgrown-perspective.jpg"
+    },
+    {
+      "id": "hummingbird.corsair",
+      "ship": "hummingbird",
+      "name": "Hummingbird",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "interceptor",
+      "base_glb": "assets/models/patrol_interceptor/hummingbird.glb",
+      "base_model": "/assets/models/patrol_interceptor/hummingbird.model",
+      "base_sha256": "89ce908e9310560a22afe59f11cc488fead51e0bd10950b2126eee40bd871330",
+      "glb": "assets/themes/hummingbird/corsair/model.glb",
+      "texture": "/assets/themes/hummingbird/corsair/albedo.png",
+      "model": "/assets/themes/hummingbird/corsair/ship.model",
+      "sha256": "25fdb7211f8cb613dd634222bdcbd53213ae646b5f0d164e4a901f18d10f8a59",
+      "texture_sha256": "5b125f185e7d2c7db5681fb3a52077f3f25b72f43e1e752e6c4e5aba95e1f06c",
+      "vertices": 18107,
+      "triangles": 20144,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 4442,
+      "bounds_m": [
+        [
+          -8.5,
+          -1.0462604601877237,
+          -7.534311771392822
+        ],
+        [
+          8.5,
+          1.4460283517837524,
+          8.992566108703613
+        ]
+      ],
+      "dimensions_m": [
+        17.0,
+        2.49229,
+        16.52688
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.829,
+          26.308
+        ],
+        "far": 87.085
+      },
+      "thumbnail": "artifacts/themes/renders/hummingbird-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "hummingbird.overgrown",
+      "ship": "hummingbird",
+      "name": "Hummingbird",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "interceptor",
+      "base_glb": "assets/models/patrol_interceptor/hummingbird.glb",
+      "base_model": "/assets/models/patrol_interceptor/hummingbird.model",
+      "base_sha256": "89ce908e9310560a22afe59f11cc488fead51e0bd10950b2126eee40bd871330",
+      "glb": "assets/themes/hummingbird/overgrown/model.glb",
+      "texture": "/assets/themes/hummingbird/overgrown/albedo.png",
+      "model": "/assets/themes/hummingbird/overgrown/ship.model",
+      "sha256": "a5b53e520f4d3ddb5c991b22b7352d451d861b4b5ace8be2923f4731c842b5ff",
+      "texture_sha256": "e0feb0e8626653a2519b28b87f498a5f5966e720c4cd7bdcf9fbed2972d60b52",
+      "vertices": 17763,
+      "triangles": 19356,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 4442,
+      "bounds_m": [
+        [
+          -8.5,
+          -1.0206676721572876,
+          -7.534311771392822
+        ],
+        [
+          8.5,
+          1.4460283517837524,
+          8.992566108703613
+        ]
+      ],
+      "dimensions_m": [
+        17.0,
+        2.4667,
+        16.52688
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.829,
+          26.308
+        ],
+        "far": 87.085
+      },
+      "thumbnail": "artifacts/themes/renders/hummingbird-overgrown-perspective.jpg"
+    },
+    {
+      "id": "oxpecker.corsair",
+      "ship": "oxpecker",
+      "name": "Oxpecker",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "support",
+      "base_glb": "assets/models/patrol_support/oxpecker.glb",
+      "base_model": "/assets/models/patrol_support/oxpecker.model",
+      "base_sha256": "4f5881c962c97bef3ba69ba42f650da8ecb362a3a5ed42d80cbbb874a1394cec",
+      "glb": "assets/themes/oxpecker/corsair/model.glb",
+      "texture": "/assets/themes/oxpecker/corsair/albedo.png",
+      "model": "/assets/themes/oxpecker/corsair/ship.model",
+      "sha256": "e1f98437697e57a93af718e09cab281a8aea5b8628b98c09c62c7763773c5da8",
+      "texture_sha256": "f58a46d4de20d84340acd87b3b64de4f5d79ce55442aa4db889eeb603b6d6f24",
+      "vertices": 19349,
+      "triangles": 21492,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -6.154672622680664,
+          -1.5421926978953144,
+          -8.357203483581543
+        ],
+        [
+          6.154672622680664,
+          1.603948712348938,
+          7.642796993255615
+        ]
+      ],
+      "dimensions_m": [
+        12.30935,
+        3.14614,
+        16.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.126,
+          24.426
+        ],
+        "far": 84.432
+      },
+      "thumbnail": "artifacts/themes/renders/oxpecker-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "oxpecker.overgrown",
+      "ship": "oxpecker",
+      "name": "Oxpecker",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "support",
+      "base_glb": "assets/models/patrol_support/oxpecker.glb",
+      "base_model": "/assets/models/patrol_support/oxpecker.model",
+      "base_sha256": "4f5881c962c97bef3ba69ba42f650da8ecb362a3a5ed42d80cbbb874a1394cec",
+      "glb": "assets/themes/oxpecker/overgrown/model.glb",
+      "texture": "/assets/themes/oxpecker/overgrown/albedo.png",
+      "model": "/assets/themes/oxpecker/overgrown/ship.model",
+      "sha256": "bbbbb2f9a6f013cb1defc7ab702de3e06307bdf457bd41c4bd4bac2382189482",
+      "texture_sha256": "b0bddf51f0104f6b37c6e05c739ca8d00208020b6388fbc92aa49c8c84e3288a",
+      "vertices": 19005,
+      "triangles": 20704,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -6.154672622680664,
+          -1.4858049154281616,
+          -8.357203483581543
+        ],
+        [
+          6.154672622680664,
+          1.603948712348938,
+          7.642796993255615
+        ]
+      ],
+      "dimensions_m": [
+        12.30935,
+        3.08975,
+        16.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.126,
+          24.426
+        ],
+        "far": 84.432
+      },
+      "thumbnail": "artifacts/themes/renders/oxpecker-overgrown-perspective.jpg"
+    },
+    {
+      "id": "shrike.corsair",
+      "ship": "shrike",
+      "name": "Shrike",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "assault",
+      "base_glb": "assets/models/patrol_assault/shrike.glb",
+      "base_model": "/assets/models/patrol_assault/shrike.model",
+      "base_sha256": "1ce875bc7247fb3f0039a62fb8cce6c07e62efa8783e9640b533558213cace7a",
+      "glb": "assets/themes/shrike/corsair/model.glb",
+      "texture": "/assets/themes/shrike/corsair/albedo.png",
+      "model": "/assets/themes/shrike/corsair/ship.model",
+      "sha256": "7d9b85b7c2da42c5199745cdb4e34662eec87119e8f5799d81a39d82aed6e24c",
+      "texture_sha256": "66efd3270c2711cf7be56568c5bcae60df1ddd30143af126c9836f6c25720081",
+      "vertices": 18825,
+      "triangles": 20572,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -6.743402004241943,
+          -1.478299530314405,
+          -9.173845291137695
+        ],
+        [
+          6.743402004241943,
+          1.5374969244003296,
+          7.326155185699463
+        ]
+      ],
+      "dimensions_m": [
+        13.4868,
+        3.0158,
+        16.5
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.018,
+          26.812
+        ],
+        "far": 87.797
+      },
+      "thumbnail": "artifacts/themes/renders/shrike-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "shrike.overgrown",
+      "ship": "shrike",
+      "name": "Shrike",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "assault",
+      "base_glb": "assets/models/patrol_assault/shrike.glb",
+      "base_model": "/assets/models/patrol_assault/shrike.model",
+      "base_sha256": "1ce875bc7247fb3f0039a62fb8cce6c07e62efa8783e9640b533558213cace7a",
+      "glb": "assets/themes/shrike/overgrown/model.glb",
+      "texture": "/assets/themes/shrike/overgrown/albedo.png",
+      "model": "/assets/themes/shrike/overgrown/ship.model",
+      "sha256": "bdd5388b2d0af30bcc4de2263a6dd717f86f18172f0816419bff24e2d22deee4",
+      "texture_sha256": "c56180e89193df2499a5f6292e5b0e2090ee20abea6dcdd433a247914574217e",
+      "vertices": 18481,
+      "triangles": 19784,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -6.743402004241943,
+          -1.4242478609085083,
+          -9.173845291137695
+        ],
+        [
+          6.743402004241943,
+          1.5374969244003296,
+          7.326155185699463
+        ]
+      ],
+      "dimensions_m": [
+        13.4868,
+        2.96174,
+        16.5
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          10.018,
+          26.812
+        ],
+        "far": 87.797
+      },
+      "thumbnail": "artifacts/themes/renders/shrike-overgrown-perspective.jpg"
+    },
+    {
+      "id": "kingfisher.corsair",
+      "ship": "kingfisher",
+      "name": "Kingfisher",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "tactical",
+      "base_glb": "assets/models/patrol_tactical/kingfisher.glb",
+      "base_model": "/assets/models/patrol_tactical/kingfisher.model",
+      "base_sha256": "3c2c8840ccdd7dfa3683bf9b7b50578ce219c088d7349bb79b105cf8f1c150b9",
+      "glb": "assets/themes/kingfisher/corsair/model.glb",
+      "texture": "/assets/themes/kingfisher/corsair/albedo.png",
+      "model": "/assets/themes/kingfisher/corsair/ship.model",
+      "sha256": "301a1cdb0b74f2cf74a3e70dc42e7509d00addfa099bd97057f4baf0be9d05c0",
+      "texture_sha256": "64cf52b12049d8fb00cca33b1ad203e23cbb1a02cfb9e1fc60962e30141cf5f4",
+      "vertices": 18858,
+      "triangles": 20136,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5358,
+      "bounds_m": [
+        [
+          -6.251928329467773,
+          -1.4847284454180425,
+          -8.045801162719727
+        ],
+        [
+          6.251928329467773,
+          2.2011735439300537,
+          8.954198837280273
+        ]
+      ],
+      "dimensions_m": [
+        12.50386,
+        3.6859,
+        17.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.789,
+          26.199
+        ],
+        "far": 86.933
+      },
+      "thumbnail": "artifacts/themes/renders/kingfisher-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "kingfisher.overgrown",
+      "ship": "kingfisher",
+      "name": "Kingfisher",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "patrol",
+      "role": "tactical",
+      "base_glb": "assets/models/patrol_tactical/kingfisher.glb",
+      "base_model": "/assets/models/patrol_tactical/kingfisher.model",
+      "base_sha256": "3c2c8840ccdd7dfa3683bf9b7b50578ce219c088d7349bb79b105cf8f1c150b9",
+      "glb": "assets/themes/kingfisher/overgrown/model.glb",
+      "texture": "/assets/themes/kingfisher/overgrown/albedo.png",
+      "model": "/assets/themes/kingfisher/overgrown/ship.model",
+      "sha256": "dfd9912303ca9d33c9da63402f33dc469b0ff04ea65efdc998fd35de14a326ce",
+      "texture_sha256": "d69da35c4fc06c1831196d6fb7c33334df8b9288de6dfbeaaece8f4625a9c1c0",
+      "vertices": 18514,
+      "triangles": 19348,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5358,
+      "bounds_m": [
+        [
+          -6.251928329467773,
+          -1.4304416179656982,
+          -8.045801162719727
+        ],
+        [
+          6.251928329467773,
+          2.2011735439300537,
+          8.954198837280273
+        ]
+      ],
+      "dimensions_m": [
+        12.50386,
+        3.63162,
+        17.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          9.789,
+          26.199
+        ],
+        "far": 86.933
+      },
+      "thumbnail": "artifacts/themes/renders/kingfisher-overgrown-perspective.jpg"
+    },
+    {
+      "id": "falcon.corsair",
+      "ship": "falcon",
+      "name": "Falcon",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "interceptor",
+      "base_glb": "assets/models/escort_interceptor/falcon.glb",
+      "base_model": "/assets/models/escort_interceptor/falcon.model",
+      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "glb": "assets/themes/falcon/corsair/model.glb",
+      "texture": "/assets/themes/falcon/corsair/albedo.png",
+      "model": "/assets/themes/falcon/corsair/ship.model",
+      "sha256": "49502c3ec21f6301474647a51e1aa1a0ab530d03e2bd17d48204cf8a6ddfa816",
+      "texture_sha256": "7e9b6e7a07c3c642efcd69106edd9a3b8b7aad5e021bc78fa262362101314028",
+      "vertices": 18057,
+      "triangles": 20100,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 4442,
+      "bounds_m": [
+        [
+          -20.0,
+          -3.1792726879531874,
+          -17.22860336303711
+        ],
+        [
+          20.0,
+          3.306584358215332,
+          15.75583553314209
+        ]
+      ],
+      "dimensions_m": [
+        40.0,
+        6.48586,
+        32.98444
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          24.479,
+          65.515
+        ],
+        "far": 142.355
+      },
+      "thumbnail": "artifacts/themes/renders/falcon-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "falcon.overgrown",
+      "ship": "falcon",
+      "name": "Falcon",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "interceptor",
+      "base_glb": "assets/models/escort_interceptor/falcon.glb",
+      "base_model": "/assets/models/escort_interceptor/falcon.model",
+      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "glb": "assets/themes/falcon/overgrown/model.glb",
+      "texture": "/assets/themes/falcon/overgrown/albedo.png",
+      "model": "/assets/themes/falcon/overgrown/ship.model",
+      "sha256": "19fe7281b5027335ff54af969c79f90c306ac8c3bb02b0e3a3fafe6ce457a4d3",
+      "texture_sha256": "ea175379ec3f360731985675ed964933225aafd830ae597049d0091b7b132515",
+      "vertices": 17713,
+      "triangles": 19312,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 4442,
+      "bounds_m": [
+        [
+          -20.0,
+          -3.0630276203155518,
+          -17.22860336303711
+        ],
+        [
+          20.0,
+          3.306584358215332,
+          15.75583553314209
+        ]
+      ],
+      "dimensions_m": [
+        40.0,
+        6.36961,
+        32.98444
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          24.479,
+          65.515
+        ],
+        "far": 142.355
+      },
+      "thumbnail": "artifacts/themes/renders/falcon-overgrown-perspective.jpg"
+    },
+    {
+      "id": "egret.corsair",
+      "ship": "egret",
+      "name": "Egret",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "support",
+      "base_glb": "assets/models/escort_support/egret.glb",
+      "base_model": "/assets/models/escort_support/egret.model",
+      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "glb": "assets/themes/egret/corsair/model.glb",
+      "texture": "/assets/themes/egret/corsair/albedo.png",
+      "model": "/assets/themes/egret/corsair/ship.model",
+      "sha256": "7ea069ce469c7a95e0fa23f6411455b6cb962f09dfcb59db1d5d346150c53896",
+      "texture_sha256": "3a1cba2d7e97431c75cb090b2b36834133a188f9b332e44c67984200fb9abf5b",
+      "vertices": 19126,
+      "triangles": 20988,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5446,
+      "bounds_m": [
+        [
+          -18.099750518798828,
+          -2.922280255949835,
+          -19.025320053100586
+        ],
+        [
+          18.099750518798828,
+          5.605203628540039,
+          20.974679946899414
+        ]
+      ],
+      "dimensions_m": [
+        36.1995,
+        8.52748,
+        40.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.254,
+          62.237
+        ],
+        "far": 137.735
+      },
+      "thumbnail": "artifacts/themes/renders/egret-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "egret.overgrown",
+      "ship": "egret",
+      "name": "Egret",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "support",
+      "base_glb": "assets/models/escort_support/egret.glb",
+      "base_model": "/assets/models/escort_support/egret.model",
+      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "glb": "assets/themes/egret/overgrown/model.glb",
+      "texture": "/assets/themes/egret/overgrown/albedo.png",
+      "model": "/assets/themes/egret/overgrown/ship.model",
+      "sha256": "cbc0365964bc738042670b64f12a58ba64a66e80d097d547bc17b571a9cad167",
+      "texture_sha256": "e9430c297a5d7605b0772eb7e25ef275b38906129bcd62b19aae0056a635a186",
+      "vertices": 18782,
+      "triangles": 20200,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5446,
+      "bounds_m": [
+        [
+          -18.099750518798828,
+          -2.794473886489868,
+          -19.025320053100586
+        ],
+        [
+          18.099750518798828,
+          5.605203628540039,
+          20.974679946899414
+        ]
+      ],
+      "dimensions_m": [
+        36.1995,
+        8.39968,
+        40.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.254,
+          62.237
+        ],
+        "far": 137.735
+      },
+      "thumbnail": "artifacts/themes/renders/egret-overgrown-perspective.jpg"
+    },
+    {
+      "id": "goshawk.corsair",
+      "ship": "goshawk",
+      "name": "Goshawk",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "assault",
+      "base_glb": "assets/models/escort_assault/goshawk.glb",
+      "base_model": "/assets/models/escort_assault/goshawk.model",
+      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "glb": "assets/themes/goshawk/corsair/model.glb",
+      "texture": "/assets/themes/goshawk/corsair/albedo.png",
+      "model": "/assets/themes/goshawk/corsair/ship.model",
+      "sha256": "539e309be8c050bcb8892cb378187a2a4ff8967a63a3143344c311f11943391f",
+      "texture_sha256": "455dcbf7ac33e49a42d23cf4f073b0663c28480e5572e700cff0f445d63a9671",
+      "vertices": 19025,
+      "triangles": 20792,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5158,
+      "bounds_m": [
+        [
+          -20.113447189331055,
+          -3.762944437095463,
+          -23.351604461669922
+        ],
+        [
+          20.113447189331055,
+          3.913628578186035,
+          18.648395538330078
+        ]
+      ],
+      "dimensions_m": [
+        40.22689,
+        7.67657,
+        42.0
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          25.689,
+          68.753
+        ],
+        "far": 146.92
+      },
+      "thumbnail": "artifacts/themes/renders/goshawk-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "goshawk.overgrown",
+      "ship": "goshawk",
+      "name": "Goshawk",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "assault",
+      "base_glb": "assets/models/escort_assault/goshawk.glb",
+      "base_model": "/assets/models/escort_assault/goshawk.model",
+      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "glb": "assets/themes/goshawk/overgrown/model.glb",
+      "texture": "/assets/themes/goshawk/overgrown/albedo.png",
+      "model": "/assets/themes/goshawk/overgrown/ship.model",
+      "sha256": "8e5ff4f122ecbbca04d87dade09cb748712bb504b358205b7fccf329fc10b9af",
+      "texture_sha256": "1ef8864f749a0cdff44f0ba92707f03412d5629dda4158875a214d6649647cff",
+      "vertices": 18681,
+      "triangles": 20004,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5158,
+      "bounds_m": [
+        [
+          -20.113447189331055,
+          -3.6253581047058105,
+          -23.351604461669922
+        ],
+        [
+          20.113447189331055,
+          3.913628578186035,
+          18.648395538330078
+        ]
+      ],
+      "dimensions_m": [
+        40.22689,
+        7.53899,
+        42.0
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          25.689,
+          68.753
+        ],
+        "far": 146.92
+      },
+      "thumbnail": "artifacts/themes/renders/goshawk-overgrown-perspective.jpg"
+    },
+    {
+      "id": "osprey.corsair",
+      "ship": "osprey",
+      "name": "Osprey",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "tactical",
+      "base_glb": "assets/models/escort_tactical/osprey.glb",
+      "base_model": "/assets/models/escort_tactical/osprey.model",
+      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "glb": "assets/themes/osprey/corsair/model.glb",
+      "texture": "/assets/themes/osprey/corsair/albedo.png",
+      "model": "/assets/themes/osprey/corsair/ship.model",
+      "sha256": "0946f2a4ecda9c863c3b0086d55f9ecbd78de447e28f8f8eeead73f0f22082e9",
+      "texture_sha256": "87cff8d85f270ab6df53f97342219d2a29844fd511c96ddb5c1fe92cabce55d1",
+      "vertices": 18721,
+      "triangles": 20476,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -20.5,
+          -3.542951924966813,
+          -19.19939613342285
+        ],
+        [
+          20.5,
+          5.252578258514404,
+          17.558156967163086
+        ]
+      ],
+      "dimensions_m": [
+        41.0,
+        8.79553,
+        36.75755
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.724,
+          63.497
+        ],
+        "far": 139.51
+      },
+      "thumbnail": "artifacts/themes/renders/osprey-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "osprey.overgrown",
+      "ship": "osprey",
+      "name": "Osprey",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "escort",
+      "role": "tactical",
+      "base_glb": "assets/models/escort_tactical/osprey.glb",
+      "base_model": "/assets/models/escort_tactical/osprey.model",
+      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "glb": "assets/themes/osprey/overgrown/model.glb",
+      "texture": "/assets/themes/osprey/overgrown/albedo.png",
+      "model": "/assets/themes/osprey/overgrown/ship.model",
+      "sha256": "6c334e9769b18001b481c04417547a4465cc7cf4f7e47228c5146965a179782f",
+      "texture_sha256": "a5d79a3ef6e87ca51f78f565e1bce39cbba34371dd72e594649792559a202b86",
+      "vertices": 18377,
+      "triangles": 19688,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5078,
+      "bounds_m": [
+        [
+          -20.5,
+          -3.413409471511841,
+          -19.19939613342285
+        ],
+        [
+          20.5,
+          5.252578258514404,
+          17.558156967163086
+        ]
+      ],
+      "dimensions_m": [
+        41.0,
+        8.66599,
+        36.75755
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          23.724,
+          63.497
+        ],
+        "far": 139.51
+      },
+      "thumbnail": "artifacts/themes/renders/osprey-overgrown-perspective.jpg"
+    },
+    {
+      "id": "frigatebird.corsair",
+      "ship": "frigatebird",
+      "name": "Frigatebird",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "interceptor",
+      "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
+      "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
+      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "glb": "assets/themes/frigatebird/corsair/model.glb",
+      "texture": "/assets/themes/frigatebird/corsair/albedo.png",
+      "model": "/assets/themes/frigatebird/corsair/ship.model",
+      "sha256": "8b2457afa7702406292a5e739a49df190865b309775b7e999a80f36dc4c52759",
+      "texture_sha256": "d5b389d5b2bfd8fe542fd7c12f4e03d148be52602deb0194b3c8883c36e2c355",
+      "vertices": 17580,
+      "triangles": 20156,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 3892,
+      "bounds_m": [
+        [
+          -44.0,
+          -3.9792720133126163,
+          -36.974788665771484
+        ],
+        [
+          44.0,
+          5.499720573425293,
+          26.205883026123047
+        ]
+      ],
+      "dimensions_m": [
+        88.0,
+        9.47899,
+        63.18067
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          49.264,
+          131.852
+        ],
+        "far": 235.868
+      },
+      "thumbnail": "artifacts/themes/renders/frigatebird-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "frigatebird.overgrown",
+      "ship": "frigatebird",
+      "name": "Frigatebird",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "interceptor",
+      "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
+      "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
+      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "glb": "assets/themes/frigatebird/overgrown/model.glb",
+      "texture": "/assets/themes/frigatebird/overgrown/albedo.png",
+      "model": "/assets/themes/frigatebird/overgrown/ship.model",
+      "sha256": "94723d43f42a92b0593cbf333cb41689e2894554a91b7d71d8b8c2d13fd32c34",
+      "texture_sha256": "f929a19b42a521f02f90d1c904ab8b0035a405084bd048564d92464242ac5e6f",
+      "vertices": 17236,
+      "triangles": 19368,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 3892,
+      "bounds_m": [
+        [
+          -44.0,
+          -3.88193416595459,
+          -36.974788665771484
+        ],
+        [
+          44.0,
+          5.499720573425293,
+          26.205883026123047
+        ]
+      ],
+      "dimensions_m": [
+        88.0,
+        9.38165,
+        63.18067
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          49.264,
+          131.852
+        ],
+        "far": 235.868
+      },
+      "thumbnail": "artifacts/themes/renders/frigatebird-overgrown-perspective.jpg"
+    },
+    {
+      "id": "pelican.corsair",
+      "ship": "pelican",
+      "name": "Pelican",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "support",
+      "base_glb": "assets/models/frigate_support/pelican.glb",
+      "base_model": "/assets/models/frigate_support/pelican.model",
+      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "glb": "assets/themes/pelican/corsair/model.glb",
+      "texture": "/assets/themes/pelican/corsair/albedo.png",
+      "model": "/assets/themes/pelican/corsair/ship.model",
+      "sha256": "a8e33e8d3eb938480f22a826c20dd2534737cca4cfda586ba9afd85fdf77f7f9",
+      "texture_sha256": "fb59dc276d920e6d62e99583384c764ad2d4aa3fd1aa62fd06c110ad4b1fbae1",
+      "vertices": 19976,
+      "triangles": 22580,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5446,
+      "bounds_m": [
+        [
+          -43.0,
+          -7.204705383727333,
+          -35.83333206176758
+        ],
+        [
+          43.0,
+          9.375406265258789,
+          48.837364196777344
+        ]
+      ],
+      "dimensions_m": [
+        86.0,
+        16.58011,
+        84.6707
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          53.461,
+          143.086
+        ],
+        "far": 251.704
+      },
+      "thumbnail": "artifacts/themes/renders/pelican-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "pelican.overgrown",
+      "ship": "pelican",
+      "name": "Pelican",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "support",
+      "base_glb": "assets/models/frigate_support/pelican.glb",
+      "base_model": "/assets/models/frigate_support/pelican.model",
+      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "glb": "assets/themes/pelican/overgrown/model.glb",
+      "texture": "/assets/themes/pelican/overgrown/albedo.png",
+      "model": "/assets/themes/pelican/overgrown/ship.model",
+      "sha256": "011efc7bd25b9f89641133e03cd4ff82ed8d7f8315ab092070596f814236f1ae",
+      "texture_sha256": "69f7c5e995ecd1c85bdab73dda97c24aa1c0af16bb5801cd449c6fa59570205c",
+      "vertices": 19632,
+      "triangles": 21792,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5446,
+      "bounds_m": [
+        [
+          -43.0,
+          -6.935276031494141,
+          -35.83333206176758
+        ],
+        [
+          43.0,
+          9.375406265258789,
+          48.837364196777344
+        ]
+      ],
+      "dimensions_m": [
+        86.0,
+        16.31068,
+        84.6707
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          53.461,
+          143.086
+        ],
+        "far": 251.704
+      },
+      "thumbnail": "artifacts/themes/renders/pelican-overgrown-perspective.jpg"
+    },
+    {
+      "id": "golden_eagle.corsair",
+      "ship": "golden_eagle",
+      "name": "Golden Eagle",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "assault",
+      "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
+      "base_model": "/assets/models/frigate_assault/golden_eagle.model",
+      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "glb": "assets/themes/golden_eagle/corsair/model.glb",
+      "texture": "/assets/themes/golden_eagle/corsair/albedo.png",
+      "model": "/assets/themes/golden_eagle/corsair/ship.model",
+      "sha256": "192061e2230660ab35db79403b5b822dde57051b3443dd005eb2245abc59a8ae",
+      "texture_sha256": "0bdccb26339ad76d30ac5766d07e7e6c950f40fb0c71d34d728cd9ff0432830d",
+      "vertices": 18945,
+      "triangles": 20704,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 4998,
+      "bounds_m": [
+        [
+          -42.0,
+          -6.36798291561519,
+          -34.50835037231445
+        ],
+        [
+          42.0,
+          6.965284824371338,
+          31.558441162109375
+        ]
+      ],
+      "dimensions_m": [
+        84.0,
+        13.33327,
+        66.06679
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.587,
+          135.392
+        ],
+        "far": 240.858
+      },
+      "thumbnail": "artifacts/themes/renders/golden_eagle-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "golden_eagle.overgrown",
+      "ship": "golden_eagle",
+      "name": "Golden Eagle",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "assault",
+      "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
+      "base_model": "/assets/models/frigate_assault/golden_eagle.model",
+      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "glb": "assets/themes/golden_eagle/overgrown/model.glb",
+      "texture": "/assets/themes/golden_eagle/overgrown/albedo.png",
+      "model": "/assets/themes/golden_eagle/overgrown/ship.model",
+      "sha256": "7ffd1180fa545b0782cc72bc3b069c46c19d0b70c2fce357918c47617cdeba75",
+      "texture_sha256": "f6f9a36c72d8cb730038d521e15fab2309ea81539c9ead3735484dd86a75115c",
+      "vertices": 18601,
+      "triangles": 19916,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 4998,
+      "bounds_m": [
+        [
+          -42.0,
+          -6.135147571563721,
+          -34.50835037231445
+        ],
+        [
+          42.0,
+          6.965284824371338,
+          31.558441162109375
+        ]
+      ],
+      "dimensions_m": [
+        84.0,
+        13.10043,
+        66.06679
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          50.587,
+          135.392
+        ],
+        "far": 240.858
+      },
+      "thumbnail": "artifacts/themes/renders/golden_eagle-overgrown-perspective.jpg"
+    },
+    {
+      "id": "harpy_eagle.corsair",
+      "ship": "harpy_eagle",
+      "name": "Harpy Eagle",
+      "collection": "corsair",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "tactical",
+      "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
+      "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
+      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "glb": "assets/themes/harpy_eagle/corsair/model.glb",
+      "texture": "/assets/themes/harpy_eagle/corsair/albedo.png",
+      "model": "/assets/themes/harpy_eagle/corsair/ship.model",
+      "sha256": "2d9f2b7720fa7be85d9546407000517797ebe8133a7cfc4a08e1f7c10565b080",
+      "texture_sha256": "b19e87addb98759067b918435d218e94e4c988b5a040b5ae802d741ded6addb1",
+      "vertices": 18833,
+      "triangles": 20556,
+      "added_vertices": 5260,
+      "added_triangles": 6952,
+      "remapped_panel_vertices": 5270,
+      "bounds_m": [
+        [
+          -41.0,
+          -6.782606936801602,
+          -36.755210876464844
+        ],
+        [
+          41.0,
+          11.60322380065918,
+          33.61323547363281
+        ]
+      ],
+      "dimensions_m": [
+        82.0,
+        18.38583,
+        70.36845
+      ],
+      "features": [
+        "Timber-patterned plating and canvas decorative panels",
+        "Four broadside cannon housings with recessed dark muzzle faces",
+        "Braided rope rails and brass-rimmed portholes",
+        "Circle faction insignias in texture and raised geometry",
+        "Circle marks on both wings"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          51.195,
+          137.019
+        ],
+        "far": 243.152
+      },
+      "thumbnail": "artifacts/themes/renders/harpy_eagle-corsair-perspective.jpg",
+      "insignia": "circle"
+    },
+    {
+      "id": "harpy_eagle.overgrown",
+      "ship": "harpy_eagle",
+      "name": "Harpy Eagle",
+      "collection": "overgrown",
+      "sprint": 3,
+      "kind": "model",
+      "faction": "swarm",
+      "size": "frigate",
+      "role": "tactical",
+      "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
+      "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
+      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "glb": "assets/themes/harpy_eagle/overgrown/model.glb",
+      "texture": "/assets/themes/harpy_eagle/overgrown/albedo.png",
+      "model": "/assets/themes/harpy_eagle/overgrown/ship.model",
+      "sha256": "3f4e6957a8c894e110760ed2f30790bace38c0fa6b859251bc5054b82525a8c8",
+      "texture_sha256": "ed98fddbf276319091b596447f11d7c6d24eac411a2e181e3bbfb71079908ad1",
+      "vertices": 18489,
+      "triangles": 19768,
+      "added_vertices": 4916,
+      "added_triangles": 6164,
+      "remapped_panel_vertices": 5270,
+      "bounds_m": [
+        [
+          -41.0,
+          -6.534611225128174,
+          -36.755210876464844
+        ],
+        [
+          41.0,
+          11.60322380065918,
+          33.61323547363281
+        ]
+      ],
+      "dimensions_m": [
+        82.0,
+        18.13784,
+        70.36845
+      ],
+      "features": [
+        "Original animal hull stays visible beneath living surface detail",
+        "Swept climbing vines follow the body and wing panels",
+        "Raised leaves and five-petal blossoms",
+        "Moss-patterned enamel and restrained warm organic accents"
+      ],
+      "preview": {
+        "eye_offset": [
+          0,
+          51.195,
+          137.019
+        ],
+        "far": 243.152
+      },
+      "thumbnail": "artifacts/themes/renders/harpy_eagle-overgrown-perspective.jpg"
+    }
+  ]
+}

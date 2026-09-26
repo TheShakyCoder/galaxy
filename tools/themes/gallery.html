@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galaxy · Theme expansion</title>
+<style>
+:root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#e7ecea;background:#101820;--muted:#9fb0b5;--accent:#a4d8c4}*{box-sizing:border-box}body{margin:0}header,main,footer{max-width:1650px;margin:auto;padding:36px}.kicker,.eyebrow{text-transform:uppercase;letter-spacing:.15em;font-size:11px;color:var(--accent)}header{padding-top:55px}h1{font-size:clamp(36px,5vw,68px);font-weight:550;letter-spacing:-.045em;line-height:1.08;margin:18px 0}header>p{color:var(--muted);max-width:800px}.stats{display:flex;gap:25px;font-size:13px;color:#a8babf;margin:24px 0 32px}.stats strong{color:#f2dfb3;font-size:20px;font-weight:550;margin-right:5px}.collections{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.collection{background:#192630;color:#e3eeeb;border:1px solid #35464d;border-radius:12px;text-align:left;padding:19px;cursor:pointer;font:inherit;transition:border-color .15s,background .15s}.collection[aria-pressed=true]{border-color:var(--accent);background:#233d3b}.collection strong{display:block;font-size:20px;font-weight:550;margin-top:12px}.collection>span:last-child{font-size:12px;color:#b3c2c1}.swatches{display:flex;gap:6px}.swatches i{width:23px;height:23px;border-radius:50%;border:1px solid #ffffff38}.toolbar{display:flex;flex-wrap:wrap;gap:15px;align-items:end;margin-top:30px}label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aabcbf}select{display:block;margin-top:6px;background:#192833;border:1px solid #3b515c;border-radius:7px;padding:10px;color:#e6edee;min-width:145px;font:14px system-ui}button.compare{background:transparent;border:1px solid #91bcb0;border-radius:7px;color:#c6e5d9;padding:10px 16px;font:14px system-ui;cursor:pointer;height:39px}button.compare[aria-pressed=true]{background:#c0dccf;color:#172b27}.notice{display:flex;justify-content:space-between;gap:24px;border-block:1px solid #304149;padding:17px 0;margin-top:26px;font-size:13px;color:#acbec0}.notice p{margin:0;max-width:1000px}.count{white-space:nowrap;color:#e1debd}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}main{padding-top:0}.ship{border:1px solid #33464e;border-radius:12px;overflow:hidden;background:#192630}.ship[hidden]{display:none}.art{display:block;background:#35414e}.art img{display:block;width:100%;aspect-ratio:7/5;object-fit:contain}.info{padding:20px}.eyebrow{font-size:9px;letter-spacing:.09em;margin:0}h2{font-size:23px;font-weight:550;margin:6px 0}.finish{font-size:13px;color:#ddc892;margin:0}.description{font-size:12px;color:#a8b9bd;min-height:42px}.links{display:flex;gap:18px;font-size:12px;margin-top:20px}a{color:#a5d8c8;text-underline-offset:3px}.empty{padding:45px;text-align:center;color:#bac8c8}footer{border-top:1px solid #304149;color:#9aacb2;font-size:13px}footer p{max-width:950px}:focus-visible{outline:3px solid #efcf8c;outline-offset:4px}#view-help{display:block;font-size:11px;color:#94a5ab;margin-top:8px}@media(max-width:1150px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:850px){.grid,.collections{grid-template-columns:repeat(2,minmax(0,1fr))}header,main,footer{padding:24px}main{padding-top:0}.notice{flex-direction:column;gap:8px}}@media(max-width:530px){.grid{grid-template-columns:1fr}.collection{padding:13px}.collection strong{font-size:17px}.toolbar{gap:12px}select{min-width:135px}.stats{gap:16px}.stats strong{display:block}.description{min-height:0}}
+</style></head><body>
+<header><div class="kicker">Galaxy / Cosmetic library</div><h1>New worlds.<br>The same fleet.</h1><p>Explore the completed theme sprints. Choose a collection, find a species, and compare its new finish with the original ship.</p>
+<div class="stats"><span><strong>24</strong> species</span><span><strong>{{VARIANT_COUNT}}</strong> new variants</span><span><strong>{{COLLECTION_COUNT}}</strong> collections</span></div>
+<nav class="collections" aria-label="Paint collections">{{COLLECTION_BUTTONS}}</nav>
+<div class="toolbar" aria-label="Library filters"><label>Faction<select id="faction"><option value="all">Both factions</option><option value="accord">Accord · Fish</option><option value="swarm">Swarm · Birds</option></select></label><label>Size<select id="size"><option value="all">All sizes</option><option value="patrol">Patrol · Small</option><option value="escort">Escort · Medium</option><option value="frigate">Frigate · Largest</option></select></label><label>Species<select id="species"><option value="all">All species</option>{{SHIP_OPTIONS}}</select></label><label>View<select id="view"><option value="perspective">Three-quarter</option><option value="side">Side profile</option><option value="top">Top-down</option></select></label><button type="button" class="compare" id="compare" aria-pressed="false">Show original</button></div>
+<span id="view-help">Surface collections have three-quarter previews. Model collections have three views.</span>
+<div class="notice"><p id="collection-description"></p><span class="count" id="count" aria-live="polite">24 variants</span></div></header>
+<main><section class="grid" aria-label="Cosmetic models">{{CARDS}}</section><p class="empty" id="empty" hidden>No ships match these filters. Choose “All species” or a different faction.</p></main>
+<footer><p>These are studio renders of the actual models and textures. Images are sized to show detail; ships retain their Patrol, Escort and Frigate scale. Added details are static; bright colors use the existing opaque base-color material. In-game appearance and performance still need verification.</p><p><a href="README.md">Artist and integration notes</a> · <a href="../../assets/themes/{{CATALOG_FILE}}" download>Download asset catalog</a> · <a href="{{VALIDATION_FILE}}">Validation results</a></p></footer>
+<script>
+const catalog={{CATALOG_JSON}},base={{BASE_JSON}};
+const entries=new Map(catalog.entries.map(r=>[r.id,r])),originals=new Map(base.map(r=>[r.slug,r]));
+const cards=[...document.querySelectorAll('.ship')],collectionButtons=[...document.querySelectorAll('.collection')];
+const faction=document.querySelector('#faction'),size=document.querySelector('#size'),species=document.querySelector('#species'),view=document.querySelector('#view'),compare=document.querySelector('#compare');
+let selected='{{FIRST_COLLECTION}}',showOriginal=false;
+function update(){
+ const canRotate=catalog.collections[selected].kind==='model'||showOriginal;
+ for(const option of view.options)option.disabled=option.value!=='perspective'&&!canRotate;
+ if(!canRotate)view.value='perspective';
+ view.disabled=!canRotate;
+ let visible=0;
+ for(const card of cards){
+  const slug=card.dataset.ship,r=entries.get(slug+'.'+selected),original=originals.get(slug);
+  card.hidden=(faction.value!=='all'&&card.dataset.faction!==faction.value)||(size.value!=='all'&&card.dataset.size!==size.value)||(species.value!=='all'&&slug!==species.value);
+  if(!card.hidden)visible++;
+  const path=showOriginal?`../fleet/renders/${slug}-${view.value}.png`:`renders/${slug}-${selected}-${view.value}.jpg`;
+  const img=card.querySelector('img');img.src=path;img.alt=`${r.name}, ${showOriginal?'original':catalog.collections[selected].name}, ${view.options[view.selectedIndex].text}`;
+  card.querySelector('.art').href=path;
+  card.querySelector('.finish').textContent=showOriginal?'Original fleet finish':catalog.collections[selected].name;
+  card.querySelector('.description').textContent=showOriginal?original.identity:catalog.collections[selected].description;
+  card.querySelector('.glb').href='../../'+(showOriginal?original.glb:r.glb);
+  card.querySelector('.texture').href='../../'+(showOriginal?original.texture:r.texture.replace(/^\//,''));
+ }
+ for(const button of collectionButtons)button.setAttribute('aria-pressed',String(button.dataset.key===selected));
+ compare.setAttribute('aria-pressed',String(showOriginal));compare.textContent=showOriginal?'Return to collection':'Show original';
+ document.querySelector('#count').textContent=visible+(showOriginal?' original ship':' variant')+(visible===1?'':'s');
+ document.querySelector('#empty').hidden=visible!==0;
+ document.querySelector('#collection-description').textContent=showOriginal?'Original fleet for comparison. Return to the selected collection to see its finish.':catalog.collections[selected].description;
+}
+for(const button of collectionButtons)button.addEventListener('click',()=>{selected=button.dataset.key;showOriginal=false;update();});
+for(const input of [faction,size,species,view])input.addEventListener('change',update);
+compare.addEventListener('click',()=>{showOriginal=!showOriginal;update();});update();
+</script></body></html>

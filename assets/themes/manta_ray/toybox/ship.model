@@ -1,0 +1,4 @@
+mesh: "/assets/themes/manta_ray/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/manta_ray/toybox/albedo.png"
+name: "manta_ray_toybox"
