@@ -32,15 +32,18 @@ local json = require "nakama.util.json"
 
 local M = {}
 
--- Local docker-compose dev server (nakama-server/docker-compose.yml) -
--- SuperShips' own SERVER_CONFIG points this same shape at a remote
--- Coolify-deployed host instead; swap host/port/use_ssl if Galaxy ever gets
--- a deployed server of its own.
+-- Read from game.project's [nakama] section, whose committed defaults point
+-- at the local docker-compose dev server (nakama-server/docker-compose.yml).
+-- The deployed web build overrides them at bundle time via bob's --settings
+-- (see Dockerfile and docs/DEPLOY_COOLIFY.md), so the production host never
+-- has to be hard-coded here.
 local SERVER_CONFIG = {
-	host = "127.0.0.1",
-	port = 7350,
-	use_ssl = false,
-	username = "defaultkey", -- Nakama's default server key, not a user login
+	host = sys.get_config_string("nakama.host", "127.0.0.1"),
+	port = sys.get_config_int("nakama.port", 7350),
+	use_ssl = sys.get_config_int("nakama.use_ssl", 0) == 1,
+	-- Nakama's server key, not a user login - ships inside every client
+	-- build, so it's an identifier rather than a secret.
+	username = sys.get_config_string("nakama.server_key", "defaultkey"),
 	password = "",
 	engine = defold,
 	timeout = 10,

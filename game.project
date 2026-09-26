@@ -25,3 +25,8 @@ dependencies#0 = https://github.com/defold/extension-poki-sdk/archive/refs/heads
 dependencies#1 = https://github.com/defold/extension-websocket/archive/4.2.4.zip
 dependencies#2 = https://github.com/heroiclabs/nakama-defold/archive/master.zip
 
+[nakama]
+host = 127.0.0.1
+port = 7350
+use_ssl = 0
+server_key = defaultkey

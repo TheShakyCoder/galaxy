@@ -1,0 +1,7 @@
+.git
+.internal
+.DS_Store
+build
+nakama-server
+plan.md
+tools
