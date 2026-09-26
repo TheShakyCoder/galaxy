@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/manta_ray/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/manta_ray/clockwork/albedo.png"
+name: "manta_ray_clockwork"

@@ -1,0 +1,5 @@
+# Generated text must reproduce byte for byte after a Windows checkout too.
+*.model text eol=lf
+*.json text eol=lf
+*.glb binary
+*.png binary

@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/anglerfish/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/anglerfish/clockwork/albedo.png"
+name: "anglerfish_clockwork"

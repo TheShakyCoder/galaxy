@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_support/manta_ray.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/manta_ray/royal_amethyst/albedo.png"
+name: "manta_ray_royal_amethyst"

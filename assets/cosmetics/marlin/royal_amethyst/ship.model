@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_interceptor/marlin.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/marlin/royal_amethyst/albedo.png"
+name: "marlin_royal_amethyst"

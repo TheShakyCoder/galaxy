@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/golden_eagle/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/golden_eagle/clockwork/albedo.png"
+name: "golden_eagle_clockwork"

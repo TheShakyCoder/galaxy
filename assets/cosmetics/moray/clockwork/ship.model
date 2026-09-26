@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/moray/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/moray/clockwork/albedo.png"
+name: "moray_clockwork"

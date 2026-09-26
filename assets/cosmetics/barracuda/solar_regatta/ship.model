@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_interceptor/barracuda.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/barracuda/solar_regatta/albedo.png"
+name: "barracuda_solar_regatta"

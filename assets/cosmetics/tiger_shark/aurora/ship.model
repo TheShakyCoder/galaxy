@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_assault/tiger_shark.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/tiger_shark/aurora/albedo.png"
+name: "tiger_shark_aurora"

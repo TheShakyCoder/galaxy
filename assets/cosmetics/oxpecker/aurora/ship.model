@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_support/oxpecker.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/oxpecker/aurora/albedo.png"
+name: "oxpecker_aurora"

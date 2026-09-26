@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/egret/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/egret/clockwork/albedo.png"
+name: "egret_clockwork"
