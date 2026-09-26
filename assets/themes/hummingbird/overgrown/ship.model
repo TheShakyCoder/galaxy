@@ -1,0 +1,4 @@
+mesh: "/assets/themes/hummingbird/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/hummingbird/overgrown/albedo.png"
+name: "hummingbird_overgrown"

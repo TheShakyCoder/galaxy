@@ -1,0 +1,4 @@
+mesh: "/assets/themes/piranha/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/piranha/overgrown/albedo.png"
+name: "piranha_overgrown"

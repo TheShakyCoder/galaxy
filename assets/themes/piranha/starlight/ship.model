@@ -1,0 +1,4 @@
+mesh: "/assets/themes/piranha/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/piranha/starlight/albedo.png"
+name: "piranha_starlight"

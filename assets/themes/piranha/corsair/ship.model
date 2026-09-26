@@ -1,0 +1,4 @@
+mesh: "/assets/themes/piranha/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/piranha/corsair/albedo.png"
+name: "piranha_corsair"

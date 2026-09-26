@@ -1,0 +1,602 @@
+{
+  "result": "PASS",
+  "sprint": 1,
+  "variants": 72,
+  "collections": [
+    "grand_prix",
+    "porcelain_dynasty",
+    "starlight"
+  ],
+  "source_hulls_preserved": true,
+  "all_preexisting_files_preserved": true,
+  "previous_sprint_assets_checked": 72,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 72,
+  "preview_poses": 8640,
+  "render_files_verified": 72,
+  "rebuild_verified": true,
+  "rows": [
+    {
+      "id": "sardine.porcelain_dynasty",
+      "triangles": 14252,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.starlight",
+      "triangles": 14252,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.grand_prix",
+      "triangles": 14252,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.porcelain_dynasty",
+      "triangles": 9744,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.starlight",
+      "triangles": 9744,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.grand_prix",
+      "triangles": 9744,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.porcelain_dynasty",
+      "triangles": 9444,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.starlight",
+      "triangles": 9444,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.grand_prix",
+      "triangles": 9444,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.porcelain_dynasty",
+      "triangles": 9208,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.starlight",
+      "triangles": 9208,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.grand_prix",
+      "triangles": 9208,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.porcelain_dynasty",
+      "triangles": 9584,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.7802,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.starlight",
+      "triangles": 9584,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.7802,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.grand_prix",
+      "triangles": 9584,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.7802,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.porcelain_dynasty",
+      "triangles": 11076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7777,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.starlight",
+      "triangles": 11076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7777,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.grand_prix",
+      "triangles": 11076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7777,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.porcelain_dynasty",
+      "triangles": 9464,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7741,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.starlight",
+      "triangles": 9464,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7741,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.grand_prix",
+      "triangles": 9464,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7741,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.porcelain_dynasty",
+      "triangles": 9692,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7807,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.starlight",
+      "triangles": 9692,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7807,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.grand_prix",
+      "triangles": 9692,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7807,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.porcelain_dynasty",
+      "triangles": 9076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7915,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.starlight",
+      "triangles": 9076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7915,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.grand_prix",
+      "triangles": 9076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7915,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.porcelain_dynasty",
+      "triangles": 9156,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7873,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.starlight",
+      "triangles": 9156,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7873,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.grand_prix",
+      "triangles": 9156,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7873,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.porcelain_dynasty",
+      "triangles": 10192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7906,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.starlight",
+      "triangles": 10192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7906,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.grand_prix",
+      "triangles": 10192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7906,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.porcelain_dynasty",
+      "triangles": 11280,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7902,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.starlight",
+      "triangles": 11280,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7902,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.grand_prix",
+      "triangles": 11280,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7902,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.porcelain_dynasty",
+      "triangles": 13192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.starlight",
+      "triangles": 13192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.grand_prix",
+      "triangles": 13192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.porcelain_dynasty",
+      "triangles": 14540,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.starlight",
+      "triangles": 14540,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.grand_prix",
+      "triangles": 14540,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.porcelain_dynasty",
+      "triangles": 13620,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.starlight",
+      "triangles": 13620,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.grand_prix",
+      "triangles": 13620,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.porcelain_dynasty",
+      "triangles": 13184,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.starlight",
+      "triangles": 13184,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.grand_prix",
+      "triangles": 13184,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.porcelain_dynasty",
+      "triangles": 13148,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.5933,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.starlight",
+      "triangles": 13148,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.5933,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.grand_prix",
+      "triangles": 13148,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.5933,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.porcelain_dynasty",
+      "triangles": 14036,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6802,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.starlight",
+      "triangles": 14036,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6802,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.grand_prix",
+      "triangles": 14036,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6802,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.porcelain_dynasty",
+      "triangles": 13840,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7388,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.starlight",
+      "triangles": 13840,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7388,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.grand_prix",
+      "triangles": 13840,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7388,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.porcelain_dynasty",
+      "triangles": 13524,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5759,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.starlight",
+      "triangles": 13524,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5759,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.grand_prix",
+      "triangles": 13524,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5759,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.porcelain_dynasty",
+      "triangles": 13204,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.558,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.starlight",
+      "triangles": 13204,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.558,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.grand_prix",
+      "triangles": 13204,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.558,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.porcelain_dynasty",
+      "triangles": 15628,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.7137,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.starlight",
+      "triangles": 15628,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.7137,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.grand_prix",
+      "triangles": 15628,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.7137,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.porcelain_dynasty",
+      "triangles": 13752,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6009,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.starlight",
+      "triangles": 13752,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6009,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.grand_prix",
+      "triangles": 13752,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6009,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.porcelain_dynasty",
+      "triangles": 13604,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.starlight",
+      "triangles": 13604,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.grand_prix",
+      "triangles": 13604,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}

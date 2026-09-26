@@ -1,0 +1,4 @@
+mesh: "/assets/themes/pelican/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/pelican/porcelain_dynasty/albedo.png"
+name: "pelican_porcelain_dynasty"

@@ -14,7 +14,8 @@
 -- Responsibilities:
 --   1. Authenticate against the self-hosted Nakama server
 --      (nakama-server/docker-compose.yml, local dev) using a persisted
---      device id, and connect the realtime socket. M.connect() is called
+--      device id, and connect the realtime socket, reconnecting on its own
+--      whenever that fails or drops. M.connect() is called
 --      once from main/remote_ships.script's init() (that game object is
 --      embedded directly in main/main.collection, so this runs at game
 --      boot, before the player has even picked a faction or launched).
@@ -69,6 +70,32 @@ local function room_name_for(system_id)
 	return SPACE_ROOM_PREFIX .. (system_id or "unknown")
 end
 
+-- Automatic reconnection: any failed connect attempt or dropped socket
+-- schedules another M.connect() after `reconnect_delay` seconds, doubling
+-- per consecutive failure up to RECONNECT_MAX_DELAY and resetting to
+-- RECONNECT_MIN_DELAY once a connection succeeds. Keeps retrying forever -
+-- a player left on the page through a server restart rejoins on their own.
+local RECONNECT_MIN_DELAY = 1
+local RECONNECT_MAX_DELAY = 30
+local reconnect_delay = RECONNECT_MIN_DELAY
+local reconnect_pending = false
+local connecting = false
+
+-- True once join_space_room() has been called - i.e. something wants to be
+-- in a room - so every successful (re)connect rejoins it automatically.
+local wants_room = false
+
+-- Remote user_ids seen in the current room, so their ships can be removed
+-- (via M.on_leave) when this client drops or changes room - no presence
+-- "leave" events arrive for those cases, which would otherwise leave frozen
+-- ghost ships behind.
+local room_senders = {}
+
+-- Resolved once per launch and reused on every reconnect: debug builds get a
+-- fresh random id per call (see get_or_create_device_id()), which would
+-- otherwise turn each reconnect into a brand-new Nakama user.
+local device_id = nil
+
 M.client = nil
 M.socket = nil
 M.session = nil
@@ -77,6 +104,29 @@ M.in_room = false
 M.channel_id = nil
 M.on_transform = nil
 M.on_leave = nil
+
+local function clear_room_senders()
+	local senders = room_senders
+	room_senders = {}
+	if M.on_leave then
+		for user_id in pairs(senders) do
+			M.on_leave(user_id)
+		end
+	end
+end
+
+local function schedule_reconnect()
+	if reconnect_pending then
+		return
+	end
+	reconnect_pending = true
+	print(string.format("[network] reconnecting in %ds", reconnect_delay))
+	timer.delay(reconnect_delay, false, function()
+		reconnect_pending = false
+		M.connect()
+	end)
+	reconnect_delay = math.min(reconnect_delay * 2, RECONNECT_MAX_DELAY)
+end
 
 local function device_id_file()
 	return sys.get_save_file("galaxy", "device_id")
@@ -107,44 +157,64 @@ local function get_or_create_device_id()
 end
 
 local function open_socket(session_obj, callback)
-	M.socket = nakama.create_socket(M.client)
-	local ok, err = M.socket.connect()
+	local socket = nakama.create_socket(M.client)
+	local ok, err = socket.connect()
 	if not ok then
 		print("[network] socket connect failed: " .. tostring(err and err.message))
+		connecting = false
+		schedule_reconnect()
 		if callback then callback(false) end
 		return
 	end
+	M.socket = socket
 
-	M.socket.on_disconnect(function()
+	socket.on_disconnect(function()
+		-- ignore late events from a socket already replaced by a reconnect
+		if M.socket ~= socket then
+			return
+		end
 		M.connected = false
 		M.in_room = false
+		M.channel_id = nil
+		clear_room_senders()
 		print("[network] disconnected")
+		schedule_reconnect()
 	end)
-	M.socket.on_error(function(socket_err)
+	socket.on_error(function(socket_err)
 		print("[network] socket error: " .. tostring(socket_err and socket_err.message or socket_err))
 	end)
 
+	connecting = false
+	reconnect_delay = RECONNECT_MIN_DELAY
 	M.connected = true
 	print("[network] connected as " .. tostring(session_obj.user_id))
+	if wants_room then
+		M.join_space_room()
+	end
 	if callback then callback(true) end
 end
 
 -- Authenticates and connects the realtime socket. callback(ok) is called
--- once the outcome is known. Safe to call more than once; subsequent calls
--- are no-ops if already connected.
+-- once this attempt's outcome is known. Safe to call more than once: a no-op
+-- while already connected or mid-attempt. On failure, or if the socket later
+-- drops, it retries by itself (see schedule_reconnect()), re-authenticating
+-- each time so an expired session token can't block reconnecting.
 function M.connect(callback)
-	if M.client then
+	if M.connected or connecting then
 		if callback then callback(M.connected) end
 		return
 	end
+	connecting = true
 
 	nakama.sync(function()
-		M.client = nakama.create_client(SERVER_CONFIG)
+		M.client = M.client or nakama.create_client(SERVER_CONFIG)
+		device_id = device_id or get_or_create_device_id()
 
-		local device_id = get_or_create_device_id()
 		local session_obj = nakama.authenticate_device(M.client, device_id, nil, true, nil)
 		if not session_obj or session_obj.error or not session_obj.token then
 			print("[network] authentication failed: " .. tostring(session_obj and (session_obj.message or session_obj.error)))
+			connecting = false
+			schedule_reconnect()
 			if callback then callback(false) end
 			return
 		end
@@ -158,19 +228,16 @@ end
 -- Joins the shared space room and starts listening for other ships'
 -- transforms. on_transform(user_id, {x,y,z,qx,qy,qz,qw,faction,speed,model})
 -- fires whenever another player's ship moves; on_leave(user_id) fires when
--- they disconnect or leave the room. Retries automatically until
--- M.connect() has finished, so call order with M.connect() doesn't matter.
+-- they disconnect or leave the room, and for every known ship when this
+-- client itself drops or changes room. If not connected yet, the join
+-- happens automatically once M.connect() succeeds - and again after every
+-- reconnect - so call order with M.connect() doesn't matter.
 function M.join_space_room(on_transform, on_leave)
 	M.on_transform = on_transform or M.on_transform
 	M.on_leave = on_leave or M.on_leave
+	wants_room = true
 
-	if not M.connected then
-		timer.delay(0.2, false, function()
-			M.join_space_room(M.on_transform, M.on_leave)
-		end)
-		return
-	end
-	if M.in_room then
+	if not M.connected or M.in_room then
 		return
 	end
 
@@ -181,6 +248,7 @@ function M.join_space_room(on_transform, on_leave)
 		end
 		local ok, payload = pcall(json.decode, chan.content)
 		if ok and payload and payload.x and M.on_transform then
+			room_senders[chan.sender_id] = true
 			M.on_transform(chan.sender_id, payload)
 		end
 	end)
@@ -191,6 +259,7 @@ function M.join_space_room(on_transform, on_leave)
 			return
 		end
 		for _, p in ipairs(pres.leaves) do
+			room_senders[p.user_id] = nil
 			if M.on_leave then M.on_leave(p.user_id) end
 		end
 	end)
@@ -203,6 +272,11 @@ function M.join_space_room(on_transform, on_leave)
 		local result, err = M.socket.channel_join(room_name_for(current_system_id), nakama_socket.CHANNELTYPE_ROOM, false, false)
 		if not result then
 			print("[network] failed to join space room: " .. tostring(err and err.message))
+			-- try again shortly; if the socket itself has dropped, the
+			-- reconnect path rejoins instead and this retry no-ops
+			timer.delay(RECONNECT_MIN_DELAY, false, function()
+				M.join_space_room()
+			end)
 			return
 		end
 		M.channel_id = result.channel and result.channel.id or result.id
@@ -231,6 +305,7 @@ function M.rejoin_room_for_system(system_id)
 	end
 	M.in_room = false
 	M.channel_id = nil
+	clear_room_senders()
 	M.join_space_room(M.on_transform, M.on_leave)
 end
 

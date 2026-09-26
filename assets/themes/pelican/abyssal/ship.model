@@ -1,0 +1,4 @@
+mesh: "/assets/themes/pelican/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/pelican/abyssal/albedo.png"
+name: "pelican_abyssal"

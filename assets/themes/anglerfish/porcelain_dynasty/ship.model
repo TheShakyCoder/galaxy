@@ -1,0 +1,4 @@
+mesh: "/assets/themes/anglerfish/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/anglerfish/porcelain_dynasty/albedo.png"
+name: "anglerfish_porcelain_dynasty"
