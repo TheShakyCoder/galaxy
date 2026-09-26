@@ -1,6 +1,7 @@
 -- Minimal flight HUD (plan.md §4's "Build flight mode" TODO) - the
--- current-speed readout, the docking prompt/countdown, and a radar,
--- nothing else yet (no shields/targeting reticle/etc.). Same "starts
+-- current-speed readout, the docking prompt/countdown, a radar, and a
+-- TARGET: text readout (no shields/on-screen reticle/nameplates yet). Same
+-- "starts
 -- disabled, hidden until told to show" pattern as main/faction_select.gui_script
 -- and main/outpost.gui_script, except the thing enabling/hiding it is a
 -- plain game object (main/player_ship.script's start_flight()/
@@ -16,6 +17,11 @@
 --    once main/flight_map.gui's sector map arms a jump destination -
 --    persists after the map closes, same as the source project's own
 --    hud.gui_script "jump_preset_changed" indicator
+--  - "target" - a text string ("TARGET: <faction>  <N>m" / "... (out of
+--    range)" / "...  [FOLLOWING]" / nil to hide) for whatever TAB/X/C/Y
+--    currently has locked (per direct instruction: "search superships for
+--    all references to target. Implement what you find") - same
+--    hide-when-nil convention as dock_prompt/jump_preset below
 --  - "system_changed" - a text string ("SYSTEM: <name>") whenever the
 --    player's current system changes (initial launch, or an FTL jump
 --    landing - see player_ship.script's start_flight()/arrive_at_system()) -
@@ -55,6 +61,7 @@ local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
 function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
+	self.target_text_node = gui.get_node("target_text")
 	self.jump_preset_node = gui.get_node("jump_preset")
 	self.system_name_node = gui.get_node("system_name")
 	self.scrip_node = gui.get_node("scrip_value")
@@ -136,6 +143,15 @@ function on_message(self, message_id, message)
 		gui.set_enabled(self.jump_preset_node, message.text ~= nil)
 		if message.text then
 			gui.set_text(self.jump_preset_node, message.text)
+		end
+	elseif message_id == hash("target") then
+		-- main/player_ship.script's TAB/X/C/T/Y targeting (per direct
+		-- instruction: "search superships for all references to target.
+		-- Implement what you find") - same hide-when-nil convention
+		-- dock_prompt/jump_preset above already use.
+		gui.set_enabled(self.target_text_node, message.text ~= nil)
+		if message.text then
+			gui.set_text(self.target_text_node, message.text)
 		end
 	elseif message_id == hash("system_changed") then
 		gui.set_text(self.system_name_node, message.text)

@@ -289,7 +289,7 @@ end
 
 -- Conversion factor between main/data/ships.lua's ftl_range_ly (real
 -- light-years) and this file's own map_x/map_y distance scale (decided,
--- per direct instruction: "one light-year = 35 pixels"). Callers comparing
+-- per direct instruction: "one light-year = 30 pixels"). Callers comparing
 -- a ship's FTL range against M.distance()'s own output (e.g.
 -- main/player_ship.script's toggle_map()/"set_jump_preset" handler) should
 -- convert through M.ly_to_map_units() first - M.distance()/M.in_ftl_range()

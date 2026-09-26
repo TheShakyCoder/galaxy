@@ -22,6 +22,8 @@
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
 local session = require("main.session")
+local network = require("main.network")
+local remote_registry = require("main.remote_registry")
 
 -- Two DIFFERENT "forward" concepts, deliberately kept separate - conflating
 -- them into one shared FORWARD constant was a real bug, found via live
@@ -184,6 +186,12 @@ local DOCK_COUNTDOWN_SEC = 5
 -- project's own identical constant has (§0).
 local COMBAT_JUMP_MULTIPLIER = 4
 
+-- How often this ship's own transform is broadcast to main/network.lua's
+-- current room (10Hz - matches ~/Defold/SuperShips/main/ship.script's own
+-- network_send_interval, §0). Well below render frame rate; remote clients
+-- smooth between updates themselves (see main/remote_ships.script).
+local NETWORK_SEND_INTERVAL = 0.1
+
 -- Uniform-on-sphere-surface point at radius DOCK_RANGE around
 -- outpost_pos, facing the system origin from there - same
 -- acos(2u-1)-for-polar-angle technique main/data/asteroids.lua already
@@ -267,6 +275,13 @@ local CAMERA_DEFAULT_DISTANCE = 12
 local CAMERA_DEFAULT_HEIGHT = 4
 local CAMERA_FOLLOW_SPEED = 3.0
 
+-- How fast Y's Follow Friend eases heading toward pure pursuit of its
+-- target each frame (update()'s follow_friend rotation block) - same
+-- shape/purpose as CAMERA_FOLLOW_SPEED above, just for the ship's own
+-- heading instead of the chase camera's. Same default value as the source
+-- project's own go.property("autopilot_response", 2.0) (§0).
+local AUTOPILOT_RESPONSE = 2.0
+
 local function camera_distance_height(ship_id)
 	local ship = ships.SHIPS[ship_id]
 	local fc = ship and ship.flight_camera
@@ -307,6 +322,9 @@ function init(self)
 	self.current_system_id = nil
 	self.ship_id = nil -- resolved from session.get_ship_id() in start_flight() - not known yet here (faction/ship selection hasn't happened this early)
 	self.model_component_id = nil
+	self.network_send_timer = 0
+	self.target_id = nil -- currently-targeted remote user_id (any ship, friend or foe - see cycle_target()/target_nearest_enemy() above), or nil
+	self.follow_friend = false -- Y's Follow Friend - see update()'s targeting/movement block
 	msg.post("flight_camera#camera", "disable")
 end
 
@@ -330,6 +348,9 @@ local function start_flight(self)
 	self.jump_target_system = nil
 	self.jump_hydrogen_spent = 0
 	self.in_combat = false
+	self.network_send_timer = 0
+	self.target_id = nil
+	self.follow_friend = false
 
 	-- Which of main/main.collection's 24 pre-embedded model components to
 	-- show (per direct instruction: the ship actually flown must match
@@ -379,6 +400,12 @@ local function start_flight(self)
 	self.current_system_id = star_systems.HOME_SYSTEM[faction]
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[self.current_system_id].name })
+	-- Realtime presence (AskUserQuestion's "Realtime presence only" slice) -
+	-- main/network_hub's remote_ships.script already called network.connect()
+	-- at boot and joined this same home-system room as its own default, so
+	-- this call is normally a same-system no-op - it's here so launching
+	-- still joins correctly even if this ever stops matching that default.
+	network.rejoin_room_for_system(self.current_system_id)
 end
 
 -- Makes `system_id` the player's current system - the Galaxy-appropriate
@@ -428,6 +455,10 @@ local function arrive_at_system(self, system_id)
 
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[system_id].name })
+	-- Leave the old system's room and join the new one, so players in
+	-- different systems don't see each other's transforms (Realtime
+	-- presence only slice - see main/network.lua's own comment).
+	network.rejoin_room_for_system(system_id)
 end
 
 -- Mirror image of start_flight() - returns to the outpost menu the same
@@ -518,6 +549,95 @@ local function execute_jump(self)
 	end
 end
 
+-- Targeting (per direct instruction: "search superships for all references
+-- to target. Implement what you find") - ported from
+-- ~/Defold/SuperShips/main/ship.script (§0). input/game.input_binding
+-- already declared every one of these actions (cycle_target/TAB,
+-- target_nearest_enemy/X, cancel_target/C, match_speed/T, follow_friend/Y,
+-- target_nearest_missile/Z, track_target/right-click) when the whole
+-- control scheme was ported wholesale, well before flight mode itself was
+-- built - none of them were ever wired to a handler until now, and none of
+-- those keys collide with anything Galaxy's own flight controls (WASD/
+-- arrows, +/-/Q/E, Space, K, J, N) use, so there's no key-binding
+-- discrepancy to flag.
+--
+-- Deliberately NOT ported: right-click's own track_target/Target Tracking
+-- pivot (needs a screen-to-world mouse raycast against remote ships -
+-- Galaxy's flight camera has no picking utility of any kind yet, unlike
+-- the source project, and everything else in Galaxy's own flight mode is
+-- keyboard-only - see main/player_ship.script's own header comment), V's
+-- target-view camera mode (a separate camera-cycle feature, not itself a
+-- "target" mechanic - V/camera_cycle isn't wired to anything else yet
+-- either), and Z's target_nearest_missile (kept as the source project's own
+-- honest no-op - Galaxy has no missile/projectile entity, same as there).
+-- All are pre-existing, unrelated gaps, not new discrepancies this task
+-- introduced.
+--
+-- How far away TAB/X will still pick up a ship to target - an
+-- already-locked target isn't force-cleared just for later drifting past
+-- this (see update()'s "out of range" dock_prompt-style HUD text), only a
+-- fresh TAB/X press respects it. Same value as the source project's own
+-- TARGET_RANGE (a literal port, not a fresh guess).
+local TARGET_RANGE = 300
+
+-- TAB cycles self.target_id among ANY remote ship (main/remote_registry.lua,
+-- populated by main/remote_ships.script from the current system's Nakama
+-- room - no NPCs exist yet, so remote players are the only candidates) in
+-- TARGET_RANGE, friend or foe alike - not faction-filtered, since Y's own
+-- follow-friend needs to be able to lock a same-faction ship through this
+-- same slot. Stable (id-sorted) order so repeated presses step through the
+-- same list even though ship positions change every frame; if the current
+-- target's dropped out of the candidate list, the next press starts over
+-- from the first candidate. Ported technique from the source project's own
+-- cycle_target() (§0).
+local function cycle_target(self)
+	local pos = go.get_position()
+	local candidates = {}
+	for user_id, ship in pairs(remote_registry.ships) do
+		if vmath.length(ship.pos - pos) <= TARGET_RANGE then
+			table.insert(candidates, user_id)
+		end
+	end
+	table.sort(candidates)
+
+	if #candidates == 0 then
+		self.target_id = nil
+		return
+	end
+
+	local next_index = 1
+	for i, id in ipairs(candidates) do
+		if id == self.target_id then
+			next_index = (i % #candidates) + 1
+			break
+		end
+	end
+	self.target_id = candidates[next_index]
+end
+
+-- X - picks the nearest OPPOSITE-faction remote ship in TARGET_RANGE as
+-- self.target_id (same slot cycle_target() above fills), by distance
+-- rather than by stepping a stable list. A miss (nothing in range) leaves
+-- whatever's already targeted alone. Ported technique from the source
+-- project's own target_nearest_enemy() (§0).
+local function target_nearest_enemy(self)
+	local pos = go.get_position()
+	local own_faction = session.get_faction()
+	local best_id, best_dist_sq = nil, TARGET_RANGE * TARGET_RANGE
+	for user_id, ship in pairs(remote_registry.ships) do
+		if ship.faction ~= own_faction then
+			local d = ship.pos - pos
+			local dist_sq = vmath.dot(d, d)
+			if dist_sq <= best_dist_sq then
+				best_id, best_dist_sq = user_id, dist_sq
+			end
+		end
+	end
+	if best_id then
+		self.target_id = best_id
+	end
+end
+
 -- Selecting a system on main/flight_map.gui arms it as a preset -
 -- re-validated independently here rather than trusting that gui_script's
 -- own reachability check outright (same "don't just trust the sender"
@@ -570,15 +690,78 @@ function on_input(self, action_id, action)
 		self.input.boost = not action.released
 	elseif action_id == hash("throttle_up") then
 		self.input.throttle_up = not action.released
+		if action.pressed then
+			self.follow_friend = false -- manual throttle always wins over Y's own speed-matching
+		end
 	elseif action_id == hash("throttle_down") then
 		self.input.throttle_down = not action.released
+		if action.pressed then
+			self.follow_friend = false
+		end
 	elseif action_id == hash("stop_throttle") then
 		if action.pressed then
 			self.throttle = 0.0
+			self.follow_friend = false
 		end
 	elseif action_id == hash("full_throttle") then
 		if action.pressed then
 			self.throttle = 1.0
+			self.follow_friend = false
+		end
+	elseif action_id == hash("cancel_target") then
+		-- C - clears whatever TAB/X currently has locked; follow-friend is
+		-- cleared alongside it, same as when the target disconnects
+		-- entirely (see update()'s targeting block) - it means nothing
+		-- without a target.
+		if action.pressed then
+			self.target_id = nil
+			self.follow_friend = false
+		end
+	elseif action_id == hash("cycle_target") then
+		-- TAB - see cycle_target()'s own comment above
+		if action.pressed then
+			cycle_target(self)
+		end
+	elseif action_id == hash("target_nearest_enemy") then
+		-- X - see target_nearest_enemy()'s own comment above
+		if action.pressed then
+			target_nearest_enemy(self)
+		end
+	elseif action_id == hash("target_nearest_missile") then
+		-- Z - NOT IMPLEMENTED: no missile/projectile-in-flight entity
+		-- exists anywhere in this project for this to ever refer to, same
+		-- as the source project's own honest no-op for this key (§0) -
+		-- consumed rather than left unbound.
+		-- (nothing to do)
+	elseif action_id == hash("match_speed") then
+		-- T - Match Speed: a ONE-SHOT snapshot, not a continuous track -
+		-- sets this ship's own throttle LEVER to whatever fraction of its
+		-- own top speed currently equals the target's broadcast speed,
+		-- right now; update()'s existing acceleration-bounded lerp (same
+		-- one +/-/Q/E already drive) eases self.speed toward that from
+		-- here, same as any other throttle change. Doesn't keep re-syncing
+		-- afterward if the target's speed changes later - press T again
+		-- for that - and, like any manual throttle change, always
+		-- overrides follow-friend. Ported technique from the source
+		-- project's own on_input "match_speed" handler (§0).
+		if action.pressed then
+			local target = self.target_id and remote_registry.ships[self.target_id]
+			if target then
+				local _, max_speed = flight_stats(self.ship_id)
+				self.throttle = math.max(0, math.min(1, (target.speed or 0) / max_speed))
+				self.follow_friend = false
+			end
+		end
+	elseif action_id == hash("follow_friend") then
+		-- Y - no-op with no target, or a target that isn't a SAME-faction
+		-- ship - there'd be nothing sensible to fly in formation with (an
+		-- enemy isn't a "friend" to follow). Ported technique from the
+		-- source project's own on_input "follow_friend" handler (§0).
+		if action.pressed then
+			local target = self.target_id and remote_registry.ships[self.target_id]
+			if target and target.faction == session.get_faction() then
+				self.follow_friend = not self.follow_friend
+			end
 		end
 	elseif action_id == hash("dock") then
 		-- "Pressing K will cancel your FTL jump" - checked first, same key
@@ -622,6 +805,29 @@ function update(self, dt)
 	local turn_speed_deg, max_speed, boost_speed, acceleration, visual_range, _, _, turn_accel_deg = flight_stats(self.ship_id)
 	local turn_speed_rad = math.rad(turn_speed_deg)
 	local turn_accel_rad = math.rad(turn_accel_deg)
+	local pos = go.get_position()
+
+	-- Targeting: self.target_id is set by TAB/X (cycle_target()/
+	-- target_nearest_enemy() above) or cleared by C - resolved right at the
+	-- top of update() since the follow-friend movement block immediately
+	-- below needs the target's position/speed, and the HUD readout further
+	-- down reuses this same local. Ported technique from the source
+	-- project's own update() (§0).
+	local target_ship = self.target_id and remote_registry.ships[self.target_id]
+	if self.target_id and not target_ship then
+		-- disconnected, or otherwise dropped out of the registry entirely
+		-- (see main/remote_ships.script's "remote_leave" handler) - NOT the
+		-- same as merely drifting out of TARGET_RANGE, which keeps the lock
+		-- (see the "out of range" HUD text further down).
+		self.target_id = nil
+	end
+	if self.follow_friend and not (target_ship and target_ship.faction == session.get_faction()) then
+		-- target gone entirely, or (shouldn't normally happen - on_input's
+		-- "follow_friend" handler already only turns this on for a
+		-- same-faction target - but re-checked every frame anyway in case
+		-- the registry entry itself changes) no longer a friendly ship.
+		self.follow_friend = false
+	end
 
 	local pitch_delta = (self.input.pitch_up and 1 or 0) - (self.input.pitch_down and 1 or 0)
 	local yaw_delta = (self.input.yaw_left and 1 or 0) - (self.input.yaw_right and 1 or 0)
@@ -650,43 +856,72 @@ function update(self, dt)
 	end
 
 	local rot = go.get_rotation()
-	local target_angular_velocity = vmath.vector3(
-		turn_speed_rad * pitch_delta,
-		turn_speed_rad * yaw_delta,
-		0)
-	if pitch_delta == 0 and yaw_delta == 0 and self.time_since_rotation_input >= AUTO_LEVEL_DELAY then
-		-- Auto-level (per direct instruction) - a proportional "spring
-		-- back to level" target for roll ALONE, only once the player's
-		-- genuinely let go for AUTO_LEVEL_DELAY seconds, same "don't
-		-- fight an active maneuver" reasoning the reference project's own
-		-- version has. See level_roll_angle()'s own comment for why the
-		-- sign here is the OPPOSITE of the reference project's own
-		-- `torque.z - roll_angle*speed` - this hull's nose is at local
-		-- +Z, not the reference's -Z, which flips which rotation SENSE
-		-- around the forward axis counts as "banking right" (verified
-		-- numerically via a standalone quaternion simulation before
-		-- landing, not just re-derived by hand - flag if this ever needs
-		-- re-checking, e.g. if SHIP_FORWARD's own sign ever changes).
-		local roll_angle = level_roll_angle(rot)
-		target_angular_velocity.z = math.max(-turn_speed_rad, math.min(turn_speed_rad, AUTO_LEVEL_SPEED * roll_angle))
-	end
-
-	local max_angular_delta = turn_accel_rad * dt
-	for _, axis in ipairs({ "x", "y", "z" }) do
-		local diff = target_angular_velocity[axis] - self.angular_velocity[axis]
-		if diff > max_angular_delta then
-			self.angular_velocity[axis] = self.angular_velocity[axis] + max_angular_delta
-		elseif diff < -max_angular_delta then
-			self.angular_velocity[axis] = self.angular_velocity[axis] - max_angular_delta
-		else
-			self.angular_velocity[axis] = target_angular_velocity[axis]
+	if self.follow_friend and target_ship then
+		-- Y's Follow Friend, fully driving rotation in place of the manual
+		-- pitch/yaw/auto-level block below: steers straight at the
+		-- target's CURRENT position every frame (pure pursuit, not a lead/
+		-- intercept solution - it re-aims continuously as the target moves
+		-- rather than predicting ahead). on_input cancels follow-friend the
+		-- instant a manual throttle key is pressed, and pitch/yaw simply
+		-- aren't read while this branch is active, so it and manual
+		-- rotation never actually run in the same frame - no blending/
+		-- arbitration needed here. Ported technique from the source
+		-- project's own update() (§0).
+		local to_target = target_ship.pos - pos
+		local look_rot = rot
+		if vmath.length(to_target) > 0.0001 then
+			local dir = vmath.normalize(to_target)
+			if vmath.dot(SHIP_FORWARD, dir) < -0.9999 then
+				-- quat_from_to() returns NaN for exactly-opposite vectors,
+				-- same edge case random_spawn() above already handles.
+				look_rot = vmath.quat_axis_angle(UP, math.pi)
+			else
+				look_rot = vmath.quat_from_to(SHIP_FORWARD, dir)
+			end
 		end
-	end
+		local t = 1.0 - math.exp(-AUTOPILOT_RESPONSE * dt)
+		rot = vmath.normalize(vmath.slerp(t, rot, look_rot))
+		self.angular_velocity = vmath.vector3()
+		self.time_since_rotation_input = 0
+	else
+		local target_angular_velocity = vmath.vector3(
+			turn_speed_rad * pitch_delta,
+			turn_speed_rad * yaw_delta,
+			0)
+		if pitch_delta == 0 and yaw_delta == 0 and self.time_since_rotation_input >= AUTO_LEVEL_DELAY then
+			-- Auto-level (per direct instruction) - a proportional "spring
+			-- back to level" target for roll ALONE, only once the player's
+			-- genuinely let go for AUTO_LEVEL_DELAY seconds, same "don't
+			-- fight an active maneuver" reasoning the reference project's own
+			-- version has. See level_roll_angle()'s own comment for why the
+			-- sign here is the OPPOSITE of the reference project's own
+			-- `torque.z - roll_angle*speed` - this hull's nose is at local
+			-- +Z, not the reference's -Z, which flips which rotation SENSE
+			-- around the forward axis counts as "banking right" (verified
+			-- numerically via a standalone quaternion simulation before
+			-- landing, not just re-derived by hand - flag if this ever needs
+			-- re-checking, e.g. if SHIP_FORWARD's own sign ever changes).
+			local roll_angle = level_roll_angle(rot)
+			target_angular_velocity.z = math.max(-turn_speed_rad, math.min(turn_speed_rad, AUTO_LEVEL_SPEED * roll_angle))
+		end
 
-	local rotation_delta = vmath.quat_axis_angle(RIGHT, self.angular_velocity.x * dt)
-		* vmath.quat_axis_angle(UP, self.angular_velocity.y * dt)
-		* vmath.quat_axis_angle(SHIP_FORWARD, self.angular_velocity.z * dt)
-	rot = vmath.normalize(rot * rotation_delta)
+		local max_angular_delta = turn_accel_rad * dt
+		for _, axis in ipairs({ "x", "y", "z" }) do
+			local diff = target_angular_velocity[axis] - self.angular_velocity[axis]
+			if diff > max_angular_delta then
+				self.angular_velocity[axis] = self.angular_velocity[axis] + max_angular_delta
+			elseif diff < -max_angular_delta then
+				self.angular_velocity[axis] = self.angular_velocity[axis] - max_angular_delta
+			else
+				self.angular_velocity[axis] = target_angular_velocity[axis]
+			end
+		end
+
+		local rotation_delta = vmath.quat_axis_angle(RIGHT, self.angular_velocity.x * dt)
+			* vmath.quat_axis_angle(UP, self.angular_velocity.y * dt)
+			* vmath.quat_axis_angle(SHIP_FORWARD, self.angular_velocity.z * dt)
+		rot = vmath.normalize(rot * rotation_delta)
+	end
 	go.set_rotation(rot)
 
 	-- self.throttle is the CONTROL position (0..1, what the stick/lever is
@@ -719,7 +954,17 @@ function update(self, dt)
 	-- alone commands (self.throttle*max_speed) - "what it was previous" -
 	-- with self.speed easing back down/up to that the same
 	-- acceleration-bounded way as any other target change.
-	local target_speed = self.input.boost and boost_speed or (self.throttle * max_speed)
+	local target_speed
+	if self.follow_friend and target_ship then
+		-- Y's Follow Friend also eases velocity toward matching the
+		-- target's own broadcast speed (main/network.lua's send_transform,
+		-- main/remote_ships.script) every frame, through this same
+		-- acceleration-bounded chase - not a separate mechanism. Ported
+		-- technique from the source project's own update() (§0).
+		target_speed = target_ship.speed or 0
+	else
+		target_speed = self.input.boost and boost_speed or (self.throttle * max_speed)
+	end
 	local max_speed_delta = acceleration * dt
 	local speed_delta = target_speed - self.speed
 	if speed_delta > max_speed_delta then
@@ -731,9 +976,18 @@ function update(self, dt)
 	end
 
 	local forward = vmath.rotate(rot, SHIP_FORWARD)
-	local pos = go.get_position() + forward * self.speed * dt
+	pos = pos + forward * self.speed * dt
 	go.set_position(pos)
 	msg.post("flight_hud#gui", "set_speed", { speed = self.speed })
+
+	-- Realtime presence (AskUserQuestion's "Realtime presence only" slice) -
+	-- broadcast this ship's own transform at NETWORK_SEND_INTERVAL, not
+	-- every frame (see that constant's own comment).
+	self.network_send_timer = self.network_send_timer + dt
+	if self.network_send_timer >= NETWORK_SEND_INTERVAL then
+		self.network_send_timer = 0
+		network.send_transform(pos, rot, self.speed, self.ship_id)
+	end
 
 	-- Currency (per direct instruction: "show the amount of currency for
 	-- each resource that the player has") - same four main/session.lua
@@ -804,18 +1058,50 @@ function update(self, dt)
 	end
 	msg.post("flight_hud#gui", "dock_prompt", { text = dock_text })
 
+	-- Targeting HUD readout (per direct instruction: "search superships for
+	-- all references to target. Implement what you find") - `target_ship`
+	-- was already resolved at the top of update() for the follow-friend
+	-- movement block above; reused here for the same reason. Out-of-range
+	-- doesn't clear the lock (see that resolution's own comment), it just
+	-- changes what this reads - same distinction the source project's own
+	-- "TARGET: <faction> (out of range)" text makes. Ported technique from
+	-- the source project's own update() (§0), simplified to hide the node
+	-- entirely with no target rather than always showing "TARGET: none",
+	-- matching this HUD's own dock_prompt/jump_preset convention.
+	local target_text = nil
+	if target_ship then
+		local dist = vmath.length(target_ship.pos - pos)
+		if dist > TARGET_RANGE then
+			target_text = string.format("TARGET: %s (out of range)", target_ship.faction)
+		else
+			target_text = string.format("TARGET: %s  %.0fm", target_ship.faction, dist)
+		end
+		if self.follow_friend then
+			target_text = target_text .. "  [FOLLOWING]"
+		end
+	end
+	msg.post("flight_hud#gui", "target", { text = target_text })
+
 	-- Radar (per direct instruction: "each ship has its own visible
 	-- range" / "a gooey that shows a radar indicating all ships within
 	-- visible range") - visual_range above, NOT the longer
 	-- sensor_range_m/"Dradis Range" main/data/ships.lua's own comment
-	-- already distinguishes it from. `contacts` is always empty right now
-	-- - there are no other ships anywhere in this project yet (no NPCs,
-	-- no multiplayer) - but the radar display itself
-	-- (main/flight_hud.gui's dot pool) and this message contract are both
-	-- real and ready for whichever of those lands first, same
-	-- "build the real system even though nothing populates it yet"
-	-- footing main/data/asteroids.lua's own M.OVERRIDES already has.
-	msg.post("flight_hud#gui", "contacts", { own_pos = pos, range = visual_range, contacts = {} })
+	-- already distinguishes it from. `contacts` was always empty until now
+	-- (no NPCs, no multiplayer) - main/remote_registry.lua (populated every
+	-- frame by main/remote_ships.script from the current system's Nakama
+	-- room) is the first real source: every remote ship there is already
+	-- guaranteed to be in this same system (main/network.lua's per-system
+	-- room join), so this only needs its own visual_range distance filter,
+	-- same "build the real system even though nothing populates it yet"
+	-- footing main/data/asteroids.lua's own M.OVERRIDES already had before
+	-- this landed.
+	local contacts = {}
+	for _, remote in pairs(remote_registry.ships) do
+		if vmath.length(remote.pos - pos) <= visual_range then
+			table.insert(contacts, remote)
+		end
+	end
+	msg.post("flight_hud#gui", "contacts", { own_pos = pos, range = visual_range, contacts = contacts })
 
 	-- Chase camera - see this file's header comment for why position is
 	-- derived from camera_rot rather than lerped independently, and for why
