@@ -1,0 +1,4 @@
+mesh: "/assets/themes/hummingbird/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/hummingbird/crystalborn/albedo.png"
+name: "hummingbird_crystalborn"
