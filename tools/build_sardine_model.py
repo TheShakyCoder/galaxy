@@ -1,359 +1,391 @@
 #!/usr/bin/env python3
+"""Build Galaxy's original sardine-shaped Accord interceptor (Python + Pillow + NumPy).
+
+Run from any directory: python tools/build_sardine_model.py
+Optional --output-root DIR stages all three outputs without changing game assets.
+
+Meters; nose +Z, dorsal +Y. Single mesh/material, explicit smooth normals,
+16-bit indices, embedded base-color atlas plus matching Defold external texture.
+The historical sardine_palette.png filename now holds a 1024px detail atlas.
+No downloaded art, external textures, PBR-only effects, or Blender dependency.
 """
-Replaces Sardine's (Accord, Patrol class, Interceptor role) hull with an
-ORIGINAL design, not sourced from anywhere - same rationale as
-tools/build_lionfish_model.py, build_pelican_model.py, and
-build_golden_eagle_model.py: the previous sardine.glb was a SuperShips-
-sourced, BSG-derived asset - ships.lua's own header comment calls it out as
-the single most-flagged asset in the whole file ("HIGHEST-SEVERITY §0
-EXCEPTION... the EXACT named pair this comment block has always cited as
-the paradigm example of what §0 excludes - 'Viper Mk II/Cylon Raider'").
-Replaced here per direct instruction with a hand-authored hull built to
-actually resemble the ship's own real-world namesake instead.
-
-Leans into an actual sardine's own most recognizable features:
-- a slender, tapered FUSIFORM (torpedo-shaped) body - a small schooling
-  fish's own classic silhouette, not a fighter-craft wedge
-- a FORKED tail (two swept lobes with a V-notch between them, not a single
-  fin) - the defining herring-family tail shape
-- a single small dorsal fin and a pair of small pectoral fins near the head
-- a two-tone body: a darker blue-green back over a lighter silver belly,
-  the actual counter-shading real sardines have (dark from above, bright
-  from below) - split at the hull's own centerline, visible now that
-  render/custom.render_script's leftover diagnostic red tint override has
-  been removed (§2.8.9, resolved alongside build_pelican_model.py)
-- deliberately the SMALLEST hull built so far, matching Patrol's own place
-  as the smallest class in the roster and Interceptor's fast/agile role
-
-Same technique as the other hand-authored hulls: flat-shaded low-poly
-geometry, vertex colors via a small palette texture, embedded in a real
-binary .glb. Units: meters, 1 Defold unit = 1 meter.
-
-Run from the project root: `python3 tools/build_sardine_model.py`
-(needs Pillow). Writes:
-  assets/models/patrol_interceptor/sardine.glb
-  assets/models/patrol_interceptor/sardine_palette.png
-  main/images/patrol_interceptor_sardine_topdown.png
-Also prints the bounding-sphere radius and a ready-to-paste PREVIEW_CAMERA
-entry for main/outpost.gui_script (PREVIEW_WORLD_POS stays unchanged -
-same model path, same off-world rig position).
-"""
+import argparse
 import io
 import json
 import math
-import os
 import struct
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GLB_PATH = os.path.join(ROOT, "assets", "models", "patrol_interceptor", "sardine.glb")
-PALETTE_PATH = os.path.join(ROOT, "assets", "models", "patrol_interceptor", "sardine_palette.png")
-PNG_PATH = os.path.join(ROOT, "main", "images", "patrol_interceptor_sardine_topdown.png")
-
-
-def write_glb(path, gltf_dict, binary_data):
-	json_bytes = json.dumps(gltf_dict).encode("utf-8")
-	pad = (-len(json_bytes)) % 4
-	json_bytes += b" " * pad
-	bin_bytes = binary_data
-	pad = (-len(bin_bytes)) % 4
-	bin_bytes += b"\x00" * pad
-	JSON_CHUNK_TYPE = 0x4E4F534A
-	BIN_CHUNK_TYPE = 0x004E4942
-	json_chunk = struct.pack("<II", len(json_bytes), JSON_CHUNK_TYPE) + json_bytes
-	bin_chunk = struct.pack("<II", len(bin_bytes), BIN_CHUNK_TYPE) + bin_bytes
-	total_length = 12 + len(json_chunk) + len(bin_chunk)
-	with open(path, "wb") as f:
-		f.write(struct.pack("<4sII", b"glTF", 2, total_length))
-		f.write(json_chunk)
-		f.write(bin_chunk)
-
-
-# ---- Hull dimensions (meters) - Patrol class, the SMALLEST hull tier in
-# the roster, noticeably smaller than Lionfish's 20m Escort hull. ----
-LENGTH = 14.0
-BEAM = 3.2
-DECK_Y = 0.85
-KEEL_Y = -0.85
-HALF_L = LENGTH / 2.0
-HALF_BEAM = BEAM / 2.0
-
-# 11-point deck/keel outline (x, z), nose at +Z: a classic small-fish
-# fusiform taper - narrow head, widest just aft of the gills, tapering to a
-# slender tail stock (peduncle) that the forked tail attaches to.
-OUTLINE = [
-	(0.0, HALF_L),                        # nose tip
-	(HALF_BEAM * 0.55, HALF_L - 1.7),     # head widening
-	(HALF_BEAM * 0.92, HALF_L - 3.3),     # gill line, nearly full beam
-	(HALF_BEAM, HALF_L - 4.8),            # body widest point
-	(HALF_BEAM * 0.85, HALF_L - 7.5),     # body still broad
-	(HALF_BEAM * 0.5, HALF_L - 10.0),     # narrowing toward the tail stock
-	(HALF_BEAM * 0.22, -HALF_L + 1.2),    # slender tail stock (peduncle)
-	(-HALF_BEAM * 0.22, -HALF_L + 1.2),
-	(-HALF_BEAM * 0.5, HALF_L - 10.0),
-	(-HALF_BEAM * 0.85, HALF_L - 7.5),
-	(-HALF_BEAM, HALF_L - 4.8),
-	(-HALF_BEAM * 0.92, HALF_L - 3.3),
-	(-HALF_BEAM * 0.55, HALF_L - 1.7),
+TAU = math.tau
+ROOT = Path(__file__).resolve().parents[1]
+SIZE = 1024
+ATLAS_END = 0.75
+COLORS = {
+    'navy': (20, 42, 55), 'blue': (36, 77, 92),
+    'teal': (58, 113, 124), 'silver': (173, 194, 200),
+    'pearl': (215, 225, 224), 'edge': (110, 146, 157),
+    'dark': (13, 25, 34), 'glass': (25, 72, 94),
+    'cyan': (108, 220, 225), 'white': (215, 247, 243),
+    'brass': (186, 160, 102), 'fin': (81, 124, 138),
+    'fin_light': (135, 172, 177), 'nozzle': (46, 58, 65),
+    'panel': (127, 161, 174), 'spot': (30, 66, 81),
+}
+# (Z, half width, half height): a rounded head and long, gently tapering body.
+# Rounded cross section is intentionally unlike a shark's wedge-shaped snout.
+PROFILE = [
+    (-6.45, .24, .25), (-5.8, .31, .34), (-4.8, .48, .51),
+    (-3.5, .76, .78), (-2, 1.05, 1.02), (0, 1.31, 1.24),
+    (1.8, 1.42, 1.35), (3.3, 1.36, 1.30), (4.5, 1.20, 1.14),
+    (5.4, .94, .90), (6.15, .64, .65), (6.65, .34, .38),
+    (6.90, .15, .20), (7.0, .045, .07),
 ]
 
-BACK_COLOR = (0.16, 0.30, 0.40, 1.0)    # darker blue-green back
-BELLY_COLOR = (0.66, 0.72, 0.76, 1.0)   # lighter silver belly (real countershading)
-FIN_COLOR = (0.13, 0.22, 0.28, 1.0)     # dorsal/pectoral/tail fins
 
-PALETTE_W = 3
-PALETTE_H = 1
-COLOR_UV = {
-	BACK_COLOR: (0.5 / PALETTE_W, 0.5),
-	BELLY_COLOR: (1.5 / PALETTE_W, 0.5),
-	FIN_COLOR: (2.5 / PALETTE_W, 0.5),
-}
+def add(a, b): return tuple(x + y for x, y in zip(a, b))
+def sub(a, b): return tuple(x - y for x, y in zip(a, b))
+def mul(a, s): return tuple(x * s for x in a)
+def dot(a, b): return sum(x * y for x, y in zip(a, b))
+def cross(a, b): return (a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0])
+def unit(a): return mul(a, 1 / math.sqrt(dot(a, a)))
 
 
-def to_8bit(color):
-	return tuple(round(c * 255) for c in color)
+def profile(z):
+    """Monotone cubic Hermite interpolation avoids bumps between hull stations."""
+    z = max(PROFILE[0][0], min(PROFILE[-1][0], z))
+    k = next((i for i in range(len(PROFILE)-1) if z <= PROFILE[i+1][0]), len(PROFILE)-2)
+    def channel(c):
+        def slope(i):
+            if i == 0: return (PROFILE[1][c]-PROFILE[0][c])/(PROFILE[1][0]-PROFILE[0][0])
+            if i == len(PROFILE)-1: return (PROFILE[-1][c]-PROFILE[-2][c])/(PROFILE[-1][0]-PROFILE[-2][0])
+            a = (PROFILE[i][c]-PROFILE[i-1][c])/(PROFILE[i][0]-PROFILE[i-1][0])
+            b = (PROFILE[i+1][c]-PROFILE[i][c])/(PROFILE[i+1][0]-PROFILE[i][0])
+            return 0 if a*b <= 0 else 2*a*b/(a+b)
+        h = PROFILE[k+1][0]-PROFILE[k][0]
+        t = (z-PROFILE[k][0])/h
+        return ((2*t**3-3*t*t+1)*PROFILE[k][c] + (t**3-2*t*t+t)*h*slope(k)
+                + (-2*t**3+3*t*t)*PROFILE[k+1][c] + (t**3-t*t)*h*slope(k+1))
+    return channel(1), channel(2)
 
 
-verts = []
-faces = []
+def surface(z, angle, offset=0):
+    w, h = profile(z)
+    return ((w+offset)*math.sin(angle), (h+offset)*math.cos(angle), z)
 
 
-def add_vert(x, y, z, color):
-	verts.append((x, y, z) + color)
-	return len(verts) - 1
+def surface_normal(z, angle):
+    a = sub(surface(min(7, z+.002), angle), surface(max(-6.45, z-.002), angle))
+    b = sub(surface(z, angle+.002), surface(z, angle-.002))
+    return unit(cross(a, b))
 
 
-def add_prism(outline, y0, y1, color):
-	top_idx = [add_vert(x, y1, z, color) for x, z in outline]
-	bot_idx = [add_vert(x, y0, z, color) for x, z in outline]
-	n = len(outline)
-	for i in range(n):
-		j = (i + 1) % n
-		faces.append(("side_%d" % i, [top_idx[i], top_idx[j], bot_idx[j], bot_idx[i]], color))
-	faces.append(("top", list(top_idx), color))
-	faces.append(("bottom", list(reversed(bot_idx)), color))
+def make_atlas():
+    img = Image.new('RGB', (SIZE, SIZE), COLORS['navy'])
+    draw = ImageDraw.Draw(img)
+    for y in range(SIZE):
+        c = math.cos(TAU*(y+.5)/SIZE)
+        if c > .38:
+            t = min(1, (c-.38)/.52)
+            lo, hi = (133, 180, 179), (25, 69, 89)
+        else:
+            t = min(1, max(0, (.38-c)/1.2))
+            lo, hi = (174, 204, 206), (221, 228, 222)
+        rgb = tuple(round(a+(b-a)*t) for a,b in zip(lo,hi))
+        draw.line((0,y,767,y), fill=rgb)
+    # Small staggered scales are engraved armor, strongest on the silver flanks.
+    overlay = Image.new('RGBA', img.size)
+    d = ImageDraw.Draw(overlay)
+    for row, y in enumerate(range(76, 960, 24)):
+        for x in range(172 + (row % 2)*18, 735, 36):
+            d.arc((x-16,y-10,x+20,y+12), 270, 450, fill=(25,60,74,65), width=1)
+            d.arc((x-15,y-9,x+19,y+11), 280, 435, fill=(244,255,250,75), width=1)
+    # Broad hull divisions give the small scales readable structure at distance.
+    for x in (181, 278, 391, 514, 620, 705):
+        d.line((x,0,x,1023), fill=(14,41,54,100), width=2)
+        d.line((x+3,0,x+3,1023), fill=(229,255,249,65), width=1)
+    for y in (116, 908):
+        d.line((175,y,704,y), fill=(12,41,56,180), width=6)
+        d.line((180,y+2,702,y+2), fill=(122,204,205,210), width=2)
+    # Sardine-specific spots, on both sides. No tiger stripes or shark gill slits.
+    for y in (181, 843):
+        for n, x in enumerate(range(215, 630, 52)):
+            r = 6 if n < 5 else 4
+            d.ellipse((x-r,y-r,x+r,y+r), fill=COLORS['spot']+(215,))
+    img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+    draw = ImageDraw.Draw(img)
+    # Discrete swatches for geometry; generous padding makes linear filtering safe.
+    for i, (name, rgb) in enumerate(COLORS.items()):
+        x, y = 800+(i%4)*56, 24+(i//4)*56
+        draw.rectangle((x,y,x+47,y+47), fill=rgb)
+    # Small original hull identification, baked into both sides of the atlas.
+    font = ImageFont.load_default(size=19)
+    for y in (282, 710):
+        draw.text((289,y), 'ACCORD / S-01', font=font, fill=(40,80,92))
+    return img
 
 
-def add_double_tri(p0, p1, p2, color, prefix):
-	i0 = add_vert(*p0, color)
-	i1 = add_vert(*p1, color)
-	i2 = add_vert(*p2, color)
-	j0 = add_vert(*p0, color)
-	j1 = add_vert(*p1, color)
-	j2 = add_vert(*p2, color)
-	faces.append((prefix + "_a", [i0, i1, i2], color))
-	faces.append((prefix + "_b", [j0, j2, j1], color))
+class Mesh:
+    def __init__(self):
+        self.p, self.n, self.uv, self.idx = [], [], [], []
+        self.parts = {}
+
+    def swatch(self, color):
+        i = list(COLORS).index(color)
+        return ((824+(i%4)*56)/SIZE, (48+(i//4)*56)/SIZE)
+
+    def vertex(self, p, n, uv):
+        self.p.append(p); self.n.append(unit(n)); self.uv.append(uv)
+        return len(self.p)-1
+
+    def tri(self, a, b, c, outward):
+        normal = cross(sub(self.p[b],self.p[a]), sub(self.p[c],self.p[a]))
+        if dot(normal,normal) < 1e-16:
+            raise ValueError('Degenerate triangle')
+        self.idx.extend((a,c,b) if dot(normal,outward)<0 else (a,b,c))
+
+    def face(self, points, color, outward):
+        n = unit(outward)
+        ids = [self.vertex(p,n,self.swatch(color)) for p in points]
+        for i in range(1,len(ids)-1): self.tri(ids[0],ids[i],ids[i+1],n)
+
+    def tube(self, points, radius, color, sides=8):
+        rings=[]; previous_u=None
+        for i,p in enumerate(points):
+            axis=unit(sub(points[min(i+1,len(points)-1)],points[max(i-1,0)]))
+            if previous_u is None:
+                ref=(0,1,0) if abs(axis[1])<.9 else (1,0,0)
+                u=unit(cross(axis,ref))
+            else:
+                # Transport the ring frame continuously around curves. Switching
+                # reference axes halfway through a gill seam twists its faces.
+                u=unit(sub(previous_u,mul(axis,dot(previous_u,axis))))
+            v=cross(axis,u); previous_u=u
+            ring=[]
+            for j in range(sides):
+                n=add(mul(u,math.cos(TAU*j/sides)),mul(v,math.sin(TAU*j/sides)))
+                ring.append(self.vertex(add(p,mul(n,radius)),n,self.swatch(color)))
+            rings.append(ring)
+        for a,b in zip(rings,rings[1:]):
+            for j in range(sides):
+                k=(j+1)%sides
+                n=add(self.n[a[j]],self.n[a[k]])
+                self.tri(a[j],b[j],b[k],n); self.tri(a[j],b[k],a[k],n)
+        for ring,p,axis in [(rings[0],points[0],sub(points[0],points[1])),(rings[-1],points[-1],sub(points[-1],points[-2]))]:
+            self.face([self.p[k] for k in ring],color,axis)
+
+    def lathe(self, center, axis, rings, colors, sides=40):
+        """Closed rotational hardware, with separate ring vertices for crisp bevels."""
+        axis=unit(axis); ref=(0,1,0) if abs(axis[1])<.9 else (1,0,0)
+        u=unit(cross(axis,ref)); v=cross(axis,u)
+        for seg,((d0,r0),(d1,r1)) in enumerate(zip(rings,rings[1:])):
+            rows=[]
+            for depth,r in ((d0,r0),(d1,r1)):
+                row=[]
+                for j in range(sides+1):
+                    radial=add(mul(u,math.cos(TAU*j/sides)),mul(v,math.sin(TAU*j/sides)))
+                    n=unit(add(mul(radial,d1-d0),mul(axis,r0-r1)))
+                    row.append(self.vertex(add(add(center,mul(axis,depth)),mul(radial,r)),n,self.swatch(colors[seg%len(colors)])))
+                rows.append(row)
+            for j in range(sides):
+                a,b=rows
+                n=self.n[a[j]]
+                self.tri(a[j],b[j],b[j+1],n); self.tri(a[j],b[j+1],a[j+1],n)
+        for (depth,r),direction,color in ((rings[0],-1,colors[0]),(rings[-1],1,colors[-1])):
+            pts=[add(add(center,mul(axis,depth)),mul(add(mul(u,math.cos(TAU*j/sides)),mul(v,math.sin(TAU*j/sides))),r)) for j in range(sides)]
+            self.face(pts,color,mul(axis,direction))
+
+    def fin(self, yz, thickness, color='fin', axis='x', sign=1):
+        # Convex outlines: a center fan, beveled rim, and a proper solid edge.
+        def coord(a,b,t): return (t,a*sign,b) if axis=='x' else (a*sign,t,b)
+        center=(sum(p[0] for p in yz)/len(yz),sum(p[1] for p in yz)/len(yz))
+        for side in (-1,1):
+            outer=[coord(a,b,side*thickness*.28) for a,b in yz]
+            inner=[coord(center[0]+(a-center[0])*.86,center[1]+(b-center[1])*.92,side*thickness*.5) for a,b in yz]
+            direction=(side,0,0) if axis=='x' else (0,side,0)
+            self.face(inner,color,direction)
+            for j in range(len(yz)):
+                k=(j+1)%len(yz)
+                p=[outer[j],outer[k],inner[k],inner[j]]
+                self.face(p,'edge',direction)
+        for j in range(len(yz)):
+            k=(j+1)%len(yz)
+            a,b=yz[j]; c,d=yz[k]
+            p=[coord(a,b,-thickness*.28),coord(c,d,-thickness*.28),coord(c,d,thickness*.28),coord(a,b,thickness*.28)]
+            mid=coord((a+c)/2,(b+d)/2,0)
+            self.face(p,'navy',sub(mid,coord(*center,0)))
+        # Fin rays resemble sardine fins and provide engineered rib detail.
+        root=yz[0]
+        for target in yz[2:-1]:
+            for side in (-1,1):
+                a=coord(root[0]*.85+center[0]*.15,root[1]*.85+center[1]*.15,side*thickness*.56)
+                b=coord(target[0]*.86+center[0]*.14,target[1]*.86+center[1]*.14,side*thickness*.56)
+                self.tube([a,b],.018,'fin_light',6)
 
 
-# ---- Body: split at the vertical centerline into a darker back (top half)
-# and lighter belly (bottom half) - real countershading, not a flat color. ----
-BODY_MID_OUTLINE = [(x * 0.97, z) for x, z in OUTLINE]  # a hair narrower at the midline seam, avoids a visible seam gap
-add_prism(OUTLINE, 0.0, DECK_Y, BACK_COLOR)
-add_prism(BODY_MID_OUTLINE, KEEL_Y, 0.0, BELLY_COLOR)
+def build_mesh():
+    m=Mesh()
+    # 72 longitudinal intervals x 48 sides: smooth hull with a continuous UV seam.
+    for i in range(73):
+        z=7-13.45*i/72
+        for j in range(49):
+            a=TAU*j/48
+            m.vertex(surface(z,a),surface_normal(z,a),(.004+.738*i/72,j/48))
+    for i in range(72):
+        for j in range(48):
+            a=i*49+j; b=a+49
+            n=add(m.n[a],m.n[a+1])
+            m.tri(a,b,b+1,n); m.tri(a,b+1,a+1,n)
+    for i,n in ((0,(0,0,1)),(72,(0,0,-1))):
+        m.face([m.p[i*49+j] for j in range(48)],'silver',n)
+    m.parts['hull_triangles']=len(m.idx)//3
 
-# ---- Dorsal fin: one small triangular fin, mid-back ----
-dorsal_root_fwd = (0.0, DECK_Y * 0.3, HALF_L - 4.5)
-dorsal_root_aft = (0.0, DECK_Y * 0.3, HALF_L - 7.0)
-dorsal_tip = (0.0, DECK_Y + 1.6, HALF_L - 5.7)
-add_double_tri(dorsal_root_fwd, dorsal_tip, dorsal_root_aft, FIN_COLOR, "dorsal")
+    # One modest, rayed dorsal fin, with a rounded shoulder instead of a shark spike.
+    m.fin([(1.03,1.7),(2.07,1.17),(2.22,.65),(2.02,.10),(1.34,-1.35),(.95,-1.6)],.18)
+    # Real fish caudal plane is vertical. Equal upper/lower lobes, clear V fork.
+    for sign in (-1,1):
+        m.fin([(.06,-5.9),(.60,-6.60),(2.03,-8.65),(1.95,-9.2),(1.32,-8.65),(.06,-7.20)],.17,sign=sign)
+    # Pectoral fins tuck alongside the hull rather than forming broad fighter wings.
+    for sign in (-1,1):
+        m.fin([(1.14,3.25),(1.78,2.7),(2.4,.85),(2.17,.63),(1.07,1.80)],.13,axis='y',sign=sign)
+        m.fin([(.60,-2.1),(1.05,-2.65),(1.22,-3.65),(.43,-3.16)],.10,axis='y',sign=sign)
 
-# ---- Pectoral fins: small fins near the head, swept back ----
-PECT_Z = HALF_L - 3.6
-for side, sign in (("stbd", 1.0), ("port", -1.0)):
-	root_fwd = (sign * HALF_BEAM * 0.7, -0.1, PECT_Z + 0.6)
-	root_aft = (sign * HALF_BEAM * 0.6, -0.1, PECT_Z - 0.9)
-	tip = (sign * (HALF_BEAM + 1.7), -0.3, PECT_Z - 0.4)
-	add_double_tri(root_fwd, tip, root_aft, FIN_COLOR, "pect_%s" % side)
+    for sign in (-1,1):
+        # Large, round optical ports read as sardine eyes; no aggressive brow.
+        a=sign*1.39; z=5.35
+        normal=surface_normal(z,a); center=surface(z,a,.008)
+        m.lathe(center,normal,[(0,.39),(.045,.43),(.11,.40),(.12,.32),(.15,.285)],['edge','silver','brass','dark'],48)
+        m.lathe(add(center,mul(normal,.15)),normal,[(0,.276),(.035,.25),(.06,.12)],['glass','glass'],48)
+        m.lathe(add(add(center,mul(normal,.215)),(0,.075,.055)),normal,[(0,.060),(.012,.048)],['cyan'],20)
+        # A single curved gill-cover seam, not a row of shark gill cuts.
+        points=[]
+        for j in range(25):
+            angle=sign*(.52+2.1*j/24)
+            z=3.55-.5*math.sin(math.pi*j/24)
+            points.append(surface(z,angle,.025))
+        m.tube(points,.042,'navy')
+        m.tube([surface(3.68-.5*math.sin(math.pi*j/24),sign*(.55+2.04*j/24),.034) for j in range(25)],.022,'pearl')
+        # Lateral sensor rail integrates machinery into the fish's side stripe.
+        m.tube([surface(z,sign*1.22,.028) for z in (2.8,2,1,0,-1,-2,-3,-4,-5)],.034,'edge')
+        m.tube([surface(z,sign*1.22,.062) for z in (2.65,2,1,0,-1,-2,-3,-4,-4.8)],.013,'cyan',6)
+        # Compact paired thrusters flank the narrow tail stock.
+        center=(sign*.40,0,-5.58)
+        m.lathe(center,(0,0,-1),[(0,.21),(.30,.31),(.83,.32),(1.02,.28),(1.04,.205)],['navy','silver','edge','nozzle'],32)
+        m.lathe((sign*.40,0,-6.635),(0,0,-1),[(0,.19),(.018,.155)],['cyan'],32)
+        # Small amber positioning lights at the pectoral-fin roots.
+        p=surface(2.8,sign*1.72,.032)
+        m.lathe(p,surface_normal(2.8,sign*1.72),[(0,.075),(.04,.064)],['brass'],16)
 
-# ---- Forked tail: two swept lobes from the tail stock, a V-notch left
-# open between them - the defining herring-family tail shape, not a
-# single fin. ----
-TAIL_ROOT_Z = -HALF_L + 1.2
-for side, sign in (("stbd", 1.0), ("port", -1.0)):
-	root_inner = (sign * 0.12, 0.0, TAIL_ROOT_Z)
-	root_outer = (sign * HALF_BEAM * 0.22, 0.0, TAIL_ROOT_Z + 0.3)
-	tip = (sign * 1.7, 0.0, -HALF_L - 2.2)
-	add_double_tri(root_outer, tip, root_inner, FIN_COLOR, "tail_%s" % side)
-
-print("Unique vertices: %d, faces (polygons): %d" % (len(verts), len(faces)))
-
-xs = [v[0] for v in verts]
-ys = [v[1] for v in verts]
-zs = [v[2] for v in verts]
-cx, cy, cz = (min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0, (min(zs) + max(zs)) / 2.0
-radius = max(math.sqrt((x - cx) ** 2 + (y - cy) ** 2 + (z - cz) ** 2) for x, y, z in zip(xs, ys, zs))
-print("Bounding box (m): X %.2f..%.2f  Y %.2f..%.2f  Z %.2f..%.2f" % (
-	min(xs), max(xs), min(ys), max(ys), min(zs), max(zs)))
-print("Bounding-sphere radius (m): %.2f" % radius)
-
-
-def face_normal(poly_verts):
-	a, b, cpt = poly_verts[0], poly_verts[1], poly_verts[2]
-	ux, uy, uz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
-	vx, vy, vz = cpt[0] - a[0], cpt[1] - a[1], cpt[2] - a[2]
-	nx, ny, nz = uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx
-	length = math.sqrt(nx * nx + ny * ny + nz * nz)
-	if length < 1e-9:
-		raise ValueError("degenerate face (zero-area triangle): %r" % (poly_verts,))
-	return nx / length, ny / length, nz / length
-
-
-positions, normals, colors, uvs, indices = [], [], [], [], []
-
-for name, poly, color in faces:
-	poly_pts = [verts[i][:3] for i in poly]
-	nx, ny, nz = face_normal(poly_pts)
-	uv = COLOR_UV[color]
-	base = len(positions)
-	for i in poly:
-		positions.append(verts[i][:3])
-		normals.append((nx, ny, nz))
-		colors.append(verts[i][3:])
-		uvs.append(uv)
-	for k in range(1, len(poly) - 1):
-		indices.extend([base, base + k, base + k + 1])
-
-pos_bytes = b"".join(struct.pack("<3f", *p) for p in positions)
-norm_bytes = b"".join(struct.pack("<3f", *n) for n in normals)
-color_bytes = b"".join(struct.pack("<4f", *c) for c in colors)
-uv_bytes = b"".join(struct.pack("<2f", *uv) for uv in uvs)
-idx_bytes = b"".join(struct.pack("<H", i) for i in indices)
-
-
-def pad4(b):
-	pad = (-len(b)) % 4
-	return b + b"\x00" * pad
+    # Low conformal cockpit on the dorsal head. Geometry follows the hull.
+    rows=[]; rim_left=[]; rim_right=[]
+    for i in range(25):
+        z=4.05+i*1.56/24
+        width=.025+.32*math.sin(math.pi*i/24)**.65
+        row=[]
+        for j in range(9):
+            a=-width+2*width*j/8
+            row.append(m.vertex(surface(z,a,.052),surface_normal(z,a),m.swatch('glass')))
+        rows.append(row)
+        rim_left.append(surface(z,-width,.055)); rim_right.append(surface(z,width,.055))
+    for a,b in zip(rows,rows[1:]):
+        for j in range(8):
+            m.tri(a[j],b[j],b[j+1],m.n[a[j]])
+            m.tri(a[j],b[j+1],a[j+1],m.n[a[j]])
+    m.tube(rim_left+list(reversed(rim_right))+[rim_left[0]],.027,'edge',8)
+    m.tube([surface(4.12+i*.12,0,.070) for i in range(13)],.016,'silver',6)
+    # Small rounded terminal mouth seam, mostly visible in the side silhouette.
+    m.tube([surface(6.83,1.22+3.84*j/24,.018) for j in range(25)],.019,'dark',6)
+    return m
 
 
-buf = b""
-views = []
+def write_glb(mesh, texture, path):
+    binary=bytearray(); views=[]; accessors=[]
+    def view(data,target=None):
+        start=len(binary); binary.extend(data); binary.extend(b'\0'*((-len(binary))%4))
+        obj={'buffer':0,'byteOffset':start,'byteLength':len(data)}
+        if target: obj['target']=target
+        views.append(obj); return len(views)-1
+    def accessor(values,width,ctype,kind,target):
+        fmt='f' if ctype==5126 else 'H'
+        flat=[x for row in values for x in row] if width>1 else values
+        v=view(struct.pack('<'+fmt*len(flat),*flat),target)
+        a={'bufferView':v,'componentType':ctype,'count':len(values),'type':kind}
+        if kind=='VEC3':
+            a['min']=[min(p[i] for p in values) for i in range(3)]
+            a['max']=[max(p[i] for p in values) for i in range(3)]
+        accessors.append(a); return len(accessors)-1
+    if len(mesh.p)>65535: raise ValueError('16-bit vertex budget exceeded')
+    p=accessor(mesh.p,3,5126,'VEC3',34962)
+    n=accessor(mesh.n,3,5126,'VEC3',34962)
+    uv=accessor(mesh.uv,2,5126,'VEC2',34962)
+    idx=accessor(mesh.idx,1,5123,'SCALAR',34963)
+    buf=io.BytesIO(); texture.save(buf,format='PNG',optimize=True)
+    im=view(buf.getvalue())
+    gltf={
+        'asset':{'version':'2.0','generator':'Galaxy original Sardine detailed hull / build_sardine_model.py'},
+        'scene':0,'scenes':[{'nodes':[0]}],'nodes':[{'name':'sardine_hull','mesh':0}],
+        'meshes':[{'name':'sardine_hull','primitives':[{'attributes':{'POSITION':p,'NORMAL':n,'TEXCOORD_0':uv},'indices':idx,'material':0,'mode':4}]}],
+        'materials':[{'name':'sardine_atlas','pbrMetallicRoughness':{'baseColorFactor':[1,1,1,1],'baseColorTexture':{'index':0},'metallicFactor':0,'roughnessFactor':.6}}],
+        'images':[{'bufferView':im,'mimeType':'image/png'}],
+        'textures':[{'source':0,'sampler':0}],
+        'samplers':[{'magFilter':9729,'minFilter':9729,'wrapS':33071,'wrapT':33071}],
+        'accessors':accessors,'bufferViews':views,'buffers':[{'byteLength':len(binary)}],
+    }
+    raw=json.dumps(gltf,separators=(',',':')).encode(); raw+=b' '*((-len(raw))%4)
+    data=struct.pack('<4sII',b'glTF',2,28+len(raw)+len(binary))+struct.pack('<II',len(raw),0x4E4F534A)+raw+struct.pack('<II',len(binary),0x004E4942)+binary
+    path.write_bytes(data)
+    return gltf
 
 
-def add_view(data, target):
-	global buf
-	true_length = len(data)
-	offset = len(buf)
-	buf += pad4(data)
-	views.append({"byteOffset": offset, "byteLength": true_length, "target": target})
-	return len(views) - 1
+def topdown(mesh,texture,path):
+    """Rasterize the actual textured mesh with a depth buffer (no approximate icon)."""
+    import numpy as np
+    w,h=520,1280
+    rgba=np.zeros((h,w,4),dtype=np.uint8); depth=np.full((h,w),-np.inf)
+    tex=np.asarray(texture); scale=69
+    p=np.asarray(mesh.p); n=np.asarray(mesh.n); uv=np.asarray(mesh.uv)
+    light=np.array([-.35,.88,.3]); light/=np.linalg.norm(light)
+    for k in range(0,len(mesh.idx),3):
+        ids=mesh.idx[k:k+3]; pts=p[ids]
+        normal=np.cross(pts[1]-pts[0],pts[2]-pts[0])
+        if normal[1]<=1e-10: continue
+        xx=w/2+pts[:,0]*scale; yy=100+(7-pts[:,2])*scale
+        xmin=max(0,int(np.floor(xx.min()))); xmax=min(w-1,int(np.ceil(xx.max())))
+        ymin=max(0,int(np.floor(yy.min()))); ymax=min(h-1,int(np.ceil(yy.max())))
+        if xmin>xmax or ymin>ymax: continue
+        X,Y=np.meshgrid(np.arange(xmin,xmax+1)+.5,np.arange(ymin,ymax+1)+.5)
+        den=(yy[1]-yy[2])*(xx[0]-xx[2])+(xx[2]-xx[1])*(yy[0]-yy[2])
+        if abs(den)<1e-9: continue
+        a=((yy[1]-yy[2])*(X-xx[2])+(xx[2]-xx[1])*(Y-yy[2]))/den
+        b=((yy[2]-yy[0])*(X-xx[2])+(xx[0]-xx[2])*(Y-yy[2]))/den
+        c=1-a-b; weights=np.stack([a,b,c],axis=-1)
+        z=weights@pts[:,1]
+        patch=depth[ymin:ymax+1,xmin:xmax+1]
+        mask=(a>=-1e-6)&(b>=-1e-6)&(c>=-1e-6)&(z>patch)
+        if not mask.any(): continue
+        coord=np.clip(weights@uv[ids],0,1)
+        color=tex[np.minimum(1023,(coord[...,1]*1024).astype(int)),np.minimum(1023,(coord[...,0]*1024).astype(int))]
+        norm=weights@n[ids]; norm/=np.maximum(np.linalg.norm(norm,axis=-1,keepdims=True),1e-9)
+        shade=.48+.52*np.maximum(0,norm@light)
+        result=np.concatenate([np.clip(color*shade[...,None],0,255).astype(np.uint8),np.full((*mask.shape,1),255,dtype=np.uint8)],axis=-1)
+        rgba[ymin:ymax+1,xmin:xmax+1][mask]=result[mask]; patch[mask]=z[mask]
+    Image.fromarray(rgba).save(path)
 
 
-ARRAY_BUFFER = 34962
-ELEMENT_ARRAY_BUFFER = 34963
-
-pos_view = add_view(pos_bytes, ARRAY_BUFFER)
-norm_view = add_view(norm_bytes, ARRAY_BUFFER)
-color_view = add_view(color_bytes, ARRAY_BUFFER)
-uv_view = add_view(uv_bytes, ARRAY_BUFFER)
-idx_view = add_view(idx_bytes, ELEMENT_ARRAY_BUFFER)
-
-xs_p = [p[0] for p in positions]
-ys_p = [p[1] for p in positions]
-zs_p = [p[2] for p in positions]
-
-accessors = [
-	{"bufferView": pos_view, "componentType": 5126, "count": len(positions), "type": "VEC3",
-	 "min": [min(xs_p), min(ys_p), min(zs_p)], "max": [max(xs_p), max(ys_p), max(zs_p)]},
-	{"bufferView": norm_view, "componentType": 5126, "count": len(normals), "type": "VEC3"},
-	{"bufferView": color_view, "componentType": 5126, "count": len(colors), "type": "VEC4"},
-	{"bufferView": uv_view, "componentType": 5126, "count": len(uvs), "type": "VEC2"},
-	{"bufferView": idx_view, "componentType": 5123, "count": len(indices), "type": "SCALAR"},
-]
-
-from PIL import Image  # noqa: E402
-
-palette_img = Image.new("RGBA", (PALETTE_W, PALETTE_H), (0, 0, 0, 0))
-for i, color in enumerate((BACK_COLOR, BELLY_COLOR, FIN_COLOR)):
-	palette_img.putpixel((i, 0), to_8bit(color))
-_buf_io = io.BytesIO()
-palette_img.save(_buf_io, format="PNG")
-img_view = add_view(_buf_io.getvalue(), None)
-
-NEAREST = 9728
-CLAMP_TO_EDGE = 33071
-
-gltf = {
-	"asset": {"version": "2.0", "generator": "Galaxy - sardine hull, hand-authored, original design"},
-	"scene": 0,
-	"scenes": [{"nodes": [0]}],
-	"nodes": [{"mesh": 0, "name": "sardine_hull"}],
-	"meshes": [{
-		"name": "sardine_hull",
-		"primitives": [{
-			"attributes": {"POSITION": 0, "NORMAL": 1, "COLOR_0": 2, "TEXCOORD_0": 3},
-			"indices": 4,
-			"material": 0,
-			"mode": 4,
-		}],
-	}],
-	"materials": [{
-		"name": "sardine_flat",
-		"pbrMetallicRoughness": {
-			"baseColorFactor": [1, 1, 1, 1],
-			"baseColorTexture": {"index": 0},
-			"metallicFactor": 0.0,
-			"roughnessFactor": 0.85,
-		},
-	}],
-	"images": [{"bufferView": img_view, "mimeType": "image/png"}],
-	"samplers": [{"magFilter": NEAREST, "minFilter": NEAREST, "wrapS": CLAMP_TO_EDGE, "wrapT": CLAMP_TO_EDGE}],
-	"textures": [{"source": 0, "sampler": 0}],
-	"buffers": [{"byteLength": len(buf)}],
-	"bufferViews": [
-		({"buffer": 0, "byteOffset": v["byteOffset"], "byteLength": v["byteLength"], "target": v["target"]}
-		 if v["target"] is not None else
-		 {"buffer": 0, "byteOffset": v["byteOffset"], "byteLength": v["byteLength"]})
-		for v in views
-	],
-	"accessors": accessors,
-}
-
-write_glb(GLB_PATH, gltf, buf)
-print("Wrote %s (%d bytes buffer, %d triangles)" % (GLB_PATH, len(buf), len(indices) // 3))
-
-palette_img.save(PALETTE_PATH)
-print("Wrote %s (%dx%d px)" % (PALETTE_PATH, PALETTE_W, PALETTE_H))
-
-from PIL import ImageDraw  # noqa: E402
-
-CANVAS_W, CANVAS_H = 260, 640
-PAD_Y = 60
-SCALE = (CANVAS_H - PAD_Y) / (LENGTH + 5)
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-root',type=Path,default=ROOT)
+    args=parser.parse_args()
+    modeldir=args.output_root/'assets/models/patrol_interceptor'; modeldir.mkdir(parents=True,exist_ok=True)
+    imagedir=args.output_root/'main/images'; imagedir.mkdir(parents=True,exist_ok=True)
+    tex=make_atlas(); mesh=build_mesh()
+    doc=write_glb(mesh,tex,modeldir/'sardine.glb')
+    tex.save(modeldir/'sardine_palette.png',optimize=True)
+    topdown(mesh,tex,imagedir/'patrol_interceptor_sardine_topdown.png')
+    bounds=doc['accessors'][0]
+    center=tuple((a+b)/2 for a,b in zip(bounds['min'],bounds['max']))
+    radius=max(math.sqrt(dot(sub(p,center),sub(p,center))) for p in mesh.p)
+    origin_radius=max(math.sqrt(dot(p,p)) for p in mesh.p)
+    print(json.dumps({'vertices':len(mesh.p),'triangles':len(mesh.idx)//3,'bounds_m':[bounds['min'],bounds['max']],'bounding_radius_m':round(radius,3),'origin_radius_m':round(origin_radius,3),'texture':[SIZE,SIZE],'parts':mesh.parts},indent=2))
 
 
-def to_px(x, z):
-	px = CANVAS_W / 2.0 + x * SCALE
-	py = CANVAS_H / 2.0 - z * SCALE
-	return px, py
-
-
-img = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
-draw = ImageDraw.Draw(img)
-
-deck_poly = [to_px(x, z) for x, z in OUTLINE]
-draw.polygon(deck_poly, fill=(41, 77, 102, 255), outline=(15, 20, 26, 255), width=3)
-
-dorsal_poly = [to_px(0.0, HALF_L - 4.5), to_px(0.35, HALF_L - 5.7), to_px(0.0, HALF_L - 7.0)]
-draw.polygon(dorsal_poly, fill=(33, 56, 71, 255), outline=(15, 20, 26, 255), width=1)
-
-for sign in (1.0, -1.0):
-	root_fwd = to_px(sign * HALF_BEAM * 0.7, PECT_Z + 0.6)
-	root_aft = to_px(sign * HALF_BEAM * 0.6, PECT_Z - 0.9)
-	tip = to_px(sign * (HALF_BEAM + 1.7), PECT_Z - 0.4)
-	draw.polygon([root_fwd, tip, root_aft], fill=(33, 56, 71, 255), outline=(15, 20, 26, 255), width=1)
-	root_inner = to_px(sign * 0.12, TAIL_ROOT_Z)
-	root_outer = to_px(sign * HALF_BEAM * 0.22, TAIL_ROOT_Z + 0.3)
-	tail_tip = to_px(sign * 1.7, -HALF_L - 2.2)
-	draw.polygon([root_outer, tail_tip, root_inner], fill=(33, 56, 71, 255), outline=(15, 20, 26, 255), width=1)
-
-bx, by = to_px(0, HALF_L)
-draw.line([(bx, by), (bx, by - 14)], fill=(230, 235, 240, 255), width=3)
-
-img.save(PNG_PATH)
-print("Wrote %s (%dx%d px, %.2f px/m)" % (PNG_PATH, CANVAS_W, CANVAS_H, SCALE))
-
-scale = (radius / 6.34) * 1.5
-eye = (0.0, 3.0 * scale, 8.0 * scale)
-far = math.sqrt(eye[0] ** 2 + eye[1] ** 2 + eye[2] ** 2) + radius + 50.0
-print()
-print("PREVIEW_CAMERA entry (PREVIEW_WORLD_POS unchanged - same model path):")
-print('\t["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(%.2f, %.2f, %.2f), far = %.2f },' % (eye[0], eye[1], eye[2], far))
+if __name__=='__main__': main()
