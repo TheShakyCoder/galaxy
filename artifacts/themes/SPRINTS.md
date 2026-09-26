@@ -42,6 +42,36 @@ and preservation of Sprint 1 passed. See `validation-sprint-2.json`.
 The Sprint 1 and Sprint 2 galleries provide separate review checkpoints.
 No scope deviations.
 
+### Sprint 4 — complete
+
+24 Toybox variants built, with 72 renders and all six contact sheets reviewed.
+The double-loop keys, slotted fasteners and decorative axles remain static and
+clear of the animal heads. The isolated sprint rebuild and 2,880 preview poses
+passed. See `validation-sprint-4.json`.
+
+### Combined library gate — complete
+
+All 192 variants rebuilt byte-for-byte in an isolated output directory. The
+combined catalog exactly matches the four sprint catalogs. Binary geometry,
+normals/winding, texture/resource references, original-hull equality, source and
+previous-sprint hashes, 23,040 preview poses, original flight framing and all
+432 render files passed. Meshes range from 9,076 to 22,580 triangles.
+All 36 faction/angle contact sheets were visually reviewed across the sprints.
+See `validation.json` for the combined binary gate.
+
+Browser checks passed for all eight collection selectors, faction/size/species
+filters, empty state, side/top views, original comparison and surface-view reset.
+The combined gallery had no browser error/warning logs. All five galleries and
+their linked resources were checked on disk (1,019 unique linked files), along
+with every original-comparison render. Browser layout was inspected at the
+normal desktop viewport; mobile/device testing was not performed.
+
+This branch only adds files relative to its upstream merge base `b63ffcc`.
+Upstream advanced to `63d8a53` during work with an unrelated Nakama configuration
+fix; this art PR does not change that configuration. No originals or prior
+cosmetics are replaced. No scope deviations. Defold runtime, device performance
+and shop/equip integration remain untested and outside this art-library pass.
+
 ### Sprint 3 — complete
 
 User specified **triangle insignias for Corsair fish** and **circle insignias for

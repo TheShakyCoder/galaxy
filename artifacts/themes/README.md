@@ -7,9 +7,12 @@ sprint has a separate catalog, preview and verification report.
 | Sprint | Collections | Preview |
 |---|---|---|
 | 1 | Porcelain Dynasty, Starlight, Grand Prix | [72 variants](sprint-1.html) |
-| 2 | Abyssal, Crystalborn | Preview follows verification |
-| 3 | Corsair, Overgrown | Preview follows verification |
-| 4 | Toybox and combined library | Preview follows verification |
+| 2 | Abyssal, Crystalborn | [48 variants](sprint-2.html) |
+| 3 | Corsair, Overgrown | [48 variants](sprint-3.html) |
+| 4 | Toybox | [24 variants](sprint-4.html) |
+
+[Browse all 192 variants](index.html). Corsair fish use triangle insignias;
+Corsair birds use circle insignias, both as painted markings and raised badges.
 
 See [sprint records](SPRINTS.md) for completed gates and review decisions.
 Model and texture downloads are available from the preview cards. All previews
