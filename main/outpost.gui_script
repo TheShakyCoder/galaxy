@@ -1840,109 +1840,32 @@ local PREVIEW_WORLD_POS = {
 -- ship with no entry here just uses the render script's own built-in
 -- (also zoomed-out) defaults.
 local PREVIEW_CAMERA = {
-	-- sardine.glb (tools/build_sardine_model.py, ORIGINAL hand-authored hull,
-	-- not SuperShips-sourced - see ships.lua's patrol_interceptor entry) has an
-	-- ~8.35-unit centered bounding radius (9.41 about the rotation origin).
-	-- Frame the whole vertical forked tail throughout a full rotation in the
-	-- square detail preview; the wider sale-grid previews use this too.
-	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0.00, 9.20, 24.60), far = 90.00 },
-	["/assets/models/escort_interceptor/escort_interceptor.model"] = { eye_offset = vmath.vector3(0, 8.15, 21.74), far = 84.71 },
-	-- hummingbird.glb was replaced with raider.glb (§0-flagged, see ships.lua's
-	-- patrol_interceptor entry) - recomputed for its own ~6.7-unit bounding
-	-- radius, close to the old asset's scale but not identical.
-	["/assets/models/patrol_interceptor/hummingbird.model"] = { eye_offset = vmath.vector3(0, 4.74, 12.64), far = 70.18 },
-	-- barracuda.glb was replaced with scythe.glb (§0-flagged, see ships.lua's
-	-- escort_interceptor entry) - recomputed for its own ~114-unit bounding
-	-- radius, different scale than the old asset this was originally tuned to.
-	["/assets/models/escort_interceptor/barracuda.model"] = { eye_offset = vmath.vector3(0, 81.05, 216.12), far = 395.0 },
-	-- falcon.glb was replaced with banshee.glb (§0-flagged, see ships.lua's
-	-- escort_interceptor entry) - recomputed for its own ~128-unit bounding
-	-- radius.
-	["/assets/models/escort_interceptor/falcon.model"] = { eye_offset = vmath.vector3(0, 91.2, 243.2), far = 438.23 },
-	-- frigatebird.glb (aesir.glb, §0-flagged, see ships.lua's frigate_interceptor
-	-- entry) has a ~321-unit world-space bounding radius (raw accessor min/max
-	-- across all 4 primitives, no node-level scale transform on this asset) -
-	-- by far the biggest model in this table so far.
-	["/assets/models/frigate_interceptor/frigatebird.model"] = { eye_offset = vmath.vector3(0, 227.83, 607.55), far = 1019.85 },
-	-- remora.glb (glaive.glb, §0-flagged, see ships.lua's escort_support entry)
-	-- has a ~119-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/escort_support/remora.model"] = { eye_offset = vmath.vector3(0, 84.45, 225.21), far = 409.51 },
-	-- hammerhead.glb (gungnir.glb, §0-flagged, see ships.lua's frigate_tactical
-	-- entry) has a ~349-unit world-space bounding radius, no node-level scale
-	-- transform on this asset - the biggest model in this table so far.
-	["/assets/models/frigate_tactical/hammerhead.model"] = { eye_offset = vmath.vector3(0, 247.67, 660.44), far = 1104.29 },
-	-- pelican.glb (tools/build_pelican_model.py, ORIGINAL hand-authored hull,
-	-- not SuperShips-sourced - see ships.lua's frigate_support entry) has an
-	-- ~22.2-unit bounding radius.
-	["/assets/models/frigate_support/pelican.model"] = { eye_offset = vmath.vector3(0.00, 15.77, 42.05), far = 117.13 },
-	-- moray.glb (maul.glb, §0-flagged, see ships.lua's escort_assault entry)
-	-- has a ~99-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/escort_assault/moray.model"] = { eye_offset = vmath.vector3(0, 70.43, 187.81), far = 349.81 },
-	-- piranha.glb (rhino.glb, §0-flagged, see ships.lua's patrol_assault entry)
-	-- has a ~7-unit world-space bounding radius - an 11m small strike-fighter
-	-- scale, the smallest SuperShips-sourced model used so far, closer to
-	-- Patrol Interceptor's own ~6.3-unit hull than any of the capital/escort-
-	-- scale ones above.
-	["/assets/models/patrol_assault/piranha.model"] = { eye_offset = vmath.vector3(0, 5.0, 13.33), far = 71.28 },
-	-- osprey.glb (tools/build_osprey_model.py, ORIGINAL hand-authored hull,
-	-- replacing the former liche.glb SuperShips/§0-flagged asset - see
-	-- ships.lua's escort_tactical entry) has a ~12.15-unit bounding radius,
-	-- sized to roughly match its own sibling Lionfish's ~11.73.
-	["/assets/models/escort_tactical/osprey.model"] = { eye_offset = vmath.vector3(0.00, 8.62, 23.00), far = 86.71 },
-	-- harpy_eagle.glb (nidhogg.glb, §0-flagged, see ships.lua's frigate_tactical
-	-- entry) has a ~339-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/frigate_tactical/harpy_eagle.model"] = { eye_offset = vmath.vector3(0, 240.39, 641.05), far = 1073.33 },
-	-- golden_eagle.glb (tools/build_golden_eagle_model.py, ORIGINAL
-	-- hand-authored hull, not SuperShips-sourced - see ships.lua's
-	-- frigate_assault entry) has an ~24.6-unit bounding radius.
-	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0.00, 17.45, 46.53), far = 124.28 },
-	-- marlin.glb (fenrir.glb, §0-flagged, see ships.lua's frigate_interceptor
-	-- entry) has a ~300-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/frigate_interceptor/marlin.model"] = { eye_offset = vmath.vector3(0, 212.97, 567.92), far = 956.59 },
-	-- manta_ray.glb (vanir.glb, §0-flagged, see ships.lua's frigate_support
-	-- entry) has a ~286-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/frigate_support/manta_ray.model"] = { eye_offset = vmath.vector3(0, 202.75, 540.65), far = 913.06 },
-	-- tiger_shark.glb (jotunn.glb, §0-flagged, see ships.lua's frigate_assault
-	-- entry) has a ~327-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/frigate_assault/tiger_shark.model"] = { eye_offset = vmath.vector3(0, 232.09, 618.9), far = 1037.97 },
-	-- oxpecker.glb (heavy_raider.glb, §0-flagged, see ships.lua's patrol_support
-	-- entry) has a ~5.8-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/patrol_support/oxpecker.model"] = { eye_offset = vmath.vector3(0, 4.09, 10.91), far = 67.42 },
-	-- shrike.glb (marauder.glb, §0-flagged, see ships.lua's patrol_assault
-	-- entry) has a ~8.4-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/patrol_assault/shrike.model"] = { eye_offset = vmath.vector3(0, 5.94, 15.83), far = 75.27 },
-	-- kingfisher.glb (war_raider.glb, §0-flagged, see ships.lua's
-	-- patrol_tactical entry) has a ~8.2-unit world-space bounding radius, no
-	-- node-level scale transform on this asset.
-	["/assets/models/patrol_tactical/kingfisher.model"] = { eye_offset = vmath.vector3(0, 5.82, 15.52), far = 74.78 },
-	-- egret.glb (spectre.glb, §0-flagged, see ships.lua's escort_support entry)
-	-- has a ~146-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/escort_support/egret.model"] = { eye_offset = vmath.vector3(0, 103.38, 275.69), far = 490.09 },
-	-- goshawk.glb (wraith.glb, §0-flagged, see ships.lua's escort_assault
-	-- entry) has a ~146-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/escort_assault/goshawk.model"] = { eye_offset = vmath.vector3(0, 103.63, 276.34), far = 491.13 },
-	-- pilotfish.glb (raptor.glb, §0-flagged, see ships.lua's patrol_support
-	-- entry) has a ~7-unit world-space bounding radius, no node-level scale
-	-- transform on this asset.
-	["/assets/models/patrol_support/pilotfish.model"] = { eye_offset = vmath.vector3(0, 4.94, 13.17), far = 71.02 },
-	-- anglerfish.glb (viper_mk7.glb, §0-flagged, see ships.lua's
-	-- patrol_tactical entry) has a ~5.9-unit world-space bounding radius, no
-	-- node-level scale transform on this asset.
-	["/assets/models/patrol_tactical/anglerfish.model"] = { eye_offset = vmath.vector3(0, 4.16, 11.1), far = 67.72 },
-	-- lionfish.glb (tools/build_lionfish_model.py, ORIGINAL hand-authored hull, not
-	-- SuperShips-sourced - see ships.lua's escort_tactical entry) has an ~11.73-unit
-	-- bounding radius, computed directly from its own generated geometry.
-	["/assets/models/escort_tactical/lionfish.model"] = { eye_offset = vmath.vector3(0.00, 8.33, 22.20), far = 85.44 },
+	-- Generated by tools/integrate_fleet_models.py from actual GLB bounds.
+	-- Square 45-degree preview checked over a full rotation; sale cards are wider.
+	["/assets/models/patrol_interceptor/patrol_interceptor.model"] = { eye_offset = vmath.vector3(0.000, 9.200, 24.600), far = 90.000 },
+	["/assets/models/patrol_support/pilotfish.model"] = { eye_offset = vmath.vector3(0.000, 10.020, 26.818), far = 87.805 },
+	["/assets/models/patrol_assault/piranha.model"] = { eye_offset = vmath.vector3(0.000, 8.899, 23.817), far = 83.574 },
+	["/assets/models/patrol_tactical/anglerfish.model"] = { eye_offset = vmath.vector3(0.000, 9.524, 25.491), far = 85.934 },
+	["/assets/models/escort_interceptor/barracuda.model"] = { eye_offset = vmath.vector3(0.000, 24.055, 64.383), far = 140.758 },
+	["/assets/models/escort_support/remora.model"] = { eye_offset = vmath.vector3(0.000, 23.435, 62.721), far = 138.416 },
+	["/assets/models/escort_assault/moray.model"] = { eye_offset = vmath.vector3(0.000, 25.900, 69.319), far = 147.717 },
+	["/assets/models/escort_tactical/lionfish.model"] = { eye_offset = vmath.vector3(0.000, 22.882, 61.243), far = 136.332 },
+	["/assets/models/frigate_interceptor/marlin.model"] = { eye_offset = vmath.vector3(0.000, 50.356, 134.774), far = 239.988 },
+	["/assets/models/frigate_support/manta_ray.model"] = { eye_offset = vmath.vector3(0.000, 55.733, 149.165), far = 260.274 },
+	["/assets/models/frigate_assault/tiger_shark.model"] = { eye_offset = vmath.vector3(0.000, 50.706, 135.711), far = 241.308 },
+	["/assets/models/frigate_tactical/hammerhead.model"] = { eye_offset = vmath.vector3(0.000, 49.095, 131.400), far = 235.231 },
+	["/assets/models/patrol_interceptor/hummingbird.model"] = { eye_offset = vmath.vector3(0.000, 9.829, 26.308), far = 87.085 },
+	["/assets/models/patrol_support/oxpecker.model"] = { eye_offset = vmath.vector3(0.000, 9.126, 24.426), far = 84.432 },
+	["/assets/models/patrol_assault/shrike.model"] = { eye_offset = vmath.vector3(0.000, 10.018, 26.812), far = 87.797 },
+	["/assets/models/patrol_tactical/kingfisher.model"] = { eye_offset = vmath.vector3(0.000, 9.789, 26.199), far = 86.933 },
+	["/assets/models/escort_interceptor/falcon.model"] = { eye_offset = vmath.vector3(0.000, 24.479, 65.515), far = 142.355 },
+	["/assets/models/escort_support/egret.model"] = { eye_offset = vmath.vector3(0.000, 23.254, 62.237), far = 137.735 },
+	["/assets/models/escort_assault/goshawk.model"] = { eye_offset = vmath.vector3(0.000, 25.689, 68.753), far = 146.920 },
+	["/assets/models/escort_tactical/osprey.model"] = { eye_offset = vmath.vector3(0.000, 23.724, 63.497), far = 139.510 },
+	["/assets/models/frigate_interceptor/frigatebird.model"] = { eye_offset = vmath.vector3(0.000, 49.264, 131.852), far = 235.868 },
+	["/assets/models/frigate_support/pelican.model"] = { eye_offset = vmath.vector3(0.000, 53.461, 143.086), far = 251.704 },
+	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0.000, 50.587, 135.392), far = 240.858 },
+	["/assets/models/frigate_tactical/harpy_eagle.model"] = { eye_offset = vmath.vector3(0.000, 51.195, 137.019), far = 243.152 },
 }
 
 -- Opens the ship detail modal (§2.8.9) for `ship_id` - replaces the old

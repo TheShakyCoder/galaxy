@@ -1,0 +1,1162 @@
+{
+  "roster_count": 24,
+  "built": 23,
+  "retained_sardine": true,
+  "size_basis": "maximum model dimension in meters; Patrol 15-17, Escort 38-42, Frigate 78-88",
+  "module_slots": "unchanged; hardware is visual role language, not a gameplay slot assignment",
+  "ships": [
+    {
+      "name": "Sardine",
+      "slug": "sardine",
+      "faction": "accord",
+      "class": "patrol",
+      "role": "interceptor",
+      "model": "/assets/models/patrol_interceptor/patrol_interceptor.model",
+      "glb": "assets/models/patrol_interceptor/sardine.glb",
+      "texture": "assets/models/patrol_interceptor/sardine_palette.png",
+      "bounds_m": [
+        [
+          -2.4000000953674316,
+          -2.0299999713897705,
+          -9.199999809265137
+        ],
+        [
+          2.4000000953674316,
+          2.2200000286102295,
+          7.0
+        ]
+      ],
+      "dimensions_m": [
+        4.8,
+        4.25,
+        16.2
+      ],
+      "origin_radius_m": 9.40451,
+      "vertices": 9742,
+      "triangles": 14252,
+      "bytes": 443080,
+      "sha256": "8462e94f72a15c7c55677ed92c2ba8201f5816d33b82a45ee57db968c77eec32",
+      "preview": {
+        "eye_offset": [
+          0,
+          9.2,
+          24.6
+        ],
+        "far": 90
+      },
+      "identity": "Preserved approved model: silver flanks, round eyes, equal forked tail",
+      "features": [
+        "Approved Sardine asset retained byte for byte"
+      ],
+      "retained": true
+    },
+    {
+      "name": "Pilotfish",
+      "slug": "pilotfish",
+      "faction": "accord",
+      "class": "patrol",
+      "role": "support",
+      "model": "/assets/models/patrol_support/pilotfish.model",
+      "glb": "assets/models/patrol_support/pilotfish.glb",
+      "texture": "assets/models/patrol_support/pilotfish_palette.png",
+      "bounds_m": [
+        [
+          -2.620208978652954,
+          -2.0069687366485596,
+          -8.97560977935791
+        ],
+        [
+          2.620208978652954,
+          2.1525685787200928,
+          7.02439022064209
+        ]
+      ],
+      "dimensions_m": [
+        5.24,
+        4.16,
+        16.0
+      ],
+      "origin_radius_m": 9.17603,
+      "vertices": 6884,
+      "triangles": 9744,
+      "bytes": 326340,
+      "sha256": "64e1e06d4ceccb3f53fafa1bd23d2a0edb373fb12cfec5843561eccd38173fdc",
+      "preview": {
+        "eye_offset": [
+          0,
+          10.02,
+          26.818
+        ],
+        "far": 87.805
+      },
+      "identity": "Five dark body bands, streamlined body and service cradles",
+      "features": [
+        "Five dark body bands, streamlined body and service cradles",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Piranha",
+      "slug": "piranha",
+      "faction": "accord",
+      "class": "patrol",
+      "role": "assault",
+      "model": "/assets/models/patrol_assault/piranha.model",
+      "glb": "assets/models/patrol_assault/piranha.glb",
+      "texture": "assets/models/patrol_assault/piranha_palette.png",
+      "bounds_m": [
+        [
+          -3.209876537322998,
+          -2.9626781940460205,
+          -7.9012346267700195
+        ],
+        [
+          3.209876537322998,
+          3.9737441539764404,
+          7.0987653732299805
+        ]
+      ],
+      "dimensions_m": [
+        6.42,
+        6.936,
+        15.0
+      ],
+      "origin_radius_m": 8.14913,
+      "vertices": 6813,
+      "triangles": 9444,
+      "bytes": 313024,
+      "sha256": "897f56958488737310e76c11b14b3faa2b50a6aef392c229f2e726154dd4810b",
+      "preview": {
+        "eye_offset": [
+          0,
+          8.899,
+          23.817
+        ],
+        "far": 83.574
+      },
+      "identity": "Deep compressed body, blunt jaw, copper belly and armored bite",
+      "features": [
+        "Deep compressed body, blunt jaw, copper belly and armored bite",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Anglerfish",
+      "slug": "anglerfish",
+      "faction": "accord",
+      "class": "patrol",
+      "role": "tactical",
+      "model": "/assets/models/patrol_tactical/anglerfish.model",
+      "glb": "assets/models/patrol_tactical/anglerfish.glb",
+      "texture": "assets/models/patrol_tactical/anglerfish_palette.png",
+      "bounds_m": [
+        [
+          -4.538858413696289,
+          -2.7508232593536377,
+          -8.527552604675293
+        ],
+        [
+          4.538858413696289,
+          4.970817565917969,
+          8.472447395324707
+        ]
+      ],
+      "dimensions_m": [
+        9.078,
+        7.722,
+        17.0
+      ],
+      "origin_radius_m": 8.7218,
+      "vertices": 6823,
+      "triangles": 9208,
+      "bytes": 313216,
+      "sha256": "f2ca233c9b73c2dc77ff3b5bef3b2af876c972002247b1d7dc9e03320001502f",
+      "preview": {
+        "eye_offset": [
+          0,
+          9.524,
+          25.491
+        ],
+        "far": 85.934
+      },
+      "identity": "Round head, broad mouth and a luminous-tipped forward sensor lure",
+      "features": [
+        "Round head, broad mouth and a luminous-tipped forward sensor lure",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Barracuda",
+      "slug": "barracuda",
+      "faction": "accord",
+      "class": "escort",
+      "role": "interceptor",
+      "model": "/assets/models/escort_interceptor/barracuda.model",
+      "glb": "assets/models/escort_interceptor/barracuda.glb",
+      "texture": "assets/models/escort_interceptor/barracuda_palette.png",
+      "bounds_m": [
+        [
+          -5.495207786560059,
+          -3.8338658809661865,
+          -21.725238800048828
+        ],
+        [
+          5.495207786560059,
+          4.413938045501709,
+          18.274761199951172
+        ]
+      ],
+      "dimensions_m": [
+        10.99,
+        8.248,
+        40.0
+      ],
+      "origin_radius_m": 22.02876,
+      "vertices": 6965,
+      "triangles": 9584,
+      "bytes": 320388,
+      "sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "preview": {
+        "eye_offset": [
+          0,
+          24.055,
+          64.383
+        ],
+        "far": 140.758
+      },
+      "identity": "Long narrow body, projecting lower jaw and two separate dorsal fins",
+      "features": [
+        "Long narrow body, projecting lower jaw and two separate dorsal fins",
+        "Four compact engine nacelles: interceptor role cue"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Remora",
+      "slug": "remora",
+      "faction": "accord",
+      "class": "escort",
+      "role": "support",
+      "model": "/assets/models/escort_support/remora.model",
+      "glb": "assets/models/escort_support/remora.glb",
+      "texture": "assets/models/escort_support/remora_palette.png",
+      "bounds_m": [
+        [
+          -5.390070915222168,
+          -2.829787254333496,
+          -21.290781021118164
+        ],
+        [
+          5.390070915222168,
+          2.829787254333496,
+          16.709218978881836
+        ]
+      ],
+      "dimensions_m": [
+        10.78,
+        5.66,
+        38.0
+      ],
+      "origin_radius_m": 21.46021,
+      "vertices": 7793,
+      "triangles": 11076,
+      "bytes": 354032,
+      "sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "preview": {
+        "eye_offset": [
+          0,
+          23.435,
+          62.721
+        ],
+        "far": 138.416
+      },
+      "identity": "Flattened head and long ribbed dorsal docking disc",
+      "features": [
+        "Flattened head and long ribbed dorsal docking disc",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Moray",
+      "slug": "moray",
+      "faction": "accord",
+      "class": "escort",
+      "role": "assault",
+      "model": "/assets/models/escort_assault/moray.model",
+      "glb": "assets/models/escort_assault/moray.glb",
+      "texture": "assets/models/escort_assault/moray_palette.png",
+      "bounds_m": [
+        [
+          -3.777285575866699,
+          -3.2534923553466797,
+          -23.661972045898438
+        ],
+        [
+          3.955763101577759,
+          4.714197158813477,
+          18.338027954101562
+        ]
+      ],
+      "dimensions_m": [
+        7.733,
+        7.968,
+        42.0
+      ],
+      "origin_radius_m": 23.71783,
+      "vertices": 6652,
+      "triangles": 9464,
+      "bytes": 317304,
+      "sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "preview": {
+        "eye_offset": [
+          0,
+          25.9,
+          69.319
+        ],
+        "far": 147.717
+      },
+      "identity": "Curving eel body, continuous dorsal ribbon and heavy jaw",
+      "features": [
+        "Curving eel body, continuous dorsal ribbon and heavy jaw",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Lionfish",
+      "slug": "lionfish",
+      "faction": "accord",
+      "class": "escort",
+      "role": "tactical",
+      "model": "/assets/models/escort_tactical/lionfish.model",
+      "glb": "assets/models/escort_tactical/lionfish.glb",
+      "texture": "assets/models/escort_tactical/lionfish_palette.png",
+      "bounds_m": [
+        [
+          -12.613083839416504,
+          -4.856085777282715,
+          -20.52554702758789
+        ],
+        [
+          12.613083839416504,
+          8.857233047485352,
+          17.47445297241211
+        ]
+      ],
+      "dimensions_m": [
+        25.226,
+        13.713,
+        38.0
+      ],
+      "origin_radius_m": 20.95449,
+      "vertices": 7876,
+      "triangles": 9692,
+      "bytes": 358924,
+      "sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "preview": {
+        "eye_offset": [
+          0,
+          22.882,
+          61.243
+        ],
+        "far": 136.332
+      },
+      "identity": "Striped body, radiating sensor spines and large fan-shaped pectorals",
+      "features": [
+        "Striped body, radiating sensor spines and large fan-shaped pectorals",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Marlin",
+      "slug": "marlin",
+      "faction": "accord",
+      "class": "frigate",
+      "role": "interceptor",
+      "model": "/assets/models/frigate_interceptor/marlin.model",
+      "glb": "assets/models/frigate_interceptor/marlin.glb",
+      "texture": "assets/models/frigate_interceptor/marlin_palette.png",
+      "bounds_m": [
+        [
+          -14.955489158630371,
+          -11.465875625610352,
+          -37.88724136352539
+        ],
+        [
+          14.955489158630371,
+          14.76002311706543,
+          46.11275863647461
+        ]
+      ],
+      "dimensions_m": [
+        29.911,
+        26.226,
+        84.0
+      ],
+      "origin_radius_m": 46.11349,
+      "vertices": 6632,
+      "triangles": 9076,
+      "bytes": 306076,
+      "sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "preview": {
+        "eye_offset": [
+          0,
+          50.356,
+          134.774
+        ],
+        "far": 239.988
+      },
+      "identity": "Long spear bill, slender fast hull and crescent caudal fin",
+      "features": [
+        "Long spear bill, slender fast hull and crescent caudal fin",
+        "Four compact engine nacelles: interceptor role cue"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Manta Ray",
+      "slug": "manta_ray",
+      "faction": "accord",
+      "class": "frigate",
+      "role": "support",
+      "model": "/assets/models/frigate_support/manta_ray.model",
+      "glb": "assets/models/frigate_support/manta_ray.glb",
+      "texture": "assets/models/frigate_support/manta_ray_palette.png",
+      "bounds_m": [
+        [
+          -40.82953643798828,
+          -4.422461032867432,
+          -51.036922454833984
+        ],
+        [
+          40.82953643798828,
+          4.760469436645508,
+          30.963077545166016
+        ]
+      ],
+      "dimensions_m": [
+        81.659,
+        9.183,
+        82.0
+      ],
+      "origin_radius_m": 51.03731,
+      "vertices": 6123,
+      "triangles": 9156,
+      "bytes": 291352,
+      "sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "preview": {
+        "eye_offset": [
+          0,
+          55.733,
+          149.165
+        ],
+        "far": 260.274
+      },
+      "identity": "Broad swept ray disc, paired cephalic lobes and slender trailing tail",
+      "features": [
+        "Broad swept ray disc, paired cephalic lobes and slender trailing tail",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Tiger Shark",
+      "slug": "tiger_shark",
+      "faction": "accord",
+      "class": "frigate",
+      "role": "assault",
+      "model": "/assets/models/frigate_assault/tiger_shark.model",
+      "glb": "assets/models/frigate_assault/tiger_shark.glb",
+      "texture": "assets/models/frigate_assault/tiger_shark_palette.png",
+      "bounds_m": [
+        [
+          -17.560976028442383,
+          -8.780488014221191,
+          -44.878047943115234
+        ],
+        [
+          17.560976028442383,
+          17.740633010864258,
+          35.121952056884766
+        ]
+      ],
+      "dimensions_m": [
+        35.122,
+        26.521,
+        80.0
+      ],
+      "origin_radius_m": 46.43393,
+      "vertices": 7180,
+      "triangles": 10192,
+      "bytes": 341472,
+      "sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "preview": {
+        "eye_offset": [
+          0,
+          50.706,
+          135.711
+        ],
+        "far": 241.308
+      },
+      "identity": "Heavy blunt shark head, dark flank bars and asymmetric caudal lobes",
+      "features": [
+        "Heavy blunt shark head, dark flank bars and asymmetric caudal lobes",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Hammerhead",
+      "slug": "hammerhead",
+      "faction": "accord",
+      "class": "frigate",
+      "role": "tactical",
+      "model": "/assets/models/frigate_tactical/hammerhead.model",
+      "glb": "assets/models/frigate_tactical/hammerhead.glb",
+      "texture": "assets/models/frigate_tactical/hammerhead_palette.png",
+      "bounds_m": [
+        [
+          -17.068418502807617,
+          -7.609755992889404,
+          -43.75609588623047
+        ],
+        [
+          17.068418502807617,
+          13.677961349487305,
+          34.24390411376953
+        ]
+      ],
+      "dimensions_m": [
+        34.137,
+        21.288,
+        78.0
+      ],
+      "origin_radius_m": 44.9591,
+      "vertices": 7513,
+      "triangles": 11280,
+      "bytes": 347512,
+      "sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "preview": {
+        "eye_offset": [
+          0,
+          49.095,
+          131.4
+        ],
+        "far": 235.231
+      },
+      "identity": "Broad transverse hammer head with sensors at both ends",
+      "features": [
+        "Broad transverse hammer head with sensors at both ends",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Hummingbird",
+      "slug": "hummingbird",
+      "faction": "swarm",
+      "class": "patrol",
+      "role": "interceptor",
+      "model": "/assets/models/patrol_interceptor/hummingbird.model",
+      "glb": "assets/models/patrol_interceptor/hummingbird.glb",
+      "texture": "assets/models/patrol_interceptor/hummingbird_palette.png",
+      "bounds_m": [
+        [
+          -8.5,
+          -1.0206676721572876,
+          -7.534311771392822
+        ],
+        [
+          8.5,
+          1.4460283517837524,
+          8.992566108703613
+        ]
+      ],
+      "dimensions_m": [
+        17.0,
+        2.467,
+        16.527
+      ],
+      "origin_radius_m": 9.00133,
+      "vertices": 12847,
+      "triangles": 13192,
+      "bytes": 523168,
+      "sha256": "89ce908e9310560a22afe59f11cc488fead51e0bd10950b2126eee40bd871330",
+      "preview": {
+        "eye_offset": [
+          0,
+          9.829,
+          26.308
+        ],
+        "far": 87.085
+      },
+      "identity": "Needle bill, swept narrow wings and ruby throat",
+      "features": [
+        "Needle bill, swept narrow wings and ruby throat",
+        "Four compact engine nacelles: interceptor role cue"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Oxpecker",
+      "slug": "oxpecker",
+      "faction": "swarm",
+      "class": "patrol",
+      "role": "support",
+      "model": "/assets/models/patrol_support/oxpecker.model",
+      "glb": "assets/models/patrol_support/oxpecker.glb",
+      "texture": "assets/models/patrol_support/oxpecker_palette.png",
+      "bounds_m": [
+        [
+          -6.154672622680664,
+          -1.4858049154281616,
+          -8.357203483581543
+        ],
+        [
+          6.154672622680664,
+          1.603948712348938,
+          7.642796993255615
+        ]
+      ],
+      "dimensions_m": [
+        12.309,
+        3.09,
+        16.0
+      ],
+      "origin_radius_m": 8.35731,
+      "vertices": 14089,
+      "triangles": 14540,
+      "bytes": 570780,
+      "sha256": "4f5881c962c97bef3ba69ba42f650da8ecb362a3a5ed42d80cbbb874a1394cec",
+      "preview": {
+        "eye_offset": [
+          0,
+          9.126,
+          24.426
+        ],
+        "far": 84.432
+      },
+      "identity": "Compact rounded wings, ochre body and red bill",
+      "features": [
+        "Compact rounded wings, ochre body and red bill",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Shrike",
+      "slug": "shrike",
+      "faction": "swarm",
+      "class": "patrol",
+      "role": "assault",
+      "model": "/assets/models/patrol_assault/shrike.model",
+      "glb": "assets/models/patrol_assault/shrike.glb",
+      "texture": "assets/models/patrol_assault/shrike_palette.png",
+      "bounds_m": [
+        [
+          -6.743402004241943,
+          -1.4242478609085083,
+          -9.173845291137695
+        ],
+        [
+          6.743402004241943,
+          1.5374969244003296,
+          7.326155185699463
+        ]
+      ],
+      "dimensions_m": [
+        13.487,
+        2.962,
+        16.5
+      ],
+      "origin_radius_m": 9.17393,
+      "vertices": 13565,
+      "triangles": 13620,
+      "bytes": 549668,
+      "sha256": "1ce875bc7247fb3f0039a62fb8cce6c07e62efa8783e9640b533558213cace7a",
+      "preview": {
+        "eye_offset": [
+          0,
+          10.018,
+          26.812
+        ],
+        "far": 87.797
+      },
+      "identity": "Black eye mask, hooked beak and long narrow tail",
+      "features": [
+        "Black eye mask, hooked beak and long narrow tail",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Kingfisher",
+      "slug": "kingfisher",
+      "faction": "swarm",
+      "class": "patrol",
+      "role": "tactical",
+      "model": "/assets/models/patrol_tactical/kingfisher.model",
+      "glb": "assets/models/patrol_tactical/kingfisher.glb",
+      "texture": "assets/models/patrol_tactical/kingfisher_palette.png",
+      "bounds_m": [
+        [
+          -6.251928329467773,
+          -1.4304416179656982,
+          -8.045801162719727
+        ],
+        [
+          6.251928329467773,
+          2.2011735439300537,
+          8.954198837280273
+        ]
+      ],
+      "dimensions_m": [
+        12.504,
+        3.632,
+        17.0
+      ],
+      "origin_radius_m": 8.96424,
+      "vertices": 13598,
+      "triangles": 13184,
+      "bytes": 546792,
+      "sha256": "3c2c8840ccdd7dfa3683bf9b7b50578ce219c088d7349bb79b105cf8f1c150b9",
+      "preview": {
+        "eye_offset": [
+          0,
+          9.789,
+          26.199
+        ],
+        "far": 86.933
+      },
+      "identity": "Long spear bill, compact wings and swept blue crest",
+      "features": [
+        "Long spear bill, compact wings and swept blue crest",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Falcon",
+      "slug": "falcon",
+      "faction": "swarm",
+      "class": "escort",
+      "role": "interceptor",
+      "model": "/assets/models/escort_interceptor/falcon.model",
+      "glb": "assets/models/escort_interceptor/falcon.glb",
+      "texture": "assets/models/escort_interceptor/falcon_palette.png",
+      "bounds_m": [
+        [
+          -20.0,
+          -3.0630276203155518,
+          -17.22860336303711
+        ],
+        [
+          20.0,
+          3.306584358215332,
+          15.75583553314209
+        ]
+      ],
+      "dimensions_m": [
+        40.0,
+        6.37,
+        32.984
+      ],
+      "origin_radius_m": 22.41636,
+      "vertices": 12797,
+      "triangles": 13148,
+      "bytes": 522316,
+      "sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "preview": {
+        "eye_offset": [
+          0,
+          24.479,
+          65.515
+        ],
+        "far": 142.355
+      },
+      "identity": "Pointed swept wings, short hooked beak and cheek mask",
+      "features": [
+        "Pointed swept wings, short hooked beak and cheek mask",
+        "Four compact engine nacelles: interceptor role cue"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Egret",
+      "slug": "egret",
+      "faction": "swarm",
+      "class": "escort",
+      "role": "support",
+      "model": "/assets/models/escort_support/egret.model",
+      "glb": "assets/models/escort_support/egret.glb",
+      "texture": "assets/models/escort_support/egret_palette.png",
+      "bounds_m": [
+        [
+          -18.099750518798828,
+          -2.794473886489868,
+          -19.025320053100586
+        ],
+        [
+          18.099750518798828,
+          5.605203628540039,
+          20.974679946899414
+        ]
+      ],
+      "dimensions_m": [
+        36.2,
+        8.4,
+        40.0
+      ],
+      "origin_radius_m": 21.29479,
+      "vertices": 13866,
+      "triangles": 14036,
+      "bytes": 559732,
+      "sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "preview": {
+        "eye_offset": [
+          0,
+          23.254,
+          62.237
+        ],
+        "far": 137.735
+      },
+      "identity": "White feather armor, slender S-neck and long straight bill",
+      "features": [
+        "White feather armor, slender S-neck and long straight bill",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Goshawk",
+      "slug": "goshawk",
+      "faction": "swarm",
+      "class": "escort",
+      "role": "assault",
+      "model": "/assets/models/escort_assault/goshawk.model",
+      "glb": "assets/models/escort_assault/goshawk.glb",
+      "texture": "assets/models/escort_assault/goshawk_palette.png",
+      "bounds_m": [
+        [
+          -20.113447189331055,
+          -3.6253581047058105,
+          -23.351604461669922
+        ],
+        [
+          20.113447189331055,
+          3.913628578186035,
+          18.648395538330078
+        ]
+      ],
+      "dimensions_m": [
+        40.227,
+        7.539,
+        42.0
+      ],
+      "origin_radius_m": 23.52429,
+      "vertices": 13765,
+      "triangles": 13840,
+      "bytes": 557568,
+      "sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "preview": {
+        "eye_offset": [
+          0,
+          25.689,
+          68.753
+        ],
+        "far": 146.92
+      },
+      "identity": "Broad rounded wings, long barred tail and pale eyebrow",
+      "features": [
+        "Broad rounded wings, long barred tail and pale eyebrow",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Osprey",
+      "slug": "osprey",
+      "faction": "swarm",
+      "class": "escort",
+      "role": "tactical",
+      "model": "/assets/models/escort_tactical/osprey.model",
+      "glb": "assets/models/escort_tactical/osprey.glb",
+      "texture": "assets/models/escort_tactical/osprey_palette.png",
+      "bounds_m": [
+        [
+          -20.5,
+          -3.413409471511841,
+          -19.19939613342285
+        ],
+        [
+          20.5,
+          5.252578258514404,
+          17.558156967163086
+        ]
+      ],
+      "dimensions_m": [
+        41.0,
+        8.666,
+        36.758
+      ],
+      "origin_radius_m": 21.72561,
+      "vertices": 13461,
+      "triangles": 13524,
+      "bytes": 546388,
+      "sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "preview": {
+        "eye_offset": [
+          0,
+          23.724,
+          63.497
+        ],
+        "far": 139.51
+      },
+      "identity": "Bent M-shaped wings, pale head and dark eye stripe",
+      "features": [
+        "Bent M-shaped wings, pale head and dark eye stripe",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Frigatebird",
+      "slug": "frigatebird",
+      "faction": "swarm",
+      "class": "frigate",
+      "role": "interceptor",
+      "model": "/assets/models/frigate_interceptor/frigatebird.model",
+      "glb": "assets/models/frigate_interceptor/frigatebird.glb",
+      "texture": "assets/models/frigate_interceptor/frigatebird_palette.png",
+      "bounds_m": [
+        [
+          -44.0,
+          -3.88193416595459,
+          -36.974788665771484
+        ],
+        [
+          44.0,
+          5.499720573425293,
+          26.205883026123047
+        ]
+      ],
+      "dimensions_m": [
+        88.0,
+        9.382,
+        63.181
+      ],
+      "origin_radius_m": 45.11369,
+      "vertices": 12320,
+      "triangles": 13204,
+      "bytes": 504832,
+      "sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "preview": {
+        "eye_offset": [
+          0,
+          49.264,
+          131.852
+        ],
+        "far": 235.868
+      },
+      "identity": "Very long angular wings, forked tail and red throat module",
+      "features": [
+        "Very long angular wings, forked tail and red throat module",
+        "Four compact engine nacelles: interceptor role cue"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Pelican",
+      "slug": "pelican",
+      "faction": "swarm",
+      "class": "frigate",
+      "role": "support",
+      "model": "/assets/models/frigate_support/pelican.model",
+      "glb": "assets/models/frigate_support/pelican.glb",
+      "texture": "assets/models/frigate_support/pelican_palette.png",
+      "bounds_m": [
+        [
+          -43.0,
+          -6.935276031494141,
+          -35.83333206176758
+        ],
+        [
+          43.0,
+          9.375406265258789,
+          48.837364196777344
+        ]
+      ],
+      "dimensions_m": [
+        86.0,
+        16.311,
+        84.671
+      ],
+      "origin_radius_m": 48.95731,
+      "vertices": 14716,
+      "triangles": 15628,
+      "bytes": 597468,
+      "sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "preview": {
+        "eye_offset": [
+          0,
+          53.461,
+          143.086
+        ],
+        "far": 251.704
+      },
+      "identity": "Broad wings, long bill and large armored throat pouch",
+      "features": [
+        "Broad wings, long bill and large armored throat pouch",
+        "Paired service cradles and gold docking sockets"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Golden Eagle",
+      "slug": "golden_eagle",
+      "faction": "swarm",
+      "class": "frigate",
+      "role": "assault",
+      "model": "/assets/models/frigate_assault/golden_eagle.model",
+      "glb": "assets/models/frigate_assault/golden_eagle.glb",
+      "texture": "assets/models/frigate_assault/golden_eagle_palette.png",
+      "bounds_m": [
+        [
+          -42.0,
+          -6.135147571563721,
+          -34.50835037231445
+        ],
+        [
+          42.0,
+          6.965284824371338,
+          31.558441162109375
+        ]
+      ],
+      "dimensions_m": [
+        84.0,
+        13.1,
+        66.067
+      ],
+      "origin_radius_m": 46.32478,
+      "vertices": 13685,
+      "triangles": 13752,
+      "bytes": 552652,
+      "sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "preview": {
+        "eye_offset": [
+          0,
+          50.587,
+          135.392
+        ],
+        "far": 240.858
+      },
+      "identity": "Broad fingered wings and golden neck/shoulder armor",
+      "features": [
+        "Broad fingered wings and golden neck/shoulder armor",
+        "Armored shoulders and paired forward gun housings"
+      ],
+      "retained": false
+    },
+    {
+      "name": "Harpy Eagle",
+      "slug": "harpy_eagle",
+      "faction": "swarm",
+      "class": "frigate",
+      "role": "tactical",
+      "model": "/assets/models/frigate_tactical/harpy_eagle.model",
+      "glb": "assets/models/frigate_tactical/harpy_eagle.glb",
+      "texture": "assets/models/frigate_tactical/harpy_eagle_palette.png",
+      "bounds_m": [
+        [
+          -41.0,
+          -6.534611225128174,
+          -36.755210876464844
+        ],
+        [
+          41.0,
+          11.60322380065918,
+          33.61323547363281
+        ]
+      ],
+      "dimensions_m": [
+        82.0,
+        18.138,
+        70.368
+      ],
+      "origin_radius_m": 46.8815,
+      "vertices": 13573,
+      "triangles": 13604,
+      "bytes": 550488,
+      "sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "preview": {
+        "eye_offset": [
+          0,
+          51.195,
+          137.019
+        ],
+        "far": 243.152
+      },
+      "identity": "Massive broad wings, slate chest and a split crown crest",
+      "features": [
+        "Massive broad wings, slate chest and a split crown crest",
+        "Raised receiver dishes and sensor equipment"
+      ],
+      "retained": false
+    }
+  ],
+  "flight_camera": {
+    "patrol_interceptor": {
+      "distance": 28.151,
+      "height": 3.292
+    },
+    "patrol_support": {
+      "distance": 27.504,
+      "height": 3.212
+    },
+    "patrol_assault": {
+      "distance": 26.725,
+      "height": 3.211
+    },
+    "patrol_tactical": {
+      "distance": 26.534,
+      "height": 3.137
+    },
+    "escort_interceptor": {
+      "distance": 62.065,
+      "height": 7.846
+    },
+    "escort_support": {
+      "distance": 57.217,
+      "height": 7.511
+    },
+    "escort_assault": {
+      "distance": 54.506,
+      "height": 8.301
+    },
+    "escort_tactical": {
+      "distance": 62.002,
+      "height": 7.604
+    },
+    "frigate_interceptor": {
+      "distance": 131.457,
+      "height": 16.14
+    },
+    "frigate_support": {
+      "distance": 113.886,
+      "height": 17.863
+    },
+    "frigate_assault": {
+      "distance": 126.662,
+      "height": 16.252
+    },
+    "frigate_tactical": {
+      "distance": 122.354,
+      "height": 16.409
+    }
+  }
+}
