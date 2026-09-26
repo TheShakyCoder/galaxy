@@ -1,0 +1,4 @@
+mesh: "/assets/themes/harpy_eagle/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/harpy_eagle/overgrown/albedo.png"
+name: "harpy_eagle_overgrown"

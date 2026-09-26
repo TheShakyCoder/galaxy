@@ -1,0 +1,4 @@
+mesh: "/assets/themes/anglerfish/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/anglerfish/overgrown/albedo.png"
+name: "anglerfish_overgrown"
