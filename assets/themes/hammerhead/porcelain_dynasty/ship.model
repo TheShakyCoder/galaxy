@@ -1,0 +1,4 @@
+mesh: "/assets/themes/hammerhead/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/hammerhead/porcelain_dynasty/albedo.png"
+name: "hammerhead_porcelain_dynasty"
