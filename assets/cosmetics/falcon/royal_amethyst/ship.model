@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_interceptor/falcon.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/falcon/royal_amethyst/albedo.png"
+name: "falcon_royal_amethyst"

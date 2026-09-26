@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_tactical/hammerhead.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/hammerhead/aurora/albedo.png"
+name: "hammerhead_aurora"

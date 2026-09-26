@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_tactical/lionfish.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/lionfish/aurora/albedo.png"
+name: "lionfish_aurora"

@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/falcon/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/falcon/clockwork/albedo.png"
+name: "falcon_clockwork"

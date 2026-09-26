@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/shrike/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/shrike/clockwork/albedo.png"
+name: "shrike_clockwork"

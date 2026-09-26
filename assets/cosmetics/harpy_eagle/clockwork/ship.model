@@ -1,0 +1,4 @@
+mesh: "/assets/cosmetics/harpy_eagle/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/harpy_eagle/clockwork/albedo.png"
+name: "harpy_eagle_clockwork"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_tactical/anglerfish.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/anglerfish/solar_regatta/albedo.png"
+name: "anglerfish_solar_regatta"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_support/remora.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/remora/solar_regatta/albedo.png"
+name: "remora_solar_regatta"

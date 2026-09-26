@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_interceptor/frigatebird.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/frigatebird/aurora/albedo.png"
+name: "frigatebird_aurora"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_support/pelican.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/cosmetics/pelican/solar_regatta/albedo.png"
+name: "pelican_solar_regatta"
