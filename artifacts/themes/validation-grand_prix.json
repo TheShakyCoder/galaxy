@@ -1,0 +1,216 @@
+{
+  "result": "PASS",
+  "theme": "grand_prix",
+  "variants": 24,
+  "collections": [
+    "grand_prix"
+  ],
+  "source_hulls_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged",
+  "installed_theme_assets_checked": 72,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 24,
+  "preview_poses": 2880,
+  "render_files_verified": 24,
+  "rebuild_verified": true,
+  "rows": [
+    {
+      "id": "sardine.grand_prix",
+      "triangles": 14252,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.grand_prix",
+      "triangles": 9744,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.grand_prix",
+      "triangles": 9444,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.grand_prix",
+      "triangles": 9208,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.grand_prix",
+      "triangles": 9584,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.788,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.grand_prix",
+      "triangles": 11076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7866,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.grand_prix",
+      "triangles": 10164,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.grand_prix",
+      "triangles": 9692,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7889,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.grand_prix",
+      "triangles": 9076,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7972,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.grand_prix",
+      "triangles": 9156,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7959,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.grand_prix",
+      "triangles": 10192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7969,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.grand_prix",
+      "triangles": 11280,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7971,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.grand_prix",
+      "triangles": 13192,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.grand_prix",
+      "triangles": 14540,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.grand_prix",
+      "triangles": 13620,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.grand_prix",
+      "triangles": 13184,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.grand_prix",
+      "triangles": 13148,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.6173,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.grand_prix",
+      "triangles": 14036,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6636,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.grand_prix",
+      "triangles": 13840,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7826,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.grand_prix",
+      "triangles": 13524,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5421,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.grand_prix",
+      "triangles": 13204,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.5621,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.grand_prix",
+      "triangles": 15628,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.6783,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.grand_prix",
+      "triangles": 13752,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.grand_prix",
+      "triangles": 13604,
+      "added_triangles": 0,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6056,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}
