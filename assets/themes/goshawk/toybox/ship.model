@@ -1,0 +1,4 @@
+mesh: "/assets/themes/goshawk/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/goshawk/toybox/albedo.png"
+name: "goshawk_toybox"

@@ -8,7 +8,7 @@ import numpy as np
 from check_cosmetic_library import load
 
 ROOT=Path(__file__).resolve().parents[1]
-BASE='f042c912e06a2e252ae628916f667d3481ea11c3'
+BASE='82aa1bfba9e974de7f3c04a9e91f925e5997c520'
 
 
 def git(*args):
@@ -20,7 +20,7 @@ def preserved_assets():
     old_fleet=json.loads(git('show',BASE+':artifacts/fleet/manifest.json'))
     old={r['slug']:r for r in old_fleet['ships']}
     allowed=set();moray={}
-    catalogs=['assets/cosmetics/catalog.json']
+    catalogs=['assets/cosmetics/catalog.json','assets/themes/catalog.json']+[f'assets/themes/catalog-sprint-{i}.json' for i in range(1,5)]
     for r in fleet['ships']:
         if r['class']=='patrol':assert r==old[r['slug']],'Patrol metadata changed'
         else:allowed.add(r['glb'])
@@ -71,7 +71,7 @@ def main():
         factor=reference*multiplier/max(old_ships[r['slug']]['dimensions_m']);ratios[r['slug']]=factor
         all_assets.append((r['glb'],factor))
         results.append(dict(ship=r['slug'],size=r['class'],extent_m=round(extent,4),patrol_ratio=multiplier,scale_from_previous=factor))
-    for library in ('cosmetics',):
+    for library in ('cosmetics','themes'):
         cat=json.loads((ROOT/f'assets/{library}/catalog.json').read_text())
         all_assets.extend((r['glb'],ratios[r['ship']]) for r in cat['entries'])
     folder=ROOT/'artifacts/scale';folder.mkdir(exist_ok=True)
@@ -88,14 +88,14 @@ def main():
             assert np.allclose(n,b,atol=1e-5,rtol=0),'Normals changed: '+path
             assert np.allclose(uv,c,atol=1e-6,rtol=0),'UV changed: '+path
             assert tex==t,'Texture changed: '+path
-    report=dict(result='PASS',comparison_base=BASE,ships=24,cosmetics=96,total_glbs=120,
+    report=dict(result='PASS',comparison_base=BASE,ships=24,cosmetics=288,total_glbs=312,
                 native_size_ratios='1:4:16 by longest dimension within each faction/role',
-                patrol_glbs_byte_identical=40,uniform_scale_glbs_checked=80,
+                patrol_glbs_byte_identical=104,uniform_scale_glbs_checked=208,
                 position_tolerance_m=.0002,topology_preserved=True,textures_preserved=True,
                 local_and_remote_reference_same_native_assets=True,only_generated_cameras_changed=True,rows=results,
                 not_tested=['Defold runtime','live multiplayer','device performance'])
     (folder/'validation.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
-    print('PASS: all 24 ships use 1:4:16 dimensions; 40 Patrol GLBs byte-identical; 80 larger GLBs uniformly scaled')
+    print('PASS: all 24 ships use 1:4:16 dimensions; 104 Patrol GLBs byte-identical; 208 larger GLBs uniformly scaled')
 
 
 if __name__=='__main__':main()

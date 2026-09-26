@@ -1,0 +1,4 @@
+mesh: "/assets/themes/goshawk/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/goshawk/grand_prix/albedo.png"
+name: "goshawk_grand_prix"

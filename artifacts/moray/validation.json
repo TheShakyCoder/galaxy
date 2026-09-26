@@ -1,10 +1,10 @@
 {
   "result": "PASS",
-  "revision_base": "fc7279db211d5a0f3415bb4e72fcd6fe899260fd",
+  "revision_base": "754a5ca6f47b60cd09f9e6caa7c4d434955f0339",
   "default_bilateral_symmetry_tolerance_m": 0.0001,
   "straight_hull_rings": true,
   "extent_m": 60,
-  "cosmetics_checked": 4,
+  "cosmetics_checked": 12,
   "all_cosmetics_retain_revised_hull": true,
   "other_ship_shapes_preserved": true,
   "patrol_resources_unchanged": true,

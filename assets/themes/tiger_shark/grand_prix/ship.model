@@ -1,0 +1,4 @@
+mesh: "/assets/themes/tiger_shark/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/tiger_shark/grand_prix/albedo.png"
+name: "tiger_shark_grand_prix"

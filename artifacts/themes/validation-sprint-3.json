@@ -1,0 +1,409 @@
+{
+  "result": "PASS",
+  "sprint": 3,
+  "variants": 48,
+  "collections": [
+    "corsair",
+    "overgrown"
+  ],
+  "source_hulls_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged",
+  "previous_sprint_assets_checked": 192,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 48,
+  "preview_poses": 5760,
+  "render_files_verified": 144,
+  "rebuild_verified": false,
+  "rows": [
+    {
+      "id": "sardine.corsair",
+      "triangles": 19176,
+      "added_triangles": 4924,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.overgrown",
+      "triangles": 19148,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.corsair",
+      "triangles": 14476,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.overgrown",
+      "triangles": 14640,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.corsair",
+      "triangles": 14176,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.overgrown",
+      "triangles": 14340,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.corsair",
+      "triangles": 13940,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.overgrown",
+      "triangles": 14104,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.corsair",
+      "triangles": 14316,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.788,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.overgrown",
+      "triangles": 14480,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.788,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.corsair",
+      "triangles": 15808,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7866,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.overgrown",
+      "triangles": 15972,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7866,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.corsair",
+      "triangles": 15088,
+      "added_triangles": 4924,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.overgrown",
+      "triangles": 15060,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.corsair",
+      "triangles": 14424,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7889,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.overgrown",
+      "triangles": 14588,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7889,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.corsair",
+      "triangles": 13808,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7972,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.overgrown",
+      "triangles": 13972,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7972,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.corsair",
+      "triangles": 13888,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7959,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.overgrown",
+      "triangles": 14052,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7959,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.corsair",
+      "triangles": 14924,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7969,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.overgrown",
+      "triangles": 15088,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7969,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.corsair",
+      "triangles": 16012,
+      "added_triangles": 4732,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7971,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.overgrown",
+      "triangles": 16176,
+      "added_triangles": 4896,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7971,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.corsair",
+      "triangles": 20144,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.overgrown",
+      "triangles": 19356,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.corsair",
+      "triangles": 21492,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.overgrown",
+      "triangles": 20704,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.corsair",
+      "triangles": 20572,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.overgrown",
+      "triangles": 19784,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.corsair",
+      "triangles": 20136,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.overgrown",
+      "triangles": 19348,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.corsair",
+      "triangles": 20100,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.6173,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.overgrown",
+      "triangles": 19312,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.6173,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.corsair",
+      "triangles": 20988,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6636,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.overgrown",
+      "triangles": 20200,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6636,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.corsair",
+      "triangles": 20792,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7826,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.overgrown",
+      "triangles": 20004,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7826,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.corsair",
+      "triangles": 20476,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5421,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.overgrown",
+      "triangles": 19688,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5421,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.corsair",
+      "triangles": 20156,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.5621,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.overgrown",
+      "triangles": 19368,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.5621,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.corsair",
+      "triangles": 22580,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.6783,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.overgrown",
+      "triangles": 21792,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.6783,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.corsair",
+      "triangles": 20704,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.overgrown",
+      "triangles": 19916,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.corsair",
+      "triangles": 20556,
+      "added_triangles": 6952,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6056,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.overgrown",
+      "triangles": 19768,
+      "added_triangles": 6164,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6056,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}

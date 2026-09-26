@@ -1,0 +1,4 @@
+mesh: "/assets/themes/piranha/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/piranha/abyssal/albedo.png"
+name: "piranha_abyssal"

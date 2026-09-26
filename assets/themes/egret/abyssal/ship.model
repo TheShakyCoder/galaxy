@@ -1,0 +1,4 @@
+mesh: "/assets/themes/egret/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/egret/abyssal/albedo.png"
+name: "egret_abyssal"

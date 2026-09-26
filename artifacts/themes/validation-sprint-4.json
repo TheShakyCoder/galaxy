@@ -1,0 +1,216 @@
+{
+  "result": "PASS",
+  "sprint": 4,
+  "variants": 24,
+  "collections": [
+    "toybox"
+  ],
+  "source_hulls_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged",
+  "previous_sprint_assets_checked": 192,
+  "body_uvs_preserved": true,
+  "panel_uvs_remapped_on_copies": true,
+  "unique_textures": 24,
+  "preview_poses": 2880,
+  "render_files_verified": 72,
+  "rebuild_verified": false,
+  "rows": [
+    {
+      "id": "sardine.toybox",
+      "triangles": 17616,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7578,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.toybox",
+      "triangles": 13108,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.7568,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.toybox",
+      "triangles": 12808,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8085,
+      "flight_max_ndc": 0.7575,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.toybox",
+      "triangles": 12572,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8124,
+      "flight_max_ndc": 0.7556,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.toybox",
+      "triangles": 12948,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8156,
+      "flight_max_ndc": 0.788,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.toybox",
+      "triangles": 14440,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8168,
+      "flight_max_ndc": 0.7866,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.toybox",
+      "triangles": 13528,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.toybox",
+      "triangles": 13056,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8131,
+      "flight_max_ndc": 0.7889,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.toybox",
+      "triangles": 12440,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.7972,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.toybox",
+      "triangles": 12520,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.7959,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.toybox",
+      "triangles": 13556,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8069,
+      "flight_max_ndc": 0.7969,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.toybox",
+      "triangles": 14644,
+      "added_triangles": 3364,
+      "preview_max_ndc": 0.8103,
+      "flight_max_ndc": 0.7971,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.toybox",
+      "triangles": 16964,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8147,
+      "flight_max_ndc": 0.4974,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.toybox",
+      "triangles": 18312,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8117,
+      "flight_max_ndc": 0.4886,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.toybox",
+      "triangles": 17392,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8116,
+      "flight_max_ndc": 0.5083,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.toybox",
+      "triangles": 16956,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.4932,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.toybox",
+      "triangles": 16920,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8126,
+      "flight_max_ndc": 0.6173,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.toybox",
+      "triangles": 17808,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8151,
+      "flight_max_ndc": 0.6636,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.toybox",
+      "triangles": 17612,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.815,
+      "flight_max_ndc": 0.7826,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.toybox",
+      "triangles": 17296,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8081,
+      "flight_max_ndc": 0.5421,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.toybox",
+      "triangles": 16976,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8106,
+      "flight_max_ndc": 0.5621,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.toybox",
+      "triangles": 19400,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.816,
+      "flight_max_ndc": 0.6783,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.toybox",
+      "triangles": 17524,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.8146,
+      "flight_max_ndc": 0.6241,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.toybox",
+      "triangles": 17376,
+      "added_triangles": 3772,
+      "preview_max_ndc": 0.814,
+      "flight_max_ndc": 0.6056,
+      "result": "PASS"
+    }
+  ],
+  "not_tested": [
+    "Defold compilation/runtime",
+    "mobile/game performance",
+    "shop/equip/multiplayer integration"
+  ]
+}
