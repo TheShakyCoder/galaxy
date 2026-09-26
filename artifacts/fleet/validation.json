@@ -61,10 +61,10 @@
     {
       "ship": "Moray",
       "result": "PASS",
-      "triangles": 9464,
+      "triangles": 10164,
       "extent_m": 42.0,
-      "preview_max_ndc": 0.8124,
-      "sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039"
+      "preview_max_ndc": 0.8128,
+      "sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01"
     },
     {
       "ship": "Lionfish",
@@ -210,7 +210,7 @@
     "patrol_tactical": 0.7556,
     "escort_interceptor": 0.7802,
     "escort_support": 0.7777,
-    "escort_assault": 0.7741,
+    "escort_assault": 0.774,
     "escort_tactical": 0.7807,
     "frigate_interceptor": 0.7915,
     "frigate_support": 0.7873,

@@ -4,7 +4,7 @@
   "cosmetics": 96,
   "recolors": 72,
   "clockwork_models": 24,
-  "source_fleet_unchanged": true,
+  "source_fleet_revision": "Symmetrical Moray; all other ships unchanged",
   "recolor_geometry_exact": true,
   "clockwork_base_geometry_exact": true,
   "unique_textures": 96,
@@ -205,34 +205,34 @@
     },
     {
       "id": "moray.aurora",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "existing_flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "existing_flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.solar_regatta",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "existing_flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "existing_flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.royal_amethyst",
-      "triangles": 9464,
+      "triangles": 10164,
       "added_triangles": 0,
-      "preview_max_ndc": 0.8124,
-      "existing_flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "existing_flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
       "id": "moray.clockwork",
-      "triangles": 17824,
+      "triangles": 18524,
       "added_triangles": 8360,
-      "preview_max_ndc": 0.8124,
-      "existing_flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "existing_flight_max_ndc": 0.774,
       "result": "PASS"
     },
     {
@@ -592,7 +592,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "existing_flight_max_ndc": 0.7388,
+      "existing_flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -600,7 +600,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "existing_flight_max_ndc": 0.7388,
+      "existing_flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -608,7 +608,7 @@
       "triangles": 13840,
       "added_triangles": 0,
       "preview_max_ndc": 0.815,
-      "existing_flight_max_ndc": 0.7388,
+      "existing_flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {
@@ -616,7 +616,7 @@
       "triangles": 22912,
       "added_triangles": 9072,
       "preview_max_ndc": 0.815,
-      "existing_flight_max_ndc": 0.7388,
+      "existing_flight_max_ndc": 0.7387,
       "result": "PASS"
     },
     {

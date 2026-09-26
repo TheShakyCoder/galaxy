@@ -1396,8 +1396,8 @@
       "game_mesh": "/assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
       "base_glb": "assets/models/escort_assault/moray.glb",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
-      "sha256": "d2927417cc24a0448e7afa14d9bbbf847dcd067cca6fa1d30ef42cb4e9917792",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
+      "sha256": "1eca4768480b662ffb3be3ad3776f182181e3963b924738019935e552f4219e9",
       "texture_sha256": "6eb5afc59a6cbcb2a9319fca8e7ba63a50168dd7e94cd2a508886cbb623e5ceb",
       "bounds_m": [
         [
@@ -1406,27 +1406,27 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "features": [],
       "thumbnail": "artifacts/cosmetics/renders/moray-aurora-perspective.jpg"
@@ -1446,8 +1446,8 @@
       "game_mesh": "/assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
       "base_glb": "assets/models/escort_assault/moray.glb",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
-      "sha256": "892675f200875e82f132c29ba98ea440777f5d5c58fb803bf658b2e90a46a93d",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
+      "sha256": "d2bc6a9ba9c45c5347aad3e30c7885239b1e75a4adcaac1b533a4d3ff89576f6",
       "texture_sha256": "7aca6bc847cb1d5f729c84e0c1021c83a4943bf464d7cc78a5e44e5af3e7df64",
       "bounds_m": [
         [
@@ -1456,27 +1456,27 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "features": [],
       "thumbnail": "artifacts/cosmetics/renders/moray-solar_regatta-perspective.jpg"
@@ -1496,8 +1496,8 @@
       "game_mesh": "/assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
       "base_glb": "assets/models/escort_assault/moray.glb",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
-      "sha256": "c0c061efcb324d5af34c6c451d45d8406fd8ddb53f96d592a50f1dd762ab63cd",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
+      "sha256": "2204f8fcd2f4b5788253ffae3e3297fb7d0c8c1b343f69b1ec626df5d78db527",
       "texture_sha256": "2aee04c7574a4fd02d8bfa5a0d66f7cb4ee9f46baff5bd104fd400040fd39d20",
       "bounds_m": [
         [
@@ -1506,27 +1506,27 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.73305,
-        7.96769,
+        7.55457,
+        7.55681,
         42.0
       ],
-      "vertices": 6652,
-      "triangles": 9464,
+      "vertices": 7156,
+      "triangles": 10164,
       "added_vertices": 0,
       "added_triangles": 0,
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "features": [],
       "thumbnail": "artifacts/cosmetics/renders/moray-royal_amethyst-perspective.jpg"
@@ -1546,37 +1546,37 @@
       "game_mesh": "/assets/cosmetics/moray/clockwork/model.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
       "base_glb": "assets/models/escort_assault/moray.glb",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
-      "sha256": "35a82303231f7f06f1c8169f7ada5345e1e0dd14f7f8d930929761f6640bfcbb",
+      "base_sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
+      "sha256": "5e386322ddb6a74139ffd9ca720bc99a0570d928cf6e2c42b5f04dd5b77b9561",
       "texture_sha256": "036d980794fa81cc31295da8eb3836d1215f460915f76372ba54663a23bcd506",
       "bounds_m": [
         [
-          -3.777285575866699,
+          -4.78987482884023,
           -3.2534923553466797,
           -23.661972045898438
         ],
         [
-          6.687449410942758,
-          4.714197158813477,
+          4.78987482884023,
+          4.585585026144981,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        10.46473,
-        7.96769,
+        9.57975,
+        7.83908,
         42.0
       ],
-      "vertices": 14252,
-      "triangles": 17824,
+      "vertices": 14756,
+      "triangles": 18524,
       "added_vertices": 7600,
       "added_triangles": 8360,
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
       "features": [
         "Original species hull, fins, beak, tail and optical hardware retained",

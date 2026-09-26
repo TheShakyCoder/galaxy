@@ -296,32 +296,32 @@
           -23.661972045898438
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
+          3.777285575866699,
+          4.303314685821533,
           18.338027954101562
         ]
       ],
       "dimensions_m": [
-        7.733,
-        7.968,
+        7.555,
+        7.557,
         42.0
       ],
-      "origin_radius_m": 23.71783,
-      "vertices": 6652,
-      "triangles": 9464,
-      "bytes": 317304,
-      "sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "origin_radius_m": 23.6656,
+      "vertices": 7156,
+      "triangles": 10164,
+      "bytes": 337628,
+      "sha256": "c73afc94df1d5ad00dd1164db8ff188c0cbf36f020f5ac365864ad96d9dc3b01",
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          25.843,
+          69.166
         ],
-        "far": 147.717
+        "far": 147.502
       },
-      "identity": "Curving eel body, continuous dorsal ribbon and heavy jaw",
+      "identity": "Straight symmetrical eel body, centered dorsal ribbon and heavy jaw",
       "features": [
-        "Curving eel body, continuous dorsal ribbon and heavy jaw",
+        "Straight symmetrical eel body, centered dorsal ribbon and heavy jaw",
         "Armored shoulders and paired forward gun housings"
       ],
       "retained": false
@@ -1135,8 +1135,8 @@
       "height": 7.511
     },
     "escort_assault": {
-      "distance": 54.506,
-      "height": 8.301
+      "distance": 54.444,
+      "height": 8.283
     },
     "escort_tactical": {
       "distance": 62.002,

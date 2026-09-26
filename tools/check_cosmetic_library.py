@@ -83,7 +83,10 @@ def main():
     assert set(catalog['collections'])==keys and len(rows)==96 and len(expected)==24
     assert len({r['id'] for r in rows})==96
     assert {(r['ship'],r['collection']) for r in rows}=={(s,k) for s in expected for k in keys}
-    subprocess.run(['git','-c','safe.directory='+ROOT.as_posix(),'diff','--exit-code',BASE,'--','assets/models','main','game.project'],check=True,capture_output=True)
+    # The user explicitly revised Moray after the original library delivery.
+    # A focused guard permits that hull/camera revision and no other ship edits.
+    from check_moray_revision import preserved_assets
+    preserved_assets()
     cache={s:load(ROOT/r['glb']) for s,r in expected.items()}
     results=[]; texture_hashes=set(); base_geometry_hashes=set()
     for row in rows:
@@ -134,12 +137,12 @@ def main():
                 files.extend(ROOT/p.lstrip('/') for p in (row['glb'],row['texture'],row['model']))
             for file in files:
                 assert file.read_bytes()==(Path(folder)/file.relative_to(ROOT)).read_bytes(),'Rebuild mismatch: '+str(file)
-    report=dict(result='PASS',validation_base_commit=BASE,cosmetics=96,recolors=72,clockwork_models=24,source_fleet_unchanged=True,
+    report=dict(result='PASS',validation_base_commit=BASE,cosmetics=96,recolors=72,clockwork_models=24,source_fleet_revision='Symmetrical Moray; all other ships unchanged',
                 recolor_geometry_exact=True,clockwork_base_geometry_exact=True,unique_textures=96,
                 preview_yaws_per_variant=120,rebuild_verified=args.rebuild,rows=results,
                 not_tested=['Defold runtime rendering/performance','shop/ownership/equip integration','live multiplayer'])
     (ROOT/'artifacts/cosmetics/validation.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8',newline='\n')
-    print('PASS: 96 cosmetics; 72 exact-geometry recolors; 24 additive Clockwork models; 96 unique textures; source fleet unchanged; rebuild='+str(args.rebuild))
+    print('PASS: 96 cosmetics; 72 exact-geometry recolors; 24 additive Clockwork models; 96 unique textures; revised Moray preserved; rebuild='+str(args.rebuild))
 
 
 if __name__=='__main__': main()

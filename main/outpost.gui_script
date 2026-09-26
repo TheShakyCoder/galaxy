@@ -1848,7 +1848,7 @@ local PREVIEW_CAMERA = {
 	["/assets/models/patrol_tactical/anglerfish.model"] = { eye_offset = vmath.vector3(0.000, 9.524, 25.491), far = 85.934 },
 	["/assets/models/escort_interceptor/barracuda.model"] = { eye_offset = vmath.vector3(0.000, 24.055, 64.383), far = 140.758 },
 	["/assets/models/escort_support/remora.model"] = { eye_offset = vmath.vector3(0.000, 23.435, 62.721), far = 138.416 },
-	["/assets/models/escort_assault/moray.model"] = { eye_offset = vmath.vector3(0.000, 25.900, 69.319), far = 147.717 },
+	["/assets/models/escort_assault/moray.model"] = { eye_offset = vmath.vector3(0.000, 25.843, 69.166), far = 147.502 },
 	["/assets/models/escort_tactical/lionfish.model"] = { eye_offset = vmath.vector3(0.000, 22.882, 61.243), far = 136.332 },
 	["/assets/models/frigate_interceptor/marlin.model"] = { eye_offset = vmath.vector3(0.000, 50.356, 134.774), far = 239.988 },
 	["/assets/models/frigate_support/manta_ray.model"] = { eye_offset = vmath.vector3(0.000, 55.733, 149.165), far = 260.274 },

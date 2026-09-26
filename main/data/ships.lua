@@ -523,11 +523,11 @@ M.SHIPS = {
 		-- number exists yet, so left empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
-		flight_camera = { distance = 54.506, height = 8.301 },
+		flight_camera = { distance = 54.444, height = 8.283 },
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
-			-- Moray: Curving eel body, continuous dorsal ribbon and heavy jaw.
+			-- Moray: Straight symmetrical eel body, centered dorsal ribbon and heavy jaw.
 			accord = { name = "Moray", model = "/assets/models/escort_assault/moray.model", weapon_gui = "<TBD>" },
 			-- Goshawk: Broad rounded wings, long barred tail and pale eyebrow.
 			swarm = { name = "Goshawk", model = "/assets/models/escort_assault/goshawk.model", weapon_gui = "<TBD>" },

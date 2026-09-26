@@ -44,7 +44,7 @@ SHIPS=[
     fish('Anglerfish','patrol','tactical',17,(31,50,67),(116,150,160),'Round head, broad mouth and a luminous-tipped forward sensor lure'),
     fish('Barracuda','escort','interceptor',40,(27,69,88),(189,210,207),'Long narrow body, projecting lower jaw and two separate dorsal fins'),
     fish('Remora','escort','support',38,(40,66,76),(158,184,183),'Flattened head and long ribbed dorsal docking disc'),
-    fish('Moray','escort','assault',42,(55,83,72),(180,194,149),'Curving eel body, continuous dorsal ribbon and heavy jaw'),
+    fish('Moray','escort','assault',42,(55,83,72),(180,194,149),'Straight symmetrical eel body, centered dorsal ribbon and heavy jaw'),
     fish('Lionfish','escort','tactical',38,(90,59,56),(213,191,161),'Striped body, radiating sensor spines and large fan-shaped pectorals'),
     fish('Marlin','frigate','interceptor',84,(24,64,96),(177,205,214),'Long spear bill, slender fast hull and crescent caudal fin'),
     fish('Manta Ray','frigate','support',82,(29,64,80),(186,209,207),'Broad swept ray disc, paired cephalic lobes and slender trailing tail'),
