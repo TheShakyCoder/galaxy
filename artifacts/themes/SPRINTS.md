@@ -42,8 +42,17 @@ and preservation of Sprint 1 passed. See `validation-sprint-2.json`.
 The Sprint 1 and Sprint 2 galleries provide separate review checkpoints.
 No scope deviations.
 
-### Sprint 3 steering
+### Sprint 3 — complete
 
 User specified **triangle insignias for Corsair fish** and **circle insignias for
 Corsair birds**. Include matching texture markings and raised faction badges;
-check metadata plus rendered visibility before completing that sprint.
+checked metadata plus rendered visibility before completing this sprint.
+
+48 Corsair/Overgrown variants built, with 144 renders and twelve contact sheets
+reviewed. Corrected repeated rope anchor samples after the winding check caught
+a folded segment; rebuilt and rerendered. Broadened bird leaves and blossoms
+after sample review. Fish coral gardens, bird vines, nautical hardware and the
+requested faction marks retain the original species profiles.
+Isolated rebuild, 5,760 preview poses, flight framing, binary/resource checks,
+and previous-sprint preservation passed. See `validation-sprint-3.json`.
+No scope deviations.

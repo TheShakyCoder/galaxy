@@ -1,0 +1,4 @@
+mesh: "/assets/themes/anglerfish/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/themes/anglerfish/corsair/albedo.png"
+name: "anglerfish_corsair"

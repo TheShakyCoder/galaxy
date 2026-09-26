@@ -47,6 +47,10 @@ def main():
             s,k=r['ship'],r['collection'];b=fleet[s]
             assert r['id']==s+'.'+k and r['base_glb']==b['glb'] and r['base_model']==b['model']
             assert r['faction']==b['faction'] and r['size']==b['class'] and r['role']==b['role']
+            if k=='corsair':
+                shape='triangle' if b['faction']=='accord' else 'circle'
+                assert r['insignia']==shape
+                assert any(shape+' faction insignias' in f.lower() for f in r['features'])
             assert r['base_sha256']==b['sha256']==sha(ROOT/b['glb'])
             assert r['sha256']==sha(ROOT/r['glb'])
             pts,n,uv,idx,tex=load(ROOT/r['glb']);bp,bn,bu,bi,_=originals[s]

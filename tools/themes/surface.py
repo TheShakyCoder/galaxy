@@ -82,6 +82,15 @@ def decorate(image,key,ship,region,detail_scale=1):
             for y in range(35,h,145):
                 d.ellipse((x+5,y-2,x+9,y+2),fill=gold+(245,))
                 d.line((x,y+50,x+44,y+50),fill=(43,25,13,130),width=2)
+        # Requested faction insignias, also repeated as raised model badges.
+        for y in (h*.32,h*.70):
+            x=w*.48;r=min(34,w*.16)
+            if ship.faction=='accord':
+                pts=[(x,y-r),(x-r*.88,y+r*.58),(x+r*.88,y+r*.58)]
+                d.polygon(pts,fill=(235,217,171,255),outline=(61,37,23,255),width=3)
+            else:
+                d.ellipse((x-r,y-r,x+r,y+r),fill=(235,217,171,255),outline=(61,37,23,255),width=3)
+                d.ellipse((x-r*.56,y-r*.56,x+r*.56,y+r*.56),fill=(71,46,29,255))
     elif key=='overgrown':
         for _ in range(w*h//420):
             x,y=rng.randrange(w),rng.randrange(h); r=rng.randrange(1,6)

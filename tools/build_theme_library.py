@@ -34,7 +34,8 @@ def build(ship,key,root):
                 added_vertices=len(mesh.p)-nv,added_triangles=len(mesh.idx)//3-nt,remapped_panel_vertices=remapped,
                 bounds_m=[lo,hi],dimensions_m=[round(b-a,5) for a,b in zip(lo,hi)],features=features,
                 preview=dict(eye_offset=[0,round(dist*.35,3),round(dist*math.sqrt(1-.35**2),3)],far=round(dist+radius+50,3)),
-                thumbnail=f'artifacts/themes/renders/{ship.slug}-{key}-perspective.jpg')
+                thumbnail=f'artifacts/themes/renders/{ship.slug}-{key}-perspective.jpg',
+                **({'insignia':'triangle' if ship.faction=='accord' else 'circle'} if key=='corsair' else {}))
 
 
 def main():
