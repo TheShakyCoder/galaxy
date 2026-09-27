@@ -2,7 +2,7 @@
 # repo root with the "Dockerfile" build pack - see docs/DEPLOY_COOLIFY.md.
 #
 # Stage 1 runs Defold's command-line builder (bob.jar) to bundle the game for
-# the browser. Native extensions (websocket, Poki SDK) are compiled remotely
+# the browser. Native extensions (websocket) are compiled remotely
 # by Defold's public build server, so the build needs outbound internet.
 
 # Match the editor you develop with (Defold -> About). 1.13.x bundles JDK 25.
@@ -25,6 +25,12 @@ RUN apt-get update \
 WORKDIR /src
 ADD https://github.com/defold/defold/releases/download/${DEFOLD_VERSION}/bob.jar /opt/bob.jar
 COPY . .
+
+# Drop the Poki SDK from this self-hosted build: its site lock shows a
+# "possible unauthorized game hosting" DMCA warning on any domain Poki doesn't
+# host. game.project keeps it for builds actually published to Poki.
+RUN sed -i '/extension-poki-sdk/d' game.project \
+    && ! grep -q poki game.project
 
 # Overrides game.project's [nakama] section for this build only.
 RUN printf '[nakama]\nhost = %s\nport = %s\nuse_ssl = %s\nserver_key = %s\n' \
