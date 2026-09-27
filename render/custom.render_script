@@ -263,16 +263,22 @@ end
 -- single ship-detail-modal preview and the Ships-For-Sale grid's per-cell
 -- previews below. `design_rect` is {x, y, w, h} in DESIGN space (matching
 -- game.project's [display] width/height), converted to actual window
--- pixels using state.width/height (design) vs state.window_width/height
--- (actual) - see the file header comment above for why this
--- viewport-restricted-redraw approach is used at all instead of a render
--- target. Caller is responsible for resetting the viewport back to
--- fullscreen afterwards.
+-- pixels the same way the GUI itself lays out: main/outpost.gui's nodes all
+-- use ADJUST_MODE_FIT with no anchors, i.e. one uniform scale
+-- (min of the two axis ratios) about the window centre, letterboxed on the
+-- other axis. Stretching each axis independently instead matched only at
+-- exactly 16:9 and drifted the previews off their cells everywhere else.
+-- See the file header comment above for why this viewport-restricted-redraw
+-- approach is used at all instead of a render target. Caller is
+-- responsible for resetting the viewport back to fullscreen afterwards.
 local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, predicates, state)
-    local vx = math.floor(design_rect.x / state.width * state.window_width)
-    local vy = math.floor(design_rect.y / state.height * state.window_height)
-    local vw = math.floor(design_rect.w / state.width * state.window_width)
-    local vh = math.floor(design_rect.h / state.height * state.window_height)
+    local scale = math.min(state.window_width / state.width, state.window_height / state.height)
+    local offset_x = (state.window_width - state.width * scale) * 0.5
+    local offset_y = (state.window_height - state.height * scale) * 0.5
+    local vx = math.floor(offset_x + design_rect.x * scale)
+    local vy = math.floor(offset_y + design_rect.y * scale)
+    local vw = math.floor(design_rect.w * scale)
+    local vh = math.floor(design_rect.h * scale)
     if vw <= 0 or vh <= 0 then
         return
     end
