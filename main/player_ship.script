@@ -186,11 +186,39 @@ local DOCK_COUNTDOWN_SEC = 5
 -- project's own identical constant has (§0).
 local COMBAT_JUMP_MULTIPLIER = 4
 
--- How often this ship's own transform is broadcast to main/network.lua's
--- current room (10Hz - matches ~/Defold/SuperShips/main/ship.script's own
--- network_send_interval, §0). Well below render frame rate; remote clients
--- smooth between updates themselves (see main/remote_ships.script).
-local NETWORK_SEND_INTERVAL = 0.1
+-- Transform broadcasts to main/network.lua's current room use dead
+-- reckoning: remote clients extrapolate each ship along its heading at its
+-- last reported speed (main/remote_ships.script), so an update is only sent
+-- when this ship has drifted from that prediction - turning, changing speed,
+-- or jumping - plus a keep-alive while it cruises straight or sits still.
+-- NETWORK_SEND_INTERVAL caps the rate at 5Hz; server fan-out grows with the
+-- square of the players in a system, so every skipped update counts.
+local NETWORK_SEND_INTERVAL = 0.2
+local NETWORK_KEEPALIVE_INTERVAL = 1.0
+local NETWORK_POS_TOLERANCE = 1.0 -- metres from the predicted position
+local NETWORK_SPEED_TOLERANCE = 0.5 -- m/sec
+-- cos(half of 2 degrees): quaternion dot product below this = turned >2 deg
+local NETWORK_ROT_TOLERANCE_COS = math.cos(math.rad(2) / 2)
+
+-- True if this ship has drifted far enough from where remote clients are
+-- predicting it (last sent position + heading * speed * time since) that
+-- they need a fresh update.
+local function network_state_changed(self, pos, rot)
+	if not self.net_sent_pos then
+		return true
+	end
+	if math.abs(self.speed - self.net_sent_speed) > NETWORK_SPEED_TOLERANCE then
+		return true
+	end
+	local sent = self.net_sent_rot
+	local dot = math.abs(rot.x * sent.x + rot.y * sent.y + rot.z * sent.z + rot.w * sent.w)
+	if dot < NETWORK_ROT_TOLERANCE_COS then
+		return true
+	end
+	local predicted = self.net_sent_pos
+		+ vmath.rotate(sent, SHIP_FORWARD) * self.net_sent_speed * self.network_since_sent
+	return vmath.length(pos - predicted) > NETWORK_POS_TOLERANCE
+end
 
 -- Uniform-on-sphere-surface point at radius DOCK_RANGE around
 -- outpost_pos, facing the system origin from there - same
@@ -323,6 +351,10 @@ function init(self)
 	self.ship_id = nil -- resolved from session.get_ship_id() in start_flight() - not known yet here (faction/ship selection hasn't happened this early)
 	self.model_component_id = nil
 	self.network_send_timer = 0
+	self.network_since_sent = 0
+	self.net_sent_pos = nil -- last broadcast state (nil = send on the next check) - see network_state_changed()
+	self.net_sent_rot = nil
+	self.net_sent_speed = 0
 	self.target_id = nil -- currently-targeted remote user_id (any ship, friend or foe - see cycle_target()/target_nearest_enemy() above), or nil
 	self.follow_friend = false -- Y's Follow Friend - see update()'s targeting/movement block
 	msg.post("flight_camera#camera", "disable")
@@ -349,6 +381,8 @@ local function start_flight(self)
 	self.jump_hydrogen_spent = 0
 	self.in_combat = false
 	self.network_send_timer = 0
+	self.network_since_sent = 0
+	self.net_sent_pos = nil -- broadcast this launch straight away
 	self.target_id = nil
 	self.follow_friend = false
 
@@ -984,9 +1018,16 @@ function update(self, dt)
 	-- broadcast this ship's own transform at NETWORK_SEND_INTERVAL, not
 	-- every frame (see that constant's own comment).
 	self.network_send_timer = self.network_send_timer + dt
+	self.network_since_sent = self.network_since_sent + dt
 	if self.network_send_timer >= NETWORK_SEND_INTERVAL then
 		self.network_send_timer = 0
-		network.send_transform(pos, rot, self.speed, self.ship_id)
+		if (self.network_since_sent >= NETWORK_KEEPALIVE_INTERVAL or network_state_changed(self, pos, rot))
+			and network.send_transform(pos, rot, self.speed, self.ship_id) then
+			self.net_sent_pos = pos
+			self.net_sent_rot = rot
+			self.net_sent_speed = self.speed
+			self.network_since_sent = 0
+		end
 	end
 
 	-- Currency (per direct instruction: "show the amount of currency for

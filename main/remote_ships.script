@@ -77,6 +77,16 @@ local render_pos = {}    -- user_id -> smoothed position actually applied this f
 local render_rot = {}    -- user_id -> smoothed rotation actually applied this frame
 local factions = {}      -- user_id -> faction name string
 local speeds = {}        -- user_id -> latest network-reported speed (number)
+local stale_time = {}    -- user_id -> seconds since that ship's last update
+
+-- Dead reckoning (matches main/player_ship.script's NETWORK_* sender):
+-- between updates each remote ship's target keeps moving along its reported
+-- heading at its reported speed, since senders stay quiet while they fly
+-- straight. Stops after EXTRAPOLATE_MAX_TIME without an update (keep-alives
+-- arrive every second), so a stalled sender - e.g. a backgrounded browser
+-- tab - doesn't coast off into space.
+local SHIP_FORWARD = vmath.vector3(0, 0, 1) -- same axis as player_ship.script
+local EXTRAPOLATE_MAX_TIME = 2.5
 
 go.property("remote_smoothing_speed", 15.0)
 
@@ -127,6 +137,7 @@ function on_message(self, message_id, message)
 		target_rot[message.user_id] = rot
 		factions[message.user_id] = message.faction or "?"
 		speeds[message.user_id] = message.speed or 0
+		stale_time[message.user_id] = 0
 
 		if not ships_by_user[message.user_id] then
 			-- nothing to smooth from yet - spawn (and start rendering)
@@ -156,6 +167,7 @@ function on_message(self, message_id, message)
 		render_rot[message.user_id] = nil
 		factions[message.user_id] = nil
 		speeds[message.user_id] = nil
+		stale_time[message.user_id] = nil
 		remote_registry.ships[message.user_id] = nil
 	end
 end
@@ -171,6 +183,12 @@ function update(self, dt)
 	local t = 1.0 - math.exp(-self.remote_smoothing_speed * dt)
 
 	for user_id, ship_go in pairs(ships_by_user) do
+		stale_time[user_id] = stale_time[user_id] + dt
+		if stale_time[user_id] < EXTRAPOLATE_MAX_TIME and speeds[user_id] ~= 0 then
+			target_pos[user_id] = target_pos[user_id]
+				+ vmath.rotate(target_rot[user_id], SHIP_FORWARD) * speeds[user_id] * dt
+		end
+
 		local pos = vmath.lerp(t, render_pos[user_id], target_pos[user_id])
 		local rot = vmath.slerp(t, render_rot[user_id], target_rot[user_id])
 		go.set_position(pos, ship_go)

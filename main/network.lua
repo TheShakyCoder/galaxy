@@ -312,10 +312,11 @@ end
 -- Broadcasts this ship's transform (plus its current speed and ship/faction
 -- id) to everyone else in the room. Cheap fire-and-forget - safe to call
 -- every frame, but callers should throttle (see player_ship.script's
--- NETWORK_SEND_INTERVAL) to keep traffic reasonable.
+-- NETWORK_SEND_INTERVAL) to keep traffic reasonable. Returns false without
+-- sending while not in a room (still connecting or mid system change).
 function M.send_transform(pos, rot, speed, ship_id)
 	if not M.in_room then
-		return
+		return false
 	end
 	local payload = json.encode({
 		x = pos.x, y = pos.y, z = pos.z,
@@ -331,6 +332,7 @@ function M.send_transform(pos, rot, speed, ship_id)
 	nakama.sync(function()
 		M.socket.channel_message_send(M.channel_id, payload)
 	end)
+	return true
 end
 
 return M
