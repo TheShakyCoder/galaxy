@@ -286,11 +286,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/barracuda.glb",
       "base_model": "/assets/models/escort_interceptor/barracuda.model",
-      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "base_sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "glb": "assets/themes/barracuda/toybox/model.glb",
       "texture": "/assets/themes/barracuda/toybox/albedo.png",
       "model": "/assets/themes/barracuda/toybox/ship.model",
-      "sha256": "e874a53506a1a2bc221505e3bdbe6af7b4f58ee73a990316e1f2e52ea9a8d06c",
+      "sha256": "636c7a7a3ff40b28461def7433630e9a33f4d09edc7c7c92cec5701be5ac9c61",
       "texture_sha256": "f87bb05525848334f7fcf0ba0d1e4df9f711745828ddf766662a6ea8cd9fb969",
       "vertices": 9447,
       "triangles": 12948,
@@ -299,20 +299,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.413938045501709,
-          18.274761199951172
+          8.902235984802246,
+          7.150579929351807,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99042,
-        8.2478,
-        40.0
+        17.80447,
+        13.36144,
+        64.8
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -324,10 +324,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "thumbnail": "artifacts/themes/renders/barracuda-toybox-perspective.jpg"
     },
@@ -343,11 +343,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/remora.glb",
       "base_model": "/assets/models/escort_support/remora.model",
-      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "base_sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "glb": "assets/themes/remora/toybox/model.glb",
       "texture": "/assets/themes/remora/toybox/albedo.png",
       "model": "/assets/themes/remora/toybox/ship.model",
-      "sha256": "8dd30fd35bea22ccb342238c98f5727678d4883b5d5ff0122c718e386a73d564",
+      "sha256": "0dc263c6ea48cbd71abf1efbe21cc4b411fafa2d6007d69d38fc1210f331d932",
       "texture_sha256": "c4d61f636b96efaa3c0a9fd2f3285b5226e04cc3bfddc6bbfb0f4f9c254ebdb5",
       "vertices": 10275,
       "triangles": 14440,
@@ -356,20 +356,20 @@
       "remapped_panel_vertices": 524,
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          3.1448780613051954,
-          16.709218978881836
+          9.078014373779297,
+          5.296636773470883,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78014,
-        5.97467,
-        38.0
+        18.15603,
+        10.06259,
+        64.0
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -381,10 +381,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "thumbnail": "artifacts/themes/renders/remora-toybox-perspective.jpg"
     },
@@ -400,33 +400,33 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "glb": "assets/themes/moray/toybox/model.glb",
       "texture": "/assets/themes/moray/toybox/albedo.png",
       "model": "/assets/themes/moray/toybox/ship.model",
-      "sha256": "1802a4a8c934c23d0dfce47729f8324a4f43520fb32ac512b3714f8288c92dc5",
+      "sha256": "79341077bd9b3bcc86fdbd10d058722951137df6d3a7fafafe6e3ba0f2163416",
       "texture_sha256": "26e8f33eec920671e3f0a581e1a0bbf2cea06dacec918724de0635526d3b181c",
-      "vertices": 9134,
-      "triangles": 12828,
+      "vertices": 9638,
+      "triangles": 13528,
       "added_vertices": 2482,
       "added_triangles": 3364,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -3.777285575866699,
-          -3.2534923553466797,
-          -23.661972045898438
+          -5.396122455596924,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          6.603131157878237,
-          4.714197158813477,
-          18.338027954101562
+          6.673959601239617,
+          6.147592544555664,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        10.38042,
-        7.96769,
-        42.0
+        12.07008,
+        10.79544,
+        60.0
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -438,10 +438,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
       "thumbnail": "artifacts/themes/renders/moray-toybox-perspective.jpg"
     },
@@ -457,11 +457,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/lionfish.glb",
       "base_model": "/assets/models/escort_tactical/lionfish.model",
-      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "base_sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "glb": "assets/themes/lionfish/toybox/model.glb",
       "texture": "/assets/themes/lionfish/toybox/albedo.png",
       "model": "/assets/themes/lionfish/toybox/ship.model",
-      "sha256": "6c36766dc6a01248c541959a1a09c4d3437861205cffab43458b4c9d135052ab",
+      "sha256": "90097e42be5847c6a45bdcd4aab8d2b3e4dc362c1e5de1f1f9ea2bbcfc360c86",
       "texture_sha256": "6a73973b97b8145262505342c799d53621ce121cd048f31ae3e28b4d3ccc5264",
       "vertices": 10358,
       "triangles": 13056,
@@ -470,20 +470,20 @@
       "remapped_panel_vertices": 1464,
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.989246021391789,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.928125007892215,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.22617,
-        13.84648,
-        38.0
+        45.14156,
+        24.77791,
+        68.0
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -495,10 +495,10 @@
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "thumbnail": "artifacts/themes/renders/lionfish-toybox-perspective.jpg"
     },
@@ -514,11 +514,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/marlin.glb",
       "base_model": "/assets/models/frigate_interceptor/marlin.model",
-      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "base_sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "glb": "assets/themes/marlin/toybox/model.glb",
       "texture": "/assets/themes/marlin/toybox/albedo.png",
       "model": "/assets/themes/marlin/toybox/ship.model",
-      "sha256": "50bcd6ee68257491c5f1d0a8060ba44d3f54f5b98933d629991e827a5c2ca92d",
+      "sha256": "ded32cf11e678cb94a64375bd1f53d8f6d2a172230963fdddd345079f884c032",
       "texture_sha256": "a36b8bde06739dedafa85ae35fb4582ac2d34d6f63892be826fd9fbad16f6fe5",
       "vertices": 9114,
       "triangles": 12440,
@@ -527,20 +527,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.91098,
-        26.2259,
-        84.0
+        92.29674,
+        80.92563,
+        259.2
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -552,10 +552,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "thumbnail": "artifacts/themes/renders/marlin-toybox-perspective.jpg"
     },
@@ -571,11 +571,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/manta_ray.glb",
       "base_model": "/assets/models/frigate_support/manta_ray.model",
-      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "base_sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "glb": "assets/themes/manta_ray/toybox/model.glb",
       "texture": "/assets/themes/manta_ray/toybox/albedo.png",
       "model": "/assets/themes/manta_ray/toybox/ship.model",
-      "sha256": "2886198a2b93c14e69ad32bfe7b7b460b860aedf0295f41776f49893a931793a",
+      "sha256": "894d4911cdbdfca042beff49d13d1727e085a5fccd5e9cb03156316165bc1278",
       "texture_sha256": "4e23adc5bdd88ccf8f74f4407170761bbd271e4751154d88d6b59b16b8a5edaf",
       "vertices": 8605,
       "triangles": 12520,
@@ -584,20 +584,20 @@
       "remapped_panel_vertices": 312,
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.446427751038466,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.881530443560198,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          6.122468031415587,
-          30.963077545166016
+          127.46782684326172,
+          19.11404671225186,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.65907,
-        10.5689,
-        82.0
+        254.93565,
+        32.99558,
+        255.99999
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -609,10 +609,10 @@
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "thumbnail": "artifacts/themes/renders/manta_ray-toybox-perspective.jpg"
     },
@@ -628,11 +628,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
       "base_model": "/assets/models/frigate_assault/tiger_shark.model",
-      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "base_sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "glb": "assets/themes/tiger_shark/toybox/model.glb",
       "texture": "/assets/themes/tiger_shark/toybox/albedo.png",
       "model": "/assets/themes/tiger_shark/toybox/ship.model",
-      "sha256": "418a8f4c09b9a3f90c2b5ff116ad69b67dcb53b4727fd9691ce8a88434e61438",
+      "sha256": "2b45335f3f4e7b52e116d1d3161be8fc73ef9756090ff021c21acb6ba68e325c",
       "texture_sha256": "f12f756829de2810575ae95bc7d369bedce59d4fa6fa1e224fcddd2a21645d31",
       "vertices": 9662,
       "triangles": 13556,
@@ -641,20 +641,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.12195,
-        26.52112,
-        80.0
+        105.36585,
+        79.56336,
+        239.99999
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -666,10 +666,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "thumbnail": "artifacts/themes/renders/tiger_shark-toybox-perspective.jpg"
     },
@@ -685,11 +685,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
       "base_model": "/assets/models/frigate_tactical/hammerhead.model",
-      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "base_sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "glb": "assets/themes/hammerhead/toybox/model.glb",
       "texture": "/assets/themes/hammerhead/toybox/albedo.png",
       "model": "/assets/themes/hammerhead/toybox/ship.model",
-      "sha256": "1ca98cd7c9bf6a5b181e25e225c0b7dab1a627ea48b3c473db515b52448d753e",
+      "sha256": "0af35408d05320e0f73833033f8478db955e2111f6a4e383cd1146ed1d3520cd",
       "texture_sha256": "bd61a3830e06cee02b01c09f2c6a18d56606ebaa337912f53b0dffa702740a21",
       "vertices": 9995,
       "triangles": 14644,
@@ -698,20 +698,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.13684,
-        21.28772,
-        78.0
+        119.04128,
+        74.23409,
+        272.00001
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -723,10 +723,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "thumbnail": "artifacts/themes/renders/hammerhead-toybox-perspective.jpg"
     },
@@ -970,11 +970,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/falcon.glb",
       "base_model": "/assets/models/escort_interceptor/falcon.model",
-      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "base_sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "glb": "assets/themes/falcon/toybox/model.glb",
       "texture": "/assets/themes/falcon/toybox/albedo.png",
       "model": "/assets/themes/falcon/toybox/ship.model",
-      "sha256": "e5d3bdf20be326da5496ce3324aae2ac4e8fe46f34f20c045756a00f0acc8737",
+      "sha256": "7f2b21e9d594de04ce5a9cc532bca7a2adbd861464193b24502ae2d82df11064",
       "texture_sha256": "12e5914bc2da243b055378cb840ab2db9ced1894c5fa4571591017a8a3c726b0",
       "vertices": 15735,
       "triangles": 16920,
@@ -983,20 +983,20 @@
       "remapped_panel_vertices": 4442,
       "bounds_m": [
         [
-          -20.0,
-          -3.1762806548109332,
-          -17.22860336303711
+          -34.0,
+          -5.399677122074374,
+          -29.288625717163086
         ],
         [
-          20.0,
-          3.3500917355125757,
-          15.75583553314209
+          34.0,
+          5.695156119812965,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        6.52637,
-        32.98444
+        68.0,
+        11.09483,
+        56.07355
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1008,10 +1008,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "thumbnail": "artifacts/themes/renders/falcon-toybox-perspective.jpg"
     },
@@ -1027,11 +1027,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/egret.glb",
       "base_model": "/assets/models/escort_support/egret.model",
-      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "base_sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "glb": "assets/themes/egret/toybox/model.glb",
       "texture": "/assets/themes/egret/toybox/albedo.png",
       "model": "/assets/themes/egret/toybox/ship.model",
-      "sha256": "02d3c20886119f7383962786da5e2d823cbfe23fdd543e78deae6d11266a2104",
+      "sha256": "35324e7e7f5b994729ce235d49c445c735cfa3603c0806cecc12ce67f891e097",
       "texture_sha256": "288633f8d448b7abbd35554c8a69166b3843f2e7102e80e7079f26cc15d2a5d8",
       "vertices": 16804,
       "triangles": 17808,
@@ -1040,20 +1040,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.794473886489868,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.471158027648926,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.1995,
-        8.39968,
-        40.0
+        57.9192,
+        13.43948,
+        64.0
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1065,10 +1065,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "thumbnail": "artifacts/themes/renders/egret-toybox-perspective.jpg"
     },
@@ -1084,11 +1084,11 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/goshawk.glb",
       "base_model": "/assets/models/escort_assault/goshawk.model",
-      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "base_sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "glb": "assets/themes/goshawk/toybox/model.glb",
       "texture": "/assets/themes/goshawk/toybox/albedo.png",
       "model": "/assets/themes/goshawk/toybox/ship.model",
-      "sha256": "6755ab870e37b0ab3b9cfb49f085f9fd86823afbce7f3a1ed44080bbf073a3c2",
+      "sha256": "0b750e048dc880b836696bd3a98fc37738540445b31a571cb300a106646ffc65",
       "texture_sha256": "b51f23515cb32442b1693912b3d9a3d2434e85ed173ebb397b92a960bec2b053",
       "vertices": 16703,
       "triangles": 17612,
@@ -1097,20 +1097,20 @@
       "remapped_panel_vertices": 5158,
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.759403589419437,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.90763410613273,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          4.112825681262446,
-          18.648395538330078
+          31.606847763061523,
+          6.463011492861135,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.22689,
-        7.87223,
-        42.0
+        63.2137,
+        12.37065,
+        66.0
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1122,10 +1122,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "thumbnail": "artifacts/themes/renders/goshawk-toybox-perspective.jpg"
     },
@@ -1141,11 +1141,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/osprey.glb",
       "base_model": "/assets/models/escort_tactical/osprey.model",
-      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "base_sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "glb": "assets/themes/osprey/toybox/model.glb",
       "texture": "/assets/themes/osprey/toybox/albedo.png",
       "model": "/assets/themes/osprey/toybox/ship.model",
-      "sha256": "0230b6a6eff91eee2c092a5714a1ed6fb89ff0e85b203100443a40b218b5139b",
+      "sha256": "f333c3a007100ac3be5b23dd757506204f0ea6c7d9a5c557f3385dea260b8e35",
       "texture_sha256": "f7e22ae100f32ae93d2ddd85111666146a1561cf95dc40ba5e2d17eb41e91989",
       "vertices": 16399,
       "triangles": 17296,
@@ -1154,20 +1154,20 @@
       "remapped_panel_vertices": 5078,
       "bounds_m": [
         [
-          -20.5,
-          -3.5396177221271548,
-          -19.19939613342285
+          -34.0,
+          -5.870585142898935,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.7922,
-        36.75755
+        68.0,
+        14.58218,
+        60.96375
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1179,10 +1179,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "thumbnail": "artifacts/themes/renders/osprey-toybox-perspective.jpg"
     },
@@ -1198,11 +1198,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
       "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
-      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "base_sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "glb": "assets/themes/frigatebird/toybox/model.glb",
       "texture": "/assets/themes/frigatebird/toybox/albedo.png",
       "model": "/assets/themes/frigatebird/toybox/ship.model",
-      "sha256": "47b9b40a1bf52c4164a44dd86331ffbec42182a0c793d89198a03d37ae4f59a3",
+      "sha256": "ebf70861f34fad0356577e33e366bbe83cf4256871a387def2569e824b0d31b7",
       "texture_sha256": "7a40ece3838993fb1be01804d638eedf227b4e17ff7c16d33fe2cbe333b0433e",
       "vertices": 15258,
       "triangles": 16976,
@@ -1211,20 +1211,20 @@
       "remapped_panel_vertices": 3892,
       "bounds_m": [
         [
-          -44.0,
-          -3.9726227009355535,
-          -36.974788665771484
+          -136.0,
+          -12.279015159641988,
+          -114.28571319580078
         ],
         [
-          44.0,
-          5.499720573425293,
-          26.205883026123047
+          136.0,
+          16.999135971069336,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        9.47234,
-        63.18067
+        272.0,
+        29.27815,
+        195.28571
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1236,10 +1236,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "thumbnail": "artifacts/themes/renders/frigatebird-toybox-perspective.jpg"
     },
@@ -1255,11 +1255,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/pelican.glb",
       "base_model": "/assets/models/frigate_support/pelican.model",
-      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "base_sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "glb": "assets/themes/pelican/toybox/model.glb",
       "texture": "/assets/themes/pelican/toybox/albedo.png",
       "model": "/assets/themes/pelican/toybox/ship.model",
-      "sha256": "7bc87e0796569487b8c9302384216c6ec79df50f60e2e3df744c001dc3f39da2",
+      "sha256": "da00df8b793721c5b819c1803ea32c191e08f529d966ab8358240e6e625382dd",
       "texture_sha256": "70f0eb0ee592fabf266e99505a92eb7fbf35e9b6a97ab8af74da73b0647b077a",
       "vertices": 17654,
       "triangles": 19400,
@@ -1268,20 +1268,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -43.0,
-          -6.935276031494141,
-          -35.83333206176758
+          -128.0,
+          -20.644542694091797,
+          -106.66666412353516
         ],
         [
-          43.0,
-          9.375406265258789,
-          48.837364196777344
+          128.0,
+          27.908185958862305,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        16.31068,
-        84.6707
+        256.0,
+        48.55273,
+        252.04301
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1293,10 +1293,10 @@
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "thumbnail": "artifacts/themes/renders/pelican-toybox-perspective.jpg"
     },
@@ -1312,11 +1312,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
       "base_model": "/assets/models/frigate_assault/golden_eagle.model",
-      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "base_sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "glb": "assets/themes/golden_eagle/toybox/model.glb",
       "texture": "/assets/themes/golden_eagle/toybox/albedo.png",
       "model": "/assets/themes/golden_eagle/toybox/ship.model",
-      "sha256": "ce1d4d689d9d13a14a2e238858902b8937283e5f8d53973ef06f70ae87ea4847",
+      "sha256": "4556bb742fc2d79a4d3d13522bbea32b060e0e52b6ae2dca0e2557134d6f3bf9",
       "texture_sha256": "1b992b67cc40fa0274a7cd5fe65578091ce8285f627f37235f5c28ec9c7e1166",
       "vertices": 16623,
       "triangles": 17524,
@@ -1325,20 +1325,20 @@
       "remapped_panel_vertices": 4998,
       "bounds_m": [
         [
-          -42.0,
-          -6.3619906928241665,
-          -34.50835037231445
+          -132.0,
+          -19.99482828351283,
+          -108.4548110961914
         ],
         [
-          42.0,
-          6.965284824371338,
-          31.558441162109375
+          132.0,
+          21.890893936157227,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        13.32728,
-        66.06679
+        264.0,
+        41.88572,
+        207.63848
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1350,10 +1350,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "thumbnail": "artifacts/themes/renders/golden_eagle-toybox-perspective.jpg"
     },
@@ -1369,11 +1369,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
       "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
-      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "base_sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "glb": "assets/themes/harpy_eagle/toybox/model.glb",
       "texture": "/assets/themes/harpy_eagle/toybox/albedo.png",
       "model": "/assets/themes/harpy_eagle/toybox/ship.model",
-      "sha256": "a7b2b28247c11baf7e8608729f4a28293118e5b6e344f8a39772ac77ed251a29",
+      "sha256": "5261b85cac9186ce6d7c4b77dbcbdad15543bd0f381d67cb8eff81a4b46a2d9e",
       "texture_sha256": "8312ed328f0341625d60d4be550c106b5749169b3db09a9a34b72006f4b440c6",
       "vertices": 16511,
       "triangles": 17376,
@@ -1382,20 +1382,20 @@
       "remapped_panel_vertices": 5270,
       "bounds_m": [
         [
-          -41.0,
-          -6.776224574531922,
-          -36.755210876464844
+          -136.0,
+          -22.477232264862057,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.37945,
-        70.36845
+        272.0,
+        60.96598,
+        233.41729
       ],
       "features": [
         "Painted tin panels with warm stripes and cream star motifs",
@@ -1407,10 +1407,10 @@
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "thumbnail": "artifacts/themes/renders/harpy_eagle-toybox-perspective.jpg"
     }

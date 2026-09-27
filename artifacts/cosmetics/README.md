@@ -1,5 +1,10 @@
 # Galaxy cosmetic library
 
+Follow-up: Moray is straight and symmetrical. Escorts and Frigates, including
+all skins, follow native 1:4:16 sizing. See `artifacts/scale/README.md`; historical
+delivery notes below predate this explicitly requested revision.
+
+
 Two requested parts, covering all **12 Accord fish and 12 Swarm birds** from the
 merged fleet upgrade. Each model receives three paint variants and one steampunk
 variant, for **96 optional cosmetics**. All are original procedural artwork.

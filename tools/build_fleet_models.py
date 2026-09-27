@@ -82,7 +82,7 @@ def main():
         distance=max(max(abs(x)/(tan*1.7778*.80)-z,abs(y-height)/(tan*.80)-z) for x,y,z in p)
         flight[chassis]={'distance':round(max(radius*2,distance)+1,3),'height':height}
     manifest={'roster_count':len(rows),'built':sum(not r['retained'] for r in rows),'retained_sardine':True,
-              'size_basis':'maximum model dimension in meters; Patrol 15-17, Escort 38-42, Frigate 78-88',
+              'size_basis':'maximum model dimension in meters; same faction/role Patrol:Escort:Frigate = 1:4:16; Patrol 15-17, Escort 60-68, Frigate 240-272',
               'module_slots':'unchanged; hardware is visual role language, not a gameplay slot assignment',
               'ships':rows,'flight_camera':flight}
     filename='manifest.json' if not args.ship else args.ship+'-manifest.json'

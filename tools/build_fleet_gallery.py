@@ -25,7 +25,7 @@ def main():
                 d.text((x+9,y+279),row['name'],font=font,fill=(222,237,239))
                 d.text((x+9,y+309),row['class'].title()+' / '+row['role'].title(),font=small,fill=(153,186,195))
                 d.text((x+9,y+332),f'{max(row["dimensions_m"]):g}m max dimension  /  {row["triangles"]:,} triangles',font=small,fill=(139,159,179))
-                width=round(max(row['dimensions_m'])/88*350)
+                width=round(max(row['dimensions_m'])/272*350)
                 d.rounded_rectangle((x+9,y+365,x+9+width,y+371),radius=3,fill=(91,194,199) if faction=='accord' else (213,147,100))
             sheet.save(OUT/f'{faction}-{view}.png',optimize=True)
     cards=[]
@@ -34,7 +34,7 @@ def main():
         cards.append(f'''<article class="ship" data-faction="{row['faction']}" data-class="{row['class']}" data-slug="{slug}">
 <a class="render" href="renders/{slug}-perspective.png"><img loading="lazy" src="renders/{slug}-perspective.png" alt="{name} spacecraft, three-quarter view"></a>
 <div class="info"><div class="eyebrow">{row['faction']} · {row['class']} · {row['role']}</div><h2>{name}</h2><p>{html.escape(row['identity'])}.</p>
-<div class="size"><span style="width:{size/88*100:.2f}%"></span></div><div class="spec">{size:g} m maximum dimension · {row['triangles']:,} triangles</div>
+<div class="size"><span style="width:{size/272*100:.2f}%"></span></div><div class="spec">{size:g} m maximum dimension · {row['triangles']:,} triangles</div>
 <a class="download" href="../../{row['glb']}" download>Download model ↗</a>{'<span class="retained">Approved Sardine retained</span>' if row['retained'] else ''}</div></article>''')
     doc='''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Galaxy · Species fleet</title><style>

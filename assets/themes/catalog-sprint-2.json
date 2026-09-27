@@ -547,11 +547,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/barracuda.glb",
       "base_model": "/assets/models/escort_interceptor/barracuda.model",
-      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "base_sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "glb": "assets/themes/barracuda/abyssal/model.glb",
       "texture": "/assets/themes/barracuda/abyssal/albedo.png",
       "model": "/assets/themes/barracuda/abyssal/ship.model",
-      "sha256": "9df1afb1cfbd406c75ea16d61a7bd309fb1c12cd222fe1db09ae788ec9ad72f2",
+      "sha256": "4de0b48e064c68eb50467831acf6f437d34306aef63d23e8c6b258ad5a248051",
       "texture_sha256": "fe89212d93c095cc3c93001ed5a0ffba22614acd2f8b9fbfa9b38d5587699c8b",
       "vertices": 9337,
       "triangles": 12576,
@@ -560,20 +560,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.413938045501709,
-          18.274761199951172
+          8.902235984802246,
+          7.150579929351807,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99042,
-        8.2478,
-        40.0
+        17.80447,
+        13.36144,
+        64.8
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -584,10 +584,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "thumbnail": "artifacts/themes/renders/barracuda-abyssal-perspective.jpg"
     },
@@ -603,11 +603,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/barracuda.glb",
       "base_model": "/assets/models/escort_interceptor/barracuda.model",
-      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "base_sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "glb": "assets/themes/barracuda/crystalborn/model.glb",
       "texture": "/assets/themes/barracuda/crystalborn/albedo.png",
       "model": "/assets/themes/barracuda/crystalborn/ship.model",
-      "sha256": "9a7665764c346b920ecd20f7b567043397fe91f9c116bc28a9e43978cee944e4",
+      "sha256": "130ff96437ceeaf4cac6ed8f0863fd4847812766e9df10d610acb1daca8954b2",
       "texture_sha256": "735f10875e38f4fc7f20e72f0fc56e9bff44ab4408a2b229930bf974ad4312c3",
       "vertices": 8165,
       "triangles": 10128,
@@ -616,20 +616,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.498042174601789,
-          18.274761199951172
+          8.902235984802246,
+          7.286828231668501,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99042,
-        8.33191,
-        40.0
+        17.80447,
+        13.49769,
+        64.8
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -640,10 +640,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "thumbnail": "artifacts/themes/renders/barracuda-crystalborn-perspective.jpg"
     },
@@ -659,11 +659,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/remora.glb",
       "base_model": "/assets/models/escort_support/remora.model",
-      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "base_sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "glb": "assets/themes/remora/abyssal/model.glb",
       "texture": "/assets/themes/remora/abyssal/albedo.png",
       "model": "/assets/themes/remora/abyssal/ship.model",
-      "sha256": "a46512d3f098b42a6d01fbc9d62738f018e1af925e800032bf9d1b9c97bab035",
+      "sha256": "0aa330ef2a191b4740a3dc6b368cf017ee25e3ae13eb31b74e5024a7330ce133",
       "texture_sha256": "52018a76286fb629b02274283b08347c387c13508870a07166df583cf7e8833d",
       "vertices": 10165,
       "triangles": 14068,
@@ -672,20 +672,20 @@
       "remapped_panel_vertices": 524,
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          2.848877128317301,
-          16.709218978881836
+          9.078014373779297,
+          4.798108824810734,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78014,
-        5.67866,
-        38.0
+        18.15603,
+        9.56407,
+        64.0
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -696,10 +696,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "thumbnail": "artifacts/themes/renders/remora-abyssal-perspective.jpg"
     },
@@ -715,11 +715,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/remora.glb",
       "base_model": "/assets/models/escort_support/remora.model",
-      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "base_sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "glb": "assets/themes/remora/crystalborn/model.glb",
       "texture": "/assets/themes/remora/crystalborn/albedo.png",
       "model": "/assets/themes/remora/crystalborn/ship.model",
-      "sha256": "7734213969744ad388ce8297b36a5a38c7c2f568fc03323b4e8745232912030e",
+      "sha256": "1dcea2f0c57f658c84de55a279c5f5740c35faad05108445b26f0f2320c49bc5",
       "texture_sha256": "ef5b248701bae49743297e63400301d8dab37569c5936ad75f68b8aa3c125113",
       "vertices": 8993,
       "triangles": 11620,
@@ -728,20 +728,20 @@
       "remapped_panel_vertices": 524,
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          4.1814804924761395,
-          16.709218978881836
+          9.078014373779297,
+          7.042493499491583,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78014,
-        7.01127,
-        38.0
+        18.15603,
+        11.80845,
+        64.0
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -752,10 +752,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "thumbnail": "artifacts/themes/renders/remora-crystalborn-perspective.jpg"
     },
@@ -771,33 +771,33 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "glb": "assets/themes/moray/abyssal/model.glb",
       "texture": "/assets/themes/moray/abyssal/albedo.png",
       "model": "/assets/themes/moray/abyssal/ship.model",
-      "sha256": "1e9ad72591fa185f2dfa2fef7672d253da93670cc4d29f46cd2f3adce678188a",
+      "sha256": "3e92f5338053caf62694e9bb456aee10f9a15d32589be7456f1bce090b038d26",
       "texture_sha256": "cdc175ec0c2b1f935870764850bbc8e244923b97ee0c5aea8a8dddf712915903",
-      "vertices": 9024,
-      "triangles": 12456,
+      "vertices": 9528,
+      "triangles": 13156,
       "added_vertices": 2372,
       "added_triangles": 2992,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -4.257794467624586,
-          -3.2534923553466797,
-          -23.661972045898438
+          -6.082563787751573,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          4.868405592978,
-          4.714197158813477,
-          18.338027954101562
+          6.082563787751573,
+          6.147592544555664,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        9.1262,
-        7.96769,
-        42.0
+        12.16513,
+        10.79544,
+        60.0
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -808,10 +808,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
       "thumbnail": "artifacts/themes/renders/moray-abyssal-perspective.jpg"
     },
@@ -827,33 +827,33 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "glb": "assets/themes/moray/crystalborn/model.glb",
       "texture": "/assets/themes/moray/crystalborn/albedo.png",
       "model": "/assets/themes/moray/crystalborn/ship.model",
-      "sha256": "47959bc068c13ac8d2bd5445d74552423595c2d2ba9c2498d380843a8ebdd83f",
+      "sha256": "4743f8730331cbc288c946597a9538768cb2bc630c2e36cda8a0bd1bc306fae2",
       "texture_sha256": "5a8a321ecee891823a140003b1b72b5566adbb00a1d898e591da628997ae94f8",
-      "vertices": 7852,
-      "triangles": 10008,
+      "vertices": 8356,
+      "triangles": 10708,
       "added_vertices": 1200,
       "added_triangles": 544,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -4.092830770222363,
-          -3.2534923553466797,
-          -23.661972045898438
+          -5.437221911996369,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          5.725651023686613,
-          5.215288630264407,
-          18.338027954101562
+          5.437221911996369,
+          7.445926240222221,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        9.81848,
-        8.46878,
-        42.0
+        10.87444,
+        12.09377,
+        60.0
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -864,10 +864,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
       "thumbnail": "artifacts/themes/renders/moray-crystalborn-perspective.jpg"
     },
@@ -883,11 +883,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/lionfish.glb",
       "base_model": "/assets/models/escort_tactical/lionfish.model",
-      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "base_sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "glb": "assets/themes/lionfish/abyssal/model.glb",
       "texture": "/assets/themes/lionfish/abyssal/albedo.png",
       "model": "/assets/themes/lionfish/abyssal/ship.model",
-      "sha256": "11fd9002ea6cea66e35a7b78368c9343f392f4765ad39b5e61f1032bffc59e40",
+      "sha256": "54dabba961a14788a2f3d01878f84b59d1af579ce3ddec69632c8aa07e931311",
       "texture_sha256": "e27c55e1a179e7c6e0c484fb7d0eca44f03793e39f7bd5d6e3cf8b7ea4f009ae",
       "vertices": 10248,
       "triangles": 12684,
@@ -896,20 +896,20 @@
       "remapped_panel_vertices": 1464,
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.856085777282715,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.689838409423828,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.22617,
-        13.71332,
-        38.0
+        45.14156,
+        24.53962,
+        68.0
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -920,10 +920,10 @@
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "thumbnail": "artifacts/themes/renders/lionfish-abyssal-perspective.jpg"
     },
@@ -939,11 +939,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/lionfish.glb",
       "base_model": "/assets/models/escort_tactical/lionfish.model",
-      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "base_sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "glb": "assets/themes/lionfish/crystalborn/model.glb",
       "texture": "/assets/themes/lionfish/crystalborn/albedo.png",
       "model": "/assets/themes/lionfish/crystalborn/ship.model",
-      "sha256": "a7367efe6319652d58cf2f2de7108cc81eab8269b0cdfdc281fc6858495daf0c",
+      "sha256": "b768397bcb35894a9c6015be4994eceb0d1eee0857213f987cd5362a54083722",
       "texture_sha256": "cd4a7eb2271e04dda4450e106140b830cb85fd4274b7d28a6b5170f495410ae4",
       "vertices": 9076,
       "triangles": 10236,
@@ -952,20 +952,20 @@
       "remapped_panel_vertices": 1464,
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.856085777282715,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.689838409423828,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.22617,
-        13.71332,
-        38.0
+        45.14156,
+        24.53962,
+        68.0
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -976,10 +976,10 @@
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "thumbnail": "artifacts/themes/renders/lionfish-crystalborn-perspective.jpg"
     },
@@ -995,11 +995,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/marlin.glb",
       "base_model": "/assets/models/frigate_interceptor/marlin.model",
-      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "base_sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "glb": "assets/themes/marlin/abyssal/model.glb",
       "texture": "/assets/themes/marlin/abyssal/albedo.png",
       "model": "/assets/themes/marlin/abyssal/ship.model",
-      "sha256": "509ca645db3b3f146e3d288db279e89625a62bb95bfee7d0380c9ef35c985f84",
+      "sha256": "8be5a38d0f6c2c1f4dec7e3b3252ab4a9d04320566372bece7d2bb25c5a3af5f",
       "texture_sha256": "7c3e4b92ceda027efa02d1f19289271a777136ff30f59b555cab8cc02a6fe772",
       "vertices": 9004,
       "triangles": 12068,
@@ -1008,20 +1008,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.91098,
-        26.2259,
-        84.0
+        92.29674,
+        80.92563,
+        259.2
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -1032,10 +1032,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "thumbnail": "artifacts/themes/renders/marlin-abyssal-perspective.jpg"
     },
@@ -1051,11 +1051,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/marlin.glb",
       "base_model": "/assets/models/frigate_interceptor/marlin.model",
-      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "base_sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "glb": "assets/themes/marlin/crystalborn/model.glb",
       "texture": "/assets/themes/marlin/crystalborn/albedo.png",
       "model": "/assets/themes/marlin/crystalborn/ship.model",
-      "sha256": "985341ea0dfc7aeb469189d0356c1e6e5d9dd1907d44f5d093b3a6d216f009ee",
+      "sha256": "7e34e7d2a9772ed5c8afa2a7124ac2b5d9b9d2f3bef2f9114a57ab24dd8ca130",
       "texture_sha256": "ab60a280707de80fe1872c303b9b0f7fb062dbdae8ed4e6e6c163a60308294f5",
       "vertices": 7832,
       "triangles": 9620,
@@ -1064,20 +1064,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.91098,
-        26.2259,
-        84.0
+        92.29674,
+        80.92563,
+        259.2
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -1088,10 +1088,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "thumbnail": "artifacts/themes/renders/marlin-crystalborn-perspective.jpg"
     },
@@ -1107,11 +1107,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/manta_ray.glb",
       "base_model": "/assets/models/frigate_support/manta_ray.model",
-      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "base_sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "glb": "assets/themes/manta_ray/abyssal/model.glb",
       "texture": "/assets/themes/manta_ray/abyssal/albedo.png",
       "model": "/assets/themes/manta_ray/abyssal/ship.model",
-      "sha256": "6c812b8f1026458b289f53f8e64df561435482d35128892cb08d1d6b18c5d27e",
+      "sha256": "ad4f8de6d7b9c636499990d5c179be929b8b5e8cbff5d0a2461801235143268f",
       "texture_sha256": "00150ea536c57502ce6e14b93b64d94ab18c6af472ba23fb7252daa2120665d9",
       "vertices": 8495,
       "triangles": 12148,
@@ -1120,20 +1120,20 @@
       "remapped_panel_vertices": 312,
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.422461032867432,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.806707382202148,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          5.097290266706336,
-          30.963077545166016
+          127.46782684326172,
+          15.913491664022393,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.65907,
-        9.51975,
-        82.0
+        254.93565,
+        29.7202,
+        255.99999
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -1144,10 +1144,10 @@
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "thumbnail": "artifacts/themes/renders/manta_ray-abyssal-perspective.jpg"
     },
@@ -1163,11 +1163,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/manta_ray.glb",
       "base_model": "/assets/models/frigate_support/manta_ray.model",
-      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "base_sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "glb": "assets/themes/manta_ray/crystalborn/model.glb",
       "texture": "/assets/themes/manta_ray/crystalborn/albedo.png",
       "model": "/assets/themes/manta_ray/crystalborn/ship.model",
-      "sha256": "c0635adf817c07581a9f384d46b071ccde34259c20626304551f985345abffee",
+      "sha256": "0e29bc0580ff1415e9f9fd8ed2effb6d3002450716d66c48117cd061442acac9",
       "texture_sha256": "36cf0a112e34ad397c0b59689b7173aea8e7d9ab8066e96ed86184e4103772c5",
       "vertices": 7323,
       "triangles": 9700,
@@ -1176,20 +1176,20 @@
       "remapped_panel_vertices": 312,
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.422461032867432,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.806707382202148,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          7.633450355286362,
-          30.963077545166016
+          127.46782684326172,
+          23.831259732303625,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.65907,
-        12.05591,
-        82.0
+        254.93565,
+        37.63797,
+        255.99999
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -1200,10 +1200,10 @@
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "thumbnail": "artifacts/themes/renders/manta_ray-crystalborn-perspective.jpg"
     },
@@ -1219,11 +1219,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
       "base_model": "/assets/models/frigate_assault/tiger_shark.model",
-      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "base_sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "glb": "assets/themes/tiger_shark/abyssal/model.glb",
       "texture": "/assets/themes/tiger_shark/abyssal/albedo.png",
       "model": "/assets/themes/tiger_shark/abyssal/ship.model",
-      "sha256": "30ca6272c02498762b0f710817152c19dbcfe8afba128a1ea9c5e729c49c1d18",
+      "sha256": "ea84400e8a4036f8973ee26cd85afcc5165d1204fd2b913fc12396edfdc198a4",
       "texture_sha256": "1a5a5dab882a1b7f33ff92c1caf858a4cb43dbe338c2e428c07d87ef0f8a7f08",
       "vertices": 9552,
       "triangles": 13184,
@@ -1232,20 +1232,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.12195,
-        26.52112,
-        80.0
+        105.36585,
+        79.56336,
+        239.99999
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -1256,10 +1256,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "thumbnail": "artifacts/themes/renders/tiger_shark-abyssal-perspective.jpg"
     },
@@ -1275,11 +1275,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
       "base_model": "/assets/models/frigate_assault/tiger_shark.model",
-      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "base_sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "glb": "assets/themes/tiger_shark/crystalborn/model.glb",
       "texture": "/assets/themes/tiger_shark/crystalborn/albedo.png",
       "model": "/assets/themes/tiger_shark/crystalborn/ship.model",
-      "sha256": "4999b72c8d48dcdb775539b052c602acd7463edb09ee9ddfa57efee02572344f",
+      "sha256": "c8fb3ec74f5c800ecb9444d6f91cebb6afcbc8521abea6aed072bbaf9c13fde6",
       "texture_sha256": "9865425f10fa7a208f0f3afc9361280ad0b722be02ae0073155eb21e5c06383d",
       "vertices": 8380,
       "triangles": 10736,
@@ -1288,20 +1288,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.12195,
-        26.52112,
-        80.0
+        105.36585,
+        79.56336,
+        239.99999
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -1312,10 +1312,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "thumbnail": "artifacts/themes/renders/tiger_shark-crystalborn-perspective.jpg"
     },
@@ -1331,11 +1331,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
       "base_model": "/assets/models/frigate_tactical/hammerhead.model",
-      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "base_sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "glb": "assets/themes/hammerhead/abyssal/model.glb",
       "texture": "/assets/themes/hammerhead/abyssal/albedo.png",
       "model": "/assets/themes/hammerhead/abyssal/ship.model",
-      "sha256": "94395f9c890f17db1bb15e9bcf367cc6600d28a9fac2f094a1241523c6e2549b",
+      "sha256": "d667cb4f48b0ae77ebc97486c6dc74334a842f5f0a45f701a62c101d54e12c42",
       "texture_sha256": "53897bf601b01b86c3255dd7381e2188b6b555cb6e0070fb5ba49cf04bf72936",
       "vertices": 9885,
       "triangles": 14272,
@@ -1344,20 +1344,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.13684,
-        21.28772,
-        78.0
+        119.04128,
+        74.23409,
+        272.00001
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -1368,10 +1368,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "thumbnail": "artifacts/themes/renders/hammerhead-abyssal-perspective.jpg"
     },
@@ -1387,11 +1387,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
       "base_model": "/assets/models/frigate_tactical/hammerhead.model",
-      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "base_sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "glb": "assets/themes/hammerhead/crystalborn/model.glb",
       "texture": "/assets/themes/hammerhead/crystalborn/albedo.png",
       "model": "/assets/themes/hammerhead/crystalborn/ship.model",
-      "sha256": "e90dda13cf2ff1b7fa0115d225fdbccc8e017bc576c4963ea851f224d197b456",
+      "sha256": "28c29b1dd8e43303bcca2e88ac35563c21e870de16a33decbc45231699676665",
       "texture_sha256": "cb47c13ca4ad270b3582d56b5a5f175f22f5ff0318be18265fefc4e9417f018f",
       "vertices": 8713,
       "triangles": 11824,
@@ -1400,20 +1400,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.13684,
-        21.28772,
-        78.0
+        119.04128,
+        74.23409,
+        272.00001
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -1424,10 +1424,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "thumbnail": "artifacts/themes/renders/hammerhead-crystalborn-perspective.jpg"
     },
@@ -1891,11 +1891,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/falcon.glb",
       "base_model": "/assets/models/escort_interceptor/falcon.model",
-      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "base_sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "glb": "assets/themes/falcon/abyssal/model.glb",
       "texture": "/assets/themes/falcon/abyssal/albedo.png",
       "model": "/assets/themes/falcon/abyssal/ship.model",
-      "sha256": "48395c87d67c19fb4838a85c7997d32b26a632be160f5102f052ccfc5b008f8b",
+      "sha256": "aa119a937d0ea1426f033a22204362bcd7921fdbda46588cefd330b7b6e24301",
       "texture_sha256": "5d3aa42f19836796f92fd34a46e3b8ae84610649dc8af3bc5d49a57b4b95f47f",
       "vertices": 16351,
       "triangles": 17676,
@@ -1904,20 +1904,20 @@
       "remapped_panel_vertices": 4442,
       "bounds_m": [
         [
-          -20.0,
-          -3.0630276203155518,
-          -17.22860336303711
+          -34.0,
+          -5.207146644592285,
+          -29.288625717163086
         ],
         [
-          20.0,
-          3.423884104114863,
-          15.75583553314209
+          34.0,
+          5.820603074669718,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        6.48691,
-        32.98444
+        68.0,
+        11.02775,
+        56.07355
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -1928,10 +1928,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "thumbnail": "artifacts/themes/renders/falcon-abyssal-perspective.jpg"
     },
@@ -1947,11 +1947,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/falcon.glb",
       "base_model": "/assets/models/escort_interceptor/falcon.model",
-      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "base_sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "glb": "assets/themes/falcon/crystalborn/model.glb",
       "texture": "/assets/themes/falcon/crystalborn/albedo.png",
       "model": "/assets/themes/falcon/crystalborn/ship.model",
-      "sha256": "3a0ac39fe39e7672c25cc998606f366fb309281ad367973077b3e44b609c2bf5",
+      "sha256": "e3f7d6526b0f693d92a2be71e5191d2050be6c587289b28419c1542dcf94bd6d",
       "texture_sha256": "a7340d3d912200f4505103ac0f5c3321e9d2074b092577dde1b429ff020b2fdd",
       "vertices": 14157,
       "triangles": 13768,
@@ -1960,20 +1960,20 @@
       "remapped_panel_vertices": 4442,
       "bounds_m": [
         [
-          -20.0,
-          -3.0630276203155518,
-          -17.22860336303711
+          -34.0,
+          -5.207146644592285,
+          -29.288625717163086
         ],
         [
-          20.0,
-          4.568580548749071,
-          15.75583553314209
+          34.0,
+          7.766587168765766,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        7.63161,
-        32.98444
+        68.0,
+        12.97373,
+        56.07355
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -1984,10 +1984,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "thumbnail": "artifacts/themes/renders/falcon-crystalborn-perspective.jpg"
     },
@@ -2003,11 +2003,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/egret.glb",
       "base_model": "/assets/models/escort_support/egret.model",
-      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "base_sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "glb": "assets/themes/egret/abyssal/model.glb",
       "texture": "/assets/themes/egret/abyssal/albedo.png",
       "model": "/assets/themes/egret/abyssal/ship.model",
-      "sha256": "d31354420d23cbbc3de247fc27fd7d8ceaded67ad353a200dadab9b21b27d947",
+      "sha256": "fc186c51766b985bdeff0aae2d8265e2f213230677cdf773410d59477a03a57a",
       "texture_sha256": "6412dd284ecb6810ed23932d7fc4467f80ab5413a032dcd8c243e8dd67b31257",
       "vertices": 17420,
       "triangles": 18564,
@@ -2016,20 +2016,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.794473886489868,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.471158027648926,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.1995,
-        8.39968,
-        40.0
+        57.9192,
+        13.43948,
+        64.0
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2040,10 +2040,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "thumbnail": "artifacts/themes/renders/egret-abyssal-perspective.jpg"
     },
@@ -2059,11 +2059,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/egret.glb",
       "base_model": "/assets/models/escort_support/egret.model",
-      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "base_sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "glb": "assets/themes/egret/crystalborn/model.glb",
       "texture": "/assets/themes/egret/crystalborn/albedo.png",
       "model": "/assets/themes/egret/crystalborn/ship.model",
-      "sha256": "d98b2a30c678ebb9e2cf00b59c7f8a7199bd610d164b3e303e3cb0691be95ddf",
+      "sha256": "af05694efc7aa272cd2b69d9b7df579baa6183b397967836c0d68d6d8447202e",
       "texture_sha256": "64a25ee0694793843b531005f5783525b8a7b7e7d2b9d06de86a2053385594a3",
       "vertices": 15226,
       "triangles": 14656,
@@ -2072,20 +2072,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.794473886489868,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.471158027648926,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.1995,
-        8.39968,
-        40.0
+        57.9192,
+        13.43948,
+        64.0
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2096,10 +2096,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "thumbnail": "artifacts/themes/renders/egret-crystalborn-perspective.jpg"
     },
@@ -2115,11 +2115,11 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/goshawk.glb",
       "base_model": "/assets/models/escort_assault/goshawk.model",
-      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "base_sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "glb": "assets/themes/goshawk/abyssal/model.glb",
       "texture": "/assets/themes/goshawk/abyssal/albedo.png",
       "model": "/assets/themes/goshawk/abyssal/ship.model",
-      "sha256": "48ee03cfe6fa847f3c35ba1f6efb5f0d774fb45b5300a1176bb0b9a3f96754dc",
+      "sha256": "8c1380e653b06510606053745e52d407a2781f7f966af4e424878c10ca65d183",
       "texture_sha256": "795371006254663345508b13812bdff8cdb48ff7d7689ccca6b0897165c4d16f",
       "vertices": 17319,
       "triangles": 18368,
@@ -2128,20 +2128,20 @@
       "remapped_panel_vertices": 5158,
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.6253581047058105,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.696991443634033,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          4.058855660195699,
-          18.648395538330078
+          31.606847763061523,
+          6.37820177982133,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.22689,
-        7.68421,
-        42.0
+        63.2137,
+        12.07519,
+        66.0
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2152,10 +2152,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "thumbnail": "artifacts/themes/renders/goshawk-abyssal-perspective.jpg"
     },
@@ -2171,11 +2171,11 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/goshawk.glb",
       "base_model": "/assets/models/escort_assault/goshawk.model",
-      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "base_sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "glb": "assets/themes/goshawk/crystalborn/model.glb",
       "texture": "/assets/themes/goshawk/crystalborn/albedo.png",
       "model": "/assets/themes/goshawk/crystalborn/ship.model",
-      "sha256": "1497c780775a987a919fd0f38d7c60932cad53ecffa767fb5f8c72f984868518",
+      "sha256": "382193664f1f1ad6fd2705ff9564299752e6fedf65d75af4053797fd711230cf",
       "texture_sha256": "0d9461afc2a11a229cd337c82ef43b0922dc3b195690d3ca8389c2d54849cec7",
       "vertices": 15125,
       "triangles": 14460,
@@ -2184,20 +2184,20 @@
       "remapped_panel_vertices": 5158,
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.6253581047058105,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.696991443634033,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          5.539542904859676,
-          18.648395538330078
+          31.606847763061523,
+          8.704995888743177,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.22689,
-        9.1649,
-        42.0
+        63.2137,
+        14.40199,
+        66.0
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2208,10 +2208,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "thumbnail": "artifacts/themes/renders/goshawk-crystalborn-perspective.jpg"
     },
@@ -2227,11 +2227,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/osprey.glb",
       "base_model": "/assets/models/escort_tactical/osprey.model",
-      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "base_sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "glb": "assets/themes/osprey/abyssal/model.glb",
       "texture": "/assets/themes/osprey/abyssal/albedo.png",
       "model": "/assets/themes/osprey/abyssal/ship.model",
-      "sha256": "f261a337953b11536579caa06b29feb30eeafdb7aac18f12595e399e316a914d",
+      "sha256": "477424c85e0f7fe48b5e37b24cb2ccd348212bb4eddb6d3110db5c1ee61b4d6e",
       "texture_sha256": "6ea028bfb2b5522819444f8845dfaa1500d2382283e8390661804576a7d1f777",
       "vertices": 17015,
       "triangles": 18052,
@@ -2240,20 +2240,20 @@
       "remapped_panel_vertices": 5078,
       "bounds_m": [
         [
-          -20.5,
-          -3.413409471511841,
-          -19.19939613342285
+          -34.0,
+          -5.661264419555664,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.66599,
-        36.75755
+        68.0,
+        14.37286,
+        60.96375
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2264,10 +2264,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "thumbnail": "artifacts/themes/renders/osprey-abyssal-perspective.jpg"
     },
@@ -2283,11 +2283,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/osprey.glb",
       "base_model": "/assets/models/escort_tactical/osprey.model",
-      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "base_sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "glb": "assets/themes/osprey/crystalborn/model.glb",
       "texture": "/assets/themes/osprey/crystalborn/albedo.png",
       "model": "/assets/themes/osprey/crystalborn/ship.model",
-      "sha256": "fddc9b39e8aa84ee9040f2aedba8e3f77dd480bec4a1c4b4fc13899eb6a4088b",
+      "sha256": "16a2f10cdf7fc0528b7ac3ee80c03c4856d514fc328671d03268b3de88bcf975",
       "texture_sha256": "fbbd1cffa614c0a897c1e55d88ca4dda8eda53dacbc8b5dff7f28a31665b52b3",
       "vertices": 14821,
       "triangles": 14144,
@@ -2296,20 +2296,20 @@
       "remapped_panel_vertices": 5078,
       "bounds_m": [
         [
-          -20.5,
-          -3.413409471511841,
-          -19.19939613342285
+          -34.0,
+          -5.661264419555664,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.66599,
-        36.75755
+        68.0,
+        14.37286,
+        60.96375
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2320,10 +2320,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "thumbnail": "artifacts/themes/renders/osprey-crystalborn-perspective.jpg"
     },
@@ -2339,11 +2339,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
       "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
-      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "base_sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "glb": "assets/themes/frigatebird/abyssal/model.glb",
       "texture": "/assets/themes/frigatebird/abyssal/albedo.png",
       "model": "/assets/themes/frigatebird/abyssal/ship.model",
-      "sha256": "fe621eb55c554d5689e4a77ce93bb72eb57604617bc95ef23b963739691e7db5",
+      "sha256": "1f91773736f97df505ae57cb280355e36ec9e4748b920d79cf921d94f4eb8de8",
       "texture_sha256": "3c85ed92228faec40a0b6a9ebe508782d5088b1db8fe38925f3442e35bb12b31",
       "vertices": 15874,
       "triangles": 17732,
@@ -2352,20 +2352,20 @@
       "remapped_panel_vertices": 3892,
       "bounds_m": [
         [
-          -44.0,
-          -3.88193416595459,
-          -36.974788665771484
+          -136.0,
+          -11.998705863952637,
+          -114.28571319580078
         ],
         [
-          44.0,
-          5.499720573425293,
-          26.205883026123047
+          136.0,
+          16.999135971069336,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        9.38165,
-        63.18067
+        272.0,
+        28.99784,
+        195.28571
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2376,10 +2376,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "thumbnail": "artifacts/themes/renders/frigatebird-abyssal-perspective.jpg"
     },
@@ -2395,11 +2395,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
       "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
-      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "base_sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "glb": "assets/themes/frigatebird/crystalborn/model.glb",
       "texture": "/assets/themes/frigatebird/crystalborn/albedo.png",
       "model": "/assets/themes/frigatebird/crystalborn/ship.model",
-      "sha256": "9fb3a80f618efc19b4cfd267a754020be1e2d090826e5129b06187fe151ba143",
+      "sha256": "2e082e3e2436d5ebf316ee600a8f0941455afdccf40c9323b0c7ba730d1a4115",
       "texture_sha256": "00a96a4eb50e3a736f29824d59e4510c7f0941b0f194989478bf3aaac66a2180",
       "vertices": 13680,
       "triangles": 13824,
@@ -2408,20 +2408,20 @@
       "remapped_panel_vertices": 3892,
       "bounds_m": [
         [
-          -44.0,
-          -3.88193416595459,
-          -36.974788665771484
+          -136.0,
+          -11.998705863952637,
+          -114.28571319580078
         ],
         [
-          44.0,
-          6.79303590613196,
-          26.205883026123047
+          136.0,
+          20.996656089027713,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        10.67497,
-        63.18067
+        272.0,
+        32.99536,
+        195.28571
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2432,10 +2432,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "thumbnail": "artifacts/themes/renders/frigatebird-crystalborn-perspective.jpg"
     },
@@ -2451,11 +2451,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/pelican.glb",
       "base_model": "/assets/models/frigate_support/pelican.model",
-      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "base_sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "glb": "assets/themes/pelican/abyssal/model.glb",
       "texture": "/assets/themes/pelican/abyssal/albedo.png",
       "model": "/assets/themes/pelican/abyssal/ship.model",
-      "sha256": "7e247f9308d35bc2a63cddb930695bf72c1e20c219e9016ef09acd253f0ce464",
+      "sha256": "cbbb4f0e89e74208737967fec0d2ba0c73e8f03d9e9a63713e459cca36c34475",
       "texture_sha256": "19d1c4c0d4f879e1e16c307f22965dc28c165af688f32ecd5160afff25b70ac9",
       "vertices": 18270,
       "triangles": 20156,
@@ -2464,20 +2464,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -43.0,
-          -6.935276031494141,
-          -35.83333206176758
+          -128.0,
+          -20.644542694091797,
+          -106.66666412353516
         ],
         [
-          43.0,
-          9.375406265258789,
-          48.837364196777344
+          128.0,
+          27.908185958862305,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        16.31068,
-        84.6707
+        256.0,
+        48.55273,
+        252.04301
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2488,10 +2488,10 @@
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "thumbnail": "artifacts/themes/renders/pelican-abyssal-perspective.jpg"
     },
@@ -2507,11 +2507,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/pelican.glb",
       "base_model": "/assets/models/frigate_support/pelican.model",
-      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "base_sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "glb": "assets/themes/pelican/crystalborn/model.glb",
       "texture": "/assets/themes/pelican/crystalborn/albedo.png",
       "model": "/assets/themes/pelican/crystalborn/ship.model",
-      "sha256": "9db910d667d01d499e6b2d72761a7a76f8658d7270e334761b0fc1e30461a9a6",
+      "sha256": "cdc36a90d069e1a3a39717b36f35de58d69af65aada291d3f2d85e70a523c881",
       "texture_sha256": "6f3fbd6be2c5dc01a4934f3bdcc233ada5ababd65a4ad0f6717cb897b5016aa9",
       "vertices": 16076,
       "triangles": 16248,
@@ -2520,20 +2520,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -43.0,
-          -6.935276031494141,
-          -35.83333206176758
+          -128.0,
+          -20.644542694091797,
+          -106.66666412353516
         ],
         [
-          43.0,
-          10.65478031960864,
-          48.837364196777344
+          128.0,
+          31.716556182107677,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        17.59006,
-        84.6707
+        256.0,
+        52.3611,
+        252.04301
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2544,10 +2544,10 @@
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "thumbnail": "artifacts/themes/renders/pelican-crystalborn-perspective.jpg"
     },
@@ -2563,11 +2563,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
       "base_model": "/assets/models/frigate_assault/golden_eagle.model",
-      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "base_sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "glb": "assets/themes/golden_eagle/abyssal/model.glb",
       "texture": "/assets/themes/golden_eagle/abyssal/albedo.png",
       "model": "/assets/themes/golden_eagle/abyssal/ship.model",
-      "sha256": "4f78c9ef68679ddac60607ede6051fed45e0dbcc9d6aa2d273d39380d69813f8",
+      "sha256": "f2e42e8c646ee96f11e455ad17201325ef4ebad67adf512287560e21eedb3066",
       "texture_sha256": "fc6271bc6f6d8a8d2757508e82465a88027ff09d4c90a9964bd3c12514a16059",
       "vertices": 17239,
       "triangles": 18280,
@@ -2576,20 +2576,20 @@
       "remapped_panel_vertices": 4998,
       "bounds_m": [
         [
-          -42.0,
-          -6.135147571563721,
-          -34.50835037231445
+          -132.0,
+          -19.281892776489258,
+          -108.4548110961914
         ],
         [
-          42.0,
-          6.965284824371338,
-          31.558441162109375
+          132.0,
+          21.890893936157227,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        13.10043,
-        66.06679
+        264.0,
+        41.17279,
+        207.63848
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2600,10 +2600,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "thumbnail": "artifacts/themes/renders/golden_eagle-abyssal-perspective.jpg"
     },
@@ -2619,11 +2619,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
       "base_model": "/assets/models/frigate_assault/golden_eagle.model",
-      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "base_sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "glb": "assets/themes/golden_eagle/crystalborn/model.glb",
       "texture": "/assets/themes/golden_eagle/crystalborn/albedo.png",
       "model": "/assets/themes/golden_eagle/crystalborn/ship.model",
-      "sha256": "e5b4051c9ad5f7f9a8208e56aa41a96a6e034c6bd832989d52cc09f0c063c814",
+      "sha256": "259c1916161def21d13a7ee4d8850e85392a74291465f305dde7b9e869c68ca0",
       "texture_sha256": "47f3b390f4250af9a4fde7e0c4cdecd2bb13bd8af09c80c19f5947517876b942",
       "vertices": 15045,
       "triangles": 14372,
@@ -2632,20 +2632,20 @@
       "remapped_panel_vertices": 4998,
       "bounds_m": [
         [
-          -42.0,
-          -6.135147571563721,
-          -34.50835037231445
+          -132.0,
+          -19.281892776489258,
+          -108.4548110961914
         ],
         [
-          42.0,
-          9.37449798993158,
-          31.558441162109375
+          132.0,
+          29.46270750289346,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        15.50965,
-        66.06679
+        264.0,
+        48.7446,
+        207.63848
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2656,10 +2656,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "thumbnail": "artifacts/themes/renders/golden_eagle-crystalborn-perspective.jpg"
     },
@@ -2675,11 +2675,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
       "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
-      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "base_sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "glb": "assets/themes/harpy_eagle/abyssal/model.glb",
       "texture": "/assets/themes/harpy_eagle/abyssal/albedo.png",
       "model": "/assets/themes/harpy_eagle/abyssal/ship.model",
-      "sha256": "442148417cb96ab14437e5131a9fc84f67aec6e2088239e59fb5415fdbcf2d6a",
+      "sha256": "0f5d97a1c3922140f5286a732a09b66d1af0b1545f31e319a1266950f68d14a1",
       "texture_sha256": "46d8fba24c7b57b0da5041c5cc661526cc73a247568c6c13454fd6a654776506",
       "vertices": 17127,
       "triangles": 18132,
@@ -2688,20 +2688,20 @@
       "remapped_panel_vertices": 5270,
       "bounds_m": [
         [
-          -41.0,
-          -6.534611225128174,
-          -36.755210876464844
+          -136.0,
+          -21.675785064697266,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.13784,
-        70.36845
+        272.0,
+        60.16453,
+        233.41729
       ],
       "features": [
         "Paired bright photophore chains fitted to the actual hull",
@@ -2712,10 +2712,10 @@
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "thumbnail": "artifacts/themes/renders/harpy_eagle-abyssal-perspective.jpg"
     },
@@ -2731,11 +2731,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
       "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
-      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "base_sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "glb": "assets/themes/harpy_eagle/crystalborn/model.glb",
       "texture": "/assets/themes/harpy_eagle/crystalborn/albedo.png",
       "model": "/assets/themes/harpy_eagle/crystalborn/ship.model",
-      "sha256": "2a563aa3b984479e0e278c8e794a3fae6ba70c0c4dc774cb1e8941cb4f53d521",
+      "sha256": "6ffbe2cd246159cc42b97a21025f63fd770556289c0d5d24428d0c7211c4ed56",
       "texture_sha256": "84fd26ae9eb3b770759826892daa9ba8aea2870289b7d4db4e01ca28c179f4c9",
       "vertices": 14933,
       "triangles": 14224,
@@ -2744,20 +2744,20 @@
       "remapped_panel_vertices": 5270,
       "bounds_m": [
         [
-          -41.0,
-          -6.534611225128174,
-          -36.755210876464844
+          -136.0,
+          -21.675785064697266,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.13784,
-        70.36845
+        272.0,
+        60.16453,
+        233.41729
       ],
       "features": [
         "True flat-shaded hexagonal and pentagonal crystal prisms",
@@ -2768,10 +2768,10 @@
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "thumbnail": "artifacts/themes/renders/harpy_eagle-crystalborn-perspective.jpg"
     }

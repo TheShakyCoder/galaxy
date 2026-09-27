@@ -1,8 +1,14 @@
 # Fleet cosmetic assets
 
+Follow-up: Moray is straight and symmetrical. Escorts and Frigates, including
+all skins, follow native 1:4:16 sizing. See `artifacts/scale/README.md`; historical
+delivery notes below predate this explicitly requested revision.
+
+
 This is an optional art library for the 24 ships already in Galaxy. It contains
 **72 paint variants** (three per ship) and **24 Clockwork model variants** (one
-per ship). The default models and gameplay are unchanged.
+per ship). The requested follow-up straightens Moray and applies 1:4:16 fleet sizing;
+Patrols and gameplay stats remain unchanged.
 
 Start with [`catalog.json`](catalog.json). Every entry has a stable ID such as
 `sardine.aurora` or `harpy_eagle.clockwork`, a species/faction/class/role mapping,

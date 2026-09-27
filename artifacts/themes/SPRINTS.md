@@ -1,5 +1,10 @@
 # Eight-theme expansion: sprint plan and evidence
 
+Follow-up: the user subsequently requested a symmetrical Moray. The historical
+additions-only sprint results below describe the initial delivery. The later
+Moray commit explicitly revises its default hull, all twelve skins, corresponding
+catalogs, previews and cameras. See `../moray/README.md` for the revision gate.
+
 Baseline: merged cosmetic-library PR #3, upstream `b63ffcc`.
 Scope: eight additional collections for all 24 existing species, 192 variants.
 All original fleet resources and all four prior cosmetic collections stay intact.
@@ -86,3 +91,11 @@ Upstream advanced to `63d8a53` during work with an unrelated Nakama configuratio
 fix; this art PR does not change that configuration. No originals or prior
 cosmetics are replaced. No scope deviations. Defold runtime, device performance
 and shop/equip integration remain untested and outside this art-library pass.
+
+### Requested class-size follow-up
+
+All ships and skins now follow native 1:4:16 class sizing by longest dimension
+within each faction/role. Patrol assets remain unchanged. See `../scale/README.md`
+and its validation/preview for the later revision. Historical additions-only
+statements above describe the original sprint delivery, not the requested
+shape and size follow-ups.

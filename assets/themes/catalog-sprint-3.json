@@ -555,11 +555,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/barracuda.glb",
       "base_model": "/assets/models/escort_interceptor/barracuda.model",
-      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "base_sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "glb": "assets/themes/barracuda/corsair/model.glb",
       "texture": "/assets/themes/barracuda/corsair/albedo.png",
       "model": "/assets/themes/barracuda/corsair/ship.model",
-      "sha256": "2d124dc28487cbf2093d9778df3e84c12d37e012d40a51fdd4c7b8fa26071a5a",
+      "sha256": "5cf938a019fe1b1bac3af4c51da477d68cecfdeea40410afbaa1e4df0bb27225",
       "texture_sha256": "a0322f82e430c37643ced1d48fcdabc58accd47371e0e9ff6cb9adb2fa29ad94",
       "vertices": 10737,
       "triangles": 14316,
@@ -568,20 +568,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.413938045501709,
-          18.274761199951172
+          8.902235984802246,
+          7.150579929351807,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99042,
-        8.2478,
-        40.0
+        17.80447,
+        13.36144,
+        64.8
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -593,10 +593,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "thumbnail": "artifacts/themes/renders/barracuda-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -613,11 +613,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/barracuda.glb",
       "base_model": "/assets/models/escort_interceptor/barracuda.model",
-      "base_sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "base_sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "glb": "assets/themes/barracuda/overgrown/model.glb",
       "texture": "/assets/themes/barracuda/overgrown/albedo.png",
       "model": "/assets/themes/barracuda/overgrown/ship.model",
-      "sha256": "d9e9b522b555d4f84158041368fd22d2053963d02084bcc02683095a5d862bde",
+      "sha256": "93bd7cdeec67f642f63864524af9d8e12f6ade83812ae3675cfe59f9db33bc2e",
       "texture_sha256": "0a07ae9c542d34162ccbe2a4b68b603b7c35e67c6eb7c975bf9bce17415c06e8",
       "vertices": 11441,
       "triangles": 14480,
@@ -626,20 +626,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.413938045501709,
-          18.274761199951172
+          8.902235984802246,
+          7.150579929351807,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99042,
-        8.2478,
-        40.0
+        17.80447,
+        13.36144,
+        64.8
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -650,10 +650,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "thumbnail": "artifacts/themes/renders/barracuda-overgrown-perspective.jpg"
     },
@@ -669,11 +669,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/remora.glb",
       "base_model": "/assets/models/escort_support/remora.model",
-      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "base_sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "glb": "assets/themes/remora/corsair/model.glb",
       "texture": "/assets/themes/remora/corsair/albedo.png",
       "model": "/assets/themes/remora/corsair/ship.model",
-      "sha256": "e65bef4fea4801450e4589f0503ef6fa4fed963860034e35253c394788a69df3",
+      "sha256": "5a847dea68300d958ac6fb45dccfc6e3b2ad8adf06658776a48ccb272a3bca87",
       "texture_sha256": "0f531deae4a67e6a67127d28c2018ac2fab21ec6b70f11ffb85db457e4e34a50",
       "vertices": 11565,
       "triangles": 15808,
@@ -682,20 +682,20 @@
       "remapped_panel_vertices": 524,
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          2.829787254333496,
-          16.709218978881836
+          9.078014373779297,
+          4.765957355499268,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78014,
-        5.65957,
-        38.0
+        18.15603,
+        9.53191,
+        64.0
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -707,10 +707,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "thumbnail": "artifacts/themes/renders/remora-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -727,11 +727,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/remora.glb",
       "base_model": "/assets/models/escort_support/remora.model",
-      "base_sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "base_sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "glb": "assets/themes/remora/overgrown/model.glb",
       "texture": "/assets/themes/remora/overgrown/albedo.png",
       "model": "/assets/themes/remora/overgrown/ship.model",
-      "sha256": "2e248c05a842e8c9295001aea8498a23c226811af98182de64cf493bb73654c2",
+      "sha256": "19fafba685dd78272cb0db726957160aec80fdd418c21afdc5de6390627f782a",
       "texture_sha256": "c7fe82972fa1f6f4d99e9cedf7d192143628af8e342cd7735b1fd35abd7034dd",
       "vertices": 12269,
       "triangles": 15972,
@@ -740,20 +740,20 @@
       "remapped_panel_vertices": 524,
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          2.829787254333496,
-          16.709218978881836
+          9.078014373779297,
+          4.765957355499268,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78014,
-        5.65957,
-        38.0
+        18.15603,
+        9.53191,
+        64.0
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -764,10 +764,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "thumbnail": "artifacts/themes/renders/remora-overgrown-perspective.jpg"
     },
@@ -783,33 +783,33 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "glb": "assets/themes/moray/corsair/model.glb",
       "texture": "/assets/themes/moray/corsair/albedo.png",
       "model": "/assets/themes/moray/corsair/ship.model",
-      "sha256": "a5998e0143bb1594333c8fe68121f6678622d91ff0efbcb5d413457d239aeb98",
+      "sha256": "3d3582e4bfa59b0acbbbaaea1594038a8a9af623462fdb2407a6c3b86c9e720a",
       "texture_sha256": "08bebec412f38c938d88a3465f85c4666fc4126af03e73f36cd167df14b86b88",
-      "vertices": 10520,
-      "triangles": 14388,
+      "vertices": 11024,
+      "triangles": 15088,
       "added_vertices": 3868,
       "added_triangles": 4924,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -3.777285575866699,
-          -3.2534923553466797,
-          -23.661972045898438
+          -7.123741395335103,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          6.801625977246418,
-          4.714197158813477,
-          18.338027954101562
+          7.123741395335103,
+          6.147592544555664,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        10.57891,
-        7.96769,
-        42.0
+        14.24748,
+        10.79544,
+        60.0
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -821,10 +821,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
       "thumbnail": "artifacts/themes/renders/moray-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -841,33 +841,33 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/moray.glb",
       "base_model": "/assets/models/escort_assault/moray.model",
-      "base_sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "base_sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "glb": "assets/themes/moray/overgrown/model.glb",
       "texture": "/assets/themes/moray/overgrown/albedo.png",
       "model": "/assets/themes/moray/overgrown/ship.model",
-      "sha256": "e21ff8a119792f4ac0935dd99e7b371245266880184136c50ce7a1e05a627fa9",
+      "sha256": "e45dc69586f6153ec52a61fdb664bfcd395f942e6e9adf3de45b96c1d91b56d1",
       "texture_sha256": "753f02316a79e0b026adbe55a9afe9f4445eaea0e7c6c18ae996efa92bfbe35a",
-      "vertices": 11128,
-      "triangles": 14360,
+      "vertices": 11632,
+      "triangles": 15060,
       "added_vertices": 4476,
       "added_triangles": 4896,
-      "remapped_panel_vertices": 224,
+      "remapped_panel_vertices": 904,
       "bounds_m": [
         [
-          -3.777285575866699,
-          -3.2534923553466797,
-          -23.661972045898438
+          -5.396122455596924,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          4.5013827893137925,
-          4.714197158813477,
-          18.338027954101562
+          5.396122455596924,
+          6.147592544555664,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        8.27867,
-        7.96769,
-        42.0
+        10.79224,
+        10.79544,
+        60.0
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -878,10 +878,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
       "thumbnail": "artifacts/themes/renders/moray-overgrown-perspective.jpg"
     },
@@ -897,11 +897,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/lionfish.glb",
       "base_model": "/assets/models/escort_tactical/lionfish.model",
-      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "base_sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "glb": "assets/themes/lionfish/corsair/model.glb",
       "texture": "/assets/themes/lionfish/corsair/albedo.png",
       "model": "/assets/themes/lionfish/corsair/ship.model",
-      "sha256": "6d51743deafe537af167017199f65b8a247b4ee8264c00d64483dd92913389ec",
+      "sha256": "6b21176b15652fc8261bdb79a7ddb0216856b9770749f455c2023cf63e9b5d9d",
       "texture_sha256": "70174f66d7d608a455d2d64b00696a1f2fbd1ca7e9c774db5a1cd5d9a930ee31",
       "vertices": 11648,
       "triangles": 14424,
@@ -910,20 +910,20 @@
       "remapped_panel_vertices": 1464,
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.965818642349029,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.88620187779829,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.22617,
-        13.82305,
-        38.0
+        45.14156,
+        24.73599,
+        68.0
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -935,10 +935,10 @@
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "thumbnail": "artifacts/themes/renders/lionfish-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -955,11 +955,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/lionfish.glb",
       "base_model": "/assets/models/escort_tactical/lionfish.model",
-      "base_sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "base_sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "glb": "assets/themes/lionfish/overgrown/model.glb",
       "texture": "/assets/themes/lionfish/overgrown/albedo.png",
       "model": "/assets/themes/lionfish/overgrown/ship.model",
-      "sha256": "3970aba8ebef65cb5c0cba25a98fcce7dcd840b9574afa9cf99c753020fb74a1",
+      "sha256": "9950105c40a066ee328351ec428e92f1b0383528c1f8b924411027abf785e3e3",
       "texture_sha256": "0350bb72b61683179ffa315a6704091db98ec17f96d0f2230635c1fe23c803f5",
       "vertices": 12352,
       "triangles": 14588,
@@ -968,20 +968,20 @@
       "remapped_panel_vertices": 1464,
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.856085777282715,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.689838409423828,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.22617,
-        13.71332,
-        38.0
+        45.14156,
+        24.53962,
+        68.0
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -992,10 +992,10 @@
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "thumbnail": "artifacts/themes/renders/lionfish-overgrown-perspective.jpg"
     },
@@ -1011,11 +1011,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/marlin.glb",
       "base_model": "/assets/models/frigate_interceptor/marlin.model",
-      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "base_sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "glb": "assets/themes/marlin/corsair/model.glb",
       "texture": "/assets/themes/marlin/corsair/albedo.png",
       "model": "/assets/themes/marlin/corsair/ship.model",
-      "sha256": "fcb31bee98dd064000db86c2abb4581032e0432a672dd8df1a7aef59be676bf9",
+      "sha256": "b1c1f35919f4eb7d7c0a7f0d9b0ec8cf1cdffe48ceba94f01c63188d4f5eaff5",
       "texture_sha256": "c95c3b904ff777e140ea6abbb48d7abdc457ffbec1c58df669ecf5384a9ad2e3",
       "vertices": 10404,
       "triangles": 13808,
@@ -1024,20 +1024,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.91098,
-        26.2259,
-        84.0
+        92.29674,
+        80.92563,
+        259.2
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -1049,10 +1049,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "thumbnail": "artifacts/themes/renders/marlin-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -1069,11 +1069,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/marlin.glb",
       "base_model": "/assets/models/frigate_interceptor/marlin.model",
-      "base_sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "base_sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "glb": "assets/themes/marlin/overgrown/model.glb",
       "texture": "/assets/themes/marlin/overgrown/albedo.png",
       "model": "/assets/themes/marlin/overgrown/ship.model",
-      "sha256": "1ab58e4c112dc227df7e703c570e485a27984d4e50e09c0cbc7a516f8f628eef",
+      "sha256": "795526321ac1867b235e1736993274979058286b91c0675944831d5bb0b9ed19",
       "texture_sha256": "6baae0775a5499f1fb7ac677630ff66e8b3f1567f56ff8724fc75a1114ecd79a",
       "vertices": 11108,
       "triangles": 13972,
@@ -1082,20 +1082,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.91098,
-        26.2259,
-        84.0
+        92.29674,
+        80.92563,
+        259.2
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -1106,10 +1106,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "thumbnail": "artifacts/themes/renders/marlin-overgrown-perspective.jpg"
     },
@@ -1125,11 +1125,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/manta_ray.glb",
       "base_model": "/assets/models/frigate_support/manta_ray.model",
-      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "base_sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "glb": "assets/themes/manta_ray/corsair/model.glb",
       "texture": "/assets/themes/manta_ray/corsair/albedo.png",
       "model": "/assets/themes/manta_ray/corsair/ship.model",
-      "sha256": "dab8e7edeee8cce3e6fe6c7acd28be3b9b7b1275137f4f6af4d10141ad96257d",
+      "sha256": "647de98f653bc5ed61d1eab77dea28febb393fb2f4fcf34c9812390a69f7f594",
       "texture_sha256": "32f743dbb8d7792130e4da853ba191b7bcc2736297d51896d72667da45bffa80",
       "vertices": 9895,
       "triangles": 13888,
@@ -1138,20 +1138,20 @@
       "remapped_panel_vertices": 312,
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.422461032867432,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.806707382202148,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          4.760469436645508,
-          30.963077545166016
+          127.46782684326172,
+          14.861953735351562,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.65907,
-        9.18293,
-        82.0
+        254.93565,
+        28.66866,
+        255.99999
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -1163,10 +1163,10 @@
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "thumbnail": "artifacts/themes/renders/manta_ray-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -1183,11 +1183,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/manta_ray.glb",
       "base_model": "/assets/models/frigate_support/manta_ray.model",
-      "base_sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "base_sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "glb": "assets/themes/manta_ray/overgrown/model.glb",
       "texture": "/assets/themes/manta_ray/overgrown/albedo.png",
       "model": "/assets/themes/manta_ray/overgrown/ship.model",
-      "sha256": "3ac977f1cffaee5cbb053a2a90e7eeb5c0079be1b6bf18fa1d93a5ae8e5cf92a",
+      "sha256": "74f16fcd19c766d3abb76a3ead89481488d270aa829d3e9dbcd2fee4e673f7aa",
       "texture_sha256": "89d45db4151ef87630d3d5595ad9da10092eef3b290ba948e9a9bffcc8094894",
       "vertices": 10599,
       "triangles": 14052,
@@ -1196,20 +1196,20 @@
       "remapped_panel_vertices": 312,
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.422461032867432,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.806707382202148,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          5.306577730098164,
-          30.963077545166016
+          127.46782684326172,
+          16.566876543027664,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.65907,
-        9.72904,
-        82.0
+        254.93565,
+        30.37358,
+        255.99999
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -1220,10 +1220,10 @@
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "thumbnail": "artifacts/themes/renders/manta_ray-overgrown-perspective.jpg"
     },
@@ -1239,11 +1239,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
       "base_model": "/assets/models/frigate_assault/tiger_shark.model",
-      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "base_sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "glb": "assets/themes/tiger_shark/corsair/model.glb",
       "texture": "/assets/themes/tiger_shark/corsair/albedo.png",
       "model": "/assets/themes/tiger_shark/corsair/ship.model",
-      "sha256": "2692c69796f2b7ddcb6c20963b03a670b076106d217dfd4a92e53355a38b17ea",
+      "sha256": "33d037e5b45d08a75cb9409b19582bca1a83e5571b7b6dfa98d59aa78267b1dc",
       "texture_sha256": "baba1e1452348420387fb5543f3f997ca10d4d760f4a16ef5b9a684f5a60214d",
       "vertices": 10952,
       "triangles": 14924,
@@ -1252,20 +1252,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.12195,
-        26.52112,
-        80.0
+        105.36585,
+        79.56336,
+        239.99999
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -1277,10 +1277,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "thumbnail": "artifacts/themes/renders/tiger_shark-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -1297,11 +1297,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/tiger_shark.glb",
       "base_model": "/assets/models/frigate_assault/tiger_shark.model",
-      "base_sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "base_sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "glb": "assets/themes/tiger_shark/overgrown/model.glb",
       "texture": "/assets/themes/tiger_shark/overgrown/albedo.png",
       "model": "/assets/themes/tiger_shark/overgrown/ship.model",
-      "sha256": "292656e87b9dc6851470e15689f500c9bdd476d272933e2dc9a3b29a084eb38e",
+      "sha256": "d6abb55356bb4b48d8bfaca52cb1367ec0b6d898feb104a667f763f8b2b13406",
       "texture_sha256": "8541ffbed4967c9efc839cce5862fbcfc85abe949ef8ddb3a1d9a184c501572f",
       "vertices": 11656,
       "triangles": 15088,
@@ -1310,20 +1310,20 @@
       "remapped_panel_vertices": 636,
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.12195,
-        26.52112,
-        80.0
+        105.36585,
+        79.56336,
+        239.99999
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -1334,10 +1334,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "thumbnail": "artifacts/themes/renders/tiger_shark-overgrown-perspective.jpg"
     },
@@ -1353,11 +1353,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
       "base_model": "/assets/models/frigate_tactical/hammerhead.model",
-      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "base_sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "glb": "assets/themes/hammerhead/corsair/model.glb",
       "texture": "/assets/themes/hammerhead/corsair/albedo.png",
       "model": "/assets/themes/hammerhead/corsair/ship.model",
-      "sha256": "2290c39298eeb0e95d29df8fbfdc854c2e72bd95b58adfac9cb024836ee22941",
+      "sha256": "45ee1d9aaca6ebb0e329ddfe002948e523cbfcafe143b408ed96635b6ca85d94",
       "texture_sha256": "5130c530df7d1d2225881fae5a367238839fbfa084a363c2023656080128e432",
       "vertices": 11285,
       "triangles": 16012,
@@ -1366,20 +1366,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.13684,
-        21.28772,
-        78.0
+        119.04128,
+        74.23409,
+        272.00001
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -1391,10 +1391,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "thumbnail": "artifacts/themes/renders/hammerhead-corsair-perspective.jpg",
       "insignia": "triangle"
@@ -1411,11 +1411,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/hammerhead.glb",
       "base_model": "/assets/models/frigate_tactical/hammerhead.model",
-      "base_sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "base_sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "glb": "assets/themes/hammerhead/overgrown/model.glb",
       "texture": "/assets/themes/hammerhead/overgrown/albedo.png",
       "model": "/assets/themes/hammerhead/overgrown/ship.model",
-      "sha256": "ea1ef28f2902028fc22d021eb655759a019b65b507b427172f0a354d486dd77f",
+      "sha256": "15bbdecda92de5bb7d6a9ba960502b4e7c90a04e5ba361a5564013e1c9f15118",
       "texture_sha256": "e80ec2dc149c38a53f955a1e51ecf61e32183f0327e5c971dc3a2ce31bb94824",
       "vertices": 11989,
       "triangles": 16176,
@@ -1424,20 +1424,20 @@
       "remapped_panel_vertices": 580,
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.13684,
-        21.28772,
-        78.0
+        119.04128,
+        74.23409,
+        272.00001
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -1448,10 +1448,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "thumbnail": "artifacts/themes/renders/hammerhead-overgrown-perspective.jpg"
     },
@@ -1923,11 +1923,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/falcon.glb",
       "base_model": "/assets/models/escort_interceptor/falcon.model",
-      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "base_sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "glb": "assets/themes/falcon/corsair/model.glb",
       "texture": "/assets/themes/falcon/corsair/albedo.png",
       "model": "/assets/themes/falcon/corsair/ship.model",
-      "sha256": "49502c3ec21f6301474647a51e1aa1a0ab530d03e2bd17d48204cf8a6ddfa816",
+      "sha256": "fccac6695570b1a7d4ec9f306a27573d0677b27bec08a21399223482d1295e13",
       "texture_sha256": "7e9b6e7a07c3c642efcd69106edd9a3b8b7aad5e021bc78fa262362101314028",
       "vertices": 18057,
       "triangles": 20100,
@@ -1936,20 +1936,20 @@
       "remapped_panel_vertices": 4442,
       "bounds_m": [
         [
-          -20.0,
-          -3.1792726879531874,
-          -17.22860336303711
+          -34.0,
+          -5.4047634355332095,
+          -29.288625717163086
         ],
         [
-          20.0,
-          3.306584358215332,
-          15.75583553314209
+          34.0,
+          5.6211934089660645,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        6.48586,
-        32.98444
+        68.0,
+        11.02596,
+        56.07355
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -1961,10 +1961,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "thumbnail": "artifacts/themes/renders/falcon-corsair-perspective.jpg",
       "insignia": "circle"
@@ -1981,11 +1981,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/escort_interceptor/falcon.glb",
       "base_model": "/assets/models/escort_interceptor/falcon.model",
-      "base_sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "base_sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "glb": "assets/themes/falcon/overgrown/model.glb",
       "texture": "/assets/themes/falcon/overgrown/albedo.png",
       "model": "/assets/themes/falcon/overgrown/ship.model",
-      "sha256": "19fe7281b5027335ff54af969c79f90c306ac8c3bb02b0e3a3fafe6ce457a4d3",
+      "sha256": "d74ca435522bbbf6388986a81ab038846c0f54411eca5e04474cbcaec05d1ab2",
       "texture_sha256": "ea175379ec3f360731985675ed964933225aafd830ae597049d0091b7b132515",
       "vertices": 17713,
       "triangles": 19312,
@@ -1994,20 +1994,20 @@
       "remapped_panel_vertices": 4442,
       "bounds_m": [
         [
-          -20.0,
-          -3.0630276203155518,
-          -17.22860336303711
+          -34.0,
+          -5.207146644592285,
+          -29.288625717163086
         ],
         [
-          20.0,
-          3.306584358215332,
-          15.75583553314209
+          34.0,
+          5.6211934089660645,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        6.36961,
-        32.98444
+        68.0,
+        10.82834,
+        56.07355
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2018,10 +2018,10 @@
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "thumbnail": "artifacts/themes/renders/falcon-overgrown-perspective.jpg"
     },
@@ -2037,11 +2037,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/egret.glb",
       "base_model": "/assets/models/escort_support/egret.model",
-      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "base_sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "glb": "assets/themes/egret/corsair/model.glb",
       "texture": "/assets/themes/egret/corsair/albedo.png",
       "model": "/assets/themes/egret/corsair/ship.model",
-      "sha256": "7ea069ce469c7a95e0fa23f6411455b6cb962f09dfcb59db1d5d346150c53896",
+      "sha256": "8b58790b073667df98bf9a1773158e98854b9de08f132a290feb51aa4d8ad59c",
       "texture_sha256": "3a1cba2d7e97431c75cb090b2b36834133a188f9b332e44c67984200fb9abf5b",
       "vertices": 19126,
       "triangles": 20988,
@@ -2050,20 +2050,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.922280255949835,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.675648220517145,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.1995,
-        8.52748,
-        40.0
+        57.9192,
+        13.64397,
+        64.0
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2075,10 +2075,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "thumbnail": "artifacts/themes/renders/egret-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2095,11 +2095,11 @@
       "role": "support",
       "base_glb": "assets/models/escort_support/egret.glb",
       "base_model": "/assets/models/escort_support/egret.model",
-      "base_sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "base_sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "glb": "assets/themes/egret/overgrown/model.glb",
       "texture": "/assets/themes/egret/overgrown/albedo.png",
       "model": "/assets/themes/egret/overgrown/ship.model",
-      "sha256": "cbc0365964bc738042670b64f12a58ba64a66e80d097d547bc17b571a9cad167",
+      "sha256": "58ea7ea9c28c379a5f28bffc7c1f5e6f12999bf582bd06411f175d2361e95fef",
       "texture_sha256": "e9430c297a5d7605b0772eb7e25ef275b38906129bcd62b19aae0056a635a186",
       "vertices": 18782,
       "triangles": 20200,
@@ -2108,20 +2108,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.794473886489868,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.471158027648926,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.1995,
-        8.39968,
-        40.0
+        57.9192,
+        13.43948,
+        64.0
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2132,10 +2132,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "thumbnail": "artifacts/themes/renders/egret-overgrown-perspective.jpg"
     },
@@ -2151,11 +2151,11 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/goshawk.glb",
       "base_model": "/assets/models/escort_assault/goshawk.model",
-      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "base_sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "glb": "assets/themes/goshawk/corsair/model.glb",
       "texture": "/assets/themes/goshawk/corsair/albedo.png",
       "model": "/assets/themes/goshawk/corsair/ship.model",
-      "sha256": "539e309be8c050bcb8892cb378187a2a4ff8967a63a3143344c311f11943391f",
+      "sha256": "fc566408367a7919c3caae2d5ed763b9ae96ed246de098bef115ec19ef7597ea",
       "texture_sha256": "455dcbf7ac33e49a42d23cf4f073b0663c28480e5572e700cff0f445d63a9671",
       "vertices": 19025,
       "triangles": 20792,
@@ -2164,20 +2164,20 @@
       "remapped_panel_vertices": 5158,
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.762944437095463,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.913198193091663,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          3.913628578186035,
-          18.648395538330078
+          31.606847763061523,
+          6.149987697601318,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.22689,
-        7.67657,
-        42.0
+        63.2137,
+        12.06319,
+        66.0
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2189,10 +2189,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "thumbnail": "artifacts/themes/renders/goshawk-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2209,11 +2209,11 @@
       "role": "assault",
       "base_glb": "assets/models/escort_assault/goshawk.glb",
       "base_model": "/assets/models/escort_assault/goshawk.model",
-      "base_sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "base_sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "glb": "assets/themes/goshawk/overgrown/model.glb",
       "texture": "/assets/themes/goshawk/overgrown/albedo.png",
       "model": "/assets/themes/goshawk/overgrown/ship.model",
-      "sha256": "8e5ff4f122ecbbca04d87dade09cb748712bb504b358205b7fccf329fc10b9af",
+      "sha256": "c6c10881be4affa70e7b4a270d7d579d0a6fdd4cb3dc4729d9f96bb553d1d25d",
       "texture_sha256": "1ef8864f749a0cdff44f0ba92707f03412d5629dda4158875a214d6649647cff",
       "vertices": 18681,
       "triangles": 20004,
@@ -2222,20 +2222,20 @@
       "remapped_panel_vertices": 5158,
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.6253581047058105,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.696991443634033,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          3.913628578186035,
-          18.648395538330078
+          31.606847763061523,
+          6.149987697601318,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.22689,
-        7.53899,
-        42.0
+        63.2137,
+        11.84698,
+        66.0
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2246,10 +2246,10 @@
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "thumbnail": "artifacts/themes/renders/goshawk-overgrown-perspective.jpg"
     },
@@ -2265,11 +2265,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/osprey.glb",
       "base_model": "/assets/models/escort_tactical/osprey.model",
-      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "base_sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "glb": "assets/themes/osprey/corsair/model.glb",
       "texture": "/assets/themes/osprey/corsair/albedo.png",
       "model": "/assets/themes/osprey/corsair/ship.model",
-      "sha256": "0946f2a4ecda9c863c3b0086d55f9ecbd78de447e28f8f8eeead73f0f22082e9",
+      "sha256": "bc1fcf881498e655e69fcb623d28b730d49cf081912a8ad5e40acdebe402fab6",
       "texture_sha256": "87cff8d85f270ab6df53f97342219d2a29844fd511c96ddb5c1fe92cabce55d1",
       "vertices": 18721,
       "triangles": 20476,
@@ -2278,20 +2278,20 @@
       "remapped_panel_vertices": 5078,
       "bounds_m": [
         [
-          -20.5,
-          -3.542951924966813,
-          -19.19939613342285
+          -34.0,
+          -5.8761156916081525,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.79553,
-        36.75755
+        68.0,
+        14.58771,
+        60.96375
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2303,10 +2303,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "thumbnail": "artifacts/themes/renders/osprey-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2323,11 +2323,11 @@
       "role": "tactical",
       "base_glb": "assets/models/escort_tactical/osprey.glb",
       "base_model": "/assets/models/escort_tactical/osprey.model",
-      "base_sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "base_sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "glb": "assets/themes/osprey/overgrown/model.glb",
       "texture": "/assets/themes/osprey/overgrown/albedo.png",
       "model": "/assets/themes/osprey/overgrown/ship.model",
-      "sha256": "6c334e9769b18001b481c04417547a4465cc7cf4f7e47228c5146965a179782f",
+      "sha256": "2fb7f839985e88aaab7b135738400661ffd7b7e941a0e509762903f8cd08e98a",
       "texture_sha256": "a5d79a3ef6e87ca51f78f565e1bce39cbba34371dd72e594649792559a202b86",
       "vertices": 18377,
       "triangles": 19688,
@@ -2336,20 +2336,20 @@
       "remapped_panel_vertices": 5078,
       "bounds_m": [
         [
-          -20.5,
-          -3.413409471511841,
-          -19.19939613342285
+          -34.0,
+          -5.661264419555664,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.66599,
-        36.75755
+        68.0,
+        14.37286,
+        60.96375
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2360,10 +2360,10 @@
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "thumbnail": "artifacts/themes/renders/osprey-overgrown-perspective.jpg"
     },
@@ -2379,11 +2379,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
       "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
-      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "base_sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "glb": "assets/themes/frigatebird/corsair/model.glb",
       "texture": "/assets/themes/frigatebird/corsair/albedo.png",
       "model": "/assets/themes/frigatebird/corsair/ship.model",
-      "sha256": "8b2457afa7702406292a5e739a49df190865b309775b7e999a80f36dc4c52759",
+      "sha256": "4489e8c70d360d40a7033eea50d4b89245a5c417b8a53bfba085454ad2574fd5",
       "texture_sha256": "d5b389d5b2bfd8fe542fd7c12f4e03d148be52602deb0194b3c8883c36e2c355",
       "vertices": 17580,
       "triangles": 20156,
@@ -2392,20 +2392,20 @@
       "remapped_panel_vertices": 3892,
       "bounds_m": [
         [
-          -44.0,
-          -3.9792720133126163,
-          -36.974788665771484
+          -136.0,
+          -12.299567840098634,
+          -114.28571319580078
         ],
         [
-          44.0,
-          5.499720573425293,
-          26.205883026123047
+          136.0,
+          16.999135971069336,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        9.47899,
-        63.18067
+        272.0,
+        29.2987,
+        195.28571
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2417,10 +2417,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "thumbnail": "artifacts/themes/renders/frigatebird-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2437,11 +2437,11 @@
       "role": "interceptor",
       "base_glb": "assets/models/frigate_interceptor/frigatebird.glb",
       "base_model": "/assets/models/frigate_interceptor/frigatebird.model",
-      "base_sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "base_sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "glb": "assets/themes/frigatebird/overgrown/model.glb",
       "texture": "/assets/themes/frigatebird/overgrown/albedo.png",
       "model": "/assets/themes/frigatebird/overgrown/ship.model",
-      "sha256": "94723d43f42a92b0593cbf333cb41689e2894554a91b7d71d8b8c2d13fd32c34",
+      "sha256": "7307b42a591611f8525e5c92acd281d68dd3e5b7363af1134cf962b633cfb1dc",
       "texture_sha256": "f929a19b42a521f02f90d1c904ab8b0035a405084bd048564d92464242ac5e6f",
       "vertices": 17236,
       "triangles": 19368,
@@ -2450,20 +2450,20 @@
       "remapped_panel_vertices": 3892,
       "bounds_m": [
         [
-          -44.0,
-          -3.88193416595459,
-          -36.974788665771484
+          -136.0,
+          -11.998705863952637,
+          -114.28571319580078
         ],
         [
-          44.0,
-          5.499720573425293,
-          26.205883026123047
+          136.0,
+          16.999135971069336,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        9.38165,
-        63.18067
+        272.0,
+        28.99784,
+        195.28571
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2474,10 +2474,10 @@
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "thumbnail": "artifacts/themes/renders/frigatebird-overgrown-perspective.jpg"
     },
@@ -2493,11 +2493,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/pelican.glb",
       "base_model": "/assets/models/frigate_support/pelican.model",
-      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "base_sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "glb": "assets/themes/pelican/corsair/model.glb",
       "texture": "/assets/themes/pelican/corsair/albedo.png",
       "model": "/assets/themes/pelican/corsair/ship.model",
-      "sha256": "a8e33e8d3eb938480f22a826c20dd2534737cca4cfda586ba9afd85fdf77f7f9",
+      "sha256": "5122bf0e692ae74b47c899bf761fbf7444b68f89fc184d6daecbd8fe4121cc3f",
       "texture_sha256": "fb59dc276d920e6d62e99583384c764ad2d4aa3fd1aa62fd06c110ad4b1fbae1",
       "vertices": 19976,
       "triangles": 22580,
@@ -2506,20 +2506,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -43.0,
-          -7.204705383727333,
-          -35.83333206176758
+          -128.0,
+          -21.446564950293617,
+          -106.66666412353516
         ],
         [
-          43.0,
-          9.375406265258789,
-          48.837364196777344
+          128.0,
+          27.908185958862305,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        16.58011,
-        84.6707
+        256.0,
+        49.35475,
+        252.04301
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2531,10 +2531,10 @@
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "thumbnail": "artifacts/themes/renders/pelican-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2551,11 +2551,11 @@
       "role": "support",
       "base_glb": "assets/models/frigate_support/pelican.glb",
       "base_model": "/assets/models/frigate_support/pelican.model",
-      "base_sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "base_sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "glb": "assets/themes/pelican/overgrown/model.glb",
       "texture": "/assets/themes/pelican/overgrown/albedo.png",
       "model": "/assets/themes/pelican/overgrown/ship.model",
-      "sha256": "011efc7bd25b9f89641133e03cd4ff82ed8d7f8315ab092070596f814236f1ae",
+      "sha256": "d743945b1d92a4e3d3282bae42d144dcbe78d8c524b05baabb48f108e6afab85",
       "texture_sha256": "69f7c5e995ecd1c85bdab73dda97c24aa1c0af16bb5801cd449c6fa59570205c",
       "vertices": 19632,
       "triangles": 21792,
@@ -2564,20 +2564,20 @@
       "remapped_panel_vertices": 5446,
       "bounds_m": [
         [
-          -43.0,
-          -6.935276031494141,
-          -35.83333206176758
+          -128.0,
+          -20.644542694091797,
+          -106.66666412353516
         ],
         [
-          43.0,
-          9.375406265258789,
-          48.837364196777344
+          128.0,
+          27.908185958862305,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        16.31068,
-        84.6707
+        256.0,
+        48.55273,
+        252.04301
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2588,10 +2588,10 @@
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "thumbnail": "artifacts/themes/renders/pelican-overgrown-perspective.jpg"
     },
@@ -2607,11 +2607,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
       "base_model": "/assets/models/frigate_assault/golden_eagle.model",
-      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "base_sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "glb": "assets/themes/golden_eagle/corsair/model.glb",
       "texture": "/assets/themes/golden_eagle/corsair/albedo.png",
       "model": "/assets/themes/golden_eagle/corsair/ship.model",
-      "sha256": "192061e2230660ab35db79403b5b822dde57051b3443dd005eb2245abc59a8ae",
+      "sha256": "d969cefafef9cdf445a0ee6ba6113edadbd5e0d10791214f3f8650566113762b",
       "texture_sha256": "0bdccb26339ad76d30ac5766d07e7e6c950f40fb0c71d34d728cd9ff0432830d",
       "vertices": 18945,
       "triangles": 20704,
@@ -2620,20 +2620,20 @@
       "remapped_panel_vertices": 4998,
       "bounds_m": [
         [
-          -42.0,
-          -6.36798291561519,
-          -34.50835037231445
+          -132.0,
+          -20.01366084714722,
+          -108.4548110961914
         ],
         [
-          42.0,
-          6.965284824371338,
-          31.558441162109375
+          132.0,
+          21.890893936157227,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        13.33327,
-        66.06679
+        264.0,
+        41.90455,
+        207.63848
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2645,10 +2645,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "thumbnail": "artifacts/themes/renders/golden_eagle-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2665,11 +2665,11 @@
       "role": "assault",
       "base_glb": "assets/models/frigate_assault/golden_eagle.glb",
       "base_model": "/assets/models/frigate_assault/golden_eagle.model",
-      "base_sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "base_sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "glb": "assets/themes/golden_eagle/overgrown/model.glb",
       "texture": "/assets/themes/golden_eagle/overgrown/albedo.png",
       "model": "/assets/themes/golden_eagle/overgrown/ship.model",
-      "sha256": "7ffd1180fa545b0782cc72bc3b069c46c19d0b70c2fce357918c47617cdeba75",
+      "sha256": "cddc59647a3c10126cb87d5dd24b51bb26f647307bf837bc93f0e91593a239da",
       "texture_sha256": "f6f9a36c72d8cb730038d521e15fab2309ea81539c9ead3735484dd86a75115c",
       "vertices": 18601,
       "triangles": 19916,
@@ -2678,20 +2678,20 @@
       "remapped_panel_vertices": 4998,
       "bounds_m": [
         [
-          -42.0,
-          -6.135147571563721,
-          -34.50835037231445
+          -132.0,
+          -19.281892776489258,
+          -108.4548110961914
         ],
         [
-          42.0,
-          6.965284824371338,
-          31.558441162109375
+          132.0,
+          21.890893936157227,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        13.10043,
-        66.06679
+        264.0,
+        41.17279,
+        207.63848
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2702,10 +2702,10 @@
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "thumbnail": "artifacts/themes/renders/golden_eagle-overgrown-perspective.jpg"
     },
@@ -2721,11 +2721,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
       "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
-      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "base_sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "glb": "assets/themes/harpy_eagle/corsair/model.glb",
       "texture": "/assets/themes/harpy_eagle/corsair/albedo.png",
       "model": "/assets/themes/harpy_eagle/corsair/ship.model",
-      "sha256": "2d9f2b7720fa7be85d9546407000517797ebe8133a7cfc4a08e1f7c10565b080",
+      "sha256": "09aa65d5f919d0580d0a7ef1edfb333ab9aba04f68fb089c05586330f5a749ab",
       "texture_sha256": "b19e87addb98759067b918435d218e94e4c988b5a040b5ae802d741ded6addb1",
       "vertices": 18833,
       "triangles": 20556,
@@ -2734,20 +2734,20 @@
       "remapped_panel_vertices": 5270,
       "bounds_m": [
         [
-          -41.0,
-          -6.782606936801602,
-          -36.755210876464844
+          -136.0,
+          -22.498403539151045,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.38583,
-        70.36845
+        272.0,
+        60.98715,
+        233.41729
       ],
       "features": [
         "Timber-patterned plating and canvas decorative panels",
@@ -2759,10 +2759,10 @@
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "thumbnail": "artifacts/themes/renders/harpy_eagle-corsair-perspective.jpg",
       "insignia": "circle"
@@ -2779,11 +2779,11 @@
       "role": "tactical",
       "base_glb": "assets/models/frigate_tactical/harpy_eagle.glb",
       "base_model": "/assets/models/frigate_tactical/harpy_eagle.model",
-      "base_sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "base_sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "glb": "assets/themes/harpy_eagle/overgrown/model.glb",
       "texture": "/assets/themes/harpy_eagle/overgrown/albedo.png",
       "model": "/assets/themes/harpy_eagle/overgrown/ship.model",
-      "sha256": "3f4e6957a8c894e110760ed2f30790bace38c0fa6b859251bc5054b82525a8c8",
+      "sha256": "895829af54e93304b8b469ca2af24823953eb6612e8a03da1afcd214b05e7543",
       "texture_sha256": "ed98fddbf276319091b596447f11d7c6d24eac411a2e181e3bbfb71079908ad1",
       "vertices": 18489,
       "triangles": 19768,
@@ -2792,20 +2792,20 @@
       "remapped_panel_vertices": 5270,
       "bounds_m": [
         [
-          -41.0,
-          -6.534611225128174,
-          -36.755210876464844
+          -136.0,
+          -21.675785064697266,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.13784,
-        70.36845
+        272.0,
+        60.16453,
+        233.41729
       ],
       "features": [
         "Original animal hull stays visible beneath living surface detail",
@@ -2816,10 +2816,10 @@
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "thumbnail": "artifacts/themes/renders/harpy_eagle-overgrown-perspective.jpg"
     }

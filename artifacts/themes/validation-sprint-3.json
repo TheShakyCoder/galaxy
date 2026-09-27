@@ -7,14 +7,14 @@
     "overgrown"
   ],
   "source_hulls_preserved": true,
-  "all_preexisting_files_preserved": true,
+  "source_fleet_revision": "Symmetrical Moray and requested native 1:4:16 class sizing; Patrol unchanged",
   "previous_sprint_assets_checked": 192,
   "body_uvs_preserved": true,
   "panel_uvs_remapped_on_copies": true,
   "unique_textures": 48,
   "preview_poses": 5760,
   "render_files_verified": 144,
-  "rebuild_verified": true,
+  "rebuild_verified": false,
   "rows": [
     {
       "id": "sardine.corsair",
@@ -85,7 +85,7 @@
       "triangles": 14316,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8156,
-      "flight_max_ndc": 0.7802,
+      "flight_max_ndc": 0.788,
       "result": "PASS"
     },
     {
@@ -93,7 +93,7 @@
       "triangles": 14480,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8156,
-      "flight_max_ndc": 0.7802,
+      "flight_max_ndc": 0.788,
       "result": "PASS"
     },
     {
@@ -101,7 +101,7 @@
       "triangles": 15808,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8168,
-      "flight_max_ndc": 0.7777,
+      "flight_max_ndc": 0.7866,
       "result": "PASS"
     },
     {
@@ -109,23 +109,23 @@
       "triangles": 15972,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8168,
-      "flight_max_ndc": 0.7777,
+      "flight_max_ndc": 0.7866,
       "result": "PASS"
     },
     {
       "id": "moray.corsair",
-      "triangles": 14388,
+      "triangles": 15088,
       "added_triangles": 4924,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
       "result": "PASS"
     },
     {
       "id": "moray.overgrown",
-      "triangles": 14360,
+      "triangles": 15060,
       "added_triangles": 4896,
-      "preview_max_ndc": 0.8124,
-      "flight_max_ndc": 0.7741,
+      "preview_max_ndc": 0.8128,
+      "flight_max_ndc": 0.7604,
       "result": "PASS"
     },
     {
@@ -133,7 +133,7 @@
       "triangles": 14424,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8131,
-      "flight_max_ndc": 0.7807,
+      "flight_max_ndc": 0.7889,
       "result": "PASS"
     },
     {
@@ -141,7 +141,7 @@
       "triangles": 14588,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8131,
-      "flight_max_ndc": 0.7807,
+      "flight_max_ndc": 0.7889,
       "result": "PASS"
     },
     {
@@ -149,7 +149,7 @@
       "triangles": 13808,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8117,
-      "flight_max_ndc": 0.7915,
+      "flight_max_ndc": 0.7972,
       "result": "PASS"
     },
     {
@@ -157,7 +157,7 @@
       "triangles": 13972,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8117,
-      "flight_max_ndc": 0.7915,
+      "flight_max_ndc": 0.7972,
       "result": "PASS"
     },
     {
@@ -165,7 +165,7 @@
       "triangles": 13888,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8116,
-      "flight_max_ndc": 0.7873,
+      "flight_max_ndc": 0.7959,
       "result": "PASS"
     },
     {
@@ -173,7 +173,7 @@
       "triangles": 14052,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8116,
-      "flight_max_ndc": 0.7873,
+      "flight_max_ndc": 0.7959,
       "result": "PASS"
     },
     {
@@ -181,7 +181,7 @@
       "triangles": 14924,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8069,
-      "flight_max_ndc": 0.7906,
+      "flight_max_ndc": 0.7969,
       "result": "PASS"
     },
     {
@@ -189,7 +189,7 @@
       "triangles": 15088,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8069,
-      "flight_max_ndc": 0.7906,
+      "flight_max_ndc": 0.7969,
       "result": "PASS"
     },
     {
@@ -197,7 +197,7 @@
       "triangles": 16012,
       "added_triangles": 4732,
       "preview_max_ndc": 0.8103,
-      "flight_max_ndc": 0.7902,
+      "flight_max_ndc": 0.7971,
       "result": "PASS"
     },
     {
@@ -205,7 +205,7 @@
       "triangles": 16176,
       "added_triangles": 4896,
       "preview_max_ndc": 0.8103,
-      "flight_max_ndc": 0.7902,
+      "flight_max_ndc": 0.7971,
       "result": "PASS"
     },
     {
@@ -277,7 +277,7 @@
       "triangles": 20100,
       "added_triangles": 6952,
       "preview_max_ndc": 0.8126,
-      "flight_max_ndc": 0.5933,
+      "flight_max_ndc": 0.6173,
       "result": "PASS"
     },
     {
@@ -285,7 +285,7 @@
       "triangles": 19312,
       "added_triangles": 6164,
       "preview_max_ndc": 0.8126,
-      "flight_max_ndc": 0.5933,
+      "flight_max_ndc": 0.6173,
       "result": "PASS"
     },
     {
@@ -293,7 +293,7 @@
       "triangles": 20988,
       "added_triangles": 6952,
       "preview_max_ndc": 0.8151,
-      "flight_max_ndc": 0.6802,
+      "flight_max_ndc": 0.6636,
       "result": "PASS"
     },
     {
@@ -301,7 +301,7 @@
       "triangles": 20200,
       "added_triangles": 6164,
       "preview_max_ndc": 0.8151,
-      "flight_max_ndc": 0.6802,
+      "flight_max_ndc": 0.6636,
       "result": "PASS"
     },
     {
@@ -309,7 +309,7 @@
       "triangles": 20792,
       "added_triangles": 6952,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7826,
       "result": "PASS"
     },
     {
@@ -317,7 +317,7 @@
       "triangles": 20004,
       "added_triangles": 6164,
       "preview_max_ndc": 0.815,
-      "flight_max_ndc": 0.7388,
+      "flight_max_ndc": 0.7826,
       "result": "PASS"
     },
     {
@@ -325,7 +325,7 @@
       "triangles": 20476,
       "added_triangles": 6952,
       "preview_max_ndc": 0.8081,
-      "flight_max_ndc": 0.5759,
+      "flight_max_ndc": 0.5421,
       "result": "PASS"
     },
     {
@@ -333,7 +333,7 @@
       "triangles": 19688,
       "added_triangles": 6164,
       "preview_max_ndc": 0.8081,
-      "flight_max_ndc": 0.5759,
+      "flight_max_ndc": 0.5421,
       "result": "PASS"
     },
     {
@@ -341,7 +341,7 @@
       "triangles": 20156,
       "added_triangles": 6952,
       "preview_max_ndc": 0.8106,
-      "flight_max_ndc": 0.558,
+      "flight_max_ndc": 0.5621,
       "result": "PASS"
     },
     {
@@ -349,7 +349,7 @@
       "triangles": 19368,
       "added_triangles": 6164,
       "preview_max_ndc": 0.8106,
-      "flight_max_ndc": 0.558,
+      "flight_max_ndc": 0.5621,
       "result": "PASS"
     },
     {
@@ -357,7 +357,7 @@
       "triangles": 22580,
       "added_triangles": 6952,
       "preview_max_ndc": 0.816,
-      "flight_max_ndc": 0.7137,
+      "flight_max_ndc": 0.6783,
       "result": "PASS"
     },
     {
@@ -365,7 +365,7 @@
       "triangles": 21792,
       "added_triangles": 6164,
       "preview_max_ndc": 0.816,
-      "flight_max_ndc": 0.7137,
+      "flight_max_ndc": 0.6783,
       "result": "PASS"
     },
     {
@@ -373,7 +373,7 @@
       "triangles": 20704,
       "added_triangles": 6952,
       "preview_max_ndc": 0.8146,
-      "flight_max_ndc": 0.6009,
+      "flight_max_ndc": 0.6241,
       "result": "PASS"
     },
     {
@@ -381,7 +381,7 @@
       "triangles": 19916,
       "added_triangles": 6164,
       "preview_max_ndc": 0.8146,
-      "flight_max_ndc": 0.6009,
+      "flight_max_ndc": 0.6241,
       "result": "PASS"
     },
     {
@@ -389,7 +389,7 @@
       "triangles": 20556,
       "added_triangles": 6952,
       "preview_max_ndc": 0.814,
-      "flight_max_ndc": 0.6241,
+      "flight_max_ndc": 0.6056,
       "result": "PASS"
     },
     {
@@ -397,7 +397,7 @@
       "triangles": 19768,
       "added_triangles": 6164,
       "preview_max_ndc": 0.814,
-      "flight_max_ndc": 0.6241,
+      "flight_max_ndc": 0.6056,
       "result": "PASS"
     }
   ],

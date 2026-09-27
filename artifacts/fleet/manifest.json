@@ -2,7 +2,7 @@
   "roster_count": 24,
   "built": 23,
   "retained_sardine": true,
-  "size_basis": "maximum model dimension in meters; Patrol 15-17, Escort 38-42, Frigate 78-88",
+  "size_basis": "maximum model dimension in meters; same faction/role Patrol:Escort:Frigate = 1:4:16; Patrol 15-17, Escort 60-68, Frigate 240-272",
   "module_slots": "unchanged; hardware is visual role language, not a gameplay slot assignment",
   "ships": [
     {
@@ -199,33 +199,33 @@
       "texture": "assets/models/escort_interceptor/barracuda_palette.png",
       "bounds_m": [
         [
-          -5.495207786560059,
-          -3.8338658809661865,
-          -21.725238800048828
+          -8.902235984802246,
+          -6.210862636566162,
+          -35.194889068603516
         ],
         [
-          5.495207786560059,
-          4.413938045501709,
-          18.274761199951172
+          8.902235984802246,
+          7.150579929351807,
+          29.605112075805664
         ]
       ],
       "dimensions_m": [
-        10.99,
-        8.248,
-        40.0
+        17.804,
+        13.361,
+        64.8
       ],
-      "origin_radius_m": 22.02876,
+      "origin_radius_m": 35.68659,
       "vertices": 6965,
       "triangles": 9584,
-      "bytes": 320388,
-      "sha256": "3b8041117eee3d6bc06818ffd154eadfb9e31fd41b44c12eaa9f4afc1d5bdb88",
+      "bytes": 320384,
+      "sha256": "c76fc995e64d90b9b0ca0c22d9b2664cb5091468c6d95048a167964f9e258689",
       "preview": {
         "eye_offset": [
           0,
-          24.055,
-          64.383
+          38.97,
+          104.3
         ],
-        "far": 140.758
+        "far": 197.029
       },
       "identity": "Long narrow body, projecting lower jaw and two separate dorsal fins",
       "features": [
@@ -245,33 +245,33 @@
       "texture": "assets/models/escort_support/remora_palette.png",
       "bounds_m": [
         [
-          -5.390070915222168,
-          -2.829787254333496,
-          -21.290781021118164
+          -9.078014373779297,
+          -4.765957355499268,
+          -35.858154296875
         ],
         [
-          5.390070915222168,
-          2.829787254333496,
-          16.709218978881836
+          9.078014373779297,
+          4.765957355499268,
+          28.141843795776367
         ]
       ],
       "dimensions_m": [
-        10.78,
-        5.66,
-        38.0
+        18.156,
+        9.532,
+        64.0
       ],
-      "origin_radius_m": 21.46021,
+      "origin_radius_m": 36.14351,
       "vertices": 7793,
       "triangles": 11076,
       "bytes": 354032,
-      "sha256": "a09128eb9f138a92370261050180f7e71d95f8dcb871cebcd0d8208c9296bcfa",
+      "sha256": "d6752fd33659dcd74af19335dbed36dc09ab7e6ebc261f794d6cce0b48796473",
       "preview": {
         "eye_offset": [
           0,
-          23.435,
-          62.721
+          39.469,
+          105.635
         ],
-        "far": 138.416
+        "far": 198.911
       },
       "identity": "Flattened head and long ribbed dorsal docking disc",
       "features": [
@@ -291,37 +291,37 @@
       "texture": "assets/models/escort_assault/moray_palette.png",
       "bounds_m": [
         [
-          -3.777285575866699,
-          -3.2534923553466797,
-          -23.661972045898438
+          -5.396122455596924,
+          -4.647846221923828,
+          -33.802818298339844
         ],
         [
-          3.955763101577759,
-          4.714197158813477,
-          18.338027954101562
+          5.396122455596924,
+          6.147592544555664,
+          26.19718360900879
         ]
       ],
       "dimensions_m": [
-        7.733,
-        7.968,
-        42.0
+        10.792,
+        10.795,
+        60.0
       ],
-      "origin_radius_m": 23.71783,
-      "vertices": 6652,
-      "triangles": 9464,
-      "bytes": 317304,
-      "sha256": "bda768a6d14ac71fcb507bdd0a51bd3cb0b88e2ef41cc867157c6206a80ad039",
+      "origin_radius_m": 33.80799,
+      "vertices": 7156,
+      "triangles": 10164,
+      "bytes": 337628,
+      "sha256": "51061640584bb8e6850cea50dcdde4f123f86141ba268a15e908d69aa25ff6ad",
       "preview": {
         "eye_offset": [
           0,
-          25.9,
-          69.319
+          36.918,
+          98.809
         ],
-        "far": 147.717
+        "far": 189.289
       },
-      "identity": "Curving eel body, continuous dorsal ribbon and heavy jaw",
+      "identity": "Straight symmetrical eel body, centered dorsal ribbon and heavy jaw",
       "features": [
-        "Curving eel body, continuous dorsal ribbon and heavy jaw",
+        "Straight symmetrical eel body, centered dorsal ribbon and heavy jaw",
         "Armored shoulders and paired forward gun housings"
       ],
       "retained": false
@@ -337,33 +337,33 @@
       "texture": "assets/models/escort_tactical/lionfish_palette.png",
       "bounds_m": [
         [
-          -12.613083839416504,
-          -4.856085777282715,
-          -20.52554702758789
+          -22.570781707763672,
+          -8.689838409423828,
+          -36.72992706298828
         ],
         [
-          12.613083839416504,
-          8.857233047485352,
-          17.47445297241211
+          22.570781707763672,
+          15.849785804748535,
+          31.27007293701172
         ]
       ],
       "dimensions_m": [
-        25.226,
-        13.713,
-        38.0
+        45.142,
+        24.54,
+        68.0
       ],
-      "origin_radius_m": 20.95449,
+      "origin_radius_m": 37.49751,
       "vertices": 7876,
       "triangles": 9692,
       "bytes": 358924,
-      "sha256": "e9a0e640630c40c39ad8b95a97bc06f2f9f51d556084950998643c21818d8ae4",
+      "sha256": "15c8da52ef87e816c59946d18c23ddf8589b9b1f864cd1de5a498eaf34219488",
       "preview": {
         "eye_offset": [
           0,
-          22.882,
-          61.243
+          40.947,
+          109.592
         ],
-        "far": 136.332
+        "far": 204.49
       },
       "identity": "Striped body, radiating sensor spines and large fan-shaped pectorals",
       "features": [
@@ -383,33 +383,33 @@
       "texture": "assets/models/frigate_interceptor/marlin_palette.png",
       "bounds_m": [
         [
-          -14.955489158630371,
-          -11.465875625610352,
-          -37.88724136352539
+          -46.14836883544922,
+          -35.38041687011719,
+          -116.9092025756836
         ],
         [
-          14.955489158630371,
-          14.76002311706543,
-          46.11275863647461
+          46.14836883544922,
+          45.54521560668945,
+          142.29080200195312
         ]
       ],
       "dimensions_m": [
-        29.911,
-        26.226,
-        84.0
+        92.297,
+        80.926,
+        259.2
       ],
-      "origin_radius_m": 46.11349,
+      "origin_radius_m": 142.29305,
       "vertices": 6632,
       "triangles": 9076,
-      "bytes": 306076,
-      "sha256": "0d741fad1de8daa39ecf5ab12a857d476cedd10a65a4d8328a008797ed5114ba",
+      "bytes": 306072,
+      "sha256": "337b36cc9bd524c1d93a643aef8be3392a6190ed3db8cb179369fb13dcb1d324",
       "preview": {
         "eye_offset": [
           0,
-          50.356,
-          134.774
+          155.384,
+          415.874
         ],
-        "far": 239.988
+        "far": 636.247
       },
       "identity": "Long spear bill, slender fast hull and crescent caudal fin",
       "features": [
@@ -429,33 +429,33 @@
       "texture": "assets/models/frigate_support/manta_ray_palette.png",
       "bounds_m": [
         [
-          -40.82953643798828,
-          -4.422461032867432,
-          -51.036922454833984
+          -127.46782684326172,
+          -13.806707382202148,
+          -159.33477783203125
         ],
         [
-          40.82953643798828,
-          4.760469436645508,
-          30.963077545166016
+          127.46782684326172,
+          14.861953735351562,
+          96.66521453857422
         ]
       ],
       "dimensions_m": [
-        81.659,
-        9.183,
-        82.0
+        254.936,
+        28.669,
+        256.0
       ],
-      "origin_radius_m": 51.03731,
+      "origin_radius_m": 159.33598,
       "vertices": 6123,
       "triangles": 9156,
-      "bytes": 291352,
-      "sha256": "324184e97728eaf8a45a39fb85cf3c7db222b99027f5a03ac09604a7f247be7c",
+      "bytes": 291356,
+      "sha256": "9fba2a529cbdb5a3443ebe44936d6da634079a5219f79ad046205bcc879e3e81",
       "preview": {
         "eye_offset": [
           0,
-          55.733,
-          149.165
+          173.995,
+          465.685
         ],
-        "far": 260.274
+        "far": 706.464
       },
       "identity": "Broad swept ray disc, paired cephalic lobes and slender trailing tail",
       "features": [
@@ -475,33 +475,33 @@
       "texture": "assets/models/frigate_assault/tiger_shark_palette.png",
       "bounds_m": [
         [
-          -17.560976028442383,
-          -8.780488014221191,
-          -44.878047943115234
+          -52.682926177978516,
+          -26.341463088989258,
+          -134.63414001464844
         ],
         [
-          17.560976028442383,
-          17.740633010864258,
-          35.121952056884766
+          52.682926177978516,
+          53.22189712524414,
+          105.36585235595703
         ]
       ],
       "dimensions_m": [
-        35.122,
-        26.521,
-        80.0
+        105.366,
+        79.563,
+        240.0
       ],
-      "origin_radius_m": 46.43393,
+      "origin_radius_m": 139.30178,
       "vertices": 7180,
       "triangles": 10192,
       "bytes": 341472,
-      "sha256": "3e3705ff2401ccb2af968420ba6f5d1abf0af353eb50780efe4e5d87a6955358",
+      "sha256": "dfa5dfca816359d92a704a0d50342f0e8cf6111c6f70f8c9b25a5a30bb760f64",
       "preview": {
         "eye_offset": [
           0,
-          50.706,
-          135.711
+          152.118,
+          407.132
         ],
-        "far": 241.308
+        "far": 623.923
       },
       "identity": "Heavy blunt shark head, dark flank bars and asymmetric caudal lobes",
       "features": [
@@ -521,33 +521,33 @@
       "texture": "assets/models/frigate_tactical/hammerhead_palette.png",
       "bounds_m": [
         [
-          -17.068418502807617,
-          -7.609755992889404,
-          -43.75609588623047
+          -59.52063751220703,
+          -26.536584854125977,
+          -152.5853729248047
         ],
         [
-          17.068418502807617,
-          13.677961349487305,
-          34.24390411376953
+          59.52063751220703,
+          47.697505950927734,
+          119.41463470458984
         ]
       ],
       "dimensions_m": [
-        34.137,
-        21.288,
-        78.0
+        119.041,
+        74.234,
+        272.0
       ],
-      "origin_radius_m": 44.9591,
+      "origin_radius_m": 156.78046,
       "vertices": 7513,
       "triangles": 11280,
       "bytes": 347512,
-      "sha256": "285fa93c8666eec69dc2c899079c69913912ffc1ea1bf2ba1f718e29090c3c86",
+      "sha256": "812c329c871344cbc3197bfe03604eab105a5708ccc55510fae6a7d5a377301b",
       "preview": {
         "eye_offset": [
           0,
-          49.095,
-          131.4
+          171.204,
+          458.216
         ],
-        "far": 235.231
+        "far": 695.936
       },
       "identity": "Broad transverse hammer head with sensors at both ends",
       "features": [
@@ -751,33 +751,33 @@
       "texture": "assets/models/escort_interceptor/falcon_palette.png",
       "bounds_m": [
         [
-          -20.0,
-          -3.0630276203155518,
-          -17.22860336303711
+          -34.0,
+          -5.207146644592285,
+          -29.288625717163086
         ],
         [
-          20.0,
-          3.306584358215332,
-          15.75583553314209
+          34.0,
+          5.6211934089660645,
+          26.78491973876953
         ]
       ],
       "dimensions_m": [
-        40.0,
-        6.37,
-        32.984
+        68.0,
+        10.828,
+        56.074
       ],
-      "origin_radius_m": 22.41636,
+      "origin_radius_m": 38.1078,
       "vertices": 12797,
       "triangles": 13148,
       "bytes": 522316,
-      "sha256": "282d75a5839e3bdcf18b74853ca51731d4852e406b5423ad20918b69801e5023",
+      "sha256": "c358215b2eaf9c65b15002070ac4f8ef5803659e6adb10ce8b7c0aa27ff438a1",
       "preview": {
         "eye_offset": [
           0,
-          24.479,
-          65.515
+          41.614,
+          111.376
         ],
-        "far": 142.355
+        "far": 207.004
       },
       "identity": "Pointed swept wings, short hooked beak and cheek mask",
       "features": [
@@ -797,33 +797,33 @@
       "texture": "assets/models/escort_support/egret_palette.png",
       "bounds_m": [
         [
-          -18.099750518798828,
-          -2.794473886489868,
-          -19.025320053100586
+          -28.95960235595703,
+          -4.471158027648926,
+          -30.440509796142578
         ],
         [
-          18.099750518798828,
-          5.605203628540039,
-          20.974679946899414
+          28.95960235595703,
+          8.9683256149292,
+          33.55949020385742
         ]
       ],
       "dimensions_m": [
-        36.2,
-        8.4,
-        40.0
+        57.919,
+        13.439,
+        64.0
       ],
-      "origin_radius_m": 21.29479,
+      "origin_radius_m": 34.07167,
       "vertices": 13866,
       "triangles": 14036,
       "bytes": 559732,
-      "sha256": "b9df0c3d9989fd3d0c354e035ee3571540d0cdae402be9432253ebdde2e55fd3",
+      "sha256": "5e22e6b2d44b866f94bd8aedd9b8e36a7543ebeb5bbd8daf2f196885a852d34d",
       "preview": {
         "eye_offset": [
           0,
-          23.254,
-          62.237
+          37.206,
+          99.58
         ],
-        "far": 137.735
+        "far": 190.375
       },
       "identity": "White feather armor, slender S-neck and long straight bill",
       "features": [
@@ -843,33 +843,33 @@
       "texture": "assets/models/escort_assault/goshawk_palette.png",
       "bounds_m": [
         [
-          -20.113447189331055,
-          -3.6253581047058105,
-          -23.351604461669922
+          -31.606847763061523,
+          -5.696991443634033,
+          -36.69538116455078
         ],
         [
-          20.113447189331055,
-          3.913628578186035,
-          18.648395538330078
+          31.606847763061523,
+          6.149987697601318,
+          29.30462074279785
         ]
       ],
       "dimensions_m": [
-        40.227,
-        7.539,
-        42.0
+        63.214,
+        11.847,
+        66.0
       ],
-      "origin_radius_m": 23.52429,
+      "origin_radius_m": 36.96674,
       "vertices": 13765,
       "triangles": 13840,
-      "bytes": 557568,
-      "sha256": "c337241c01fe182e9020f5aaa26e00702843e3e03dfedd0f42d31233de4fbe7c",
+      "bytes": 557564,
+      "sha256": "b81a7f0e6e63adaded67fab3e5b6bd40b6e1e5c42ee2d0324c04b7191f76c77d",
       "preview": {
         "eye_offset": [
           0,
-          25.689,
-          68.753
+          40.368,
+          108.041
         ],
-        "far": 146.92
+        "far": 202.303
       },
       "identity": "Broad rounded wings, long barred tail and pale eyebrow",
       "features": [
@@ -889,33 +889,33 @@
       "texture": "assets/models/escort_tactical/osprey_palette.png",
       "bounds_m": [
         [
-          -20.5,
-          -3.413409471511841,
-          -19.19939613342285
+          -34.0,
+          -5.661264419555664,
+          -31.8429012298584
         ],
         [
-          20.5,
-          5.252578258514404,
-          17.558156967163086
+          34.0,
+          8.711593627929688,
+          29.120845794677734
         ]
       ],
       "dimensions_m": [
-        41.0,
-        8.666,
-        36.758
+        68.0,
+        14.373,
+        60.964
       ],
-      "origin_radius_m": 21.72561,
+      "origin_radius_m": 36.03272,
       "vertices": 13461,
       "triangles": 13524,
       "bytes": 546388,
-      "sha256": "29ea1faf79ae88f61a5c15840e81ee21e04517d9a0ff22ace6edb2cee0320265",
+      "sha256": "98d667a5d7b3c24f98661b0e9584a744a59ea6195e8712170d3b403ea24f920c",
       "preview": {
         "eye_offset": [
           0,
-          23.724,
-          63.497
+          39.348,
+          105.311
         ],
-        "far": 139.51
+        "far": 198.455
       },
       "identity": "Bent M-shaped wings, pale head and dark eye stripe",
       "features": [
@@ -935,33 +935,33 @@
       "texture": "assets/models/frigate_interceptor/frigatebird_palette.png",
       "bounds_m": [
         [
-          -44.0,
-          -3.88193416595459,
-          -36.974788665771484
+          -136.0,
+          -11.998705863952637,
+          -114.28571319580078
         ],
         [
-          44.0,
-          5.499720573425293,
-          26.205883026123047
+          136.0,
+          16.999135971069336,
+          81.0
         ]
       ],
       "dimensions_m": [
-        88.0,
-        9.382,
-        63.181
+        272.0,
+        28.998,
+        195.286
       ],
-      "origin_radius_m": 45.11369,
+      "origin_radius_m": 139.44231,
       "vertices": 12320,
       "triangles": 13204,
-      "bytes": 504832,
-      "sha256": "7d8eb025eac616dc627db6e5bea15c96729313d355ef91b1db13ccd386a5f44a",
+      "bytes": 504824,
+      "sha256": "9efbccd027af245bd965549016cb06bb3feb9af98027780e52e498b71c1740fa",
       "preview": {
         "eye_offset": [
           0,
-          49.264,
-          131.852
+          152.271,
+          407.542
         ],
-        "far": 235.868
+        "far": 624.502
       },
       "identity": "Very long angular wings, forked tail and red throat module",
       "features": [
@@ -981,33 +981,33 @@
       "texture": "assets/models/frigate_support/pelican_palette.png",
       "bounds_m": [
         [
-          -43.0,
-          -6.935276031494141,
-          -35.83333206176758
+          -128.0,
+          -20.644542694091797,
+          -106.66666412353516
         ],
         [
-          43.0,
-          9.375406265258789,
-          48.837364196777344
+          128.0,
+          27.908185958862305,
+          145.3763427734375
         ]
       ],
       "dimensions_m": [
-        86.0,
-        16.311,
-        84.671
+        256.0,
+        48.553,
+        252.043
       ],
-      "origin_radius_m": 48.95731,
+      "origin_radius_m": 145.73339,
       "vertices": 14716,
       "triangles": 15628,
-      "bytes": 597468,
-      "sha256": "de1e9cac0cfab194b8d5e4506c5fad50db8d79bef099cbde9db61b4155644fff",
+      "bytes": 597472,
+      "sha256": "9b174238819689ab380ea390ac9fb06c40ba806cc1f680278f03b6b45a83b187",
       "preview": {
         "eye_offset": [
           0,
-          53.461,
-          143.086
+          159.141,
+          425.929
         ],
-        "far": 251.704
+        "far": 650.422
       },
       "identity": "Broad wings, long bill and large armored throat pouch",
       "features": [
@@ -1027,33 +1027,33 @@
       "texture": "assets/models/frigate_assault/golden_eagle_palette.png",
       "bounds_m": [
         [
-          -42.0,
-          -6.135147571563721,
-          -34.50835037231445
+          -132.0,
+          -19.281892776489258,
+          -108.4548110961914
         ],
         [
-          42.0,
-          6.965284824371338,
-          31.558441162109375
+          132.0,
+          21.890893936157227,
+          99.18367004394531
         ]
       ],
       "dimensions_m": [
-        84.0,
-        13.1,
-        66.067
+        264.0,
+        41.173,
+        207.638
       ],
-      "origin_radius_m": 46.32478,
+      "origin_radius_m": 145.59217,
       "vertices": 13685,
       "triangles": 13752,
       "bytes": 552652,
-      "sha256": "e81d4d8b4207b3a1e111b47fc4a965a9f6ac5e2849828c2fdc35b6dd377208d0",
+      "sha256": "00b2f10b53c3ba492d4d3bf6f56b858e75e4eef5f03d78be9581d2c4a7764a93",
       "preview": {
         "eye_offset": [
           0,
-          50.587,
-          135.392
+          158.987,
+          425.516
         ],
-        "far": 240.858
+        "far": 649.84
       },
       "identity": "Broad fingered wings and golden neck/shoulder armor",
       "features": [
@@ -1073,33 +1073,33 @@
       "texture": "assets/models/frigate_tactical/harpy_eagle_palette.png",
       "bounds_m": [
         [
-          -41.0,
-          -6.534611225128174,
-          -36.755210876464844
+          -136.0,
+          -21.675785064697266,
+          -121.91973114013672
         ],
         [
-          41.0,
-          11.60322380065918,
-          33.61323547363281
+          136.0,
+          38.48874282836914,
+          111.49755859375
         ]
       ],
       "dimensions_m": [
-        82.0,
-        18.138,
-        70.368
+        272.0,
+        60.165,
+        233.417
       ],
-      "origin_radius_m": 46.8815,
+      "origin_radius_m": 155.50937,
       "vertices": 13573,
       "triangles": 13604,
-      "bytes": 550488,
-      "sha256": "9011c613ad9694f3b46c4e8ee1490fb1f65e62828fac18e2dc2f4a1a62b69dff",
+      "bytes": 550492,
+      "sha256": "d492e46936ab03c10ad17250214ca5083643ebddf91b945a54f115aa9a12277a",
       "preview": {
         "eye_offset": [
           0,
-          51.195,
-          137.019
+          169.816,
+          454.501
         ],
-        "far": 243.152
+        "far": 690.699
       },
       "identity": "Massive broad wings, slate chest and a split crown crest",
       "features": [
@@ -1127,36 +1127,36 @@
       "height": 3.137
     },
     "escort_interceptor": {
-      "distance": 62.065,
-      "height": 7.846
+      "distance": 102.074,
+      "height": 13.338
     },
     "escort_support": {
-      "distance": 57.217,
-      "height": 7.511
+      "distance": 95.681,
+      "height": 12.65
     },
     "escort_assault": {
-      "distance": 54.506,
-      "height": 8.301
+      "distance": 82.545,
+      "height": 12.938
     },
     "escort_tactical": {
-      "distance": 62.002,
-      "height": 7.604
+      "distance": 108.507,
+      "height": 13.124
     },
     "frigate_interceptor": {
-      "distance": 131.457,
-      "height": 16.14
+      "distance": 403.553,
+      "height": 49.803
     },
     "frigate_support": {
-      "distance": 113.886,
-      "height": 17.863
+      "distance": 353.428,
+      "height": 55.768
     },
     "frigate_assault": {
-      "distance": 126.662,
-      "height": 16.252
+      "distance": 385.522,
+      "height": 50.957
     },
     "frigate_tactical": {
-      "distance": 122.354,
-      "height": 16.409
+      "distance": 416.144,
+      "height": 54.873
     }
   }
 }

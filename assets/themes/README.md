@@ -1,7 +1,10 @@
 # Optional fleet themes
 
-Eight collections for all 24 ships: 192 additional variants. Existing models,
-textures, scripts and the earlier cosmetic library remain unchanged.
+Eight collections for all 24 ships: 192 additional variants. The requested
+Moray follow-up straightens its default model and updates all twelve cosmetic
+variants. The later sizing revision applies native 1:4:16 dimensions to all ships
+and skins, preserving Patrols. See `artifacts/scale/README.md` and
+`artifacts/moray/README.md`.
 
 | Collection | Treatment | Sprint |
 |---|---|---|

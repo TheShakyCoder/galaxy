@@ -351,7 +351,7 @@ M.SHIPS = {
 		-- plan.md §4 pending real Escort-tier fitting design.
 		components = {},
 		slot_positions = {},
-		flight_camera = { distance = 62.065, height = 7.846 },
+		flight_camera = { distance = 102.074, height = 13.338 },
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -403,7 +403,7 @@ M.SHIPS = {
 		-- number exists yet, so left empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
-		flight_camera = { distance = 57.217, height = 7.511 },
+		flight_camera = { distance = 95.681, height = 12.650 },
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -471,7 +471,7 @@ M.SHIPS = {
 		-- empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
-		flight_camera = { distance = 62.002, height = 7.604 },
+		flight_camera = { distance = 108.507, height = 13.124 },
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -523,11 +523,11 @@ M.SHIPS = {
 		-- number exists yet, so left empty rather than guessed (§0/§4).
 		components = {},
 		slot_positions = {},
-		flight_camera = { distance = 54.506, height = 8.301 },
+		flight_camera = { distance = 82.545, height = 12.938 },
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
-			-- Moray: Curving eel body, continuous dorsal ribbon and heavy jaw.
+			-- Moray: Straight symmetrical eel body, centered dorsal ribbon and heavy jaw.
 			accord = { name = "Moray", model = "/assets/models/escort_assault/moray.model", weapon_gui = "<TBD>" },
 			-- Goshawk: Broad rounded wings, long barred tail and pale eyebrow.
 			swarm = { name = "Goshawk", model = "/assets/models/escort_assault/goshawk.model", weapon_gui = "<TBD>" },
@@ -535,7 +535,7 @@ M.SHIPS = {
 	},
 	["frigate_support"] = {
 		class = "Frigate",
-		flight_camera = { distance = 113.886, height = 17.863 },
+		flight_camera = { distance = 353.428, height = 55.768 },
 		-- `role` (new field, plan.md §2.1.2's Interceptor/Support/Assault/Tactical
 		-- naming-matrix rows): Support. Deliberately separate from `class` above,
 		-- which stays the size tier (Patrol/Escort/Frigate/Carrier) - outpost.gui_script
@@ -595,7 +595,7 @@ M.SHIPS = {
 	},
 	["frigate_interceptor"] = {
 		class = "Frigate",
-		flight_camera = { distance = 131.457, height = 16.140 },
+		flight_camera = { distance = 403.553, height = 49.803 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Interceptor.
 		role = "Interceptor",
 		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
@@ -647,7 +647,7 @@ M.SHIPS = {
 	},
 	["frigate_tactical"] = {
 		class = "Frigate",
-		flight_camera = { distance = 122.354, height = 16.409 },
+		flight_camera = { distance = 416.144, height = 54.873 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Tactical.
 		role = "Tactical",
 		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
@@ -699,7 +699,7 @@ M.SHIPS = {
 	},
 	["frigate_assault"] = {
 		class = "Frigate",
-		flight_camera = { distance = 126.662, height = 16.252 },
+		flight_camera = { distance = 385.522, height = 50.957 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Assault.
 		role = "Assault",
 		-- Full stat block: the unmodified universal baseline (§2.1.1), same as

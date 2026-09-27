@@ -48,9 +48,9 @@ def build(ship):
         h=Hull([(-6,.20,.19),(-4.5,.42,.34),(-2,.66,.52),(0,.91,.65),
                 (3,1.14,.65),(4.7,1.00,.55),(5.8,.65,.40),(6.2,.2,.23)])
     elif s=='moray':
-        h=Hull([(-8,.10,.14,0,-.45),(-6,.29,.43,0,-.70),(-4,.44,.67,0,-.20),
-                (-2,.64,.85,0,.65),(0,.76,.96,0,.50),(2,.95,1.04,0,0),
-                (4,1.15,1.1,0,0),(5.5,.90,.70,0,0),(6.2,.20,.25,0,0)])
+        h=Hull([(-8,.10,.14),(-6,.29,.43),(-4,.44,.67),
+                (-2,.64,.85),(0,.76,.96),(2,.95,1.04),
+                (4,1.15,1.1),(5.5,.90,.70),(6.2,.20,.25)])
     elif s=='lionfish': h=standard(1.40,1.70)
     elif s=='marlin':
         h=Hull([(-5.6,.20,.26),(-4.1,.44,.57),(-1.7,.84,1.12),(1,1.11,1.39),
@@ -105,14 +105,29 @@ def build(ship):
         cockpit(m,h,4.8,5.55,.26)
     elif s=='moray':
         eye(m,h,4.85,.30); gill(m,h,3.25); cockpit(m,h,3.3,4.45,.28)
-        # A continuous low ribbon follows the eel's bent spine and tail.
-        for i in range(28):
-            z0=-7.6+i*.4; z1=z0+.41
-            p0=h.point(z0,0); p1=h.point(z1,0)
-            m.face([p0,p1,add(p1,(0,.48,0)),add(p0,(0,.48,0))],'fin',(1,0,0))
-            m.face([add(p0,(-.055,0,0)),add(p0,(-.055,.48,0)),add(p1,(-.055,.48,0)),add(p1,(-.055,0,0))],'fin',(-1,0,0))
-            m.tube([add(p0,(0,.47,0)),add(p1,(0,.47,0))],.032,'edge',6)
-        m.tube([(-.72,-.27,5.35),(0,-.38,6.14),(.72,-.27,5.35)],.055,'dark',8)
+        # One centered ribbon, with shared stations and closed edges instead of
+        # overlapping offset patches. Keep the long eel profile on a straight keel.
+        stations=[]; crest=[]
+        for i in range(57):
+            t=i/56; p=h.point(-7.6+11.2*t,0)
+            height=.12+.36*math.sin(math.pi*t)**.45
+            stations.append([add(p,(-.0275,-.015,0)),add(p,(.0275,-.015,0)),
+                             add(p,(.0275,height,0)),add(p,(-.0275,height,0))])
+            crest.append(add(p,(0,height,0)))
+        for a,b in zip(stations,stations[1:]):
+            for j,n in enumerate(((0,-1,0),(1,0,0),(0,1,0),(-1,0,0))):
+                k=(j+1)%4; m.face([a[j],a[k],b[k],b[j]],'fin',n)
+        m.face(stations[0],'fin',(0,0,-1));m.face(stations[-1],'fin',(0,0,1))
+        m.tube(crest,.032,'edge',8)
+        # Mirror the mouth trim explicitly as well: transporting a tube around
+        # the full jaw can give its end rings slightly different orientations.
+        start,first_index=len(m.p),len(m.idx)
+        m.tube([(0,-.38,6.14),(.72,-.27,5.35)],.055,'dark',8)
+        end=len(m.p)
+        for p,n,uv in zip(m.p[start:end],m.n[start:end],m.uv[start:end]):
+            m.vertex((-p[0],p[1],p[2]),(-n[0],n[1],n[2]),uv)
+        for j in range(first_index,len(m.idx),3):
+            a,b,c=m.idx[j:j+3];m.idx.extend((a+end-start,c+end-start,b+end-start))
     elif s=='lionfish':
         fork(m,root=-5.3,length=2.1,height=1.6); eye(m,h,4.7,.34); gill(m,h,3.0)
         cockpit(m,h,3.3,4.6,.3)

@@ -44,8 +44,12 @@ species-specific wings, beaks, eyes, tails and crests.
 Maximum physical dimensions (body length or wingspan, whichever is greater):
 
 - Patrol: **15–17 m**. Sardine remains exactly 16.2 m long.
-- Escort: **38–42 m**.
-- Frigate: **78–88 m**.
+- Escort: **60–68 m**.
+- Frigate: **240–272 m**.
+
+Each same-faction, same-role trio follows 1:4:16 in longest dimension. See the
+[actual-scale preview](../scale/index.html) and [revision notes](../scale/README.md).
+The Moray now has the requested straight, symmetrical hull.
 
 This intentionally replaces inconsistent old asset scales. Both factions follow
 the same size bands. Interceptors carry additional visible engine nacelles;

@@ -1,0 +1,190 @@
+{
+  "result": "PASS",
+  "comparison_base": "82aa1bfba9e974de7f3c04a9e91f925e5997c520",
+  "ships": 24,
+  "cosmetics": 288,
+  "total_glbs": 312,
+  "native_size_ratios": "1:4:16 by longest dimension within each faction/role",
+  "patrol_glbs_byte_identical": 104,
+  "uniform_scale_glbs_checked": 208,
+  "position_tolerance_m": 0.0002,
+  "topology_preserved": true,
+  "textures_preserved": true,
+  "local_and_remote_reference_same_native_assets": true,
+  "only_generated_cameras_changed": true,
+  "rows": [
+    {
+      "ship": "sardine",
+      "size": "patrol",
+      "extent_m": 16.2,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "pilotfish",
+      "size": "patrol",
+      "extent_m": 16.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "piranha",
+      "size": "patrol",
+      "extent_m": 15.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "anglerfish",
+      "size": "patrol",
+      "extent_m": 17.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "barracuda",
+      "size": "escort",
+      "extent_m": 64.8,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.6199999999999999
+    },
+    {
+      "ship": "remora",
+      "size": "escort",
+      "extent_m": 64.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.6842105263157894
+    },
+    {
+      "ship": "moray",
+      "size": "escort",
+      "extent_m": 60.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.4285714285714286
+    },
+    {
+      "ship": "lionfish",
+      "size": "escort",
+      "extent_m": 68.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.7894736842105263
+    },
+    {
+      "ship": "marlin",
+      "size": "frigate",
+      "extent_m": 259.2,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.0857142857142854
+    },
+    {
+      "ship": "manta_ray",
+      "size": "frigate",
+      "extent_m": 256.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.1219512195121952
+    },
+    {
+      "ship": "tiger_shark",
+      "size": "frigate",
+      "extent_m": 240.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.0
+    },
+    {
+      "ship": "hammerhead",
+      "size": "frigate",
+      "extent_m": 272.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.4871794871794872
+    },
+    {
+      "ship": "hummingbird",
+      "size": "patrol",
+      "extent_m": 17.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "oxpecker",
+      "size": "patrol",
+      "extent_m": 16.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "shrike",
+      "size": "patrol",
+      "extent_m": 16.5,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "kingfisher",
+      "size": "patrol",
+      "extent_m": 17.0,
+      "patrol_ratio": 1,
+      "scale_from_previous": 1.0
+    },
+    {
+      "ship": "falcon",
+      "size": "escort",
+      "extent_m": 68.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.7
+    },
+    {
+      "ship": "egret",
+      "size": "escort",
+      "extent_m": 64.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.6
+    },
+    {
+      "ship": "goshawk",
+      "size": "escort",
+      "extent_m": 66.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.5714285714285714
+    },
+    {
+      "ship": "osprey",
+      "size": "escort",
+      "extent_m": 68.0,
+      "patrol_ratio": 4,
+      "scale_from_previous": 1.6585365853658536
+    },
+    {
+      "ship": "frigatebird",
+      "size": "frigate",
+      "extent_m": 272.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.090909090909091
+    },
+    {
+      "ship": "pelican",
+      "size": "frigate",
+      "extent_m": 256.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 2.9767441860465116
+    },
+    {
+      "ship": "golden_eagle",
+      "size": "frigate",
+      "extent_m": 264.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.142857142857143
+    },
+    {
+      "ship": "harpy_eagle",
+      "size": "frigate",
+      "extent_m": 272.0,
+      "patrol_ratio": 16,
+      "scale_from_previous": 3.317073170731707
+    }
+  ],
+  "not_tested": [
+    "Defold runtime",
+    "live multiplayer",
+    "device performance"
+  ]
+}
