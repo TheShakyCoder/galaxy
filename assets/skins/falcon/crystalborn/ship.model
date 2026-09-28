@@ -1,0 +1,4 @@
+mesh: "/assets/skins/falcon/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/falcon/crystalborn/albedo.png"
+name: "falcon_crystalborn"

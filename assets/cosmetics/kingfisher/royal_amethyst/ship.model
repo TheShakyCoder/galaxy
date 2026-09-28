@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_tactical/kingfisher.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/kingfisher/royal_amethyst/albedo.png"
-name: "kingfisher_royal_amethyst"

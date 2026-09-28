@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_assault/goshawk.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/aurora/albedo.png"
+name: "goshawk_aurora"

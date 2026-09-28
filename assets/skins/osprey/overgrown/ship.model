@@ -1,0 +1,4 @@
+mesh: "/assets/skins/osprey/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/osprey/overgrown/albedo.png"
+name: "osprey_overgrown"

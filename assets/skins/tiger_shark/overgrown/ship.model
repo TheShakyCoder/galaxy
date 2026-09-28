@@ -1,0 +1,4 @@
+mesh: "/assets/skins/tiger_shark/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/tiger_shark/overgrown/albedo.png"
+name: "tiger_shark_overgrown"

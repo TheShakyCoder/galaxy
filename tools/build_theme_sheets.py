@@ -31,6 +31,6 @@ if __name__=='__main__':
     import argparse
     p=argparse.ArgumentParser();p.add_argument('--sprint',type=int);args=p.parse_args()
     suffix=f'-sprint-{args.sprint}' if args.sprint else ''
-    cat=json.loads((ROOT/'assets/themes'/('catalog'+suffix+'.json')).read_text())
+    cat=json.loads((ROOT/'assets/skins/catalogs'/('themes'+suffix+'.json')).read_text())
     sheets(cat)
     print('Theme contact sheets complete.')

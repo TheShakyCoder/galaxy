@@ -1,0 +1,4 @@
+mesh: "/assets/skins/falcon/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/falcon/overgrown/albedo.png"
+name: "falcon_overgrown"

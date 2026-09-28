@@ -1,0 +1,4 @@
+mesh: "/assets/skins/falcon/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/falcon/starlight/albedo.png"
+name: "falcon_starlight"

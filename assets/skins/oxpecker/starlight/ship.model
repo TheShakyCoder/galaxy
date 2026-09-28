@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/starlight/albedo.png"
+name: "oxpecker_starlight"

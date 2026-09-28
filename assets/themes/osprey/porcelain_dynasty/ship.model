@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/porcelain_dynasty/albedo.png"
-name: "osprey_porcelain_dynasty"

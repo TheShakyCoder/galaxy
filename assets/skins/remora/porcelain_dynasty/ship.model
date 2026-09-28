@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/porcelain_dynasty/albedo.png"
+name: "remora_porcelain_dynasty"

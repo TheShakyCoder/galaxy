@@ -1,4 +1,0 @@
-mesh: "/assets/themes/tiger_shark/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/tiger_shark/crystalborn/albedo.png"
-name: "tiger_shark_crystalborn"

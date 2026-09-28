@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/abyssal/albedo.png"
+name: "remora_abyssal"

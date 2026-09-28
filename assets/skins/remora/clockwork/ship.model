@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/clockwork/albedo.png"
+name: "remora_clockwork"

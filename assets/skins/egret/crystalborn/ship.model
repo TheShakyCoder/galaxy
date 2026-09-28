@@ -1,0 +1,4 @@
+mesh: "/assets/skins/egret/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/egret/crystalborn/albedo.png"
+name: "egret_crystalborn"

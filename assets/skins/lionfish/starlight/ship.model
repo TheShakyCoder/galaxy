@@ -1,0 +1,4 @@
+mesh: "/assets/skins/lionfish/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/lionfish/starlight/albedo.png"
+name: "lionfish_starlight"

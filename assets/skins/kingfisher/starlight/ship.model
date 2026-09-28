@@ -1,0 +1,4 @@
+mesh: "/assets/skins/kingfisher/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/kingfisher/starlight/albedo.png"
+name: "kingfisher_starlight"

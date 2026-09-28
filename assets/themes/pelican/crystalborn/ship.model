@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pelican/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pelican/crystalborn/albedo.png"
-name: "pelican_crystalborn"

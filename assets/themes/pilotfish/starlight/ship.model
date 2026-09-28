@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pilotfish/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pilotfish/starlight/albedo.png"
-name: "pilotfish_starlight"

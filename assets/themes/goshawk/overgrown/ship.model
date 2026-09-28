@@ -1,4 +1,0 @@
-mesh: "/assets/themes/goshawk/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/goshawk/overgrown/albedo.png"
-name: "goshawk_overgrown"

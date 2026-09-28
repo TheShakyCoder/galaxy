@@ -1,4 +1,0 @@
-mesh: "/assets/themes/goshawk/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/goshawk/abyssal/albedo.png"
-name: "goshawk_abyssal"

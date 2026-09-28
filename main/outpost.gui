@@ -154,7 +154,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_overview"
-  position { x: 600.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 480.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.22 y: 0.38 z: 0.5 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -172,7 +172,7 @@ nodes {
   id: "tab_overview_label"
   text: "Overview"
   font: "default_font"
-  position { x: 600.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 480.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -192,7 +192,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_fitting"
-  position { x: 840.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 720.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -210,7 +210,7 @@ nodes {
   id: "tab_fitting_label"
   text: "Fitting"
   font: "default_font"
-  position { x: 840.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 720.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -230,7 +230,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_ships"
-  position { x: 1080.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 960.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -248,7 +248,7 @@ nodes {
   id: "tab_ships_label"
   text: "Ships"
   font: "default_font"
-  position { x: 1080.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 960.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -268,7 +268,7 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "tab_map"
-  position { x: 1320.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 1200.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -286,7 +286,45 @@ nodes {
   id: "tab_map_label"
   text: "Map"
   font: "default_font"
-  position { x: 1320.0 y: 968.0 z: 0.0 w: 1.0 }
+  position { x: 1200.0 y: 968.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "tab_skins"
+  position { x: 1440.0 y: 968.0 z: 0.0 w: 1.0 }
+  size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
+  color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "tab_skins_label"
+  text: "Skins"
+  font: "default_font"
+  position { x: 1440.0 y: 968.0 z: 0.0 w: 1.0 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -411,7 +449,7 @@ nodes {
   type: TYPE_BOX
   id: "ship_visual"
   position { x: 260.0 y: 470.0 z: 0.0 w: 1.0 }
-  size { x: 260.0 y: 640.0 z: 0.0 w: 1.0 }
+  size { x: 440.0 y: 640.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
@@ -916,6 +954,66 @@ nodes {
   line_break: false
   text_leading: 1.0
   text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "skins_heading"
+  text: "Skins"
+  font: "default_font"
+  position { x: 960.0 y: 800.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 50.0 z: 0.0 w: 1.0 }
+  color { x: 0.7 y: 0.75 z: 0.8 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "skins_hint"
+  text: "Owned skins: click to equip.  Others: click to buy."
+  font: "default_font"
+  position { x: 960.0 y: 755.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.5 y: 0.55 z: 0.62 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "skins_panel"
+  position { x: 960.0 y: 447.5 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 575.0 z: 0.0 w: 1.0 }
+  color { x: 0.08 y: 0.09 z: 0.14 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
   parent: ""
   layer: ""
 }

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/kingfisher/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/kingfisher/abyssal/albedo.png"
-name: "kingfisher_abyssal"

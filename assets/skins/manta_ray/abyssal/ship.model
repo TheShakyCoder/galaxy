@@ -1,0 +1,4 @@
+mesh: "/assets/skins/manta_ray/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/manta_ray/abyssal/albedo.png"
+name: "manta_ray_abyssal"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/starlight/albedo.png"
+name: "barracuda_starlight"

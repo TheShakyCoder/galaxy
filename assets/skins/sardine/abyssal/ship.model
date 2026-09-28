@@ -1,0 +1,4 @@
+mesh: "/assets/skins/sardine/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/sardine/abyssal/albedo.png"
+name: "sardine_abyssal"

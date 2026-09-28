@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hummingbird/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hummingbird/abyssal/albedo.png"
+name: "hummingbird_abyssal"

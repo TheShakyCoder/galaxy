@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_interceptor/marlin.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/marlin/solar_regatta/albedo.png"
+name: "marlin_solar_regatta"

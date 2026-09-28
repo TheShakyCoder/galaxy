@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hammerhead/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hammerhead/corsair/albedo.png"
-name: "hammerhead_corsair"

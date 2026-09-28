@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hummingbird/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hummingbird/toybox/albedo.png"
+name: "hummingbird_toybox"

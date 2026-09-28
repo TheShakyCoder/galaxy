@@ -21,7 +21,7 @@ def build(ship,key,root):
     if THEMES[key]['kind']=='model':
         from themes.geometry import detail
         features=detail(mesh,key)
-    folder=Path('assets/themes')/ship.slug/key; (root/folder).mkdir(parents=True,exist_ok=True)
+    folder=Path('assets/skins')/ship.slug/key; (root/folder).mkdir(parents=True,exist_ok=True)
     glb=folder/'model.glb'; texture=folder/'albedo.png'; model=folder/'ship.model'
     image=paint(ship,key); export(mesh,image,root/glb); image.save(root/texture,optimize=True)
     (root/model).write_text(f'mesh: "/{glb.as_posix()}"\nmaterial: "/builtins/materials/model.material"\ntextures: "/{texture.as_posix()}"\nname: "{ship.slug}_{key}"\n',encoding='utf-8',newline='\n')
@@ -47,9 +47,9 @@ def main():
     for ship in ([BY_SLUG[args.ship]] if args.ship else SHIPS):
         for key in keys:rows.append(build(ship,key,args.output_root))
         print(ship.name+': '+', '.join(keys),flush=True)
-    folder=args.output_root/'assets/themes';folder.mkdir(parents=True,exist_ok=True)
+    folder=args.output_root/'assets/skins/catalogs';folder.mkdir(parents=True,exist_ok=True)
     suffix=f'-{args.ship}' if args.ship else ''
-    name='catalog'+(f'-sprint-{args.sprint}' if args.sprint else f'-{args.theme}' if args.theme else '')+suffix+'.json'
+    name='themes'+(f'-sprint-{args.sprint}' if args.sprint else f'-{args.theme}' if args.theme else '')+suffix+'.json'
     doc=dict(schema_version=1,source_commit='b63ffcc',scope='Optional art resources. No shop/equip integration.',collections={k:THEMES[k] for k in keys},entries=rows)
     (folder/name).write_text(json.dumps(doc,indent=2)+'\n',encoding='utf-8',newline='\n')
     print(f'Built {len(rows)} variants: {name}')

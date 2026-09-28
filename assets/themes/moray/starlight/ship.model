@@ -1,4 +1,0 @@
-mesh: "/assets/themes/moray/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/moray/starlight/albedo.png"
-name: "moray_starlight"

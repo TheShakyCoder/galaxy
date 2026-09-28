@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_interceptor/sardine.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/sardine/aurora/albedo.png"
-name: "sardine_aurora"

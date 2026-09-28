@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_support/pilotfish.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/pilotfish/aurora/albedo.png"
-name: "pilotfish_aurora"

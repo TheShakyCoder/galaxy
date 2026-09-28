@@ -23,7 +23,7 @@ def preserved_files():
     from check_moray_revision import preserved_assets
     preserved_assets()
     checked=0
-    for path in (ROOT/'assets/themes').glob('catalog-sprint-[1-4].json'):
+    for path in (ROOT/'assets/skins/catalogs').glob('themes-sprint-[1-4].json'):
         for r in json.loads(path.read_text())['entries']:
             assert sha(ROOT/r['glb'])==r['sha256'],'Previous sprint GLB changed: '+r['id']
             assert sha(ROOT/r['texture'].lstrip('/'))==r['texture_sha256'],'Previous sprint texture changed: '+r['id']
@@ -34,7 +34,7 @@ def preserved_files():
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--sprint',type=int,choices=range(1,5));p.add_argument('--rebuild',action='store_true');p.add_argument('--renders',action='store_true');args=p.parse_args()
     suffix=f'-sprint-{args.sprint}' if args.sprint else ''
-    catalog_path=Path('assets/themes')/('catalog'+suffix+'.json');cat=json.loads((ROOT/catalog_path).read_text());rows=cat['entries']
+    catalog_path=Path('assets/skins/catalogs')/('themes'+suffix+'.json');cat=json.loads((ROOT/catalog_path).read_text());rows=cat['entries']
     expected=EXPECTED[args.sprint] if args.sprint else set.union(*EXPECTED.values())
     base=json.loads((ROOT/'artifacts/fleet/manifest.json').read_text());fleet={r['slug']:r for r in base['ships']}
     assert set(cat['collections'])==expected and len(rows)==24*len(expected)

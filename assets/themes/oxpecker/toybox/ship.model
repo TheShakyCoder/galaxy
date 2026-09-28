@@ -1,4 +1,0 @@
-mesh: "/assets/themes/oxpecker/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/oxpecker/toybox/albedo.png"
-name: "oxpecker_toybox"

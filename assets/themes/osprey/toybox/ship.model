@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/toybox/albedo.png"
-name: "osprey_toybox"

@@ -15,17 +15,24 @@ def git(*args):
     return subprocess.check_output(['git','-c','safe.directory='+ROOT.as_posix(),*args],cwd=ROOT)
 
 
+def moved_path(text):
+    return text.replace('assets/themes/','assets/skins/').replace('assets/cosmetics/','assets/skins/')
+
+
 def preserved_assets():
     fleet=json.loads((ROOT/'artifacts/fleet/manifest.json').read_text())
     old_fleet=json.loads(git('show',BASE+':artifacts/fleet/manifest.json'))
     old={r['slug']:r for r in old_fleet['ships']}
     allowed=set();moray={}
-    catalogs=['assets/cosmetics/catalog.json','assets/themes/catalog.json']+[f'assets/themes/catalog-sprint-{i}.json' for i in range(1,5)]
+    # (path at BASE, current path): both libraries later moved to assets/skins.
+    catalogs=[('assets/cosmetics/catalog.json','assets/skins/catalogs/cosmetics.json'),('assets/themes/catalog.json','assets/skins/catalogs/themes.json')]
+    catalogs+=[(f'assets/themes/catalog-sprint-{i}.json',f'assets/skins/catalogs/themes-sprint-{i}.json') for i in range(1,5)]
     for r in fleet['ships']:
         if r['class']=='patrol':assert r==old[r['slug']],'Patrol metadata changed'
         else:allowed.add(r['glb'])
-    for path in catalogs:
-        before=json.loads(git('show',BASE+':'+path));after=json.loads((ROOT/path).read_text())
+    for old_path,path in catalogs:
+        before=moved_path(git('show',BASE+':'+old_path).decode())
+        before=json.loads(before);after=json.loads((ROOT/path).read_text())
         assert {k:v for k,v in before.items() if k!='entries'}=={k:v for k,v in after.items() if k!='entries'}
         old_rows={r['id']:r for r in before['entries']};new_rows={r['id']:r for r in after['entries']}
         assert old_rows.keys()==new_rows.keys()
@@ -34,8 +41,13 @@ def preserved_assets():
             else:allowed.add(r['glb'])
             if r['ship']=='moray':moray[key]=r
         allowed.add(path)
-    allowed.update(('assets/themes/README.md','assets/cosmetics/README.md'))
-    changed=set(git('diff','--name-only','--diff-filter=MD',BASE,'--','assets').decode().splitlines())
+    allowed.update(('assets/themes/README.md','assets/cosmetics/README.md','assets/skins/README.md','assets/skins/.gitattributes'))
+    changed=set(git('diff','--name-only','-M','--diff-filter=MD',BASE,'--','assets').decode().splitlines())
+    for path in list(changed):
+        moved=moved_path(path)
+        if moved!=path and (ROOT/moved).is_file():
+            changed.discard(path)
+            if moved_path(git('show',BASE+':'+path).decode())!=(ROOT/moved).read_text():changed.add(moved)
     assert changed<=allowed,'Unexpected resource changes: '+str(changed-allowed)
     game=set(git('diff','--name-only',BASE,'--','main','game.project').decode().splitlines())
     assert game<={'main/outpost.gui_script','main/data/ships.lua'}
@@ -71,14 +83,16 @@ def main():
         factor=reference*multiplier/max(old_ships[r['slug']]['dimensions_m']);ratios[r['slug']]=factor
         all_assets.append((r['glb'],factor))
         results.append(dict(ship=r['slug'],size=r['class'],extent_m=round(extent,4),patrol_ratio=multiplier,scale_from_previous=factor))
+    base_paths={}  # skins lived under assets/<library>/ at BASE
     for library in ('cosmetics','themes'):
-        cat=json.loads((ROOT/f'assets/{library}/catalog.json').read_text())
+        cat=json.loads((ROOT/f'assets/skins/catalogs/{library}.json').read_text())
         all_assets.extend((r['glb'],ratios[r['ship']]) for r in cat['entries'])
+        base_paths.update((r['glb'],r['glb'].replace('assets/skins/',f'assets/{library}/')) for r in cat['entries'])
     folder=ROOT/'artifacts/scale';folder.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='rebuild-',dir=folder) as temp:
         prior=Path(temp)/'previous.glb'
         for path,factor in all_assets:
-            original=git('show',BASE+':'+path)
+            original=git('show',BASE+':'+base_paths.get(path,path))
             if abs(factor-1)<1e-8:
                 assert (ROOT/path).read_bytes()==original,'Patrol binary changed: '+path
                 continue

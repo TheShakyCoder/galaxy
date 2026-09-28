@@ -1,4 +1,0 @@
-mesh: "/assets/themes/lionfish/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/lionfish/crystalborn/albedo.png"
-name: "lionfish_crystalborn"

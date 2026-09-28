@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/porcelain_dynasty/albedo.png"
+name: "oxpecker_porcelain_dynasty"

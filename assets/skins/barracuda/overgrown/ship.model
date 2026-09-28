@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/overgrown/albedo.png"
+name: "barracuda_overgrown"

@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/tiger_shark/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/tiger_shark/clockwork/albedo.png"
-name: "tiger_shark_clockwork"

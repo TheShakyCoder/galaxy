@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/overgrown/albedo.png"
+name: "frigatebird_overgrown"

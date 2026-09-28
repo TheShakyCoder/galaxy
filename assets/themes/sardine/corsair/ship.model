@@ -1,4 +1,0 @@
-mesh: "/assets/themes/sardine/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/sardine/corsair/albedo.png"
-name: "sardine_corsair"

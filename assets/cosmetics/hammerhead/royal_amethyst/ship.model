@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_tactical/hammerhead.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/hammerhead/royal_amethyst/albedo.png"
-name: "hammerhead_royal_amethyst"

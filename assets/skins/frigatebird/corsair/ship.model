@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/corsair/albedo.png"
+name: "frigatebird_corsair"

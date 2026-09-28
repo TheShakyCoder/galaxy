@@ -1,4 +1,0 @@
-mesh: "/assets/themes/shrike/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/shrike/starlight/albedo.png"
-name: "shrike_starlight"

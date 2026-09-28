@@ -1,4 +1,0 @@
-mesh: "/assets/models/escort_tactical/osprey.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/osprey/royal_amethyst/albedo.png"
-name: "osprey_royal_amethyst"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/frigatebird/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/frigatebird/toybox/albedo.png"
-name: "frigatebird_toybox"

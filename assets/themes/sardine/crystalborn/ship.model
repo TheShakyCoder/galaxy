@@ -1,4 +1,0 @@
-mesh: "/assets/themes/sardine/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/sardine/crystalborn/albedo.png"
-name: "sardine_crystalborn"

@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_interceptor/marlin.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/marlin/aurora/albedo.png"
-name: "marlin_aurora"

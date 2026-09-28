@@ -1,0 +1,4 @@
+mesh: "/assets/skins/shrike/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/shrike/abyssal/albedo.png"
+name: "shrike_abyssal"

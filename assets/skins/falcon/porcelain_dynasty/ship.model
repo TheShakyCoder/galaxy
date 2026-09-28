@@ -1,0 +1,4 @@
+mesh: "/assets/skins/falcon/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/falcon/porcelain_dynasty/albedo.png"
+name: "falcon_porcelain_dynasty"

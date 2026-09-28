@@ -1,0 +1,4 @@
+mesh: "/assets/skins/goshawk/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/crystalborn/albedo.png"
+name: "goshawk_crystalborn"

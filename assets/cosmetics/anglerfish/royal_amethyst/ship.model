@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_tactical/anglerfish.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/anglerfish/royal_amethyst/albedo.png"
-name: "anglerfish_royal_amethyst"

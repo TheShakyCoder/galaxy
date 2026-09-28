@@ -1,0 +1,4 @@
+mesh: "/assets/skins/osprey/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/osprey/clockwork/albedo.png"
+name: "osprey_clockwork"

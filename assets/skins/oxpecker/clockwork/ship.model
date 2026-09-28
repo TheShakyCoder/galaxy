@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/clockwork/albedo.png"
+name: "oxpecker_clockwork"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/harpy_eagle/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/harpy_eagle/toybox/albedo.png"
+name: "harpy_eagle_toybox"

@@ -36,7 +36,7 @@ remain to be tested during integration.
 
 ```text
 python tools/build_theme_library.py --sprint 1
-blender --background --python tools/render_theme_review.py -- --catalog assets/themes/catalog-sprint-1.json
+blender --background --python tools/render_theme_review.py -- --catalog assets/skins/catalogs/themes-sprint-1.json
 python tools/build_theme_sheets.py --sprint 1
 python tools/check_theme_library.py --sprint 1 --rebuild --renders
 python tools/build_theme_gallery.py --sprint 1

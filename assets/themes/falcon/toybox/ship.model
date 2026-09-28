@@ -1,4 +1,0 @@
-mesh: "/assets/themes/falcon/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/falcon/toybox/albedo.png"
-name: "falcon_toybox"

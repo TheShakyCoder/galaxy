@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_support/pelican.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/pelican/aurora/albedo.png"
-name: "pelican_aurora"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hammerhead/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hammerhead/starlight/albedo.png"
+name: "hammerhead_starlight"

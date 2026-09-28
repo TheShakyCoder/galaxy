@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pelican/grand_prix/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pelican/grand_prix/albedo.png"
-name: "pelican_grand_prix"

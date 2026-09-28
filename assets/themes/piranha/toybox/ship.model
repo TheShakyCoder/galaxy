@@ -1,4 +1,0 @@
-mesh: "/assets/themes/piranha/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/piranha/toybox/albedo.png"
-name: "piranha_toybox"

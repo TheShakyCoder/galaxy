@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/toybox/albedo.png"
+name: "oxpecker_toybox"

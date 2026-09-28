@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pilotfish/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pilotfish/crystalborn/albedo.png"
+name: "pilotfish_crystalborn"

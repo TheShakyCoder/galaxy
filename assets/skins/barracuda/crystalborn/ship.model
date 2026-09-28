@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/crystalborn/albedo.png"
+name: "barracuda_crystalborn"

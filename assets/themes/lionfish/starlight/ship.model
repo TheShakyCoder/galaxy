@@ -1,4 +1,0 @@
-mesh: "/assets/themes/lionfish/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/lionfish/starlight/albedo.png"
-name: "lionfish_starlight"

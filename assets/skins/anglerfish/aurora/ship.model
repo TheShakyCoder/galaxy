@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_tactical/anglerfish.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/anglerfish/aurora/albedo.png"
+name: "anglerfish_aurora"

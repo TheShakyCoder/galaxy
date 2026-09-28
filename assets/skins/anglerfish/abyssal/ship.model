@@ -1,0 +1,4 @@
+mesh: "/assets/skins/anglerfish/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/anglerfish/abyssal/albedo.png"
+name: "anglerfish_abyssal"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/anglerfish/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/anglerfish/grand_prix/albedo.png"
+name: "anglerfish_grand_prix"

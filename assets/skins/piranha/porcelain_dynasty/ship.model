@@ -1,0 +1,4 @@
+mesh: "/assets/skins/piranha/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/piranha/porcelain_dynasty/albedo.png"
+name: "piranha_porcelain_dynasty"

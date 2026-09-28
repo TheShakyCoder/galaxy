@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/toybox/albedo.png"
+name: "pelican_toybox"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/lionfish/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/lionfish/corsair/albedo.png"
-name: "lionfish_corsair"

@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/goshawk/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/goshawk/clockwork/albedo.png"
-name: "goshawk_clockwork"

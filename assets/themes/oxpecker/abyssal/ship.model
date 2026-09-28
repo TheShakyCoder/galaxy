@@ -1,4 +1,0 @@
-mesh: "/assets/themes/oxpecker/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/oxpecker/abyssal/albedo.png"
-name: "oxpecker_abyssal"

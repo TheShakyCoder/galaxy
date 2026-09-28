@@ -1,4 +1,0 @@
-mesh: "/assets/themes/lionfish/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/lionfish/abyssal/albedo.png"
-name: "lionfish_abyssal"

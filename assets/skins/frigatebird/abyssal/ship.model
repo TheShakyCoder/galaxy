@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/abyssal/albedo.png"
+name: "frigatebird_abyssal"

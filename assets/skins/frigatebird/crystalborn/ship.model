@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/crystalborn/albedo.png"
+name: "frigatebird_crystalborn"

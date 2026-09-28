@@ -1,4 +1,0 @@
-mesh: "/assets/themes/remora/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/remora/starlight/albedo.png"
-name: "remora_starlight"

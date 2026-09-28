@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/porcelain_dynasty/albedo.png"
+name: "frigatebird_porcelain_dynasty"

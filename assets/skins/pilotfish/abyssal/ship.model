@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pilotfish/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pilotfish/abyssal/albedo.png"
+name: "pilotfish_abyssal"

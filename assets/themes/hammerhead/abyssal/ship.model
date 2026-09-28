@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hammerhead/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hammerhead/abyssal/albedo.png"
-name: "hammerhead_abyssal"

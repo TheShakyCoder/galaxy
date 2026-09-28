@@ -6,6 +6,9 @@
 -- Registered-account session state (auth token, permanent faction, etc.,
 -- §3.2/§3.3) is separate, not-yet-built work.
 
+local skins = require("main.data.skins")
+local skin_prices = require("main.data.skin_prices")
+
 local M = {}
 
 M.faction = nil -- "accord" | "swarm" | nil (not chosen yet)
@@ -21,6 +24,13 @@ M.active_ship_id = nil -- which owned ship is currently selected/fitted
 -- M.sell_ship so a later re-purchase of that same ship starts fresh at the
 -- basic tier, same as a brand-new copy would.
 M.advanced_ships = nil
+-- Ship skins (assets/skins/README.md): `owned_skins` is a { [skin_id] = true }
+-- set of bought skins, keyed like main/data/skins.lua ("sardine.starlight").
+-- `equipped_skins` maps an owned ship_id to the skin_id it wears; no entry
+-- means the default faction_skins model. A skin belongs to one species, so it
+-- stays owned (and equipped) if its ship is sold and bought back later.
+M.owned_skins = nil
+M.equipped_skins = nil
 -- `owned`: list of OWNED INSTANCES, NOT catalog type-keys — decided (§4) that
 -- module upgrades are per PHYSICAL COPY, not a shared per-type "blueprint"
 -- upgrade, so two owned Gnats need to be distinguishable and independently
@@ -110,6 +120,8 @@ function M.choose_faction(faction)
 	M.owned_ships = { STARTING_SHIP_ID }
 	M.active_ship_id = STARTING_SHIP_ID
 	M.advanced_ships = {}
+	M.owned_skins = {}
+	M.equipped_skins = {}
 	next_instance_id = 1
 	M.owned = {}
 	M.loadout = {}
@@ -274,6 +286,54 @@ function M.purchase_ship(ship_id)
 		return false
 	end
 	table.insert(M.owned_ships, ship_id)
+	return true
+end
+
+-- Scrip price of `skin_id`, from its collection (main/data/skin_prices.lua),
+-- or nil for an unknown skin.
+function M.get_skin_price(skin_id)
+	local skin = skins.SKINS[skin_id]
+	return skin and skin_prices.PRICES[skin.collection]
+end
+
+function M.is_skin_owned(skin_id)
+	return M.owned_skins[skin_id] == true
+end
+
+-- Buys `skin_id` for get_skin_price(skin_id) Scrip. Returns false, spending
+-- nothing, for an unknown or already-owned skin or if the player can't
+-- afford it.
+function M.purchase_skin(skin_id)
+	local price = M.get_skin_price(skin_id)
+	if not price or M.is_skin_owned(skin_id) then
+		return false
+	end
+	if not spend_scrip(price) then
+		return false
+	end
+	M.owned_skins[skin_id] = true
+	return true
+end
+
+-- The skin_id `ship_id` currently wears, or nil for its default model.
+function M.get_equipped_skin(ship_id)
+	return M.equipped_skins[ship_id]
+end
+
+-- Puts owned `skin_id` on owned `ship_id`, or restores the default model when
+-- `skin_id` is nil. The skin must be for this ship's chassis in the player's
+-- faction. Returns false and changes nothing otherwise.
+function M.equip_skin(ship_id, skin_id)
+	if not M.is_ship_owned(ship_id) then
+		return false
+	end
+	if skin_id ~= nil then
+		local skin = skins.SKINS[skin_id]
+		if not (skin and M.is_skin_owned(skin_id) and skin.chassis == ship_id and skin.faction == M.faction) then
+			return false
+		end
+	end
+	M.equipped_skins[ship_id] = skin_id
 	return true
 end
 

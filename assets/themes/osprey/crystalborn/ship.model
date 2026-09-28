@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/crystalborn/albedo.png"
-name: "osprey_crystalborn"

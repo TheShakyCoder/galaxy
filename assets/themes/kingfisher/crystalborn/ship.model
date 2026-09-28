@@ -1,4 +1,0 @@
-mesh: "/assets/themes/kingfisher/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/kingfisher/crystalborn/albedo.png"
-name: "kingfisher_crystalborn"

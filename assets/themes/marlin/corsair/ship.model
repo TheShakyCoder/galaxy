@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/corsair/albedo.png"
-name: "marlin_corsair"

@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_tactical/kingfisher.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/kingfisher/solar_regatta/albedo.png"
-name: "kingfisher_solar_regatta"

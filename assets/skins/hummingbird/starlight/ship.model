@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hummingbird/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hummingbird/starlight/albedo.png"
+name: "hummingbird_starlight"

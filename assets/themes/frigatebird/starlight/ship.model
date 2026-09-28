@@ -1,4 +1,0 @@
-mesh: "/assets/themes/frigatebird/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/frigatebird/starlight/albedo.png"
-name: "frigatebird_starlight"

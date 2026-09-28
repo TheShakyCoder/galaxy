@@ -1,0 +1,4 @@
+mesh: "/assets/skins/shrike/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/shrike/overgrown/albedo.png"
+name: "shrike_overgrown"

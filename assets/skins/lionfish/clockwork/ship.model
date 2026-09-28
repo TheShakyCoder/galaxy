@@ -1,0 +1,4 @@
+mesh: "/assets/skins/lionfish/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/lionfish/clockwork/albedo.png"
+name: "lionfish_clockwork"

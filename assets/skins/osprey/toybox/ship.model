@@ -1,0 +1,4 @@
+mesh: "/assets/skins/osprey/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/osprey/toybox/albedo.png"
+name: "osprey_toybox"

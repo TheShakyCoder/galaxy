@@ -1,4 +1,0 @@
-mesh: "/assets/themes/anglerfish/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/anglerfish/toybox/albedo.png"
-name: "anglerfish_toybox"

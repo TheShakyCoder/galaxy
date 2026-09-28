@@ -1,0 +1,4 @@
+mesh: "/assets/skins/kingfisher/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/kingfisher/grand_prix/albedo.png"
+name: "kingfisher_grand_prix"

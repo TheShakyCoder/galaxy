@@ -1,4 +1,0 @@
-*.model text eol=lf
-*.json text eol=lf
-*.png binary
-*.glb binary

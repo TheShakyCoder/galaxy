@@ -1,0 +1,4 @@
+mesh: "/assets/skins/egret/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/egret/overgrown/albedo.png"
+name: "egret_overgrown"

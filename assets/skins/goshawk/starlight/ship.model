@@ -1,0 +1,4 @@
+mesh: "/assets/skins/goshawk/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/starlight/albedo.png"
+name: "goshawk_starlight"

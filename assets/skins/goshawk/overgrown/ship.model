@@ -1,0 +1,4 @@
+mesh: "/assets/skins/goshawk/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/overgrown/albedo.png"
+name: "goshawk_overgrown"

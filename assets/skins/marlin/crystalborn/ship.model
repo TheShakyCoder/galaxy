@@ -1,0 +1,4 @@
+mesh: "/assets/skins/marlin/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/marlin/crystalborn/albedo.png"
+name: "marlin_crystalborn"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/harpy_eagle/grand_prix/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/harpy_eagle/grand_prix/albedo.png"
-name: "harpy_eagle_grand_prix"

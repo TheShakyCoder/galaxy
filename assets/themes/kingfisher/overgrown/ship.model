@@ -1,4 +1,0 @@
-mesh: "/assets/themes/kingfisher/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/kingfisher/overgrown/albedo.png"
-name: "kingfisher_overgrown"

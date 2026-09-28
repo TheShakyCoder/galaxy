@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_assault/golden_eagle.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/golden_eagle/aurora/albedo.png"
-name: "golden_eagle_aurora"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/overgrown/albedo.png"
-name: "marlin_overgrown"

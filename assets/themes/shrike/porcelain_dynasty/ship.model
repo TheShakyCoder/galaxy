@@ -1,4 +1,0 @@
-mesh: "/assets/themes/shrike/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/shrike/porcelain_dynasty/albedo.png"
-name: "shrike_porcelain_dynasty"

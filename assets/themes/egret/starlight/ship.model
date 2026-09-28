@@ -1,4 +1,0 @@
-mesh: "/assets/themes/egret/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/egret/starlight/albedo.png"
-name: "egret_starlight"

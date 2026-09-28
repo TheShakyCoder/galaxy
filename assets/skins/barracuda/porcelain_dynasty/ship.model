@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/porcelain_dynasty/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/porcelain_dynasty/albedo.png"
+name: "barracuda_porcelain_dynasty"

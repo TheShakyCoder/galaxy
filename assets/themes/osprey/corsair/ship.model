@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/corsair/albedo.png"
-name: "osprey_corsair"

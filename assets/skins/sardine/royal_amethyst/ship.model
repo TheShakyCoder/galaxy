@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_interceptor/sardine.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/sardine/royal_amethyst/albedo.png"
+name: "sardine_royal_amethyst"

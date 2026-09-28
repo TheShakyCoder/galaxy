@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/overgrown/albedo.png"
+name: "oxpecker_overgrown"

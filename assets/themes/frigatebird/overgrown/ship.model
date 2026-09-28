@@ -1,4 +1,0 @@
-mesh: "/assets/themes/frigatebird/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/frigatebird/overgrown/albedo.png"
-name: "frigatebird_overgrown"

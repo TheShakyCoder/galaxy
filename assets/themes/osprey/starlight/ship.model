@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/starlight/albedo.png"
-name: "osprey_starlight"

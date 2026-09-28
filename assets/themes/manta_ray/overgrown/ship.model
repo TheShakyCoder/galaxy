@@ -1,4 +1,0 @@
-mesh: "/assets/themes/manta_ray/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/manta_ray/overgrown/albedo.png"
-name: "manta_ray_overgrown"

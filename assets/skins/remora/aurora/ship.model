@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_support/remora.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/aurora/albedo.png"
+name: "remora_aurora"

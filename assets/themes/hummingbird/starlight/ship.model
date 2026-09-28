@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hummingbird/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hummingbird/starlight/albedo.png"
-name: "hummingbird_starlight"

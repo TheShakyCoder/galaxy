@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/crystalborn/albedo.png"
+name: "oxpecker_crystalborn"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/kingfisher/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/kingfisher/porcelain_dynasty/albedo.png"
-name: "kingfisher_porcelain_dynasty"

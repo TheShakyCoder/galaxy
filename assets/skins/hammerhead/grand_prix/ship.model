@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hammerhead/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hammerhead/grand_prix/albedo.png"
+name: "hammerhead_grand_prix"

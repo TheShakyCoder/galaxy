@@ -1,0 +1,4 @@
+mesh: "/assets/skins/moray/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/moray/abyssal/albedo.png"
+name: "moray_abyssal"

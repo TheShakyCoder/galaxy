@@ -1,0 +1,4 @@
+mesh: "/assets/skins/osprey/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/osprey/abyssal/albedo.png"
+name: "osprey_abyssal"

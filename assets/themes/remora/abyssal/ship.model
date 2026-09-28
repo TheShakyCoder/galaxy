@@ -1,4 +1,0 @@
-mesh: "/assets/themes/remora/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/remora/abyssal/albedo.png"
-name: "remora_abyssal"

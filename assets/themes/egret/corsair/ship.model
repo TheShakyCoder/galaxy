@@ -1,4 +1,0 @@
-mesh: "/assets/themes/egret/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/egret/corsair/albedo.png"
-name: "egret_corsair"

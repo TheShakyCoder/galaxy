@@ -1,4 +1,0 @@
-mesh: "/assets/themes/sardine/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/sardine/porcelain_dynasty/albedo.png"
-name: "sardine_porcelain_dynasty"

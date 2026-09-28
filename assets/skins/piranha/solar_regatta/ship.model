@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_assault/piranha.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/piranha/solar_regatta/albedo.png"
+name: "piranha_solar_regatta"

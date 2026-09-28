@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pilotfish/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pilotfish/corsair/albedo.png"
+name: "pilotfish_corsair"

@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_interceptor/hummingbird.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/hummingbird/solar_regatta/albedo.png"
-name: "hummingbird_solar_regatta"

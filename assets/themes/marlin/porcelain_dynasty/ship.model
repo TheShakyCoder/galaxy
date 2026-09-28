@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/porcelain_dynasty/albedo.png"
-name: "marlin_porcelain_dynasty"

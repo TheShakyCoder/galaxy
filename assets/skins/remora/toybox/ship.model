@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/toybox/albedo.png"
+name: "remora_toybox"

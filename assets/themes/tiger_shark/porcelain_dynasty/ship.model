@@ -1,4 +1,0 @@
-mesh: "/assets/themes/tiger_shark/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/tiger_shark/porcelain_dynasty/albedo.png"
-name: "tiger_shark_porcelain_dynasty"

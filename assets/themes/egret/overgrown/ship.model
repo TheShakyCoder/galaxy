@@ -1,4 +1,0 @@
-mesh: "/assets/themes/egret/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/egret/overgrown/albedo.png"
-name: "egret_overgrown"

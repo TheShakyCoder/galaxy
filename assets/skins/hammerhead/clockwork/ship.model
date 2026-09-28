@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hammerhead/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hammerhead/clockwork/albedo.png"
+name: "hammerhead_clockwork"

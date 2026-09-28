@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/starlight/albedo.png"
-name: "marlin_starlight"

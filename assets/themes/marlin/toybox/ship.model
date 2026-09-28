@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/toybox/albedo.png"
-name: "marlin_toybox"

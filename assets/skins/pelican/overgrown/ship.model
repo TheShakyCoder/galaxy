@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/overgrown/albedo.png"
+name: "pelican_overgrown"

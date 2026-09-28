@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_tactical/kingfisher.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/kingfisher/aurora/albedo.png"
-name: "kingfisher_aurora"

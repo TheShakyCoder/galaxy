@@ -76,7 +76,7 @@ def framing(p,camera):
 
 def main():
     parser=argparse.ArgumentParser(); parser.add_argument('--rebuild',action='store_true'); args=parser.parse_args()
-    catalog=json.loads((ROOT/'assets/cosmetics/catalog.json').read_text()); rows=catalog['entries']
+    catalog=json.loads((ROOT/'assets/skins/catalogs/cosmetics.json').read_text()); rows=catalog['entries']
     originals=json.loads((ROOT/'artifacts/fleet/manifest.json').read_text())
     expected={r['slug']:r for r in originals['ships']}
     keys={'aurora','solar_regatta','royal_amethyst','clockwork'}
@@ -132,7 +132,7 @@ def main():
     if args.rebuild:
         with tempfile.TemporaryDirectory(prefix='rebuild-',dir=ROOT/'artifacts/cosmetics') as folder:
             subprocess.run([sys.executable,str(ROOT/'tools/build_cosmetic_library.py'),'--output-root',folder],check=True,capture_output=True)
-            files=[ROOT/'assets/cosmetics/catalog.json']
+            files=[ROOT/'assets/skins/catalogs/cosmetics.json']
             for row in rows:
                 files.extend(ROOT/p.lstrip('/') for p in (row['glb'],row['texture'],row['model']))
             for file in files:

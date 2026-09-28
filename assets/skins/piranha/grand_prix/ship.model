@@ -1,0 +1,4 @@
+mesh: "/assets/skins/piranha/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/piranha/grand_prix/albedo.png"
+name: "piranha_grand_prix"

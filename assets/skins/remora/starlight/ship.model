@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/starlight/albedo.png"
+name: "remora_starlight"

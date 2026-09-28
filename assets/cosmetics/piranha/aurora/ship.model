@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_assault/piranha.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/piranha/aurora/albedo.png"
-name: "piranha_aurora"

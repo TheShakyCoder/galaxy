@@ -1,4 +1,0 @@
-mesh: "/assets/themes/frigatebird/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/frigatebird/crystalborn/albedo.png"
-name: "frigatebird_crystalborn"

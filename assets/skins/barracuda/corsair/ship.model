@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/corsair/albedo.png"
+name: "barracuda_corsair"

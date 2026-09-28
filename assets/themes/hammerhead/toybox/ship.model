@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hammerhead/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hammerhead/toybox/albedo.png"
-name: "hammerhead_toybox"

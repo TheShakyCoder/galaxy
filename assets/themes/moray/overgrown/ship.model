@@ -1,4 +1,0 @@
-mesh: "/assets/themes/moray/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/moray/overgrown/albedo.png"
-name: "moray_overgrown"

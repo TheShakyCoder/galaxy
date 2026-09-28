@@ -1,4 +1,0 @@
-mesh: "/assets/themes/lionfish/grand_prix/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/lionfish/grand_prix/albedo.png"
-name: "lionfish_grand_prix"

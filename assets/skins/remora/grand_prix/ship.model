@@ -1,0 +1,4 @@
+mesh: "/assets/skins/remora/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/remora/grand_prix/albedo.png"
+name: "remora_grand_prix"

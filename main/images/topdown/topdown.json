@@ -1,0 +1,266 @@
+{
+ "anglerfish": {
+  "class": "patrol",
+  "faction": "accord",
+  "hull_px": [
+   331.1,
+   620.0
+  ],
+  "px_per_m": 36.4706,
+  "role": "tactical",
+  "ship": "Anglerfish"
+ },
+ "barracuda": {
+  "class": "escort",
+  "faction": "accord",
+  "hull_px": [
+   170.4,
+   620.0
+  ],
+  "px_per_m": 9.5679,
+  "role": "interceptor",
+  "ship": "Barracuda"
+ },
+ "egret": {
+  "class": "escort",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   464.1
+  ],
+  "px_per_m": 7.2515,
+  "role": "support",
+  "ship": "Egret"
+ },
+ "falcon": {
+  "class": "escort",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   346.3
+  ],
+  "px_per_m": 6.1765,
+  "role": "interceptor",
+  "ship": "Falcon"
+ },
+ "frigatebird": {
+  "class": "frigate",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   301.5
+  ],
+  "px_per_m": 1.5441,
+  "role": "interceptor",
+  "ship": "Frigatebird"
+ },
+ "golden_eagle": {
+  "class": "frigate",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   330.3
+  ],
+  "px_per_m": 1.5909,
+  "role": "assault",
+  "ship": "Golden Eagle"
+ },
+ "goshawk": {
+  "class": "escort",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   438.5
+  ],
+  "px_per_m": 6.6441,
+  "role": "assault",
+  "ship": "Goshawk"
+ },
+ "hammerhead": {
+  "class": "frigate",
+  "faction": "accord",
+  "hull_px": [
+   271.3,
+   620.0
+  ],
+  "px_per_m": 2.2794,
+  "role": "tactical",
+  "ship": "Hammerhead"
+ },
+ "harpy_eagle": {
+  "class": "frigate",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   360.4
+  ],
+  "px_per_m": 1.5441,
+  "role": "tactical",
+  "ship": "Harpy Eagle"
+ },
+ "hummingbird": {
+  "class": "patrol",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   408.3
+  ],
+  "px_per_m": 24.7059,
+  "role": "interceptor",
+  "ship": "Hummingbird"
+ },
+ "kingfisher": {
+  "class": "patrol",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   571.0
+  ],
+  "px_per_m": 33.5896,
+  "role": "tactical",
+  "ship": "Kingfisher"
+ },
+ "lionfish": {
+  "class": "escort",
+  "faction": "accord",
+  "hull_px": [
+   411.6,
+   620.0
+  ],
+  "px_per_m": 9.1176,
+  "role": "tactical",
+  "ship": "Lionfish"
+ },
+ "manta_ray": {
+  "class": "frigate",
+  "faction": "accord",
+  "hull_px": [
+   420.0,
+   421.8
+  ],
+  "px_per_m": 1.6475,
+  "role": "support",
+  "ship": "Manta Ray"
+ },
+ "marlin": {
+  "class": "frigate",
+  "faction": "accord",
+  "hull_px": [
+   220.8,
+   620.0
+  ],
+  "px_per_m": 2.392,
+  "role": "interceptor",
+  "ship": "Marlin"
+ },
+ "moray": {
+  "class": "escort",
+  "faction": "accord",
+  "hull_px": [
+   111.5,
+   620.0
+  ],
+  "px_per_m": 10.3333,
+  "role": "assault",
+  "ship": "Moray"
+ },
+ "osprey": {
+  "class": "escort",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   376.5
+  ],
+  "px_per_m": 6.1765,
+  "role": "tactical",
+  "ship": "Osprey"
+ },
+ "oxpecker": {
+  "class": "patrol",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   545.9
+  ],
+  "px_per_m": 34.1204,
+  "role": "support",
+  "ship": "Oxpecker"
+ },
+ "patrol_interceptor": {
+  "class": "patrol",
+  "faction": "accord",
+  "hull_px": [
+   183.7,
+   620.0
+  ],
+  "px_per_m": 38.2716,
+  "role": "interceptor",
+  "ship": "Sardine"
+ },
+ "pelican": {
+  "class": "frigate",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   413.5
+  ],
+  "px_per_m": 1.6406,
+  "role": "support",
+  "ship": "Pelican"
+ },
+ "pilotfish": {
+  "class": "patrol",
+  "faction": "accord",
+  "hull_px": [
+   203.1,
+   620.0
+  ],
+  "px_per_m": 38.75,
+  "role": "support",
+  "ship": "Pilotfish"
+ },
+ "piranha": {
+  "class": "patrol",
+  "faction": "accord",
+  "hull_px": [
+   265.3,
+   620.0
+  ],
+  "px_per_m": 41.3333,
+  "role": "assault",
+  "ship": "Piranha"
+ },
+ "remora": {
+  "class": "escort",
+  "faction": "accord",
+  "hull_px": [
+   175.9,
+   620.0
+  ],
+  "px_per_m": 9.6875,
+  "role": "support",
+  "ship": "Remora"
+ },
+ "shrike": {
+  "class": "patrol",
+  "faction": "swarm",
+  "hull_px": [
+   420.0,
+   513.8
+  ],
+  "px_per_m": 31.1416,
+  "role": "assault",
+  "ship": "Shrike"
+ },
+ "tiger_shark": {
+  "class": "frigate",
+  "faction": "accord",
+  "hull_px": [
+   272.2,
+   620.0
+  ],
+  "px_per_m": 2.5833,
+  "role": "assault",
+  "ship": "Tiger Shark"
+ }
+}

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pilotfish/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pilotfish/abyssal/albedo.png"
-name: "pilotfish_abyssal"

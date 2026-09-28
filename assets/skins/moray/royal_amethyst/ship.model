@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_assault/moray.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/moray/royal_amethyst/albedo.png"
+name: "moray_royal_amethyst"

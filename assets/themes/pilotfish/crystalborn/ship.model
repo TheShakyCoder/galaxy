@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pilotfish/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pilotfish/crystalborn/albedo.png"
-name: "pilotfish_crystalborn"

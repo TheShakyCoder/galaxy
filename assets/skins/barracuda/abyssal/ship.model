@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/abyssal/albedo.png"
+name: "barracuda_abyssal"

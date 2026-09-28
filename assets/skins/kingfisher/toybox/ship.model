@@ -1,0 +1,4 @@
+mesh: "/assets/skins/kingfisher/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/kingfisher/toybox/albedo.png"
+name: "kingfisher_toybox"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/oxpecker/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/oxpecker/corsair/albedo.png"
-name: "oxpecker_corsair"

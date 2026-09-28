@@ -1,0 +1,4 @@
+mesh: "/assets/skins/moray/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/moray/corsair/albedo.png"
+name: "moray_corsair"

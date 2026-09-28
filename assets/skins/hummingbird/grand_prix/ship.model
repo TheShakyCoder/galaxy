@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hummingbird/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hummingbird/grand_prix/albedo.png"
+name: "hummingbird_grand_prix"

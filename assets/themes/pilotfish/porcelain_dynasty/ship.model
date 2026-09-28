@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pilotfish/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pilotfish/porcelain_dynasty/albedo.png"
-name: "pilotfish_porcelain_dynasty"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hummingbird/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hummingbird/porcelain_dynasty/albedo.png"
-name: "hummingbird_porcelain_dynasty"

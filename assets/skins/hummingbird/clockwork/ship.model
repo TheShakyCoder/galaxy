@@ -1,0 +1,4 @@
+mesh: "/assets/skins/hummingbird/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/hummingbird/clockwork/albedo.png"
+name: "hummingbird_clockwork"

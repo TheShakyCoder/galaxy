@@ -1,4 +1,0 @@
-mesh: "/assets/themes/harpy_eagle/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/harpy_eagle/crystalborn/albedo.png"
-name: "harpy_eagle_crystalborn"

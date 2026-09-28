@@ -1,4 +1,0 @@
-mesh: "/assets/themes/moray/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/moray/porcelain_dynasty/albedo.png"
-name: "moray_porcelain_dynasty"

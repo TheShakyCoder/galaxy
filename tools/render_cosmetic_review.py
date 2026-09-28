@@ -9,7 +9,7 @@ from mathutils import Vector
 
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'artifacts/cosmetics/renders'; OUT.mkdir(parents=True,exist_ok=True)
-p=argparse.ArgumentParser(); p.add_argument('--catalog',default='assets/cosmetics/catalog.json')
+p=argparse.ArgumentParser(); p.add_argument('--catalog',default='assets/skins/catalogs/cosmetics.json')
 p.add_argument('--ships',default='all'); p.add_argument('--collections',default='all')
 p.add_argument('--views',default='auto'); p.add_argument('--missing-only',action='store_true')
 args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])

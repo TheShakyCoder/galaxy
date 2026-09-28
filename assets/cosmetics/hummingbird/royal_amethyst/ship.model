@@ -1,4 +1,0 @@
-mesh: "/assets/models/patrol_interceptor/hummingbird.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/hummingbird/royal_amethyst/albedo.png"
-name: "hummingbird_royal_amethyst"

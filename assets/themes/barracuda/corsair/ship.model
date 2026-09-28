@@ -1,4 +1,0 @@
-mesh: "/assets/themes/barracuda/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/barracuda/corsair/albedo.png"
-name: "barracuda_corsair"

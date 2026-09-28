@@ -1,4 +1,0 @@
-mesh: "/assets/themes/goshawk/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/goshawk/crystalborn/albedo.png"
-name: "goshawk_crystalborn"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/osprey/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/osprey/abyssal/albedo.png"
-name: "osprey_abyssal"

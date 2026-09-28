@@ -1,4 +1,0 @@
-mesh: "/assets/themes/egret/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/egret/toybox/albedo.png"
-name: "egret_toybox"

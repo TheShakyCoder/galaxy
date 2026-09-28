@@ -1,0 +1,4 @@
+mesh: "/assets/skins/egret/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/egret/toybox/albedo.png"
+name: "egret_toybox"

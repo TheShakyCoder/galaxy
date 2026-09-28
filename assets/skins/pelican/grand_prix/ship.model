@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/grand_prix/albedo.png"
+name: "pelican_grand_prix"

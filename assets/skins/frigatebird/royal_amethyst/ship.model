@@ -1,0 +1,4 @@
+mesh: "/assets/models/frigate_interceptor/frigatebird.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/royal_amethyst/albedo.png"
+name: "frigatebird_royal_amethyst"

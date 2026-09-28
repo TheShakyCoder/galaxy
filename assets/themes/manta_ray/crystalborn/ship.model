@@ -1,4 +1,0 @@
-mesh: "/assets/themes/manta_ray/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/manta_ray/crystalborn/albedo.png"
-name: "manta_ray_crystalborn"

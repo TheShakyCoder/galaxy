@@ -58,11 +58,11 @@ show details; the assets themselves retain the game's ship scale.
 
 ## Delivery
 
-[`assets/cosmetics/catalog.json`](../../assets/cosmetics/catalog.json) lists every
+[`assets/skins/catalogs/cosmetics.json`](../../assets/skins/catalogs/cosmetics.json) lists every
 asset, stable cosmetic ID, species mapping, bounds, hashes, thumbnail and camera.
 Each variant includes a PNG atlas, portable GLB and Defold `.model` resource.
 Recolor `.model` resources share the existing base geometry; Clockwork resources
-reference their new geometry. See [integration notes](../../assets/cosmetics/README.md).
+reference their new geometry. See [integration notes](../../assets/skins/README.md).
 
 This adds a library, not a working shop. Existing models, ship tables, cameras,
 module slots, advanced tiers, player components, factories and multiplayer code

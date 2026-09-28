@@ -1,4 +1,0 @@
-mesh: "/assets/themes/egret/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/egret/porcelain_dynasty/albedo.png"
-name: "egret_porcelain_dynasty"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_support/egret.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/egret/solar_regatta/albedo.png"
+name: "egret_solar_regatta"

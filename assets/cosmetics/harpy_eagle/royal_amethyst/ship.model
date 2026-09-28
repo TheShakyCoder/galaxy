@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_tactical/harpy_eagle.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/harpy_eagle/royal_amethyst/albedo.png"
-name: "harpy_eagle_royal_amethyst"

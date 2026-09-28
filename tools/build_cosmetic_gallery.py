@@ -40,7 +40,7 @@ def gallery(catalog):
         slug=r['slug']; name=html.escape(r['name'])
         cards.append(f'''<article class="ship" data-ship="{slug}" data-faction="{r['faction']}" data-size="{r['class']}">
 <a class="art" href="renders/{slug}-aurora-perspective.jpg" target="_blank" rel="noopener"><img loading="lazy" src="renders/{slug}-aurora-perspective.jpg" alt="{name}, Aurora paint"></a>
-<div class="info"><p class="eyebrow">{r['faction']} / {r['class']} / {r['role']}</p><h2>{name}</h2><p class="finish">Aurora</p><p class="description"></p><div class="links"><a class="glb" href="../../assets/cosmetics/{slug}/aurora/model.glb" download>Model GLB</a><a class="texture" href="../../assets/cosmetics/{slug}/aurora/albedo.png" download>Texture PNG</a></div></div></article>''')
+<div class="info"><p class="eyebrow">{r['faction']} / {r['class']} / {r['role']}</p><h2>{name}</h2><p class="finish">Aurora</p><p class="description"></p><div class="links"><a class="glb" href="../../assets/skins/{slug}/aurora/model.glb" download>Model GLB</a><a class="texture" href="../../assets/skins/{slug}/aurora/albedo.png" download>Texture PNG</a></div></div></article>''')
     template=(ROOT/'tools/cosmetics/gallery.html').read_text(encoding='utf-8')
     for marker,value in [('COLLECTION_BUTTONS',''.join(collection_buttons)),('SHIP_OPTIONS',options),('CARDS',''.join(cards)),('CATALOG_JSON',json.dumps(catalog)),('BASE_JSON',json.dumps(base))]:
         template=template.replace('{{'+marker+'}}',value)
@@ -48,7 +48,7 @@ def gallery(catalog):
 
 
 def main():
-    catalog=json.loads((ROOT/'assets/cosmetics/catalog.json').read_text())
+    catalog=json.loads((ROOT/'assets/skins/catalogs/cosmetics.json').read_text())
     sheets(catalog); gallery(catalog)
     print('Built 12 contact sheets and the 96-variant cosmetic gallery.')
 

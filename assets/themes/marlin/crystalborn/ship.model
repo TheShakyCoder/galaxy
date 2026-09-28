@@ -1,4 +1,0 @@
-mesh: "/assets/themes/marlin/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/marlin/crystalborn/albedo.png"
-name: "marlin_crystalborn"

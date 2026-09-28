@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/toybox/albedo.png"
+name: "frigatebird_toybox"

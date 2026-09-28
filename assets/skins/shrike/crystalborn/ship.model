@@ -1,0 +1,4 @@
+mesh: "/assets/skins/shrike/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/shrike/crystalborn/albedo.png"
+name: "shrike_crystalborn"

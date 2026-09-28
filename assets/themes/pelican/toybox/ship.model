@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pelican/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pelican/toybox/albedo.png"
-name: "pelican_toybox"

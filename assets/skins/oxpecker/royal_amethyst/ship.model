@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_support/oxpecker.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/royal_amethyst/albedo.png"
+name: "oxpecker_royal_amethyst"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/anglerfish/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/anglerfish/crystalborn/albedo.png"
-name: "anglerfish_crystalborn"

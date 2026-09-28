@@ -1,0 +1,4 @@
+mesh: "/assets/skins/osprey/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/osprey/crystalborn/albedo.png"
+name: "osprey_crystalborn"

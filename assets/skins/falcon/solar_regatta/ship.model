@@ -1,0 +1,4 @@
+mesh: "/assets/models/escort_interceptor/falcon.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/falcon/solar_regatta/albedo.png"
+name: "falcon_solar_regatta"

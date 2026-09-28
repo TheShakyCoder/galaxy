@@ -1,0 +1,4 @@
+mesh: "/assets/skins/anglerfish/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/anglerfish/crystalborn/albedo.png"
+name: "anglerfish_crystalborn"

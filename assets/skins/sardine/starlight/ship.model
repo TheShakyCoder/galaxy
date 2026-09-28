@@ -1,0 +1,4 @@
+mesh: "/assets/skins/sardine/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/sardine/starlight/albedo.png"
+name: "sardine_starlight"

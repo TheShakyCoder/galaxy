@@ -1,0 +1,4 @@
+mesh: "/assets/skins/barracuda/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/barracuda/clockwork/albedo.png"
+name: "barracuda_clockwork"

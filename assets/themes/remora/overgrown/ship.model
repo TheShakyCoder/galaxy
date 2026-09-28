@@ -1,4 +1,0 @@
-mesh: "/assets/themes/remora/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/remora/overgrown/albedo.png"
-name: "remora_overgrown"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/marlin/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/marlin/abyssal/albedo.png"
+name: "marlin_abyssal"

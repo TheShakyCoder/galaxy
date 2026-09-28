@@ -1,0 +1,4 @@
+mesh: "/assets/skins/shrike/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/shrike/toybox/albedo.png"
+name: "shrike_toybox"

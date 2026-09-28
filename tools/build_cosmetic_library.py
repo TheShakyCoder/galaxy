@@ -28,7 +28,7 @@ def build(ship, key, root):
         from cosmetics.clockwork import detail
         features=detail(mesh)
     image=paint(ship,key)
-    folder=Path('assets/cosmetics')/ship.slug/key
+    folder=Path('assets/skins')/ship.slug/key
     dest=root/folder; dest.mkdir(parents=True,exist_ok=True)
     glb=folder/'model.glb'; texture=folder/'albedo.png'; model=folder/'ship.model'
     export(mesh,image,root/glb); image.save(root/texture,optimize=True)
@@ -67,9 +67,9 @@ def main():
         print(ship.name+': '+', '.join(keys),flush=True)
     catalog=dict(schema_version=1,scope='Optional art library; no store, pricing, ownership or equip integration.',
                  source_commit='de7d7b4',collections={k:COLLECTIONS[k] for k in keys},entries=rows)
-    path=args.output_root/'assets/cosmetics'; path.mkdir(parents=True,exist_ok=True)
+    path=args.output_root/'assets/skins/catalogs'; path.mkdir(parents=True,exist_ok=True)
     # Partial builds cannot silently overwrite the complete shop catalog.
-    filename='catalog.json' if not args.ship and args.part=='all' else f'catalog-{args.ship or "all"}-{args.part}.json'
+    filename='cosmetics.json' if not args.ship and args.part=='all' else f'cosmetics-{args.ship or "all"}-{args.part}.json'
     (path/filename).write_text(json.dumps(catalog,indent=2)+'\n',encoding='utf-8',newline='\n')
     print(f'Built {len(rows)} cosmetics; catalog: {path/filename}')
 

@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/sardine/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/sardine/clockwork/albedo.png"
-name: "sardine_clockwork"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/golden_eagle/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/golden_eagle/starlight/albedo.png"
-name: "golden_eagle_starlight"

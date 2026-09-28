@@ -1,0 +1,4 @@
+mesh: "/assets/skins/marlin/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/marlin/clockwork/albedo.png"
+name: "marlin_clockwork"

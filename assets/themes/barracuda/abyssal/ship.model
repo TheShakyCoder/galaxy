@@ -1,4 +1,0 @@
-mesh: "/assets/themes/barracuda/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/barracuda/abyssal/albedo.png"
-name: "barracuda_abyssal"

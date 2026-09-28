@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/kingfisher/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/kingfisher/clockwork/albedo.png"
-name: "kingfisher_clockwork"

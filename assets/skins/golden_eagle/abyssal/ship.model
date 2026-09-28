@@ -1,0 +1,4 @@
+mesh: "/assets/skins/golden_eagle/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/golden_eagle/abyssal/albedo.png"
+name: "golden_eagle_abyssal"

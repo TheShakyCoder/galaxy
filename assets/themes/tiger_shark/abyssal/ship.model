@@ -1,4 +1,0 @@
-mesh: "/assets/themes/tiger_shark/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/tiger_shark/abyssal/albedo.png"
-name: "tiger_shark_abyssal"

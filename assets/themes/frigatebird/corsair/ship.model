@@ -1,4 +1,0 @@
-mesh: "/assets/themes/frigatebird/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/frigatebird/corsair/albedo.png"
-name: "frigatebird_corsair"

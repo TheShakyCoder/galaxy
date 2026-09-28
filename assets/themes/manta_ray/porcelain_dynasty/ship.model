@@ -1,4 +1,0 @@
-mesh: "/assets/themes/manta_ray/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/manta_ray/porcelain_dynasty/albedo.png"
-name: "manta_ray_porcelain_dynasty"

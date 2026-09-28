@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/frigatebird/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/frigatebird/clockwork/albedo.png"
-name: "frigatebird_clockwork"

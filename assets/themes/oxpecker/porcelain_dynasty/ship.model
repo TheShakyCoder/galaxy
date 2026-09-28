@@ -1,4 +1,0 @@
-mesh: "/assets/themes/oxpecker/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/oxpecker/porcelain_dynasty/albedo.png"
-name: "oxpecker_porcelain_dynasty"

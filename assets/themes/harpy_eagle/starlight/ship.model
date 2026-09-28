@@ -1,4 +1,0 @@
-mesh: "/assets/themes/harpy_eagle/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/harpy_eagle/starlight/albedo.png"
-name: "harpy_eagle_starlight"

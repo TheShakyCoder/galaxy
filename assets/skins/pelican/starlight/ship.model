@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/starlight/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/starlight/albedo.png"
+name: "pelican_starlight"

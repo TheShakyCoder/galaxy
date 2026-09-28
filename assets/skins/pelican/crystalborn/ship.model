@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/crystalborn/albedo.png"
+name: "pelican_crystalborn"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/oxpecker/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/oxpecker/overgrown/albedo.png"
-name: "oxpecker_overgrown"

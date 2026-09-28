@@ -40,9 +40,9 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Multiplayer**: each star system is a shared room where you see other players'
   ships in real time. The client reconnects automatically and uses dead
   reckoning to keep network traffic low.
-- **Cosmetics library**: four optional paint and model collections for every ship
-  (see [`assets/cosmetics/`](assets/cosmetics/README.md)). They aren't selectable
-  in-game yet.
+- **Ship skins**: twelve optional paint and model collections for every ship,
+  288 skins in all (see [`assets/skins/`](assets/skins/README.md)). They aren't
+  selectable in-game yet.
 
 ## Controls
 

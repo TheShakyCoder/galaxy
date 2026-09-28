@@ -1,0 +1,4 @@
+mesh: "/assets/skins/sardine/toybox/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/sardine/toybox/albedo.png"
+name: "sardine_toybox"

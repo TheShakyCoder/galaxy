@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pelican/clockwork/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pelican/clockwork/albedo.png"
+name: "pelican_clockwork"

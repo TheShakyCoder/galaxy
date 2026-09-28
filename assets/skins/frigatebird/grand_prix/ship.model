@@ -1,0 +1,4 @@
+mesh: "/assets/skins/frigatebird/grand_prix/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/frigatebird/grand_prix/albedo.png"
+name: "frigatebird_grand_prix"

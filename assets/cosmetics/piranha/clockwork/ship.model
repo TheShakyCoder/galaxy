@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/piranha/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/piranha/clockwork/albedo.png"
-name: "piranha_clockwork"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/kingfisher/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/kingfisher/starlight/albedo.png"
-name: "kingfisher_starlight"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/goshawk/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/goshawk/corsair/albedo.png"
-name: "goshawk_corsair"

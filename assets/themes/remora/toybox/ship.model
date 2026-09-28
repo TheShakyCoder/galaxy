@@ -1,4 +1,0 @@
-mesh: "/assets/themes/remora/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/remora/toybox/albedo.png"
-name: "remora_toybox"

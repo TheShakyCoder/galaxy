@@ -1,0 +1,4 @@
+mesh: "/assets/skins/goshawk/abyssal/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/abyssal/albedo.png"
+name: "goshawk_abyssal"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/patrol_assault/shrike.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/shrike/royal_amethyst/albedo.png"
+name: "shrike_royal_amethyst"

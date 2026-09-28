@@ -1,4 +1,0 @@
-mesh: "/assets/themes/harpy_eagle/abyssal/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/harpy_eagle/abyssal/albedo.png"
-name: "harpy_eagle_abyssal"

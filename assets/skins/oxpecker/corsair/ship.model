@@ -1,0 +1,4 @@
+mesh: "/assets/skins/oxpecker/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/oxpecker/corsair/albedo.png"
+name: "oxpecker_corsair"

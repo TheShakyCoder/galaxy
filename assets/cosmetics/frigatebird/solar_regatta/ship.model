@@ -1,4 +1,0 @@
-mesh: "/assets/models/frigate_interceptor/frigatebird.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/frigatebird/solar_regatta/albedo.png"
-name: "frigatebird_solar_regatta"

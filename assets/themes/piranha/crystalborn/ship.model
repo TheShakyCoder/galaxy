@@ -1,4 +1,0 @@
-mesh: "/assets/themes/piranha/crystalborn/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/piranha/crystalborn/albedo.png"
-name: "piranha_crystalborn"

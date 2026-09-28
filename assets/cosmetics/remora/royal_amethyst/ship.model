@@ -1,4 +1,0 @@
-mesh: "/assets/models/escort_support/remora.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/remora/royal_amethyst/albedo.png"
-name: "remora_royal_amethyst"

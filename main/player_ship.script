@@ -171,10 +171,12 @@ local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
 
 -- Docking (per direct instruction): a ship may only dock within DOCK_RANGE
 -- of its own faction's outpost, and launching drops it back at a random
--- point on the surface of that same DOCK_RANGE sphere (not a filled ball -
--- "any point ON a sphere") - see random_spawn()/update()'s docking block
--- below.
+-- point on the surface of a LAUNCH_DISTANCE sphere around it (not a filled
+-- ball - "any point ON a sphere") - see random_spawn()/update()'s docking
+-- block below. Launching outside DOCK_RANGE means a freshly launched ship
+-- has to fly back in before it can dock again.
 local DOCK_RANGE = 500
+local LAUNCH_DISTANCE = 800
 local DOCK_COUNTDOWN_SEC = 5
 
 -- FTL jump (per direct instruction: "implement [the SuperShips jump
@@ -220,7 +222,7 @@ local function network_state_changed(self, pos, rot)
 	return vmath.length(pos - predicted) > NETWORK_POS_TOLERANCE
 end
 
--- Uniform-on-sphere-surface point at radius DOCK_RANGE around
+-- Uniform-on-sphere-surface point at `radius` around
 -- outpost_pos, facing the system origin from there - same
 -- acos(2u-1)-for-polar-angle technique main/data/asteroids.lua already
 -- uses to avoid bunching at the poles (there it's for a filled ball; here
@@ -228,13 +230,13 @@ end
 -- (quat_from_to with a same-axis fallback for the exactly-opposite case,
 -- which quat_from_to can't itself handle - it returns NaN) is ported from
 -- the reference project's own random_spawn() (§0).
-local function random_spawn(outpost_pos)
+local function random_spawn(outpost_pos, radius)
 	local theta = math.acos(2 * math.random() - 1)
 	local phi = math.random() * 2 * math.pi
 	local offset = vmath.vector3(
-		DOCK_RANGE * math.sin(theta) * math.cos(phi),
-		DOCK_RANGE * math.cos(theta),
-		DOCK_RANGE * math.sin(theta) * math.sin(phi))
+		radius * math.sin(theta) * math.cos(phi),
+		radius * math.cos(theta),
+		radius * math.sin(theta) * math.sin(phi))
 	local pos = outpost_pos + offset
 
 	local to_center = -pos
@@ -418,7 +420,7 @@ local function start_flight(self)
 	go.set("#" .. self.model_component_id, "tint", AMBIENT_TINT)
 
 	local outpost_pos = FACTION_OUTPOST[faction]
-	local pos, rot = random_spawn(outpost_pos)
+	local pos, rot = random_spawn(outpost_pos, LAUNCH_DISTANCE)
 	go.set_position(pos)
 	go.set_rotation(rot)
 	msg.post(".", "acquire_input_focus")
@@ -471,7 +473,7 @@ local function arrive_at_system(self, system_id)
 
 	local pos, rot
 	if home == faction then
-		pos, rot = random_spawn(FACTION_OUTPOST[faction])
+		pos, rot = random_spawn(FACTION_OUTPOST[faction], DOCK_RANGE)
 	else
 		-- Same ring-spawn as random_spawn(), just centered on the map
 		-- origin instead of an outpost - ported technique from the
@@ -481,7 +483,7 @@ local function arrive_at_system(self, system_id)
 		-- own field is centered, unlike the source (whose ambient drone
 		-- pool just happens to roam near its own map origin too, per that
 		-- function's own comment).
-		pos, rot = random_spawn(vmath.vector3(0, 0, 0))
+		pos, rot = random_spawn(vmath.vector3(0, 0, 0), DOCK_RANGE)
 	end
 	go.set_position(pos)
 	go.set_rotation(rot)

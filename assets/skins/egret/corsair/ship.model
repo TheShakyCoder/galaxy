@@ -1,0 +1,4 @@
+mesh: "/assets/skins/egret/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/egret/corsair/albedo.png"
+name: "egret_corsair"

@@ -1,0 +1,4 @@
+mesh: "/assets/skins/lionfish/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/lionfish/overgrown/albedo.png"
+name: "lionfish_overgrown"

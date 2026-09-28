@@ -1,4 +1,0 @@
-mesh: "/assets/themes/shrike/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/shrike/overgrown/albedo.png"
-name: "shrike_overgrown"

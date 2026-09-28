@@ -546,44 +546,70 @@ M.SHIPS = {
 		-- predate this dimension and are Interceptor-row per the naming matrix, but
 		-- don't have a `role` field set retroactively (out of scope here).
 		role = "Support",
-		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
-		-- Escort Interceptor - no Frigate-specific tuning has been decided yet, so this is
-		-- the shared starting point, not an invented number.
+		-- Full stat block and slot counts: the reference game's Vanir (a
+		-- Command-role line ship, bsgo.fandom.com/wiki/Vanir), per direct
+		-- instruction - plain numbers, a balancing fact not creative
+		-- expression (§0), same footing as Patrol Interceptor's Viper Mk II
+		-- slot counts. Source units renamed as elsewhere: Titanium repair
+		-- cost -> Iron, Tylium fuel -> Hydrogen, Dradis -> sensor range.
+		-- Not carried over: its level-20 requirement and 2,000,000 purchase
+		-- price (no rank gating yet; prices come from session.lua), and its
+		-- Command role bonus (no FTL-transponder module exists).
 		data = {
 			-- Hull Systems
-			hull_points = 650,
-			hull_recovery_per_sec = 5,
-			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-			armor = 5,
+			hull_points = 3500,
+			hull_recovery_per_sec = 19,
+			repair_cost_iron = 35000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 40,
 			critical_defense = 100,
 
 			-- Engine Systems
-			avoidance = 500,
-			turning_speed_deg_per_sec = 47.5,
-			turning_acceleration_deg_per_sec2 = 47.5,
-			inertial_compensation_m_per_sec = 100,
-			acceleration_m_per_sec2 = 10,
-			speed_m_per_sec = 52.5,
-			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			avoidance = 50,
+			turning_speed_deg_per_sec = 9,
+			turning_acceleration_deg_per_sec2 = 9,
+			inertial_compensation_m_per_sec = 50,
+			acceleration_m_per_sec2 = 2,
+			speed_m_per_sec = 27.5,
+			boost_speed_m_per_sec = 42.5,
+			boost_cost_hydrogen_per_sec = 5.4, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
-			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_range_ly = 11,
+			ftl_charge_sec = 25,
+			ftl_cost_hydrogen_per_ly = 250, -- Hydrogen fuel (§2.6)
 
 			-- Computer Systems
-			power = 175,
-			power_recharge_per_sec = 6,
+			power = 650,
+			power_recharge_per_sec = 28,
 			firewall_rating = 200,
 			emitter_rating = 200,
-			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-			visual_range_m = 500,
+			sensor_range_m = 4000, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 1000,
 		},
-		-- Same as Escort Interceptor: no confirmed Frigate-tier slot-count number exists yet,
-		-- so left empty rather than guessed (§0/§4).
-		components = {},
-		slot_positions = {},
+		-- Vanir slot counts (see the stat block's comment above);
+		-- Fitting screen positions below.
+		components = { W = 6, C = 4, E = 2, H = 2 },
+		-- Laid out over both faction silhouettes (main/images/topdown/,
+		-- 440 x 640 px, centre origin, +y = bow, +x = starboard): rows of
+		-- up to 4 from bow to stern - Weapons, Hull, Computers, Engines -
+		-- symmetric, with an odd count's extra slot on the centreline.
+		-- Weapon arcs angle outward with distance from the centreline.
+		slot_positions = {
+			W1 = { x = -135, y = 200, angle_deg = -30 },
+			W2 = { x = -45, y = 200, angle_deg = -10 },
+			W3 = { x = 45, y = 200, angle_deg = 10 },
+			W4 = { x = 135, y = 200, angle_deg = 30 },
+			W5 = { x = -45, y = 100, angle_deg = -10 },
+			W6 = { x = 45, y = 100, angle_deg = 10 },
+			H1 = { x = -45, y = 0 },
+			H2 = { x = 45, y = 0 },
+			C1 = { x = -135, y = -100 },
+			C2 = { x = -45, y = -100 },
+			C3 = { x = 45, y = -100 },
+			C4 = { x = 135, y = -100 },
+			E1 = { x = -45, y = -200 },
+			E2 = { x = 45, y = -200 },
+		},
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -598,44 +624,69 @@ M.SHIPS = {
 		flight_camera = { distance = 403.553, height = 49.803 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Interceptor.
 		role = "Interceptor",
-		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
-		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
-		-- been decided yet.
+		-- Full stat block and slot counts: the reference game's Fenrir (an
+		-- Interceptor-role line ship, bsgo.fandom.com/wiki/Fenrir), per direct
+		-- instruction - same sourcing and unit renames as `frigate_support`'s
+		-- Vanir numbers above (§0). Not carried over, for the same reasons:
+		-- its level-20 requirement and 135,000-cubit purchase price.
 		data = {
 			-- Hull Systems
-			hull_points = 650,
-			hull_recovery_per_sec = 5,
-			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-			armor = 5,
-			critical_defense = 100,
+			hull_points = 4290,
+			hull_recovery_per_sec = 33,
+			repair_cost_iron = 66000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 40,
+			critical_defense = 80,
 
 			-- Engine Systems
-			avoidance = 500,
-			turning_speed_deg_per_sec = 47.5,
-			turning_acceleration_deg_per_sec2 = 47.5,
-			inertial_compensation_m_per_sec = 100,
-			acceleration_m_per_sec2 = 10,
-			speed_m_per_sec = 52.5,
-			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			avoidance = 70,
+			turning_speed_deg_per_sec = 10,
+			turning_acceleration_deg_per_sec2 = 10,
+			inertial_compensation_m_per_sec = 50,
+			acceleration_m_per_sec2 = 2.5,
+			speed_m_per_sec = 30,
+			boost_speed_m_per_sec = 45,
+			boost_cost_hydrogen_per_sec = 4.5, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
-			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_range_ly = 9,
+			ftl_charge_sec = 25,
+			ftl_cost_hydrogen_per_ly = 250, -- Hydrogen fuel (§2.6)
 
 			-- Computer Systems
-			power = 175,
-			power_recharge_per_sec = 6,
-			firewall_rating = 200,
-			emitter_rating = 200,
+			power = 750,
+			power_recharge_per_sec = 25,
+			firewall_rating = 100,
+			emitter_rating = 100,
 			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-			visual_range_m = 500,
+			visual_range_m = 300,
 		},
-		-- Same as the other Frigate-tier ships: no confirmed slot-count number
-		-- exists yet, so left empty rather than guessed (§0/§4).
-		components = {},
-		slot_positions = {},
+		-- Fenrir slot counts (see the stat block's comment above);
+		-- Fitting screen positions below.
+		components = { W = 8, C = 2, E = 5, H = 2 },
+		-- Laid out over both faction silhouettes (main/images/topdown/,
+		-- 440 x 640 px, centre origin, +y = bow, +x = starboard): rows of
+		-- up to 4 from bow to stern - Weapons, Hull, Computers, Engines -
+		-- symmetric, with an odd count's extra slot on the centreline.
+		-- Weapon arcs angle outward with distance from the centreline.
+		slot_positions = {
+			W1 = { x = -135, y = 250, angle_deg = -30 },
+			W2 = { x = -45, y = 250, angle_deg = -10 },
+			W3 = { x = 45, y = 250, angle_deg = 10 },
+			W4 = { x = 135, y = 250, angle_deg = 30 },
+			W5 = { x = -135, y = 150, angle_deg = -30 },
+			W6 = { x = -45, y = 150, angle_deg = -10 },
+			W7 = { x = 45, y = 150, angle_deg = 10 },
+			W8 = { x = 135, y = 150, angle_deg = 30 },
+			H1 = { x = -45, y = 50 },
+			H2 = { x = 45, y = 50 },
+			C1 = { x = -45, y = -50 },
+			C2 = { x = 45, y = -50 },
+			E1 = { x = -135, y = -150 },
+			E2 = { x = -45, y = -150 },
+			E3 = { x = 45, y = -150 },
+			E4 = { x = 135, y = -150 },
+			E5 = { x = 0, y = -250 },
+		},
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -650,44 +701,69 @@ M.SHIPS = {
 		flight_camera = { distance = 416.144, height = 54.873 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Tactical.
 		role = "Tactical",
-		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
-		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
-		-- been decided yet.
+		-- Full stat block and slot counts: the reference game's Gungnir (a
+		-- Multi-Role line ship, bsgo.fandom.com/wiki/Gungnir), per direct
+		-- instruction - same sourcing and unit renames as `frigate_support`'s
+		-- Vanir numbers above (§0). Not carried over, for the same reasons:
+		-- its level-20 requirement and 250,000-cubit purchase price.
 		data = {
 			-- Hull Systems
-			hull_points = 650,
-			hull_recovery_per_sec = 5,
-			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-			armor = 5,
+			hull_points = 4550,
+			hull_recovery_per_sec = 35,
+			repair_cost_iron = 70000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 40,
 			critical_defense = 100,
 
 			-- Engine Systems
-			avoidance = 500,
-			turning_speed_deg_per_sec = 47.5,
-			turning_acceleration_deg_per_sec2 = 47.5,
-			inertial_compensation_m_per_sec = 100,
-			acceleration_m_per_sec2 = 10,
-			speed_m_per_sec = 52.5,
-			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			avoidance = 50,
+			turning_speed_deg_per_sec = 10,
+			turning_acceleration_deg_per_sec2 = 10,
+			inertial_compensation_m_per_sec = 50,
+			acceleration_m_per_sec2 = 2,
+			speed_m_per_sec = 30,
+			boost_speed_m_per_sec = 45,
+			boost_cost_hydrogen_per_sec = 8.1, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
-			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_range_ly = 10,
+			ftl_charge_sec = 25,
+			ftl_cost_hydrogen_per_ly = 250, -- Hydrogen fuel (§2.6)
 
 			-- Computer Systems
-			power = 175,
-			power_recharge_per_sec = 6,
-			firewall_rating = 200,
-			emitter_rating = 200,
-			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-			visual_range_m = 500,
+			power = 750,
+			power_recharge_per_sec = 25,
+			firewall_rating = 150,
+			emitter_rating = 150,
+			sensor_range_m = 3500, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 350,
 		},
-		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
-		-- number exists yet, so left empty rather than guessed (§0/§4).
-		components = {},
-		slot_positions = {},
+		-- Gungnir slot counts (see the stat block's comment above);
+		-- Fitting screen positions below.
+		components = { W = 8, C = 3, E = 3, H = 3 },
+		-- Laid out over both faction silhouettes (main/images/topdown/,
+		-- 440 x 640 px, centre origin, +y = bow, +x = starboard): rows of
+		-- up to 4 from bow to stern - Weapons, Hull, Computers, Engines -
+		-- symmetric, with an odd count's extra slot on the centreline.
+		-- Weapon arcs angle outward with distance from the centreline.
+		slot_positions = {
+			W1 = { x = -135, y = 200, angle_deg = -30 },
+			W2 = { x = -45, y = 200, angle_deg = -10 },
+			W3 = { x = 45, y = 200, angle_deg = 10 },
+			W4 = { x = 135, y = 200, angle_deg = 30 },
+			W5 = { x = -135, y = 100, angle_deg = -30 },
+			W6 = { x = -45, y = 100, angle_deg = -10 },
+			W7 = { x = 45, y = 100, angle_deg = 10 },
+			W8 = { x = 135, y = 100, angle_deg = 30 },
+			H1 = { x = -90, y = 0 },
+			H2 = { x = 0, y = 0 },
+			H3 = { x = 90, y = 0 },
+			C1 = { x = -90, y = -100 },
+			C2 = { x = 0, y = -100 },
+			C3 = { x = 90, y = -100 },
+			E1 = { x = -90, y = -200 },
+			E2 = { x = 0, y = -200 },
+			E3 = { x = 90, y = -200 },
+		},
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.
@@ -702,44 +778,66 @@ M.SHIPS = {
 		flight_camera = { distance = 385.522, height = 50.957 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Assault.
 		role = "Assault",
-		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
-		-- every other Frigate-tier ship so far - no Frigate-specific tuning has
-		-- been decided yet.
+		-- Full stat block and slot counts: the reference game's Jotunn (an
+		-- Assault-role line ship, bsgo.fandom.com/wiki/Jotunn), per direct
+		-- instruction - same sourcing and unit renames as `frigate_support`'s
+		-- Vanir numbers above (§0). Not carried over, for the same reasons:
+		-- its level-20 requirement and 2,000,000 purchase price.
 		data = {
 			-- Hull Systems
-			hull_points = 650,
-			hull_recovery_per_sec = 5,
-			repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-			armor = 5,
-			critical_defense = 100,
+			hull_points = 4500,
+			hull_recovery_per_sec = 20.6,
+			repair_cost_iron = 37000, -- full-repair cost, paid in Iron (§2.6)
+			armor = 45,
+			critical_defense = 120,
 
 			-- Engine Systems
-			avoidance = 500,
-			turning_speed_deg_per_sec = 47.5,
-			turning_acceleration_deg_per_sec2 = 47.5,
-			inertial_compensation_m_per_sec = 100,
-			acceleration_m_per_sec2 = 10,
-			speed_m_per_sec = 52.5,
-			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			avoidance = 30,
+			turning_speed_deg_per_sec = 8,
+			turning_acceleration_deg_per_sec2 = 8,
+			inertial_compensation_m_per_sec = 50,
+			acceleration_m_per_sec2 = 1.5,
+			speed_m_per_sec = 25,
+			boost_speed_m_per_sec = 40,
+			boost_cost_hydrogen_per_sec = 6.3, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
-			ftl_range_ly = 5.5,
-			ftl_charge_sec = 15,
-			ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+			ftl_range_ly = 10,
+			ftl_charge_sec = 25,
+			ftl_cost_hydrogen_per_ly = 250, -- Hydrogen fuel (§2.6)
 
 			-- Computer Systems
-			power = 175,
-			power_recharge_per_sec = 6,
-			firewall_rating = 200,
-			emitter_rating = 200,
-			sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-			visual_range_m = 500,
+			power = 500,
+			power_recharge_per_sec = 25,
+			firewall_rating = 150,
+			emitter_rating = 150,
+			sensor_range_m = 3500, -- renamed from source's "Dradis Range" (§0)
+			visual_range_m = 350,
 		},
-		-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
-		-- number exists yet, so left empty rather than guessed (§0/§4).
-		components = {},
-		slot_positions = {},
+		-- Jotunn slot counts (see the stat block's comment above);
+		-- Fitting screen positions below.
+		components = { W = 6, C = 2, E = 2, H = 4 },
+		-- Laid out over both faction silhouettes (main/images/topdown/,
+		-- 440 x 640 px, centre origin, +y = bow, +x = starboard): rows of
+		-- up to 4 from bow to stern - Weapons, Hull, Computers, Engines -
+		-- symmetric, with an odd count's extra slot on the centreline.
+		-- Weapon arcs angle outward with distance from the centreline.
+		slot_positions = {
+			W1 = { x = -135, y = 200, angle_deg = -30 },
+			W2 = { x = -45, y = 200, angle_deg = -10 },
+			W3 = { x = 45, y = 200, angle_deg = 10 },
+			W4 = { x = 135, y = 200, angle_deg = 30 },
+			W5 = { x = -45, y = 100, angle_deg = -10 },
+			W6 = { x = 45, y = 100, angle_deg = 10 },
+			H1 = { x = -135, y = 0 },
+			H2 = { x = -45, y = 0 },
+			H3 = { x = 45, y = 0 },
+			H4 = { x = 135, y = 0 },
+			C1 = { x = -45, y = -100 },
+			C2 = { x = 45, y = -100 },
+			E1 = { x = -45, y = -200 },
+			E2 = { x = 45, y = -200 },
+		},
 		faction_skins = {
 			-- Original species hulls; tools/build_fleet_models.py. Sardine retains its approved asset.
 			-- One mesh/texture each; meters, +Z forward. Hardware conveys role, not slot counts.

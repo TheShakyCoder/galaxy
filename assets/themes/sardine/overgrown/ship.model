@@ -1,4 +1,0 @@
-mesh: "/assets/themes/sardine/overgrown/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/sardine/overgrown/albedo.png"
-name: "sardine_overgrown"

@@ -1,4 +1,0 @@
-mesh: "/assets/themes/pilotfish/toybox/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/pilotfish/toybox/albedo.png"
-name: "pilotfish_toybox"

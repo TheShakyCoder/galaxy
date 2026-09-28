@@ -1,4 +1,0 @@
-mesh: "/assets/models/escort_tactical/osprey.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/osprey/aurora/albedo.png"
-name: "osprey_aurora"

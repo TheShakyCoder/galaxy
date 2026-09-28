@@ -1,0 +1,4 @@
+mesh: "/assets/skins/moray/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/moray/overgrown/albedo.png"
+name: "moray_overgrown"

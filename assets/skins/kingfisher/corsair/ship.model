@@ -1,0 +1,4 @@
+mesh: "/assets/skins/kingfisher/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/kingfisher/corsair/albedo.png"
+name: "kingfisher_corsair"

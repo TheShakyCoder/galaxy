@@ -1,0 +1,4 @@
+mesh: "/assets/skins/lionfish/crystalborn/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/lionfish/crystalborn/albedo.png"
+name: "lionfish_crystalborn"

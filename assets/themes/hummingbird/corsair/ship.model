@@ -1,4 +1,0 @@
-mesh: "/assets/themes/hummingbird/corsair/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/themes/hummingbird/corsair/albedo.png"
-name: "hummingbird_corsair"

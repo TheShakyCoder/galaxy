@@ -1,0 +1,4 @@
+mesh: "/assets/skins/pilotfish/overgrown/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/pilotfish/overgrown/albedo.png"
+name: "pilotfish_overgrown"

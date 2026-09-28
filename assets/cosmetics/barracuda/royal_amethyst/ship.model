@@ -1,4 +1,0 @@
-mesh: "/assets/models/escort_interceptor/barracuda.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/barracuda/royal_amethyst/albedo.png"
-name: "barracuda_royal_amethyst"

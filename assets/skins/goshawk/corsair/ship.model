@@ -1,0 +1,4 @@
+mesh: "/assets/skins/goshawk/corsair/model.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/skins/goshawk/corsair/albedo.png"
+name: "goshawk_corsair"

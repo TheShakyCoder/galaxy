@@ -1,4 +1,0 @@
-mesh: "/assets/cosmetics/pilotfish/clockwork/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/cosmetics/pilotfish/clockwork/albedo.png"
-name: "pilotfish_clockwork"
