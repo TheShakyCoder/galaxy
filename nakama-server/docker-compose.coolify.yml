@@ -10,6 +10,9 @@
 #   - every secret is required (`:?`), so Coolify lists them as variables to
 #     fill in and a deploy with one missing fails instead of running on
 #     Nakama's well-known defaults.
+#   - the runtime modules are baked into the nakama image (./Dockerfile)
+#     instead of bind-mounted: Coolify doesn't keep the repository on the
+#     host, so a `./` mount there is an empty folder and no modules load.
 services:
   postgres:
     image: postgres:16.8-alpine
@@ -26,7 +29,9 @@ services:
       timeout: 3s
       retries: 5
   nakama:
-    image: registry.heroiclabs.com/heroiclabs/nakama:3.37.0
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
       # Must equal the NAKAMA_SERVER_KEY build variable of the web app.
@@ -64,8 +69,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - ./:/nakama/data
     expose:
       - "7350" # client API + realtime socket - give this a domain in Coolify
       - "7351" # admin console - only give this a domain if you need it
