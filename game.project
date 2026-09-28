@@ -21,10 +21,9 @@ show_made_with_defold = 0
 
 [project]
 title = Galaxy
-dependencies#0 = https://github.com/defold/extension-poki-sdk/archive/refs/heads/main.zip
-dependencies#1 = https://github.com/defold/extension-websocket/archive/4.2.4.zip
-dependencies#2 = https://github.com/heroiclabs/nakama-defold/archive/master.zip
-custom_resources = /main/images/topdown,/main/images/skins
+dependencies#0 = https://github.com/defold/extension-websocket/archive/4.2.4.zip
+dependencies#1 = https://github.com/heroiclabs/nakama-defold/archive/master.zip
+custom_resources = /main/images/topdown,/main/images/skins,/main/images/skin_textures
 
 [nakama]
 host = 127.0.0.1

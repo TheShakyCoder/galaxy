@@ -61,6 +61,9 @@ local STARTING_SCRIP = 500
 local MODULE_PRICE = 100
 local MODULE_SELL_REFUND = 50
 local SHIP_PRICE = 500
+-- TEMPORARY: every ship costs 1 Scrip for testing. Delete this line to go
+-- back to SHIP_PRICE.
+SHIP_PRICE = 1
 local SHIP_SELL_REFUND = 250
 local SHIP_ADVANCE_PRICE = 500
 

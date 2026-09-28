@@ -24,6 +24,7 @@ local star_systems = require("main.data.star_systems")
 local session = require("main.session")
 local network = require("main.network")
 local remote_registry = require("main.remote_registry")
+local skin_flight = require("main.skin_flight")
 
 -- Two DIFFERENT "forward" concepts, deliberately kept separate - conflating
 -- them into one shared FORWARD constant was a real bug, found via live
@@ -168,6 +169,25 @@ local FACTION_OUTPOST = {
 -- main/ambient_lit.script's outposts) so the boost reads as one
 -- consistent scene-wide change, not just brighter ships.
 local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
+
+-- Shows the equipped skin on the visible model component (main/skin_flight.lua:
+-- recolors swap its texture, surface themes spawn their own model on this
+-- ship). One skin_flight state per model component, created the first time
+-- that ship is flown so it remembers the component's own texture.
+local SHIP_LIGHT_POS = vmath.vector4(4000, 6000, 4000, 1.0)
+
+local function apply_skin(self)
+	local id = self.model_component_id
+	if not self.skin_states[id] then
+		self.skin_states[id] = skin_flight.new_state(go.get_id(), msg.url("#" .. id), function(model)
+			go.set(model, "light", SHIP_LIGHT_POS)
+			go.set(model, "tint", AMBIENT_TINT)
+		end)
+	end
+	self.skin_state = self.skin_states[id]
+	skin_flight.show(self.skin_state, session.get_equipped_skin(self.ship_id), self.ship_id, session.get_faction())
+end
+
 
 -- Docking (per direct instruction): a ship may only dock within DOCK_RANGE
 -- of its own faction's outpost, and launching drops it back at a random
@@ -352,6 +372,8 @@ function init(self)
 	self.current_system_id = nil
 	self.ship_id = nil -- resolved from session.get_ship_id() in start_flight() - not known yet here (faction/ship selection hasn't happened this early)
 	self.model_component_id = nil
+	self.skin_states = {} -- model component id -> main/skin_flight.lua state, see apply_skin()
+	self.skin_state = nil -- the one for the ship currently flown
 	self.network_send_timer = 0
 	self.network_since_sent = 0
 	self.net_sent_pos = nil -- last broadcast state (nil = send on the next check) - see network_state_changed()
@@ -396,12 +418,18 @@ local function start_flight(self)
 	local faction = session.get_faction()
 	self.ship_id = session.get_ship_id() or DEFAULT_SHIP_ID
 	self.model_component_id = model_component_id(self.ship_id, faction)
+	-- Drop the previous flight's skin first, so its model component's
+	-- re-enable can't undo the enable/disable pass below.
+	if self.skin_state then
+		skin_flight.clear(self.skin_state)
+	end
 	for ship_id, _ in pairs(ships.SHIPS) do
 		for _, f in ipairs({ "accord", "swarm" }) do
 			local id = model_component_id(ship_id, f)
 			msg.post("#" .. id, (id == self.model_component_id) and "enable" or "disable")
 		end
 	end
+	apply_skin(self)
 
 	-- `light` is a world-space POINT LIGHT POSITION on model.material (see
 	-- main/ship_preview.script's own header comment on this exact constant),
@@ -412,7 +440,7 @@ local function start_flight(self)
 	-- design (sun direction, ambient, etc.) is plan.md §4 territory, not solved here.
 	-- Set on the CURRENTLY VISIBLE model component specifically, not a
 	-- fixed "#model" (only ever true back when there was exactly one).
-	go.set("#" .. self.model_component_id, "light", vmath.vector4(4000, 6000, 4000, 1.0))
+	go.set("#" .. self.model_component_id, "light", SHIP_LIGHT_POS)
 	-- `tint` (per direct instruction: "increase the general ambient light
 	-- in all the systems") - see AMBIENT_TINT's own comment above for why
 	-- this, not `light`, is the lever that actually reaches the shader's

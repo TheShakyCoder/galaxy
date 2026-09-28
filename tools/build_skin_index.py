@@ -4,12 +4,21 @@
 Reads the per-library catalogs in assets/skins/catalogs/ and writes:
   assets/skins/catalog.json               merged manifest, one entry per skin
   assets/skins/<ship>/<collection>/ship.go  factory prototype per skin
-  main/skin_hub.go                        one dynamically loaded factory per skin
-  main/data/skins.lua                     skin id -> ship, chassis, model, factory
+  main/skin_hub.go                        a load_dynamically factory per skin whose
+                                          mesh is bundled (MESH_KINDS); placed in
+                                          main/main.collection as "skin_hub"
+  main/data/skins.lua                     skin id -> ship, chassis, model, and how
+                                          flight shows it (flight_texture/_factory)
   main/data/skin_collections.lua          collection id -> name, description
   main/images/skins/<ship>-<collection>.jpg  outpost Skins tab thumbnails
   main/images/skins/<ship>-default.jpg       (plus the default hull), from
                                           the review renders in artifacts/
+  main/images/skin_textures/<ship>-<collection>.png  recolor albedos, which
+                                          flight swaps onto the ship's own model
+
+In flight, recolors swap the ship's texture, MESH_KINDS spawn their own model
+from skin_hub, and the rest (sculpted themes, Clockwork) show the default
+model until Live Update.
 
 Run after build_cosmetic_library.py or build_theme_library.py. Output is
 deterministic so it can be checked in.
@@ -21,6 +30,12 @@ ROOT = Path(__file__).resolve().parents[1]
 SKINS = ROOT / 'assets/skins'
 LIBRARIES = ('cosmetics', 'themes')
 THUMBS = ROOT / 'main/images/skins'
+# Skin kinds whose meshes are bundled into every build (via skin_hub.go). Surface
+# themes keep the base hull's vertices but remap fin-panel UVs, so they need
+# their own mesh; ~29 MB for all 72. Sculpted themes/Clockwork wait for Live Update.
+MESH_KINDS = {'surface'}
+SKIN_HUB_URL = 'main:/skin_hub#'
+FLIGHT_TEXTURES = ROOT / 'main/images/skin_textures'
 # Review renders keep the ship centered with wide margins; crop them and shrink
 # to what a Skins-tab card shows. Bundled via game.project custom_resources.
 THUMB_CROP = 0.12
@@ -40,6 +55,16 @@ def factory_id(entry):
     return 'skin_factory_' + entry['id'].replace('.', '_')
 
 
+def flight_fields(entry):
+    """Lua fields telling flight how to show this skin (none = default model)."""
+    texture = flight_texture(entry)
+    if texture:
+        return f', flight_texture = {lua(texture)}'
+    if entry['kind'] in MESH_KINDS:
+        return f', flight_factory = {lua(SKIN_HUB_URL + factory_id(entry))}'
+    return ''
+
+
 def write_thumbnail(source, dest):
     from PIL import Image  # only this step needs Pillow
     with Image.open(source) as im:
@@ -56,6 +81,23 @@ def write_thumbnails(entries):
         write_thumbnail(ROOT / e['thumbnail'], THUMBS / f'{e["ship"]}-{e["collection"]}.jpg')
     for ship in sorted({e['ship'] for e in entries}):
         write_thumbnail(ROOT / f'artifacts/fleet/renders/{ship}-perspective.png', THUMBS / f'{ship}-default.jpg')
+
+
+def flight_texture(entry):
+    """Bundled texture path for a recolor skin, else None."""
+    if entry['kind'] != 'recolor':
+        return None
+    return f'/main/images/skin_textures/{entry["ship"]}-{entry["collection"]}.png'
+
+
+def write_flight_textures(entries):
+    FLIGHT_TEXTURES.mkdir(parents=True, exist_ok=True)
+    for old in FLIGHT_TEXTURES.glob('*.png'):
+        old.unlink()
+    for e in entries:
+        path = flight_texture(e)
+        if path:
+            (ROOT / path.lstrip('/')).write_bytes((ROOT / e['texture'].lstrip('/')).read_bytes())
 
 
 def main():
@@ -80,17 +122,21 @@ def main():
         assert (ROOT / e['model'].lstrip('/')).is_file(), 'Missing model: ' + e['model']
         go = '/' + (folder / 'ship.go').relative_to(ROOT).as_posix()
         write(folder / 'ship.go', f'components {{\n  id: "model"\n  component: "{e["model"]}"\n}}\n')
+        if e['kind'] not in MESH_KINDS:
+            continue
         hub.append(f'embedded_components {{\n  id: "{factory_id(e)}"\n  type: "factory"\n'
                    f'  data: "prototype: \\"{go}\\"\\nload_dynamically: true\\n"\n}}\n')
     write(ROOT / 'main/skin_hub.go', ''.join(hub))
 
     rows = [f'\t[{lua(e["id"])}] = {{ ship = {lua(e["ship"])}, collection = {lua(e["collection"])}, '
             f'chassis = {lua(e["size"] + "_" + e["role"])}, faction = {lua(e["faction"])}, '
-            f'model = {lua(e["model"])}, factory = {lua(factory_id(e))} }},\n' for e in entries]
+            f'model = {lua(e["model"])}' + flight_fields(e) + ' },\n' for e in entries]
     write(ROOT / 'main/data/skins.lua',
           HEADER + '-- One entry per purchasable skin, keyed "<ship>.<collection>". `chassis` and\n'
-          '-- `faction` match main/data/ships.lua\'s SHIPS key and faction_skins key;\n'
-          '-- `factory` is a load_dynamically factory on main/skin_hub.go.\n\n'
+          '-- `faction` match main/data/ships.lua\'s SHIPS key and faction_skins key.\n'
+          '-- In flight (main/skin_flight.lua): `flight_texture` is swapped onto the ship\'s\n'
+          '-- own model; `flight_factory` spawns the skin\'s own model in its place;\n'
+          '-- neither means the default model is shown.\n\n'
           'local M = {}\n\nM.SKINS = {\n' + ''.join(rows) + '}\n\nreturn M\n')
 
     rows = [f'\t[{lua(k)}] = {{ name = {lua(c["name"])}, kind = {lua(c["kind"])}, description = {lua(c["description"])} }},\n'
@@ -99,6 +145,7 @@ def main():
           HEADER + '-- Display data for each skin collection, keyed by main/data/skins.lua\'s `collection`.\n\n'
           'local M = {}\n\nM.COLLECTIONS = {\n' + ''.join(rows) + '}\n\nreturn M\n')
     write_thumbnails(entries)
+    write_flight_textures(entries)
     print(f'Indexed {len(entries)} skins in {len(collections)} collections')
 
 

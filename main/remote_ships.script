@@ -41,6 +41,7 @@
 local network = require "main.network"
 local remote_registry = require "main.remote_registry"
 local ships = require "main.data.ships"
+local skin_flight = require "main.skin_flight"
 
 -- Same ambient-lighting boost every model this project renders during
 -- flight gets (per direct instruction: "increase the general ambient light
@@ -78,6 +79,18 @@ local render_rot = {}    -- user_id -> smoothed rotation actually applied this f
 local factions = {}      -- user_id -> faction name string
 local speeds = {}        -- user_id -> latest network-reported speed (number)
 local stale_time = {}    -- user_id -> seconds since that ship's last update
+-- Skins (main/skin_flight.lua). Unlike ship type, a skin can change between
+-- one flight and the next without the ship leaving the room, so it's
+-- re-checked on every update (cheap: only a changed value touches the ship).
+local ship_ids = {}      -- user_id -> ship_id the ship was spawned as
+local shown_skins = {}   -- user_id -> skin_id currently shown (false = default)
+local skin_states = {}   -- user_id -> skin_flight state for that ship
+
+-- Gives a spawned skin model the same material constants as the ship's own.
+local function setup_skin_model(model)
+	go.set(model, "tint", AMBIENT_TINT)
+	go.set(model, "light", LIGHT_POS)
+end
 
 -- Dead reckoning (matches main/player_ship.script's NETWORK_* sender):
 -- between updates each remote ship's target keeps moving along its reported
@@ -116,6 +129,7 @@ local function on_transform(user_id, t)
 		faction = t.faction,
 		speed = t.speed,
 		ship_id = t.ship_id,
+		skin_id = t.skin_id,
 	})
 end
 
@@ -154,9 +168,21 @@ function on_message(self, message_id, message)
 			render_rot[message.user_id] = rot
 			go.set(msg.url(nil, ship_go, "model"), "tint", AMBIENT_TINT)
 			go.set(msg.url(nil, ship_go, "model"), "light", LIGHT_POS)
+			ship_ids[message.user_id] = message.ship_id
+			skin_states[message.user_id] = skin_flight.new_state(ship_go, msg.url(nil, ship_go, "model"), setup_skin_model)
+		end
+
+		local skin_id = message.skin_id or false
+		if shown_skins[message.user_id] ~= skin_id then
+			shown_skins[message.user_id] = skin_id
+			print("[remote_ships] " .. message.user_id .. " skin: " .. tostring(message.skin_id or "default"))
+			skin_flight.show(skin_states[message.user_id], message.skin_id, ship_ids[message.user_id], message.faction)
 		end
 	elseif message_id == hash("remote_leave") then
 		local ship_go = ships_by_user[message.user_id]
+		if skin_states[message.user_id] then
+			skin_flight.clear(skin_states[message.user_id]) -- a spawned skin model isn't deleted with its parent
+		end
 		if ship_go then
 			go.delete(ship_go)
 			ships_by_user[message.user_id] = nil
@@ -168,6 +194,9 @@ function on_message(self, message_id, message)
 		factions[message.user_id] = nil
 		speeds[message.user_id] = nil
 		stale_time[message.user_id] = nil
+		ship_ids[message.user_id] = nil
+		shown_skins[message.user_id] = nil
+		skin_states[message.user_id] = nil
 		remote_registry.ships[message.user_id] = nil
 	end
 end

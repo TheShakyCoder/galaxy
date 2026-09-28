@@ -28,8 +28,9 @@ assets/skins/
 Defold only bundles resources that the game references. Review-only files in
 these folders, such as the recolor `model.glb`s, don't add to the build.
 
-Don't edit `catalog.json`, `ship.go`, `main/skins.collection` or
-`main/data/skins.lua` by hand. Regenerate them after any library build:
+Don't edit `catalog.json`, `ship.go`, `main/skin_hub.go`,
+`main/data/skins.lua`, `main/data/skin_collections.lua` or the images in
+`main/images/skins/` and `main/images/skin_textures/` by hand. Regenerate them after any library build:
 
 ```text
 python tools/build_skin_index.py
@@ -76,9 +77,20 @@ paths, source hashes, bounds and a suggested preview camera (`preview`). Look up
 a skin by its ID and fall back to the ship's default `faction_skins` model when a
 skin is missing or not owned.
 
-`catalog.json` is an asset manifest, not a commerce contract. Keep prices,
-ownership, equip state and network sync in game data (`main/data/skins.lua`) and
-game code. None of these are implemented yet.
+`catalog.json` is an asset manifest, not a commerce contract. Prices live in
+`main/data/skin_prices.lua`; ownership and equip state in `main/session.lua`;
+the outpost's Skins tab is in `main/outpost.gui_script`.
+
+In flight (`main/skin_flight.lua`), for your ship and other players' ships:
+
+| Kind | How it's shown | Bundled data |
+|---|---|---|
+| Recolor | Texture swap on the ship's own model | `main/images/skin_textures/` (~3 MB) |
+| Surface | Skin's own model, spawned from `main/skin_hub.go` | Meshes + textures (~9 MB compressed in the web archive) |
+| Sculpted, Clockwork | Default model | Not bundled; waits for Live Update |
+
+Each player sends their equipped skin ID with their position (`main/network.lua`).
+Receivers only show it if it matches that player's ship and faction.
 
 Do an in-engine material, framing and crowded-scene performance review before
 enabling skins. The studio previews don't guarantee how Defold will render them.

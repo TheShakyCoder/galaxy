@@ -181,7 +181,7 @@ docker run --rm -p 8080:80 galaxy-web
 
 Only the single-threaded `wasm-web` target is built. The pthread variant needs
 cross-origin isolation headers (COOP/COEP), and those break third-party
-scripts such as the Poki SDK.
+scripts loaded from other domains.
 
 ## Upgrading Defold
 

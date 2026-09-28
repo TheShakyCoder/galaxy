@@ -226,7 +226,7 @@ function M.connect(callback)
 end
 
 -- Joins the shared space room and starts listening for other ships'
--- transforms. on_transform(user_id, {x,y,z,qx,qy,qz,qw,faction,speed,model})
+-- transforms. on_transform(user_id, {x,y,z,qx,qy,qz,qw,faction,speed,ship_id,skin_id})
 -- fires whenever another player's ship moves; on_leave(user_id) fires when
 -- they disconnect or leave the room, and for every known ship when this
 -- client itself drops or changes room. If not connected yet, the join
@@ -328,6 +328,10 @@ function M.send_transform(pos, rot, speed, ship_id)
 		-- nil/omitted (json.encode drops nil fields) falls back to a
 		-- default-sized marker, same as a client too old to send this.
 		ship_id = ship_id,
+		-- Equipped skin (main/data/skins.lua id), omitted for the default
+		-- model. Receivers only show it if it's valid for this ship_id and
+		-- faction - see main/skin_flight.lua's show().
+		skin_id = ship_id and session.get_equipped_skin(ship_id),
 	})
 	nakama.sync(function()
 		M.socket.channel_message_send(M.channel_id, payload)

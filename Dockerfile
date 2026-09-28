@@ -26,12 +26,6 @@ WORKDIR /src
 ADD https://github.com/defold/defold/releases/download/${DEFOLD_VERSION}/bob.jar /opt/bob.jar
 COPY . .
 
-# Drop the Poki SDK from this self-hosted build: its site lock shows a
-# "possible unauthorized game hosting" DMCA warning on any domain Poki doesn't
-# host. game.project keeps it for builds actually published to Poki.
-RUN sed -i '/extension-poki-sdk/d' game.project \
-    && ! grep -q poki game.project
-
 # Overrides game.project's [nakama] section for this build only.
 RUN printf '[nakama]\nhost = %s\nport = %s\nuse_ssl = %s\nserver_key = %s\n' \
         "$NAKAMA_HOST" "$NAKAMA_PORT" "$NAKAMA_USE_SSL" "$NAKAMA_SERVER_KEY" > /tmp/deploy.ini \

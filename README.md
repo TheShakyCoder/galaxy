@@ -73,8 +73,8 @@ for features that aren't built yet.
    ```
    Nakama listens on `127.0.0.1:7350`. Its admin console is at <http://127.0.0.1:7351>.
 2. **Run the game.** Open `game.project` in the Defold editor (1.13.1) and choose
-   **Project → Build**. The editor fetches the dependencies (Nakama, WebSocket,
-   Poki SDK) on first build.
+   **Project → Build**. The editor fetches the dependencies (Nakama and
+   WebSocket) on first build.
 
 To test multiplayer, run two builds from the editor. Debug builds get a new
 player identity each launch, so they won't collide.

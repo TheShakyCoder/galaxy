@@ -9,6 +9,10 @@
 
 local M = {}
 
+-- TEMPORARY: every skin costs 1 Scrip for testing. Delete this line to go back
+-- to the per-collection prices below.
+local TEST_PRICE = 1
+
 M.PRICES = {
 	-- Recolor
 	aurora = 150,
@@ -26,5 +30,11 @@ M.PRICES = {
 	toybox = 400,
 	clockwork = 400,
 }
+
+if TEST_PRICE then
+	for collection in pairs(M.PRICES) do
+		M.PRICES[collection] = TEST_PRICE
+	end
+end
 
 return M
