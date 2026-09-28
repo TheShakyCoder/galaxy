@@ -42,6 +42,7 @@ local network = require "main.network"
 local remote_registry = require "main.remote_registry"
 local ships = require "main.data.ships"
 local skin_flight = require "main.skin_flight"
+local profile = require "main.profile"
 
 -- Same ambient-lighting boost every model this project renders during
 -- flight gets (per direct instruction: "increase the general ambient light
@@ -138,7 +139,9 @@ local function on_leave(user_id)
 end
 
 function init(self)
-	network.connect()
+	-- No connect() here: main/start_screen.gui_script connects once the player
+	-- has logged in and verified their email. join_space_room() just
+	-- registers the callbacks and joins as soon as that connection exists.
 	network.join_space_room(on_transform, on_leave)
 end
 
@@ -202,6 +205,7 @@ function on_message(self, message_id, message)
 end
 
 function update(self, dt)
+	profile.update(dt) -- sends queued progress changes to the server (see main/profile.lua)
 	if next(ships_by_user) == nil then
 		return
 	end

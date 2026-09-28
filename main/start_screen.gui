@@ -33,47 +33,9 @@ nodes {
   id: "title"
   text: "GALAXY"
   font: "default_font"
-  position { x: 960.0 y: 820.0 z: 0.0 w: 1.0 }
-  size { x: 800.0 y: 100.0 z: 0.0 w: 1.0 }
-  color { x: 0.9 y: 0.95 z: 1.0 w: 1.0 }
-  pivot: PIVOT_CENTER
-  xanchor: XANCHOR_NONE
-  yanchor: YANCHOR_NONE
-  adjust_mode: ADJUST_MODE_FIT
-  inherit_alpha: true
-  alpha: 1.0
-  outline { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
-  outline_alpha: 1.0
-  shadow_alpha: 0.0
-  line_break: false
-  text_leading: 1.0
-  text_tracking: 0.0
-  parent: ""
-  layer: ""
-}
-nodes {
-  type: TYPE_BOX
-  id: "guest_button"
-  position { x: 960.0 y: 520.0 z: 0.0 w: 1.0 }
-  size { x: 560.0 y: 100.0 z: 0.0 w: 1.0 }
-  color { x: 0.16 y: 0.32 z: 0.45 w: 1.0 }
-  pivot: PIVOT_CENTER
-  xanchor: XANCHOR_NONE
-  yanchor: YANCHOR_NONE
-  adjust_mode: ADJUST_MODE_FIT
-  inherit_alpha: true
-  alpha: 1.0
-  texture: ""
-  parent: ""
-  layer: ""
-}
-nodes {
-  type: TYPE_TEXT
-  id: "guest_button_label"
-  text: "Play as Guest"
-  font: "default_font"
-  position { x: 960.0 y: 520.0 z: 0.0 w: 1.0 }
-  size { x: 560.0 y: 100.0 z: 0.0 w: 1.0 }
+  position { x: 960.0 y: 900.0 z: 0.0 w: 1.0 }
+  scale { x: 2.0 y: 2.0 z: 1.0 w: 1.0 }
+  size { x: 1200.0 y: 100.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
@@ -90,11 +52,77 @@ nodes {
   layer: ""
 }
 nodes {
+  type: TYPE_TEXT
+  id: "heading"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 790.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 0.8 y: 0.85 z: 0.9 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "info"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 720.0 z: 0.0 w: 1.0 }
+  size { x: 1000.0 y: 80.0 z: 0.0 w: 1.0 }
+  color { x: 0.6 y: 0.66 z: 0.74 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: true
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "field_1_label"
+  text: ""
+  font: "default_font"
+  position { x: 640.0 y: 690.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.6 y: 0.66 z: 0.74 w: 1.0 }
+  pivot: PIVOT_W
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
   type: TYPE_BOX
-  id: "login_button"
-  position { x: 960.0 y: 380.0 z: 0.0 w: 1.0 }
-  size { x: 560.0 y: 100.0 z: 0.0 w: 1.0 }
-  color { x: 0.16 y: 0.32 z: 0.45 w: 1.0 }
+  id: "field_1"
+  position { x: 960.0 y: 640.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 0.1 y: 0.12 z: 0.17 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
@@ -107,13 +135,133 @@ nodes {
 }
 nodes {
   type: TYPE_TEXT
-  id: "login_button_label"
-  text: "Register / Log In"
+  id: "field_1_text"
+  text: ""
   font: "default_font"
-  position { x: 960.0 y: 380.0 z: 0.0 w: 1.0 }
-  size { x: 560.0 y: 100.0 z: 0.0 w: 1.0 }
+  position { x: 656.0 y: 640.0 z: 0.0 w: 1.0 }
+  size { x: 608.0 y: 60.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_W
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "field_2_label"
+  text: ""
+  font: "default_font"
+  position { x: 640.0 y: 580.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.6 y: 0.66 z: 0.74 w: 1.0 }
+  pivot: PIVOT_W
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "field_2"
+  position { x: 960.0 y: 530.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 0.1 y: 0.12 z: 0.17 w: 1.0 }
   pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "field_2_text"
+  text: ""
+  font: "default_font"
+  position { x: 656.0 y: 530.0 z: 0.0 w: 1.0 }
+  size { x: 608.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_W
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "field_3_label"
+  text: ""
+  font: "default_font"
+  position { x: 640.0 y: 470.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.6 y: 0.66 z: 0.74 w: 1.0 }
+  pivot: PIVOT_W
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "field_3"
+  position { x: 960.0 y: 420.0 z: 0.0 w: 1.0 }
+  size { x: 640.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 0.1 y: 0.12 z: 0.17 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "field_3_text"
+  text: ""
+  font: "default_font"
+  position { x: 656.0 y: 420.0 z: 0.0 w: 1.0 }
+  size { x: 608.0 y: 60.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_W
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   adjust_mode: ADJUST_MODE_FIT
@@ -132,9 +280,123 @@ nodes {
   id: "status"
   text: ""
   font: "default_font"
-  position { x: 960.0 y: 260.0 z: 0.0 w: 1.0 }
-  size { x: 1200.0 y: 80.0 z: 0.0 w: 1.0 }
-  color { x: 0.8 y: 0.85 z: 0.9 w: 1.0 }
+  position { x: 960.0 y: 345.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 50.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 0.75 z: 0.45 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: true
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "primary"
+  position { x: 960.0 y: 270.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 0.16 y: 0.32 z: 0.45 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "primary_label"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 270.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "secondary"
+  position { x: 960.0 y: 170.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "secondary_label"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 170.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_BOX
+  id: "tertiary"
+  position { x: 960.0 y: 85.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 0.15 y: 0.17 z: 0.22 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  texture: ""
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "tertiary_label"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 85.0 z: 0.0 w: 1.0 }
+  size { x: 420.0 y: 76.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 1.0 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE

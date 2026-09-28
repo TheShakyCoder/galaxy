@@ -1,45 +1,347 @@
--- The initial screen shown on game load, for the case the player is NOT
--- automatically logged in (plan.md §3.2 step 3: no valid stored auth
--- token found — first-time visitor, guest, logged-out, or expired
--- session). Presents both entry points on one combined screen, per the
--- decided boot flow: **Play as Guest** or **Register / Log In**.
+-- The account screen shown on game load. There is no guest play: every
+-- player registers with email + password and verifies the email with a
+-- 6-digit code before playing (nakama-server/modules/accounts.lua enforces
+-- that server-side too). Views:
 --
--- Guest now actually transitions to main/faction_select.gui (this screen
--- disables itself and tells that one to show). Register/Log In still just
--- logs its intended next step — the real account flow against Nakama
--- (§3.2/§3.3) isn't wired up yet. Wiring the silent-login check (step 1/2
--- of §3.2's boot flow — skip this screen entirely if a valid token is
--- already stored) is also separate, future work.
+--   loading   "Connecting..." while a stored session is resumed
+--   login     Email, Password                    [Log In] [Create account]
+--   register  Email, Password, Confirm password  [Create account] [Back]
+--   verify    Code                               [Verify] [Resend code] [Log out]
+--
+-- One set of nodes (three fields, three buttons) is relabelled per view.
+-- Text entry follows ~/Defold/SuperShips/main/station.gui_script: clicking a
+-- field focuses it; the `text`, `backspace` and `enter` input actions type
+-- into it; Tab (bound as `cycle_target`) moves to the next field.
+--
+-- Once verified, main/profile.lua loads the saved progress. A player with a
+-- faction goes straight to the outpost; a new player picks one first
+-- (main/faction_select). Logging out (here or from the outpost, which sends
+-- "show_account") comes back to the login view.
 
-local STATUS_LOGIN = "Register / Log In not wired up yet -- Nakama auth pending (plan.md S3.2/S3.3)"
+local network = require("main.network")
+local profile = require("main.profile")
+
+local FIELD_COLOR = vmath.vector4(0.1, 0.12, 0.17, 1.0)
+local FIELD_FOCUS_COLOR = vmath.vector4(0.16, 0.22, 0.32, 1.0)
+local MAX_FIELD_LENGTH = 64
+local MIN_PASSWORD_LENGTH = 8 -- Nakama's own minimum for email accounts
+
+-- Per view: heading, field labels (nil = hidden), which fields are masked,
+-- and button labels (nil = hidden).
+local VIEWS = {
+	loading = { heading = "", fields = {}, buttons = {} },
+	login = {
+		heading = "Log in",
+		fields = { "Email", "Password" }, masked = { [2] = true },
+		buttons = { "Log In", "Create account" },
+	},
+	register = {
+		heading = "Create account",
+		fields = { "Email", "Password (at least 8 characters)", "Confirm password" }, masked = { [2] = true, [3] = true },
+		buttons = { "Create account", "Back to log in" },
+	},
+	verify = {
+		heading = "Verify your email",
+		fields = { "6-digit code" }, digits = { [1] = 6 }, -- digits only, at most 6
+		buttons = { "Verify", "Resend code", "Log out" },
+	},
+}
+
+local BUTTON_IDS = { "primary", "secondary", "tertiary" }
+
+local function set_status(self, text)
+	gui.set_text(self.status_node, text or "")
+end
+
+local function refresh_fields(self)
+	local view = VIEWS[self.view]
+	for i, field in ipairs(self.fields) do
+		local value = self.values[i]
+		local shown = (view.masked and view.masked[i]) and string.rep("*", #value) or value
+		if self.focus == i then
+			shown = shown .. "|"
+		end
+		gui.set_text(field.text, shown)
+		gui.set_color(field.box, self.focus == i and FIELD_FOCUS_COLOR or FIELD_COLOR)
+	end
+end
+
+local function show_view(self, name, info)
+	self.view = name
+	local view = VIEWS[name]
+	gui.set_text(self.heading_node, view.heading)
+	gui.set_text(self.info_node, info or "")
+	for i, field in ipairs(self.fields) do
+		local label = view.fields[i]
+		gui.set_enabled(field.label, label ~= nil)
+		gui.set_enabled(field.box, label ~= nil)
+		gui.set_enabled(field.text, label ~= nil)
+		gui.set_text(field.label, label or "")
+	end
+	for i, button in ipairs(self.buttons) do
+		local label = view.buttons[i]
+		gui.set_enabled(button.box, label ~= nil)
+		gui.set_enabled(button.label, label ~= nil)
+		gui.set_text(button.label, label or "")
+	end
+	-- Keep the email between login and register; clear passwords and codes.
+	local email = (name == "login" or name == "register") and self.values[1] or ""
+	self.values = { email, "", "" }
+	self.focus = #view.fields > 0 and (email ~= "" and name ~= "verify" and 2 or 1) or nil
+	self.busy = false
+	refresh_fields(self)
+end
+
+local function field_count(self)
+	return #VIEWS[self.view].fields
+end
+
+-- Leaves this screen for the game (outpost) or, for a new player, the
+-- faction choice.
+local function enter_game(self)
+	show_view(self, "loading")
+	set_status(self, "Loading your progress...")
+	profile.load(function(ok, has_faction, err)
+		if not ok then
+			show_view(self, "login")
+			set_status(self, err or "Couldn't load your progress.")
+			return
+		end
+		self.active = false
+		msg.post("#gui", "disable")
+		if has_faction then
+			network.connect()
+			msg.post("outpost#gui", "show_outpost")
+		else
+			msg.post("faction_select#gui", "show_faction_select")
+		end
+	end)
+end
+
+-- Emails a verification code and shows the verify view.
+local function send_code(self, email)
+	network.send_code(function(result, err)
+		if result and result.ok then
+			show_view(self, "verify", "We've emailed a 6-digit code to " .. (email or "your address") .. ".\nIt expires in 15 minutes.")
+			set_status(self, "")
+		elseif result and result.error then
+			show_view(self, "verify", "Enter the code we emailed to " .. (email or "your address") .. ".")
+			set_status(self, result.error .. (result.retry_in_s and (" (" .. result.retry_in_s .. " s)") or ""))
+		else
+			set_status(self, err or "Couldn't send the code.")
+			self.busy = false
+		end
+	end)
+end
+
+-- After any successful login/registration/resume: verified players go in,
+-- others verify first.
+local function after_login(self)
+	network.account_status(function(status, err)
+		if not status then
+			network.logout()
+			show_view(self, "login")
+			set_status(self, err or "Couldn't reach the server.")
+			return
+		end
+		self.email = status.email
+		if status.verified then
+			enter_game(self)
+		else
+			send_code(self, status.email)
+		end
+	end)
+end
+
+local function valid_email(email)
+	return email:match("^[^@%s]+@[^@%s]+%.[^@%s]+$") ~= nil
+end
+
+local function submit(self)
+	if self.busy then
+		return
+	end
+	local email, password, confirm = self.values[1], self.values[2], self.values[3]
+	if self.view == "login" then
+		if not valid_email(email) or password == "" then
+			set_status(self, "Enter your email and password.")
+			return
+		end
+		self.busy = true
+		set_status(self, "Logging in...")
+		network.login(email, password, function(ok, err)
+			if ok then
+				after_login(self)
+			else
+				self.busy = false
+				set_status(self, err)
+			end
+		end)
+	elseif self.view == "register" then
+		if not valid_email(email) then
+			set_status(self, "Enter a valid email address.")
+			return
+		elseif #password < MIN_PASSWORD_LENGTH then
+			set_status(self, "Passwords need at least " .. MIN_PASSWORD_LENGTH .. " characters.")
+			return
+		elseif password ~= confirm then
+			set_status(self, "The passwords don't match.")
+			return
+		end
+		self.busy = true
+		set_status(self, "Creating your account...")
+		network.register(email, password, function(ok, err)
+			if ok then
+				after_login(self)
+			else
+				self.busy = false
+				set_status(self, err)
+			end
+		end)
+	elseif self.view == "verify" then
+		local code = self.values[1]:gsub("%s", "")
+		if not code:match("^%d%d%d%d%d%d$") then
+			set_status(self, "Enter the 6-digit code from the email.")
+			return
+		end
+		self.busy = true
+		set_status(self, "Checking...")
+		network.verify(code, function(result, err)
+			self.busy = false
+			if result and result.ok then
+				enter_game(self)
+			else
+				self.values[1] = "" -- clear the wrong code so the next one can be typed straight in
+				refresh_fields(self)
+				set_status(self, (result and result.error) or err or "Couldn't verify the code.")
+			end
+		end)
+	end
+end
+
+local function logout(self)
+	profile.flush(function()
+		profile.unload()
+		network.logout()
+		show_view(self, "login")
+		set_status(self, "")
+	end)
+end
 
 function init(self)
 	self.active = true
 	msg.post(".", "acquire_input_focus")
-	self.guest_node = gui.get_node("guest_button")
-	self.login_node = gui.get_node("login_button")
+	self.heading_node = gui.get_node("heading")
+	self.info_node = gui.get_node("info")
 	self.status_node = gui.get_node("status")
-	gui.set_text(self.status_node, "")
+	self.fields = {}
+	for i = 1, 3 do
+		self.fields[i] = {
+			label = gui.get_node("field_" .. i .. "_label"),
+			box = gui.get_node("field_" .. i),
+			text = gui.get_node("field_" .. i .. "_text"),
+		}
+	end
+	self.buttons = {}
+	for i, id in ipairs(BUTTON_IDS) do
+		self.buttons[i] = { box = gui.get_node(id), label = gui.get_node(id .. "_label") }
+	end
+	self.values = { "", "", "" }
+
+	show_view(self, "loading")
+	set_status(self, "Connecting...")
+	network.resume(function(ok)
+		if ok then
+			after_login(self)
+		else
+			show_view(self, "login")
+			set_status(self, "")
+		end
+	end)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("show_account") then
+		-- From the outpost's Log out button: it has already saved and logged out.
+		self.active = true
+		msg.post("#gui", "enable")
+		show_view(self, "login")
+		set_status(self, message.status or "")
+	end
 end
 
 local function hits(node, action)
-	return gui.pick_node(node, action.x, action.y)
+	return gui.is_enabled(node) and gui.pick_node(node, action.x, action.y)
 end
 
 function on_input(self, action_id, action)
-	if not self.active or action_id ~= hash("touch") or not action.pressed then
+	if not self.active then
 		return false
 	end
-	if hits(self.guest_node, action) then
-		print("[start_screen] Play as Guest pressed -- handing off to faction_select")
-		self.active = false
-		msg.post("#gui", "disable")
-		msg.post("faction_select#gui", "show_faction_select")
+
+	if action_id == hash("text") then
+		local digits = VIEWS[self.view].digits and VIEWS[self.view].digits[self.focus]
+		local text = digits and action.text:gsub("%D", "") or action.text
+		local limit = digits or MAX_FIELD_LENGTH
+		if self.focus and #self.values[self.focus] + #text <= limit then
+			self.values[self.focus] = self.values[self.focus] .. text
+			refresh_fields(self)
+		end
 		return true
-	elseif hits(self.login_node, action) then
-		gui.set_text(self.status_node, STATUS_LOGIN)
-		print("[start_screen] Register / Log In pressed")
+	elseif action_id == hash("backspace") then
+		if self.focus and (action.pressed or action.repeated) then
+			self.values[self.focus] = self.values[self.focus]:sub(1, -2)
+			refresh_fields(self)
+		end
+		return true
+	elseif action_id == hash("cycle_target") then -- Tab
+		if action.pressed and self.focus then
+			self.focus = self.focus % field_count(self) + 1
+			refresh_fields(self)
+		end
+		return true
+	elseif action_id == hash("enter") then
+		if action.pressed and self.focus then
+			if self.focus < field_count(self) then
+				self.focus = self.focus + 1
+				refresh_fields(self)
+			else
+				submit(self)
+			end
+		end
 		return true
 	end
-	return false
+
+	if action_id ~= hash("touch") or not action.pressed then
+		return action_id ~= nil -- keep other keys (flight controls) from leaking through
+	end
+
+	for i, field in ipairs(self.fields) do
+		if hits(field.box, action) then
+			self.focus = i
+			refresh_fields(self)
+			return true
+		end
+	end
+
+	if self.busy then
+		return true
+	end
+	if hits(self.buttons[1].box, action) then
+		submit(self)
+	elseif hits(self.buttons[2].box, action) then
+		if self.view == "login" then
+			show_view(self, "register")
+		elseif self.view == "register" then
+			show_view(self, "login")
+		elseif self.view == "verify" then
+			set_status(self, "Sending a new code...")
+			send_code(self, self.email)
+		end
+	elseif hits(self.buttons[3].box, action) then
+		if self.view == "verify" then
+			logout(self)
+		end
+	end
+	return true
 end

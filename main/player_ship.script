@@ -416,6 +416,7 @@ local function start_flight(self)
 	-- see model_component_id()'s own comment above for why toggling
 	-- enabled state on 24 pre-built components, not a runtime mesh swap.
 	local faction = session.get_faction()
+	session.launch() -- flights start in the home system (see self.current_system_id below)
 	self.ship_id = session.get_ship_id() or DEFAULT_SHIP_ID
 	self.model_component_id = model_component_id(self.ship_id, faction)
 	-- Drop the previous flight's skin first, so its model component's
@@ -464,11 +465,10 @@ local function start_flight(self)
 	self.current_system_id = star_systems.HOME_SYSTEM[faction]
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[self.current_system_id].name })
-	-- Realtime presence (AskUserQuestion's "Realtime presence only" slice) -
-	-- main/network_hub's remote_ships.script already called network.connect()
-	-- at boot and joined this same home-system room as its own default, so
-	-- this call is normally a same-system no-op - it's here so launching
-	-- still joins correctly even if this ever stops matching that default.
+	-- Realtime presence - the account screen (main/start_screen.gui_script)
+	-- already connected after login and joined this same home-system room as
+	-- its default, so this call is normally a same-system no-op - it's here
+	-- so launching still joins correctly even if that ever stops matching.
 	network.rejoin_room_for_system(self.current_system_id)
 end
 
@@ -591,12 +591,11 @@ local function execute_jump(self)
 	if not star_systems.in_ftl_range(dist, star_systems.ly_to_map_units(ftl_range_ly)) then
 		return
 	end
-	-- Hydrogen is real fuel, not just displayed - main/flight_map.gui_script
-	-- already checks affordability before ever describing this system as
-	-- reachable, but re-checked here too for the same "don't just trust
-	-- the sender" reason as the checks above.
-	local cost = star_systems.hydrogen_cost(dist)
-	if not session.spend_hydrogen(cost) then
+	-- Hydrogen is real fuel: session.start_jump() prices the jump from the
+	-- saved current system and spends it (the server re-checks the same rule
+	-- - nakama-server/modules/economy.lua). nil = not allowed or can't afford.
+	local cost = session.start_jump(self.jump_preset_system)
+	if not cost then
 		return
 	end
 
@@ -841,7 +840,7 @@ function on_input(self, action_id, action)
 			if self.jumping then
 				self.jumping = false
 				self.jump_target_system = nil
-				session.add_hydrogen(self.jump_hydrogen_spent)
+				session.cancel_jump() -- refunds what start_jump() charged
 				self.jump_hydrogen_spent = 0
 			elseif self.near_outpost and not self.docking then
 				self.docking = true
@@ -1085,6 +1084,7 @@ function update(self, dt)
 			local target = self.jump_target_system
 			self.jump_target_system = nil
 			self.jump_hydrogen_spent = 0 -- already spent, not refundable now that it's landed
+			session.arrive_jump()
 			arrive_at_system(self, target)
 			-- arrive_at_system() just teleported/reoriented the ship -
 			-- refresh `pos`/`rot` (computed earlier this frame, now stale)
