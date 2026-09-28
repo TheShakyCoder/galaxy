@@ -75,13 +75,11 @@ M.loadout = nil
 -- now purely so the currency display has something genuine to show and
 -- update, rather than a number that never changes.
 M.scrip = nil
-local STARTING_SCRIP = 500
+local STARTING_SCRIP = 1000
 local MODULE_PRICE = 100
 local MODULE_SELL_REFUND = 50
-local SHIP_PRICE = 500
--- TEMPORARY: every ship costs 1 Scrip for testing. Delete this line to go
--- back to SHIP_PRICE.
-SHIP_PRICE = 1
+-- Ship purchase prices are per ship, in main/data/ships.lua's `price`
+-- (M.get_ship_price below). The sell refund is still a flat placeholder.
 local SHIP_SELL_REFUND = 250
 local SHIP_ADVANCE_PRICE = 500
 
@@ -104,7 +102,7 @@ M.iron = nil
 M.hydrogen = nil
 local STARTING_WATER = 500
 local STARTING_IRON = 500
-local STARTING_HYDROGEN = 500
+local STARTING_HYDROGEN = 5000
 
 -- Monotonically-increasing instance id counter, reset on every
 -- choose_faction (a fresh guest session) — plain incrementing integers are
@@ -189,6 +187,13 @@ end
 -- the saved current system - never an amount the caller supplies - so the
 -- server can check every jump (main/player_ship.script calls them).
 local DEFAULT_FTL_RANGE_LY = 4.5 -- same fallback as main/player_ship.script's flight_stats()
+local DEFAULT_FTL_COST_PER_LY = 30 -- the class baseline in main/data/ships.lua
+
+-- Hydrogen per light-year jumped by `ship_id` (its FTL Cost stat).
+function M.ftl_cost_per_ly(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	return (ship and ship.data and ship.data.ftl_cost_hydrogen_per_ly) or DEFAULT_FTL_COST_PER_LY
+end
 
 -- Takes off from the outpost: flights always start in the faction's home
 -- system (main/player_ship.script's start_flight()).
@@ -214,7 +219,7 @@ function M.jump_cost(system_id)
 	if not star_systems.in_ftl_range(distance, star_systems.ly_to_map_units(range_ly)) then
 		return nil
 	end
-	return star_systems.hydrogen_cost(distance)
+	return star_systems.hydrogen_cost(distance, M.ftl_cost_per_ly(M.active_ship_id))
 end
 
 -- Pays for a jump to `system_id`. Returns the cost, or nil if the jump isn't
@@ -261,8 +266,23 @@ function M.get_module_sell_refund()
 	return MODULE_SELL_REFUND
 end
 
-function M.get_ship_price()
-	return SHIP_PRICE
+-- Purchase price of `ship_id`: amount, currency ("scrip" or "hydrogen"), or
+-- nil for a ship that isn't for sale (the starter ship).
+function M.get_ship_price(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	local price = ship and ship.price
+	if not price then
+		return nil
+	end
+	return price.amount, price.currency
+end
+
+-- The balance a price in `currency` is paid from.
+function M.get_balance(currency)
+	if currency == "hydrogen" then
+		return M.hydrogen
+	end
+	return M.scrip
 end
 
 function M.get_ship_sell_refund()
@@ -353,16 +373,21 @@ function M.select_ship(ship_id)
 	return false
 end
 
--- Adds `ship_id` to owned ships if not already owned, spending
--- get_ship_price() Scrip (a flat placeholder, see STARTING_SCRIP's
--- comment - not real per-ship pricing). Returns false, spending nothing,
--- if the player can't afford it or already owns the ship.
+-- Adds `ship_id` to owned ships if not already owned, paying its
+-- get_ship_price() in Scrip or Hydrogen. Returns false, spending nothing, if
+-- the ship isn't for sale, is already owned, or the player can't afford it.
 function M.purchase_ship(ship_id)
-	if not ships.SHIPS[ship_id] or M.is_ship_owned(ship_id) then
+	local amount, currency = M.get_ship_price(ship_id)
+	if not amount or M.is_ship_owned(ship_id) then
 		return false
 	end
-	if not spend_scrip(SHIP_PRICE) then
+	if M.get_balance(currency) < amount then
 		return false
+	end
+	if currency == "hydrogen" then
+		M.hydrogen = M.hydrogen - amount
+	else
+		M.scrip = M.scrip - amount
 	end
 	table.insert(M.owned_ships, ship_id)
 	return true

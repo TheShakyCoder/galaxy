@@ -24,8 +24,9 @@
 -- main/data/ships.lua's ftl_range_ly (real light-years) and this map's own
 -- map_x/map_y distance scale used to be calibrated completely
 -- independently (nothing was ever in range) - now resolved, per direct
--- instruction ("one light-year = 35 pixels"): main/data/star_systems.lua's
--- own M.ly_to_map_units()/M.MAP_UNITS_PER_LY. That conversion happens
+-- instruction, at the original game's own scale of 20 map units per
+-- light-year: main/data/star_systems.lua's own
+-- M.ly_to_map_units()/M.MAP_UNITS_PER_LY. That conversion happens
 -- upstream, in main/player_ship.script's toggle_map() (the "toggle"
 -- message's own `ftl_range` field) and its "set_jump_preset" handler -
 -- self.ftl_range below always arrives already in map units, same units
@@ -123,7 +124,7 @@ local function dot_color(self, id)
 	end
 	-- in range, but affordability also gates green - "reachable" should
 	-- mean "you could actually jump here right now", not just "in range"
-	local cost = star_systems.hydrogen_cost(dist)
+	local cost = star_systems.hydrogen_cost(dist, session.ftl_cost_per_ly(session.get_ship_id()))
 	return session.get_hydrogen() >= cost and COLOR_REACHABLE or COLOR_OUT_OF_RANGE
 end
 
@@ -167,13 +168,13 @@ local function select_system(self, id)
 	local dist = self.current_system_id and star_systems.distance(self.current_system_id, id)
 	local can_enter = star_systems.can_enter(id, faction)
 	local in_range = can_enter and star_systems.in_ftl_range(dist, self.ftl_range)
-	local cost = dist and star_systems.hydrogen_cost(dist)
+	local cost = dist and star_systems.hydrogen_cost(dist, session.ftl_cost_per_ly(session.get_ship_id()))
 	local can_afford = cost and session.get_hydrogen() >= cost
 	local reachable = in_range and can_afford
 
 	set_desc_visible(true)
 	gui.set_text(gui.get_node("desc_title"), sys.name)
-	gui.set_text(gui.get_node("desc_distance"), string.format("Distance: %s", dist and string.format("%.0f", dist) or "-"))
+	gui.set_text(gui.get_node("desc_distance"), string.format("Distance: %s", dist and string.format("%.1f ly", star_systems.map_units_to_ly(dist)) or "-"))
 	gui.set_text(gui.get_node("desc_fuel"), string.format("Hydrogen to jump: %s", cost and tostring(cost) or "-"))
 	gui.set_text(gui.get_node("desc_threat"), string.format("Threat: %d", sys.threat or 0))
 

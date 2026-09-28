@@ -634,6 +634,25 @@ function init(self)
 	end
 end
 
+local CURRENCY_NAME = { scrip = "Scrip", hydrogen = "Hydrogen" }
+
+-- 36000 -> "36,000"
+local function with_commas(n)
+	local s = tostring(math.floor(n))
+	local formatted = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (formatted:gsub("^,", ""))
+end
+
+-- "36,000 Scrip", "600,000 Hydrogen", or "Not for sale" for a ship with no
+-- price (the starter ship).
+local function ship_price_text(ship_id)
+	local amount, currency = session.get_ship_price(ship_id)
+	if not amount then
+		return "Not for sale"
+	end
+	return with_commas(amount) .. " " .. CURRENCY_NAME[currency]
+end
+
 local function ship_display_name(ship_id, faction)
 	local ship = ships.SHIPS[ship_id]
 	local skin = ship and ship.faction_skins[faction]
@@ -1477,7 +1496,7 @@ local function ship_forsale_rows(faction, active_ship)
 			label = name .. "  (owned)" .. advanced_tag
 			color = SHIP_CARD_OWNED_COLOR
 		else
-			label = name .. "  (" .. session.get_ship_price() .. " Scrip)"
+			label = name .. "  (" .. ship_price_text(ship_id) .. ")"
 			color = nil
 		end
 		table.insert(rows, {
@@ -2021,6 +2040,7 @@ local function show_confirm(self, message, on_confirm, show_cancel)
 	local yes_pos = vmath.vector3(show_cancel and CONFIRM_YES_X or CONFIRM_YES_CENTERED_X, CONFIRM_BUTTON_Y, 0)
 	gui.set_position(self.confirm_nodes.yes, yes_pos)
 	gui.set_position(self.confirm_nodes.yes_label, yes_pos)
+	refresh_forsale_preview(self) -- hide the Ships grid's 3D previews under the dialog
 end
 
 local function hide_confirm(self)
@@ -2028,6 +2048,7 @@ local function hide_confirm(self)
 	for _, node in pairs(self.confirm_nodes) do
 		gui.set_enabled(node, false)
 	end
+	refresh_forsale_preview(self) -- bring the Ships grid's previews back
 end
 
 -- Ship detail modal preview, keyed by model path (§2.8.9) - PREVIEW_WORLD_POS
@@ -2165,6 +2186,9 @@ local function show_ship_detail(self, ship_id)
 		.. (session.is_ship_advanced(ship_id) and "  [Advanced]" or ""))
 
 	local stats = ship_stats_text(ship_id)
+	if not owned then
+		stats = "Price: " .. ship_price_text(ship_id) .. "\n\n" .. stats
+	end
 	local model_path = ship and faction and ship.faction_skins[faction] and ship.faction_skins[faction].model
 	local world_pos = model_path and PREVIEW_WORLD_POS[model_path]
 	if not world_pos then
@@ -2178,6 +2202,9 @@ local function show_ship_detail(self, ship_id)
 	-- it's an explicit "just Cancel" state instead of a dead-end button).
 	local show_primary = true
 	if not owned then
+		-- The price goes in the text (see `stats` above); a ship that isn't for
+		-- sale (the starter) gets no Purchase button at all.
+		show_primary = session.get_ship_price(ship_id) ~= nil
 		gui.set_text(self.ship_detail_nodes.primary_label, "Purchase")
 	elseif not is_active then
 		gui.set_text(self.ship_detail_nodes.primary_label, "Select")
@@ -2408,7 +2435,9 @@ local FORSALE_PREVIEW_BATCH_SIZE = 4
 
 function refresh_forsale_preview(self)
 	local items = {}
-	if self.active_page == "ships" and not self.ship_detail then
+	-- Also hidden under the confirm dialog: the 3D overlay draws after the GUI,
+	-- so it would paint over the dialog.
+	if self.active_page == "ships" and not self.ship_detail and not self.confirm then
 		items = compute_forsale_preview_items(self)
 	end
 	if #items == 0 then
@@ -2606,10 +2635,10 @@ function on_input(self, action_id, action)
 					gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
 				else
 					local name = ship_display_name(ship_id, session.get_faction())
-					local price = session.get_ship_price()
-					if session.get_scrip() < price then
-						show_confirm(self, "Not enough Scrip to buy " .. name
-							.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
+					local price, currency = session.get_ship_price(ship_id)
+					if price and session.get_balance(currency) < price then
+						show_confirm(self, "Not enough " .. CURRENCY_NAME[currency] .. " to buy " .. name
+							.. " (need " .. with_commas(price) .. ", have " .. with_commas(session.get_balance(currency)) .. ").", function() end, false)
 					elseif session.purchase_ship(ship_id) then
 						session.select_ship(ship_id)
 						refresh_ship_cards(self)

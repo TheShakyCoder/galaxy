@@ -288,18 +288,24 @@ function M.distance(id_a, id_b)
 	return math.sqrt(dx * dx + dy * dy)
 end
 
--- Conversion factor between main/data/ships.lua's ftl_range_ly (real
--- light-years) and this file's own map_x/map_y distance scale (decided,
--- per direct instruction: "one light-year = 30 pixels"). Callers comparing
--- a ship's FTL range against M.distance()'s own output (e.g.
--- main/player_ship.script's toggle_map()/"set_jump_preset" handler) should
--- convert through M.ly_to_map_units() first - M.distance()/M.in_ftl_range()
--- themselves stay in plain map units, they don't do this conversion
--- implicitly.
-M.MAP_UNITS_PER_LY = 30
+-- Conversion factor between main/data/ships.lua's light-year stats
+-- (ftl_range_ly, ftl_cost_hydrogen_per_ly) and this file's map_x/map_y
+-- units. 20 is the original game's own scale: the BSGO server emulator
+-- (github.com/victti/BSGO-Private-Server) stores FTL range in map units as
+-- light-years x 20 (e.g. "90 //4.5f * 20"), and map_x/map_y here match its
+-- star positions 1:1 (fitted: 1.013 original units per unit here, Y
+-- flipped), since both come from the same map. Callers comparing a ship's
+-- FTL range against M.distance()'s output should convert through
+-- M.ly_to_map_units() first - M.distance()/M.in_ftl_range() themselves stay
+-- in plain map units.
+M.MAP_UNITS_PER_LY = 20
 
 function M.ly_to_map_units(ly)
 	return ly * M.MAP_UNITS_PER_LY
+end
+
+function M.map_units_to_ly(units)
+	return units / M.MAP_UNITS_PER_LY
 end
 
 -- Which faction (if any) this system is restricted to for entry purposes -
@@ -357,13 +363,12 @@ function M.reachable_from(from_id, ftl_range, faction)
 	return out
 end
 
--- Hydrogen cost of a jump (plan.md §2.6/§2.1.1's FTL Cost stat) - purely
--- `distance` rounded to a friendlier integer. Not a real balancing
--- formula yet, same "no unexplained extra constant" approach the map
--- layout itself takes - see plan.md §4 for the open TODO on real
--- yield/conversion rates.
-function M.hydrogen_cost(distance)
-	return math.floor(distance + 0.5)
+-- Hydrogen cost of a jump, as in the original game: distance in
+-- light-years x the ship's FTL Cost (main/data/ships.lua's
+-- ftl_cost_hydrogen_per_ly - the wiki's "Tyl/LY"). Rounded up so a jump
+-- never costs less than the rate says. `distance` is in map units.
+function M.hydrogen_cost(distance, cost_per_ly)
+	return math.ceil(M.map_units_to_ly(distance) * cost_per_ly - 1e-9)
 end
 
 return M
