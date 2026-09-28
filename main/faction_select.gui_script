@@ -1,15 +1,16 @@
--- Faction-choice screen a Guest is shown after pressing "Play as Guest" on
--- the start screen (plan.md §1.1: guests re-pick every load, no
--- persistence — see main/session.lua). Only **The Accord** and **The
--- Swarm** are offered; Robots is never a selectable faction (§1).
+-- Faction-choice screen, shown once per account: main/start_screen.gui_script
+-- sends "show_faction_select" when a verified player's saved progress has no
+-- faction yet. The choice is permanent (saved with the rest of their
+-- progress by main/profile.lua). Only **The Accord** and **The Swarm** are
+-- offered; Robots is never a selectable faction (§1).
 --
--- Starts disabled (hidden) — main/start_screen.gui_script enables this
--- screen and disables itself when Guest is pressed. Picking a faction
--- here calls session.choose_faction(), which also assigns the starting
--- ship/loadout gift (session.lua), then hands off to
--- main/outpost.gui — the home-system outpost overview screen.
+-- Picking a faction calls session.choose_faction(), which also assigns the
+-- starting ship/loadout gift (session.lua) and triggers a save, then
+-- connects to the realtime server and hands off to main/outpost.gui - the
+-- home-system outpost overview screen.
 
 local session = require("main.session")
+local network = require("main.network")
 
 function init(self)
 	self.active = false
@@ -35,6 +36,7 @@ end
 
 local function choose(self, faction)
 	session.choose_faction(faction)
+	network.connect() -- rooms are per faction home system, so only once it's known
 	print("[faction_select] " .. faction .. " chosen -- handing off to outpost")
 	self.active = false
 	msg.post("#gui", "disable")

@@ -19,7 +19,7 @@ the jump lanes of a dying home system:
 - **Robots**: the original robots the Accord abandoned. A computer-controlled
   enemy that both player factions fight. Players can't choose it.
 
-You pick Accord or Swarm when you start. Galaxy is mechanically inspired by
+You pick Accord or Swarm when you first start; it's permanent for your account. Galaxy is mechanically inspired by
 browser space MMOs of the early 2010s, but its setting, names and art are its own.
 
 ## What's in the game
@@ -37,12 +37,18 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Targeting**: cycle targets, target the nearest enemy, match its speed, or
   follow a friendly ship.
 - **Resources**: Scrip, Water, Iron and Hydrogen.
+- **Accounts**: sign up with email and password and verify the email with a
+  6-digit code before playing. Your faction, Scrip, ships, fittings and skins
+  are saved to your account, and the game logs you back in automatically.
+  The server owns that progress: every purchase, sale, fitting change and FTL
+  jump is checked and applied by Nakama, so balances and items can't be
+  edited in the browser.
 - **Multiplayer**: each star system is a shared room where you see other players'
   ships in real time. The client reconnects automatically and uses dead
   reckoning to keep network traffic low.
-- **Ship skins**: twelve optional paint and model collections for every ship,
-  288 skins in all (see [`assets/skins/`](assets/skins/README.md)). They aren't
-  selectable in-game yet.
+- **Ship skins**: twelve paint and model collections for every ship, 288 skins
+  in all, bought and equipped in the outpost's Skins tab (see
+  [`assets/skins/`](assets/skins/README.md)).
 
 ## Controls
 
@@ -76,8 +82,22 @@ for features that aren't built yet.
    **Project → Build**. The editor fetches the dependencies (Nakama and
    WebSocket) on first build.
 
-To test multiplayer, run two builds from the editor. Debug builds get a new
-player identity each launch, so they won't collide.
+Every player needs a verified account. With no `RESEND_API_KEY` in
+`nakama-server/.env`, verification codes aren't emailed; read them from the
+server log instead:
+
+```sh
+docker logs nakama 2>&1 | grep "verification code"
+```
+
+The server enforces the same rules as the game by running copies of
+`main/session.lua` and its data files. After changing any of them, run
+`python tools/sync_server_rules.py` and restart Nakama
+(`docker compose restart nakama`).
+
+To test multiplayer, use two accounts. Separate browsers each keep their own
+login; two builds run from the editor on the same Mac share the saved login,
+so log out in one and log in there with a second account.
 
 The client reads its server address from the `[nakama]` section of `game.project`,
 which points at the local server by default.
@@ -122,4 +142,5 @@ Main next steps:
 - Server-authoritative game logic in `nakama-server/modules/` (Robots PvE,
   combat, economy)
 - Carriers, progression and ranks
-- Registered accounts, since only guest play exists today
+- Password reset for accounts
+- Stripe purchases (premium currency for real-money skins)

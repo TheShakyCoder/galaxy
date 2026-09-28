@@ -71,6 +71,8 @@ local catalog = require("main.data.modules.catalog")
 local skins = require("main.data.skins")
 local skin_collections = require("main.data.skin_collections")
 local skin_flight = require("main.skin_flight")
+local network = require("main.network")
+local profile = require("main.profile")
 
 local FACTION_DISPLAY = { accord = "The Accord", swarm = "The Swarm" }
 
@@ -402,6 +404,9 @@ function init(self)
 	self.water_node = gui.get_node("water_label")
 	self.iron_node = gui.get_node("iron_label")
 	self.hydrogen_node = gui.get_node("hydrogen_label")
+	-- Log out (top-left, outside every tab): saves, logs out and returns to
+	-- the account screen (main/start_screen.gui_script).
+	self.logout_node = gui.get_node("logout_button")
 
 	self.tab_nodes = {
 		overview = gui.get_node("tab_overview"),
@@ -2430,6 +2435,29 @@ local function end_drag(self)
 end
 
 function on_message(self, message_id, message, sender)
+	if message_id == hash("profile_resynced") then
+		-- main/profile.lua: the server refused a change and its copy of the
+		-- player's progress replaced ours. Redraw everything from it.
+		if self.active and not self.launching then
+			if self.skin_detail then
+				hide_skin_detail(self)
+			end
+			if self.ship_detail then
+				hide_ship_detail(self)
+			end
+			if self.confirm then
+				hide_confirm(self)
+			end
+			end_drag(self)
+			refresh_currency(self)
+			local home_name, faction_label, ship_name = ship_overview_text(session.get_faction())
+			gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
+			set_page(self, self.active_page)
+			show_confirm(self, "That change couldn't be saved, so your progress was reloaded from the server."
+				.. (message.error and ("\n(" .. message.error .. ")") or ""), function() end, false)
+		end
+		return
+	end
 	if message_id == hash("show_outpost") then
 		self.active = true
 		msg.post("#gui", "enable")
@@ -2740,6 +2768,18 @@ function on_input(self, action_id, action)
 			return true
 		elseif hits(self.tab_nodes.skins, action) then
 			set_page(self, "skins")
+			return true
+		elseif hits(self.logout_node, action) then
+			-- Overview clears every tab's dynamic nodes and the render
+			-- script's 3D previews before the screen goes away.
+			set_page(self, "overview")
+			self.active = false
+			msg.post("#gui", "disable")
+			profile.flush(function()
+				profile.unload()
+				network.logout()
+				msg.post("start_screen#gui", "show_account")
+			end)
 			return true
 		elseif hits(self.launch_node, action) then
 			-- Minimal flight-mode slice (plan.md §4/§2.8.10-adjacent, per

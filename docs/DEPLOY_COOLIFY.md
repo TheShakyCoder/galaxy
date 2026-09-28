@@ -67,6 +67,12 @@ change the API domain or server key, redeploy **galaxy-web** too.
    | `NAKAMA_SESSION_ENCRYPTION_KEY` | generated |
    | `NAKAMA_REFRESH_ENCRYPTION_KEY` | generated |
    | `NAKAMA_HTTP_KEY` | generated |
+   | `RESEND_API_KEY` | from [Resend](https://resend.com): verify your sending domain, then create an API key |
+   | `EMAIL_FROM` | e.g. `Galaxy <noreply@stupidly.uk>`, on the domain verified in Resend |
+
+   The last two send the 6-digit email verification codes
+   (`nakama-server/modules/accounts.lua`). Every player must verify their email
+   before playing, so the game is unplayable without them.
 
    A missing variable makes the deploy fail rather than fall back to Nakama's
    well-known defaults. That's on purpose.

@@ -35,12 +35,16 @@ services:
       # connect to postgres), which is why both read from the same
       # POSTGRES_PASSWORD env var rather than being set independently.
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-localdb}
+      # Email verification (modules/accounts.lua). Leave RESEND_API_KEY empty
+      # in .env for local dev: codes are then printed to this container's log.
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-Galaxy <noreply@example.com>}
     entrypoint:
       - "/bin/sh"
       - "-ecx"
       - >
           /nakama/nakama migrate up --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama &&
-          exec /nakama/nakama --name nakama1 --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200
+          exec /nakama/nakama --name nakama1 --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200 --runtime.env "RESEND_API_KEY=$$RESEND_API_KEY" --runtime.env "EMAIL_FROM=$$EMAIL_FROM"
     restart: always
     links:
       - "postgres:db"

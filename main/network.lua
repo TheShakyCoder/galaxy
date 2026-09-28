@@ -2,27 +2,24 @@
 -- means this module is the same table everywhere it's required).
 --
 -- Ported from ~/Defold/SuperShips/main/network.lua (§0 - mechanics, not
--- creative expression, reuse is fine), cut down to exactly the
--- "Realtime presence only" slice picked via AskUserQuestion: guest device-id
--- auth, connect, join a per-system room, broadcast/receive transforms. The
--- source file's Steam/email account layer, username generation, and
--- session-activity logging (its M.login_steam/M.register_email/M.login_email/
--- M.start_session_log and friends) are deliberately NOT ported - no
--- wallet/economy/combat authority yet, and guest play is the only account
--- model Galaxy has at all right now (main/session.lua).
+-- creative expression, reuse is fine), including its email login, minus
+-- Steam and username generation.
 --
 -- Responsibilities:
---   1. Authenticate against the self-hosted Nakama server
---      (nakama-server/docker-compose.yml, local dev) using a persisted
---      device id, and connect the realtime socket, reconnecting on its own
---      whenever that fails or drops. M.connect() is called
---      once from main/remote_ships.script's init() (that game object is
---      embedded directly in main/main.collection, so this runs at game
---      boot, before the player has even picked a faction or launched).
---   2. Join a realtime "room" per star system (main/data/star_systems.lua) -
---      a plain named channel every client in that system joins by the same
---      fixed string, so there's no match-creation race to resolve
---      server-side. Used purely as a broadcast bus for ship transforms.
+--   1. Accounts. Every player registers/logs in with email + password
+--      (Nakama email auth) and must verify the email with a 6-digit code
+--      before playing (nakama-server/modules/accounts.lua enforces that
+--      server-side). The session is stored on the device so returning
+--      players skip the login screen (M.resume()). Driven by
+--      main/start_screen.gui_script.
+--   2. Saved progress: M.load_profile() reads the player's profile storage
+--      object; M.economy() asks the server to change it (both used by
+--      main/profile.lua). Only the server writes it.
+--   3. Realtime: once logged in and verified, M.connect() opens the socket
+--      (reconnecting on its own whenever it drops) and joins a room per star
+--      system (main/data/star_systems.lua) - a plain named channel every
+--      client in that system joins by the same fixed string, used purely as
+--      a broadcast bus for ship transforms.
 
 local session = require "main.session"
 local star_systems = require "main.data.star_systems"
@@ -30,6 +27,7 @@ local defold = require "nakama.engine.defold"
 local nakama = require "nakama.nakama"
 local nakama_socket = require "nakama.socket"
 local json = require "nakama.util.json"
+local nakama_session = require "nakama.session"
 
 local M = {}
 
@@ -91,10 +89,25 @@ local wants_room = false
 -- ghost ships behind.
 local room_senders = {}
 
--- Resolved once per launch and reused on every reconnect: debug builds get a
--- fresh random id per call (see get_or_create_device_id()), which would
--- otherwise turn each reconnect into a brand-new Nakama user.
-local device_id = nil
+-- Where the logged-in session is kept between visits (a sys.save file -
+-- IndexedDB on the web). Not nakama/session.lua's own store()/restore():
+-- those call sys.get_config, which Defold 1.13 no longer has.
+local function session_file()
+	return sys.get_save_file("galaxy", "account_session")
+end
+
+local function store_session(session_obj)
+	sys.save(session_file(), session_obj or {})
+end
+
+local function restore_session()
+	local saved = sys.load(session_file())
+	return saved and saved.token and saved or nil
+end
+
+-- False after M.logout(), so a pending reconnect doesn't bring a logged-out
+-- player back online.
+local online_wanted = false
 
 M.client = nil
 M.socket = nil
@@ -104,6 +117,11 @@ M.in_room = false
 M.channel_id = nil
 M.on_transform = nil
 M.on_leave = nil
+
+local function client()
+	M.client = M.client or nakama.create_client(SERVER_CONFIG)
+	return M.client
+end
 
 local function clear_room_senders()
 	local senders = room_senders
@@ -116,7 +134,7 @@ local function clear_room_senders()
 end
 
 local function schedule_reconnect()
-	if reconnect_pending then
+	if reconnect_pending or not online_wanted then
 		return
 	end
 	reconnect_pending = true
@@ -128,32 +146,168 @@ local function schedule_reconnect()
 	reconnect_delay = math.min(reconnect_delay * 2, RECONNECT_MAX_DELAY)
 end
 
-local function device_id_file()
-	return sys.get_save_file("galaxy", "device_id")
+-- A readable message from a failed Nakama call.
+local function error_message(result, fallback)
+	local message = result and (result.message or (type(result.error) == "string" and result.error))
+	return message and message ~= "" and message or fallback
 end
 
--- A stable per-install id, generated once and persisted to disk so the same
--- player is recognized across relaunches.
---
--- Debug (editor Build-and-Run) builds skip persistence and always get a
--- fresh random id instead: the save file path is the same for every debug
--- instance launched from this project on this machine, so persisting it
--- would make two editor-launched clients on the same Mac collide onto the
--- same Nakama user - exactly the case when locally testing multiplayer with
--- two editor windows (ported verbatim from SuperShips' own
--- get_or_create_device_id(), §0).
-local function get_or_create_device_id()
-	if sys.get_engine_info().is_debug then
-		return defold.uuid()
-	end
+local function use_session(session_obj)
+	M.session = session_obj
+	nakama.set_bearer_token(client(), session_obj.token)
+	store_session(session_obj)
+end
 
-	local saved = sys.load(device_id_file())
-	if saved and saved.device_id then
-		return saved.device_id
+-- Refreshes the access token if it's about to expire (tokens last 2 h;
+-- the refresh token much longer). Must run inside nakama.sync(). Returns
+-- false if the session can't be used any more (player has to log in).
+local function ensure_fresh_session()
+	local s = M.session
+	if not s then
+		return false
 	end
-	local id = defold.uuid()
-	sys.save(device_id_file(), { device_id = id })
-	return id
+	if os.time() + 60 < s.expires then
+		return true
+	end
+	if nakama_session.is_refresh_token_expired(s) then
+		return false
+	end
+	local refreshed = nakama.session_refresh(client(), s.refresh_token, nil)
+	if not refreshed or refreshed.error or not refreshed.token then
+		return false
+	end
+	use_session(refreshed)
+	return true
+end
+
+-- Email login/registration. `create`: true registers a new account (Nakama
+-- rejects an email that's already taken with a different password).
+-- callback(ok, error_message)
+local function authenticate(email, password, create, callback)
+	nakama.sync(function()
+		local result = nakama.authenticate_email(client(), email, password, nil, create, nil)
+		if not result or result.error or not result.token then
+			-- authenticate_email clears the client's bearer token even on
+			-- failure (nakama-defold quirk, see SuperShips) - restore it.
+			if M.session then
+				nakama.set_bearer_token(client(), M.session.token)
+			end
+			local fallback = create and "Couldn't create the account." or "Wrong email or password."
+			local message = error_message(result, fallback)
+			if message == "Invalid credentials." then
+				message = create and "That email is already registered." or "Wrong email or password."
+			end
+			print("[network] " .. (create and "register" or "login") .. " failed: " .. tostring(message))
+			if callback then callback(false, message) end
+			return
+		end
+		use_session(result)
+		print("[network] " .. (create and "registered" or "logged in") .. " as " .. tostring(result.user_id))
+		if callback then callback(true) end
+	end)
+end
+
+function M.register(email, password, callback)
+	authenticate(email, password, true, callback)
+end
+
+function M.login(email, password, callback)
+	authenticate(email, password, false, callback)
+end
+
+-- Picks up the session stored by an earlier visit. callback(ok)
+function M.resume(callback)
+	local stored = restore_session()
+	if not stored then
+		callback(false)
+		return
+	end
+	M.session = stored
+	nakama.set_bearer_token(client(), stored.token)
+	nakama.sync(function()
+		local ok = ensure_fresh_session()
+		if not ok then
+			M.session = nil
+		end
+		callback(ok)
+	end)
+end
+
+-- Calls a server RPC (nakama-server/modules/*.lua) with a JSON payload.
+-- callback(decoded_result_or_nil, error_message)
+local function rpc(id, payload, callback)
+	nakama.sync(function()
+		if not ensure_fresh_session() then
+			callback(nil, "Your session has expired. Please log in again.")
+			return
+		end
+		local result = nakama.rpc_func(client(), id, json.encode(payload or {}), nil)
+		if not result or result.error or not result.payload then
+			callback(nil, error_message(result, "Couldn't reach the server."))
+			return
+		end
+		local ok, decoded = pcall(json.decode, result.payload)
+		if ok then
+			callback(decoded, nil)
+		else
+			callback(nil, "Unexpected server reply.")
+		end
+	end)
+end
+
+-- callback({ email, verified } or nil, error)
+function M.account_status(callback)
+	rpc("account_status", {}, callback)
+end
+
+-- callback({ ok, error?, retry_in_s? } or nil, error)
+function M.send_code(callback)
+	rpc("send_verification_code", {}, callback)
+end
+
+-- callback({ ok, error? } or nil, error)
+function M.verify(code, callback)
+	rpc("verify_email", { code = code }, callback)
+end
+
+-- Saved progress: one storage object per player, readable by its owner,
+-- written only by the server.
+local PROFILE_COLLECTION = "profile"
+local PROFILE_KEY = "state"
+
+-- callback(data_or_nil, error) - data is nil (no error) for a new player.
+function M.load_profile(callback)
+	nakama.sync(function()
+		if not ensure_fresh_session() then
+			callback(nil, "Your session has expired. Please log in again.")
+			return
+		end
+		local result = nakama.read_storage_objects(client(), {
+			{ collection = PROFILE_COLLECTION, key = PROFILE_KEY, user_id = M.session.user_id },
+		})
+		if not result or result.error then
+			callback(nil, error_message(result, "Couldn't load your progress."))
+			return
+		end
+		local object = result.objects and result.objects[1]
+		if not object then
+			callback(nil, nil)
+			return
+		end
+		local ok, data = pcall(json.decode, object.value)
+		if ok then
+			callback(data, nil)
+		else
+			callback(nil, "Your saved progress couldn't be read.")
+		end
+	end)
+end
+
+-- Asks the server to apply one change to the player's progress
+-- (nakama-server/modules/economy.lua; see main/profile.lua).
+-- callback({ ok, result?, error?, profile? } or nil, network_error)
+function M.economy(op, args, callback)
+	rpc("economy", { op = op, args = args }, callback)
 end
 
 local function open_socket(session_obj, callback)
@@ -194,35 +348,54 @@ local function open_socket(session_obj, callback)
 	if callback then callback(true) end
 end
 
--- Authenticates and connects the realtime socket. callback(ok) is called
--- once this attempt's outcome is known. Safe to call more than once: a no-op
--- while already connected or mid-attempt. On failure, or if the socket later
--- drops, it retries by itself (see schedule_reconnect()), re-authenticating
--- each time so an expired session token can't block reconnecting.
+-- Opens the realtime socket for the logged-in, verified player. callback(ok)
+-- is called once this attempt's outcome is known. Safe to call more than
+-- once: a no-op while already connected or mid-attempt. On failure, or if
+-- the socket later drops, it retries by itself (see schedule_reconnect()),
+-- refreshing the session token when needed.
 function M.connect(callback)
+	online_wanted = true
 	if M.connected or connecting then
 		if callback then callback(M.connected) end
+		return
+	end
+	if not M.session then
+		if callback then callback(false) end
 		return
 	end
 	connecting = true
 
 	nakama.sync(function()
-		M.client = M.client or nakama.create_client(SERVER_CONFIG)
-		device_id = device_id or get_or_create_device_id()
-
-		local session_obj = nakama.authenticate_device(M.client, device_id, nil, true, nil)
-		if not session_obj or session_obj.error or not session_obj.token then
-			print("[network] authentication failed: " .. tostring(session_obj and (session_obj.message or session_obj.error)))
+		if not ensure_fresh_session() then
+			print("[network] session expired - log in again")
 			connecting = false
-			schedule_reconnect()
 			if callback then callback(false) end
 			return
 		end
-		nakama.set_bearer_token(M.client, session_obj.token)
-		M.session = session_obj
-
-		open_socket(session_obj, callback)
+		open_socket(M.session, callback)
 	end)
+end
+
+-- Logs out: closes the realtime connection, forgets the stored session.
+function M.logout()
+	online_wanted = false
+	wants_room = false
+	local socket = M.socket
+	M.socket = nil
+	M.connected = false
+	M.in_room = false
+	M.channel_id = nil
+	clear_room_senders()
+	if socket then
+		socket.disconnect()
+	end
+	M.session = nil
+	current_system_id = nil -- the next account may be in a different faction's home system
+	if M.client then
+		nakama.set_bearer_token(M.client, nil)
+	end
+	store_session(nil) -- overwrite with an empty (token-less) session
+	print("[network] logged out")
 end
 
 -- Joins the shared space room and starts listening for other ships'
