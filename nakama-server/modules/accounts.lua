@@ -24,6 +24,7 @@ Email is sent through Resend's HTTP API. Configure with runtime env vars
 ]]
 
 local nk = require("nakama")
+local version = require("main.version") -- copied from the game by tools/sync_server_rules.py
 
 local CODE_COLLECTION = "verification"
 local CODE_KEY = "code"
@@ -92,10 +93,11 @@ local function send_email(context, to, code)
 	return true
 end
 
--- { email, verified }
+-- { email, verified, server_version } - the game compares server_version with
+-- its own to tell players when they need to reload.
 local function account_status(context, _)
 	local acc = account(context.user_id)
-	return result({ email = acc.email, verified = is_verified(context.user_id) })
+	return result({ email = acc.email, verified = is_verified(context.user_id), server_version = version.VERSION })
 end
 
 -- Emails a fresh code. { ok } or { ok = false, error, retry_in_s }
@@ -191,4 +193,4 @@ nk.register_req_before(client_writable, "WriteStorageObjects")
 nk.register_req_before(verified_only, "ListStorageObjects")
 nk.register_req_before(client_writable, "DeleteStorageObjects")
 
-nk.logger_info("accounts module loaded")
+nk.logger_info("accounts module loaded (Galaxy " .. version.VERSION .. ")")

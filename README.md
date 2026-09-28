@@ -3,7 +3,7 @@
 A multiplayer space-flight game for the browser, built with [Defold](https://defold.com/)
 and a self-hosted [Nakama](https://heroiclabs.com/nakama/) server.
 
-**Play the current build:** <https://galaxy.stupidly.uk>
+**Play the current build:** <https://galaxy.stupidly.uk> (alpha, see [`CHANGELOG.md`](CHANGELOG.md))
 
 > Early prototype. Flying, fitting, the star map, FTL jumps and seeing other
 > players fly are in. Combat, missions and progression are still being designed.
@@ -114,6 +114,26 @@ this repo:
 
 For the full setup, required secrets and troubleshooting, see
 [`docs/DEPLOY_COOLIFY.md`](docs/DEPLOY_COOLIFY.md).
+
+## Versioning
+
+Galaxy uses [Semantic Versioning](https://semver.org) with an alpha label while the game
+is in alpha: `0.1.0-alpha.1`, `0.1.0-alpha.2`, ... A bigger step bumps the minor version
+(`0.2.0-alpha.1`); beta and `1.0.0` come later. Changes are listed in
+[`CHANGELOG.md`](CHANGELOG.md).
+
+The version lives in one place, `main/version.lua`. The game shows it on the login screen,
+and the server gets a copy through `tools/sync_server_rules.py`. If a player's game and the
+server report different versions (mid-deploy, or a cached old copy of the game), the login
+screen asks them to reload.
+
+To release:
+
+1. Set `M.VERSION` in `main/version.lua`.
+2. Add a `CHANGELOG.md` entry for it.
+3. Run `python tools/sync_server_rules.py`.
+4. Commit, tag the commit `v<version>` (e.g. `git tag v0.1.0-alpha.2`), and push the
+   commit and the tag (`git push origin master --tags`).
 
 ## Project layout
 

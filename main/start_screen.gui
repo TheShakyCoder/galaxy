@@ -411,3 +411,26 @@ nodes {
   parent: ""
   layer: ""
 }
+
+nodes {
+  type: TYPE_TEXT
+  id: "version"
+  text: ""
+  font: "default_font"
+  position { x: 1900.0 y: 24.0 z: 0.0 w: 1.0 }
+  size { x: 600.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.45 y: 0.5 z: 0.58 w: 1.0 }
+  pivot: PIVOT_E
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}

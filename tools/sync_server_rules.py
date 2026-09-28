@@ -19,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MODULES = ROOT / 'nakama-server/modules'
 SOURCES = [
+    'main/version.lua',
     'main/session.lua',
     'main/data/ships.lua',
     'main/data/star_systems.lua',

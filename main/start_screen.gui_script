@@ -20,6 +20,7 @@
 
 local network = require("main.network")
 local profile = require("main.profile")
+local version = require("main.version")
 
 local FIELD_COLOR = vmath.vector4(0.1, 0.12, 0.17, 1.0)
 local FIELD_FOCUS_COLOR = vmath.vector4(0.16, 0.22, 0.32, 1.0)
@@ -145,6 +146,15 @@ local function after_login(self)
 			return
 		end
 		self.email = status.email
+		-- The server runs a different release (mid-deploy, or this browser
+		-- cached an old copy of the game): the rules may not match, so ask for
+		-- a reload rather than risk changes being refused.
+		if status.server_version and status.server_version ~= version.VERSION then
+			show_view(self, "login")
+			set_status(self, "Galaxy has been updated - please reload the page.\n(game v" .. version.VERSION
+				.. ", server v" .. status.server_version .. ")")
+			return
+		end
 		if status.verified then
 			enter_game(self)
 		else
@@ -234,6 +244,7 @@ function init(self)
 	self.heading_node = gui.get_node("heading")
 	self.info_node = gui.get_node("info")
 	self.status_node = gui.get_node("status")
+	gui.set_text(gui.get_node("version"), "v" .. version.VERSION)
 	self.fields = {}
 	for i = 1, 3 do
 		self.fields[i] = {
