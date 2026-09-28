@@ -52,7 +52,10 @@ change the API domain or server key, redeploy **galaxy-web** too.
    Use the `.coolify.yml` file, **not** `docker-compose.yml`. The plain file
    is for local development only: it publishes host ports 7349–7351 and uses
    fixed container names, which would clash with any other Nakama (e.g.
-   SuperShips) on the same server.
+   SuperShips) on the same server. The `.coolify.yml` file also builds Nakama
+   from `nakama-server/Dockerfile`, which copies `modules/` (accounts,
+   economy and the shared game rules) into the image, so each deploy runs
+   the modules from the commit being deployed.
 
 2. **Environment Variables:** Coolify lists every required variable from the
    compose file. Fill them in from the generated secrets, and set a username:
