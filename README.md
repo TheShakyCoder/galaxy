@@ -3,7 +3,7 @@
 A multiplayer space-flight game for the browser, built with [Defold](https://defold.com/)
 and a self-hosted [Nakama](https://heroiclabs.com/nakama/) server.
 
-**Play the current build:** <https://galaxy.stupidly.uk> (alpha, see [`CHANGELOG.md`](CHANGELOG.md))
+**Play the current build:** <https://play.fig.limited> (alpha, see [`CHANGELOG.md`](CHANGELOG.md))
 
 > Early prototype. Flying, fitting, the star map, FTL jumps and seeing other
 > players fly are in. Combat, missions and progression are still being designed.

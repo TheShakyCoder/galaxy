@@ -5,13 +5,13 @@ Galaxy runs as two Coolify resources, both built from this public repo
 
 | Resource | Build pack | Source | Serves |
 |---|---|---|---|
-| **galaxy-server** | Docker Compose | `nakama-server/docker-compose.coolify.yml` | Nakama + Postgres at `https://galaxy-api.stupidly.uk` |
-| **galaxy-web** | Dockerfile | `Dockerfile` (repo root) | HTML5 build of the game at `https://galaxy.stupidly.uk` |
+| **galaxy-server** | Docker Compose | `nakama-server/docker-compose.coolify.yml` | Nakama + Postgres at `https://api1.fig.limited` |
+| **galaxy-web** | Dockerfile | `Dockerfile` (repo root) | HTML5 build of the game at `https://play.fig.limited` |
 
 ```
- browser ──https──▶ galaxy.stupidly.uk      ──▶ galaxy-web (nginx, static files)
+ browser ──https──▶ play.fig.limited      ──▶ galaxy-web (nginx, static files)
     │
-    └──https/wss──▶ galaxy-api.stupidly.uk  ──▶ galaxy-server: nakama :7350 ──▶ postgres
+    └──https/wss──▶ api1.fig.limited  ──▶ galaxy-server: nakama :7350 ──▶ postgres
                     (Coolify proxy, TLS)
 ```
 
@@ -25,7 +25,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
 - A Coolify server with outbound internet (the web build downloads `bob.jar`
   and compiles native extensions on Defold's build server, `build.defold.com`).
 - Two DNS `A` records pointing at the Coolify server:
-  `galaxy.stupidly.uk` and `galaxy-api.stupidly.uk`.
+  `play.fig.limited` and `api1.fig.limited`.
 - Secrets to paste into Coolify. Generate them locally:
 
   ```sh
@@ -71,7 +71,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
    | `NAKAMA_REFRESH_ENCRYPTION_KEY` | generated |
    | `NAKAMA_HTTP_KEY` | generated |
    | `RESEND_API_KEY` | from [Resend](https://resend.com): verify your sending domain, then create an API key |
-   | `EMAIL_FROM` | e.g. `Galaxy <noreply@stupidly.uk>`, on the domain verified in Resend |
+   | `EMAIL_FROM` | e.g. `Galaxy <noreply@fig.limited>`, on the domain verified in Resend |
    | `TICKET_SECRET` | generated. Signs the tickets players use to enter a star system |
 
    The last two send the 6-digit email verification codes
@@ -82,18 +82,18 @@ change the API domain or server key, redeploy **galaxy-web** too.
    well-known defaults. That's on purpose.
 
 3. **Domains:** on the `nakama` service, set
-   `https://galaxy-api.stupidly.uk:7350`. The `:7350` tells Coolify's proxy
+   `https://api1.fig.limited:7350`. The `:7350` tells Coolify's proxy
    which container port to route to. Players still connect on 443. Give
    `postgres` no domain.
 
    *Optional admin console:* add a second domain to the `nakama` service,
-   e.g. `https://galaxy-admin.stupidly.uk:7351`. It's protected only by the
+   e.g. `https://admin.fig.limited:7351`. It's protected only by the
    console username and password, so leave it off unless you need it.
 
 4. **Deploy**, then check:
 
    ```sh
-   curl https://galaxy-api.stupidly.uk/healthcheck
+   curl https://api1.fig.limited/healthcheck
    # → {}
    ```
 
@@ -116,7 +116,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
 
    | Variable | Value |
    |---|---|
-   | `NAKAMA_HOST` | `galaxy-api.stupidly.uk` (no `https://`, no port) |
+   | `NAKAMA_HOST` | `api1.fig.limited` (no `https://`, no port) |
    | `NAKAMA_PORT` | `443` |
    | `NAKAMA_USE_SSL` | `1` |
    | `NAKAMA_SERVER_KEY` | same value as galaxy-server's `NAKAMA_SERVER_KEY` |
@@ -127,11 +127,11 @@ change the API domain or server key, redeploy **galaxy-web** too.
    warning about it in the build log is expected. The other galaxy-server
    variables are real secrets and never go here.
 
-3. **Domains:** `https://galaxy.stupidly.uk`
+3. **Domains:** `https://play.fig.limited`
 
 4. **Deploy.** The first build takes a few minutes: it resolves the
    `game.project` dependencies and sends the native extensions to Defold's
-   build server. Then open `https://galaxy.stupidly.uk`.
+   build server. Then open `https://play.fig.limited`.
 
 ---
 

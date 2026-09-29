@@ -19,7 +19,7 @@ Email is sent through Resend's HTTP API. Configure with runtime env vars
 (--runtime.env on the nakama command line):
   RESEND_API_KEY  Resend API key. Production (docker-compose.coolify.yml)
                   requires it.
-  EMAIL_FROM      Sender, e.g. "Galaxy <noreply@stupidly.uk>", on a domain
+  EMAIL_FROM      Sender, e.g. "Galaxy <noreply@fig.limited>", on a domain
                   verified in Resend.
   MAILPIT_URL     Local development only (docker-compose.yml): emails go to
                   this Mailpit instance instead of Resend, even if a Resend
