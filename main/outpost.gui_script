@@ -61,8 +61,9 @@
 --
 -- Ship/loadout/owned data comes from main/session.lua; display names come
 -- from main/data/modules/catalog.lua and main/data/ships.lua; the
--- outpost's own system name comes from main/data/star_systems.lua's
--- HOME_SYSTEM (§2.7/§2.9).
+-- outpost's own system is the one the player docked in (docked_system_id
+-- below: their current system if their faction has an outpost there,
+-- otherwise home).
 
 local session = require("main.session")
 local star_systems = require("main.data.star_systems")
@@ -751,11 +752,21 @@ local function refresh_ship_stats(self, highlight)
 	gui.set_text(self.ship_stats_content_node, ship_stats_text(session.get_ship_id(), highlight))
 end
 
+-- The system whose outpost the player is at (session.docked_system(): their
+-- current system if their faction has an outpost there, otherwise home -
+-- the same rule session.launch() uses for where the next flight starts).
+local function docked_system_id()
+	return session.docked_system()
+end
+
+local function system_name(system_id)
+	return (system_id and star_systems.SYSTEMS[system_id] and star_systems.SYSTEMS[system_id].name) or "?"
+end
+
+-- Outpost screen header: the docked system's name, faction, active ship.
 local function ship_overview_text(faction)
-	local home_id = star_systems.HOME_SYSTEM[faction]
-	local home_name = (home_id and star_systems.SYSTEMS[home_id].name) or "?"
 	local ship_name = ship_display_name(session.get_ship_id(), faction)
-	return home_name, FACTION_DISPLAY[faction] or faction, ship_name
+	return system_name(docked_system_id()), FACTION_DISPLAY[faction] or faction, ship_name
 end
 
 -- Keeps the always-visible Scrip/Water/Iron/Hydrogen readouts in sync with
@@ -847,6 +858,7 @@ local function overview_text()
 	local lines = {
 		"Faction: " .. faction_label,
 		"Home system: " .. home_name,
+		"Docked at: " .. system_name(docked_system_id()) .. " outpost",
 		"",
 		"Active ship: " .. active_ship_name .. " (" .. active_ship_class .. ")"
 			.. (session.is_ship_advanced(active_ship_id) and "  [Advanced]" or ""),
@@ -1713,11 +1725,10 @@ end
 -- own init() runs (main.collection embeds start_screen/faction_select/
 -- outpost together, §3's project-layout note - faction is only chosen
 -- once the player clicks through faction_select). The "current" system is
--- always just the player's own home system (star_systems.HOME_SYSTEM) -
--- there's no flight mode yet (§2.10/§4) to ever actually BE anywhere else.
+-- the one whose outpost the player is docked at (docked_system_id).
 local function refresh_map(self)
 	local faction = session.get_faction()
-	local current_id = star_systems.HOME_SYSTEM[faction]
+	local current_id = docked_system_id()
 	local current_name = (current_id and star_systems.SYSTEMS[current_id] and star_systems.SYSTEMS[current_id].name) or "-"
 	gui.set_text(self.map_current_text_node, "Current system: " .. current_name)
 	for id, dot in pairs(self.map_dots) do
@@ -2523,6 +2534,20 @@ function on_message(self, message_id, message, sender)
 		gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
 		refresh_currency(self)
 		set_page(self, "overview") -- default tab, per direct instruction
+		-- Is this system's outpost still standing? If it has been destroyed
+		-- (main/network.lua outpost_state), docked_system() is home instead:
+		-- redraw the title and "Docked at" once the server has answered.
+		local system_id = session.get_current_system()
+		if system_id then
+			network.fetch_outposts(system_id, function(ok)
+				if ok and self.active and not self.launching then
+					gui.set_text(self.title_node, (ship_overview_text(session.get_faction())) .. " Outpost")
+					if self.active_page == "overview" then
+						refresh_overview(self)
+					end
+				end
+			end)
+		end
 	end
 end
 

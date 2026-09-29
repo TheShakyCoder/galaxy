@@ -19,6 +19,12 @@ Reply: { ok = true, result, profile } or { ok = false, error, profile }.
 
 local nk = require("nakama")
 local session = require("main.session")
+local outposts = require("outposts")
+
+-- Destroyed outposts count as absent for docking/launch/respawn rules.
+session.set_outpost_availability(function(system_id, faction)
+	return outposts.get(system_id, faction).available
+end)
 
 local COLLECTION = "profile"
 local KEY = "state"

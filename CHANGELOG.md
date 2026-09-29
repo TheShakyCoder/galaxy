@@ -4,6 +4,41 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.1.0-alpha.3] - 2026-09-29
+
+### Combat
+- Outposts can be attacked. Target the other faction's outpost with Tab or X (from up to
+  2,000 m) and press 1 to fire all your weapons at it; press 1 again to stop. The HUD shows
+  its distance, hull and whether you're firing.
+- The server does the damage: every weapon in a W slot hits for its damage per second while
+  the outpost is inside its range and 75° firing arc. Your own faction's outpost can't be hit.
+- Outposts have 50,000 hull, the BSGO wiki's figure for a regular outpost. At zero they are
+  destroyed: they leave the system for an hour, then come back at full hull.
+- While an outpost is destroyed its faction can't dock, launch or respawn there; they go to
+  their home system instead.
+- Weapon stats from the BSGO wiki, one class of weapon per ship class: Gnat (light
+  autocannon) 11–22 DPS by upgrade level, 750 m; Digger (light mining cannon) 5 DPS, 600 m;
+  Miner (medium mining battery) 5 DPS, 900 m; Speculator (heavy mining battery) 5.3 DPS,
+  1,350 m. The Prospector has no stats yet.
+
+### Outposts
+- Every system has an outpost for each faction that can go there, not only the home systems.
+  Dock at your faction's outpost in any system and launch again from there.
+- Launching or arriving from a jump puts you 1,200 m from your faction's outpost in that
+  system (or from the system's centre if you have none there), facing the centre.
+- Docking range is 1,000 m.
+- If you quit, or are destroyed, in a system without your faction's outpost, you return to
+  your home system's outpost.
+- Launching refunds an unfinished jump.
+
+### Temporary
+- FTL jumps cost no Hydrogen for now.
+
+### Deployment
+- Hosted at play.fig.limited (game), api1.fig.limited (Nakama) and admin.fig.limited.
+- Nakama is built from Docker Hub's copy of the official image, and the server checks its
+  required settings when it starts.
+
 ## [0.1.0-alpha.2] - 2026-09-29
 
 ### Multiplayer

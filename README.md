@@ -66,9 +66,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | N | Star map |
 | J | Execute FTL jump |
 | K | Dock at a nearby outpost, or cancel a jump |
+| 1 | Fire / stop firing all weapons at the target (enemy outposts only, so far) |
 | Mouse wheel | Zoom |
 
-Other keys (weapons 1–9, G, F, scanner, slide thrusters and so on) are reserved
+Other keys (weapons 2–9, G, F, scanner, slide thrusters and so on) are reserved
 for features that aren't built yet.
 
 ## Running it locally

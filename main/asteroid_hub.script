@@ -23,8 +23,8 @@ local asteroids = require("main.data.asteroids")
 -- model.material's shader and why `tint` is the only real lever.
 -- Duplicated here rather than required from that file since it's a plain
 -- numeric constant, not shared logic (same "small shared constant,
--- mirrored with a cross-reference comment" precedent FACTION_OUTPOST/
--- DOCK_RANGE already follow elsewhere in this project).
+-- mirrored with a cross-reference comment" precedent DOCK_RANGE already
+-- follows elsewhere in this project).
 local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
 
 local spawned_ids = {}

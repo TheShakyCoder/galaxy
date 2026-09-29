@@ -17,24 +17,41 @@ system_matches/<system>) up to date with a heartbeat, so the directory can
 find it - on this node now, and on whichever node hosts it once there are
 several (see directory.lua).
 
+The match also owns the system's outposts (modules/outposts.lua): players
+of the other faction can fire at one, and the match applies each of their
+installed weapons' damage per second (BSGO values in main/data/modules/
+weapons_autocannons.lua) while the outpost is within that weapon's range
+and firing arc of the ship's last validated position and heading. At zero
+hull the outpost is destroyed for an hour, then returns at full hull.
+
 Wire protocol (JSON match data):
   1 STATE     client -> server  {x,y,z,qx,qy,qz,qw,speed}
   2 SNAPSHOT  server -> client  [{u,x,y,z,qx,qy,qz,qw,speed}, ...]
   3 JOIN      server -> client  {u, ship_id, faction, skin_id}
   4 LEAVE     server -> client  {u}
+  5 OUTPOSTS  server -> client  {accord = state, swarm = state, now}
+              state = {exists, hp, max_hp, available, destroyed_until}
+              (ms; `now` is the server's clock, for the countdown)
+  6 FIRE      client -> server  {target = "outpost:<faction>"} to fire, {} to stop
 ]]
 
 local nk = require("nakama")
 local ships = require("main.data.ships") -- copied from the game by tools/sync_server_rules.py
+local star_systems = require("main.data.star_systems")
+local catalog = require("main.data.modules.catalog")
+local weapons = require("main.data.modules.weapons_autocannons")
 local tickets = require("tickets")
 local registry = require("registry")
+local outposts = require("outposts")
 
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE = 1, 2, 3, 4
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE = 1, 2, 3, 4, 5, 6
 
 local TICK_RATE = 10
 local HEARTBEAT_TICKS = 5 * TICK_RATE
 local IDLE_TICKS = 5 * 60 * TICK_RATE -- empty for 5 minutes -> shut down
 local MAX_STRIKES = 20 -- invalid updates before a player is kicked
+local OUTPOST_BROADCAST_TICKS = 5 -- hull updates at most twice a second
+local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed hull every 5 seconds
 
 -- Validation slack: speed limit is the ship's boost speed + 10%; a move may
 -- cover 1.5x what that speed allows in the time since the last update, plus
@@ -46,6 +63,28 @@ local DEFAULT_BOOST_SPEED = 40 -- m/s, same fallback as main/player_ship.script
 
 local M = {}
 
+-- The combat weapons fitted in the ship's weapon slots, from the profile's
+-- loadout and module instances (upgrade level sets the DPS). Fitting only
+-- changes at an outpost, so this is read once per join.
+local function installed_weapons(profile)
+	local instances = {}
+	for _, inst in ipairs(profile.owned or {}) do
+		instances[inst.id] = inst
+	end
+	local list = {}
+	for _, entry in ipairs(profile.loadout or {}) do
+		local inst = instances[entry.instance_id]
+		local module = inst and catalog.get(inst.item_key)
+		if module and tostring(entry.slot):sub(1, 1) == "W" and module.max_range_m then
+			local dps = weapons.dps_at_level(module, inst.level)
+			if dps > 0 then
+				table.insert(list, { dps = dps, range = module.max_range_m, cos_half_arc = math.cos(math.rad((module.arc or 0) / 2)) })
+			end
+		end
+	end
+	return list
+end
+
 local function load_identity(user_id)
 	local objects = nk.storage_read({ { collection = "profile", key = "state", user_id = user_id } })
 	local profile = objects[1] and objects[1].value or {}
@@ -54,7 +93,111 @@ local function load_identity(user_id)
 		ship_id = ship_id,
 		faction = profile.faction,
 		skin_id = profile.equipped_skins and ship_id and profile.equipped_skins[ship_id] or nil,
+		weapons = installed_weapons(profile),
 	}
+end
+
+-- Outposts ----------------------------------------------------------------
+
+local function load_outposts(system)
+	local list = {}
+	local now = nk.time()
+	for _, faction in ipairs(outposts.FACTIONS) do
+		local st = outposts.state(system, faction, outposts.read(system, faction), now)
+		if st.exists then
+			st.pos = star_systems.outpost_position(system, faction)
+			list[faction] = st
+		end
+	end
+	return list
+end
+
+local function outposts_message(state)
+	local out = { now = nk.time() }
+	for faction, o in pairs(state.outposts) do
+		out[faction] = { exists = true, hp = math.floor(o.hp + 0.5), max_hp = o.max_hp, available = o.available, destroyed_until = o.destroyed_until }
+	end
+	return nk.json_encode(out)
+end
+
+local function save_outpost(state, faction)
+	local o = state.outposts[faction]
+	outposts.write(state.system, faction, { hp = o.hp, destroyed_until = o.destroyed_until })
+	o.dirty = false
+end
+
+local function save_dirty_outposts(state)
+	for faction, o in pairs(state.outposts) do
+		if o.dirty then
+			save_outpost(state, faction)
+		end
+	end
+end
+
+-- Direction the ship faces (+Z rotated by its quaternion), as in the game.
+local function forward(t)
+	local x, y, z, w = t.qx, t.qy, t.qz, t.qw
+	return 2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y)
+end
+
+-- Damage this player's weapons deal to `outpost` over `dt` seconds: each
+-- weapon counts if the outpost is within its range and firing arc.
+local function outpost_damage(player, outpost, dt)
+	local s = player.state
+	if not s then
+		return 0
+	end
+	local dx, dy, dz = outpost.pos.x - s.x, outpost.pos.y - s.y, outpost.pos.z - s.z
+	local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+	local cos_angle = 1
+	if dist > 0 then
+		local fx, fy, fz = forward(s)
+		cos_angle = (fx * dx + fy * dy + fz * dz) / dist
+	end
+	local damage = 0
+	for _, weapon in ipairs(player.weapons or {}) do
+		if dist <= weapon.range and cos_angle >= weapon.cos_half_arc then
+			damage = damage + weapon.dps * dt
+		end
+	end
+	return damage
+end
+
+-- Applies this tick's fire to the outposts, destroys any at zero hull and
+-- brings back any whose hour is up. Returns true if their state changed.
+local function update_outposts(state, now)
+	local changed = false
+	for faction, o in pairs(state.outposts) do
+		if not o.available and o.destroyed_until and now >= o.destroyed_until then
+			o.hp, o.available, o.destroyed_until = o.max_hp, true, nil
+			save_outpost(state, faction)
+			nk.logger_info(string.format("%s outpost in %s is back", faction, state.system))
+			changed = true
+		elseif o.available then
+			local damage = 0
+			for _, player in pairs(state.players) do
+				if player.firing == faction and player.faction ~= faction then
+					damage = damage + outpost_damage(player, o, 1 / TICK_RATE)
+				end
+			end
+			if damage > 0 then
+				o.hp = o.hp - damage
+				o.dirty = true
+				changed = true
+				if o.hp <= 0 then
+					o.hp, o.available, o.destroyed_until = 0, false, now + outposts.DESTROYED_FOR_MS
+					save_outpost(state, faction)
+					nk.logger_info(string.format("%s outpost in %s destroyed until %d", faction, state.system, o.destroyed_until))
+					for _, player in pairs(state.players) do
+						if player.firing == faction then
+							player.firing = nil
+						end
+					end
+				end
+			end
+		end
+	end
+	return changed
 end
 
 local function max_speed(ship_id)
@@ -99,9 +242,12 @@ function M.match_init(context, params)
 	local system = params.system
 	local state = {
 		system = system,
-		players = {}, -- user_id -> { presence, ship_id, faction, skin_id, state, updated_at, strikes }
+		players = {}, -- user_id -> { presence, ship_id, faction, skin_id, weapons, firing, state, updated_at, strikes }
 		used_tickets = {}, -- jti -> expiry (seconds)
 		idle_ticks = 0,
+		outposts = load_outposts(system), -- faction -> { hp, max_hp, available, destroyed_until, pos, dirty }
+		outposts_changed = false,
+		last_outposts_broadcast = 0,
 	}
 	local label = nk.json_encode({ system = system, node = registry.node_id(context) })
 	return state, TICK_RATE, label
@@ -144,6 +290,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
 		if #others > 0 then
 			dispatcher.broadcast_message(OP_SNAPSHOT, nk.json_encode(others), { presence })
 		end
+		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state), { presence })
 		-- ...and everyone else about the newcomer (a reconnect replaces the
 		-- previous session silently).
 		if not old then
@@ -179,7 +326,16 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 	local updates = {}
 	for _, message in ipairs(messages) do
 		local player = state.players[message.sender.user_id]
-		if player and message.op_code == OP_STATE and player.presence.session_id == message.sender.session_id then
+		if player and message.op_code == OP_FIRE and player.presence.session_id == message.sender.session_id then
+			local ok, t = pcall(nk.json_decode, message.data)
+			local faction = ok and type(t) == "table" and type(t.target) == "string" and t.target:match("^outpost:(%a+)$")
+			-- Only the other faction's outpost in this system can be a target.
+			if faction and state.outposts[faction] and faction ~= player.faction then
+				player.firing = faction
+			else
+				player.firing = nil
+			end
+		elseif player and message.op_code == OP_STATE and player.presence.session_id == message.sender.session_id then
 			local ok, t = pcall(nk.json_decode, message.data)
 			if ok and type(t) == "table" and number_fields_ok(t) and plausible(player, t, now) then
 				player.state = t
@@ -203,6 +359,18 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		dispatcher.broadcast_message(OP_SNAPSHOT, nk.json_encode(batch))
 	end
 
+	if update_outposts(state, now) then
+		state.outposts_changed = true
+	end
+	if state.outposts_changed and tick - state.last_outposts_broadcast >= OUTPOST_BROADCAST_TICKS then
+		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state))
+		state.outposts_changed = false
+		state.last_outposts_broadcast = tick
+	end
+	if tick % OUTPOST_PERSIST_TICKS == 0 then
+		save_dirty_outposts(state)
+	end
+
 	local count = 0
 	for _ in pairs(state.players) do
 		count = count + 1
@@ -220,6 +388,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 	if count == 0 then
 		state.idle_ticks = state.idle_ticks + 1
 		if state.idle_ticks >= IDLE_TICKS then
+			save_dirty_outposts(state)
 			registry.release(context, state.system)
 			return nil -- end the match; the directory makes a new one when needed
 		end
@@ -230,6 +399,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 end
 
 function M.match_terminate(context, dispatcher, tick, state, grace_seconds)
+	save_dirty_outposts(state)
 	registry.release(context, state.system)
 	return state
 end

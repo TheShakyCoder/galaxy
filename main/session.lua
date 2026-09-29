@@ -194,12 +194,55 @@ function M.ftl_cost_per_ly(ship_id)
 	return (ship and ship.data and ship.data.ftl_cost_hydrogen_per_ly) or DEFAULT_FTL_COST_PER_LY
 end
 
--- Takes off from the outpost: flights always start in the faction's home
--- system (main/player_ship.script's start_flight()).
-function M.launch()
-	M.current_system = star_systems.HOME_SYSTEM[M.faction]
-	M.pending_jump = nil
+-- The system whose outpost the player is at whenever they're not flying:
+-- their current system if their faction has an outpost there, otherwise
+-- their home system. That covers docking (only possible at an outpost),
+-- quitting mid-flight, and being destroyed: in a system without one of
+-- their outposts, they're back at home.
+function M.docked_system()
+	if M.current_system and M.outpost_available(M.current_system, M.faction) then
+		return M.current_system
+	end
+	return star_systems.HOME_SYSTEM[M.faction]
+end
+
+-- Is `faction`'s outpost in `system_id` there right now? By default just
+-- "does the faction have an outpost in that system" (star_systems). Outposts
+-- can also be destroyed for an hour, which only the server knows for sure:
+-- nakama-server/modules/economy.lua replaces this with the live state, and
+-- the game with its latest copy of it (main/network.lua). A destroyed outpost
+-- counts as no outpost - docking, quitting and respawning there send the
+-- player home.
+local outpost_available_fn = nil
+function M.set_outpost_availability(fn)
+	outpost_available_fn = fn
+end
+
+function M.outpost_available(system_id, faction)
+	if not star_systems.has_outpost(system_id, faction) then
+		return false
+	end
+	if outpost_available_fn then
+		return outpost_available_fn(system_id, faction)
+	end
 	return true
+end
+
+-- Takes off from the outpost the player is at (M.docked_system()). A jump
+-- that was paid for but never arrived (the game was closed mid-countdown)
+-- is refunded.
+function M.launch()
+	if M.pending_jump then
+		M.hydrogen = M.hydrogen + M.pending_jump.cost
+		M.pending_jump = nil
+	end
+	M.current_system = M.docked_system()
+	return true
+end
+
+-- The system whose outpost the player is at (or last launched from).
+function M.get_current_system()
+	return M.current_system
 end
 
 -- Hydrogen cost of jumping from the current system to `system_id` with the

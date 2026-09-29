@@ -27,6 +27,7 @@ local defold = require "nakama.engine.defold"
 local nakama = require "nakama.nakama"
 local json = require "nakama.util.json"
 local nakama_session = require "nakama.session"
+local session = require "main.session"
 
 local M = {}
 
@@ -48,7 +49,7 @@ local SERVER_CONFIG = {
 }
 
 -- Star-system match protocol (see nakama-server/modules/system_match.lua).
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE = 1, 2, 3, 4
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE = 1, 2, 3, 4, 5, 6
 
 -- The system the player is in while flying (nil when docked or logged out).
 -- Every (re)connect enters it again with a fresh ticket.
@@ -73,6 +74,56 @@ local connecting = false
 -- skin_id } from their JOIN message. Their ships are removed (M.on_leave)
 -- when we drop or change system, since no LEAVE arrives for those cases.
 local members = {}
+
+-- Outposts' hull/destruction as last heard from the server (the system's
+-- match while flying, the outpost_status RPC at an outpost): system_id ->
+-- faction -> { exists, hp, max_hp, available, destroyed_until, returns_at }.
+-- `returns_at` is destroyed_until on the local socket.gettime() clock, so
+-- countdowns don't depend on this computer's clock matching the server's.
+local outpost_cache = {}
+
+local function store_outposts(system_id, data)
+	local now = socket.gettime()
+	local by_faction = {}
+	for _, faction in ipairs({ "accord", "swarm" }) do
+		local st = data[faction]
+		if type(st) == "table" then
+			if st.destroyed_until and data.now then
+				st.returns_at = now + (st.destroyed_until - data.now) / 1000
+			end
+			by_faction[faction] = st
+		end
+	end
+	outpost_cache[system_id] = by_faction
+end
+
+-- The outpost's last known state, or nil if the server hasn't told us yet.
+-- A destruction whose hour is up counts as returned (the server says so as
+-- soon as it notices).
+function M.outpost_state(system_id, faction)
+	local st = outpost_cache[system_id] and outpost_cache[system_id][faction]
+	if st and not st.available and st.returns_at and socket.gettime() >= st.returns_at then
+		st.available, st.hp, st.destroyed_until, st.returns_at = true, st.max_hp, nil, nil
+	end
+	return st
+end
+
+-- Seconds until a destroyed outpost returns (0 if it isn't destroyed).
+function M.outpost_returns_in(system_id, faction)
+	local st = M.outpost_state(system_id, faction)
+	if not (st and st.returns_at) then
+		return 0
+	end
+	return math.max(0, st.returns_at - socket.gettime())
+end
+
+-- Docking, launching and respawning (main/session.lua docked_system) treat
+-- a destroyed outpost as missing, the same rule the server applies. Until
+-- the server has said otherwise an outpost is assumed to be there.
+session.set_outpost_availability(function(system_id, faction)
+	local st = M.outpost_state(system_id, faction)
+	return st == nil or st.available
+end)
 
 -- Where the logged-in session is kept between visits (a sys.save file -
 -- IndexedDB on the web). Not nakama/session.lua's own store()/restore():
@@ -399,12 +450,36 @@ function M.set_space_callbacks(on_transform, on_leave)
 	M.on_leave = on_leave
 end
 
+-- on_outposts(system_id) is called whenever the current system's outpost
+-- state arrives (on joining its match and whenever a hull changes).
+function M.set_outposts_callback(on_outposts)
+	M.on_outposts = on_outposts
+end
+
+-- Asks the server for `system_id`'s outposts (the outpost screen isn't in
+-- any system's match); callback(ok) once the cache is updated.
+function M.fetch_outposts(system_id, callback)
+	rpc("outpost_status", { system_id = system_id }, function(result)
+		if result and not result.error then
+			store_outposts(system_id, result)
+			if callback then callback(true) end
+		elseif callback then
+			callback(false)
+		end
+	end)
+end
+
 function M.handle_match_data(op, raw)
 	local ok, data = pcall(json.decode, raw)
 	if not ok or type(data) ~= "table" then
 		return
 	end
-	if op == OP_JOIN then
+	if op == OP_OUTPOSTS then
+		if current_system_id then
+			store_outposts(current_system_id, data)
+			if M.on_outposts then M.on_outposts(current_system_id) end
+		end
+	elseif op == OP_JOIN then
 		members[data.u] = { ship_id = data.ship_id, faction = data.faction, skin_id = data.skin_id }
 	elseif op == OP_LEAVE then
 		if members[data.u] then
@@ -504,6 +579,25 @@ function M.send_transform(pos, rot, speed, ship_id)
 		socket.match_data_send(match_id, OP_STATE, payload)
 	end)
 	return true
+end
+
+-- Fires this ship's weapons at `target` ("outpost:<faction>") until
+-- M.stop_fire(). The server decides the damage: each installed weapon hits
+-- while the target is inside its range and firing arc.
+function M.fire(target)
+	if not M.match_id then
+		return false
+	end
+	local socket, match_id = M.socket, M.match_id
+	local payload = json.encode(target and { target = target } or {})
+	nakama.sync(function()
+		socket.match_data_send(match_id, OP_FIRE, payload)
+	end)
+	return true
+end
+
+function M.stop_fire()
+	return M.fire(nil)
 end
 
 return M

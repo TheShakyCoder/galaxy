@@ -143,16 +143,37 @@ local function model_component_id(ship_id, faction)
 	return "model_" .. ship_id .. "_" .. faction
 end
 
--- Must match main/main.collection's own accord_outpost/swarm_outpost
--- embedded instance positions exactly - same "hardcoded mirror, kept in
--- sync by hand" approach (and same reasoning) as the other local reference
--- project's own ship.script FACTION_OUTPOST table, which this is ported
--- from (§0 - mechanics, not creative expression). Used for both the
--- launch spawn point and the docking proximity check below.
-local FACTION_OUTPOST = {
-	accord = vmath.vector3(-4000, 0, -4000),
-	swarm = vmath.vector3(4000, 0, 4000),
-}
+-- Outposts come from main/data/star_systems.lua's outpost_position(): each
+-- faction's outpost sits in its own corner of every system where it has one
+-- (large systems included; per-system overrides allowed there). The one
+-- accord_outpost / swarm_outpost object pair in main/main.collection is
+-- moved there on every system change (place_outposts() below), and hidden
+-- in systems where that faction has no outpost, or while it's destroyed
+-- (the server's state, main/network.lua outpost_state).
+local OUTPOST_FACTIONS = { "accord", "swarm" }
+
+-- `faction`'s outpost in `system_id` as a vector3, or nil if it has none
+-- or it's currently destroyed.
+local function outpost_position(system_id, faction)
+	local p = system_id and star_systems.outpost_position(system_id, faction)
+	if not (p and session.outpost_available(system_id, faction)) then
+		return nil
+	end
+	return vmath.vector3(p.x, p.y, p.z)
+end
+
+local function place_outposts(system_id)
+	for _, faction in ipairs(OUTPOST_FACTIONS) do
+		local id = "/" .. faction .. "_outpost"
+		local pos = outpost_position(system_id, faction)
+		if pos then
+			go.set_position(pos, id)
+			msg.post(id, "enable")
+		else
+			msg.post(id, "disable")
+		end
+	end
+end
 
 -- Ambient lighting (per direct instruction: "increase the general ambient
 -- light in all the systems"). /builtins/materials/model.material's
@@ -202,14 +223,15 @@ local function apply_skin(self)
 end
 
 
--- Docking (per direct instruction): a ship may only dock within DOCK_RANGE
--- of its own faction's outpost, and launching drops it back at a random
--- point on the surface of a LAUNCH_DISTANCE sphere around it (not a filled
--- ball - "any point ON a sphere") - see random_spawn()/update()'s docking
--- block below. Launching outside DOCK_RANGE means a freshly launched ship
--- has to fly back in before it can dock again.
-local DOCK_RANGE = 500
-local LAUNCH_DISTANCE = 800
+-- Docking (per direct instruction): a ship may dock within DOCK_RANGE of
+-- its own faction's outpost in whatever system it's in. Launching and
+-- arriving from a jump both put it at a random point on the surface of a
+-- LAUNCH_DISTANCE sphere around that outpost (or around the system centre
+-- where its faction has no outpost), facing the system centre - see
+-- arrival_spawn()/update()'s docking block below. LAUNCH_DISTANCE is beyond
+-- DOCK_RANGE, so a freshly arrived ship has to fly in before it can dock.
+local DOCK_RANGE = 1000
+local LAUNCH_DISTANCE = 1200
 local DOCK_COUNTDOWN_SEC = 5
 
 -- FTL jump (per direct instruction: "implement [the SuperShips jump
@@ -285,6 +307,13 @@ local function random_spawn(outpost_pos, radius)
 		end
 	end
 	return pos, rot
+end
+
+-- Where a ship appears in `system_id` after launching or jumping in:
+-- LAUNCH_DISTANCE from its faction's outpost there (or from the system
+-- centre if its faction has no outpost), facing the system centre.
+local function arrival_spawn(system_id, faction)
+	return random_spawn(outpost_position(system_id, faction) or vmath.vector3(), LAUNCH_DISTANCE)
 end
 
 -- Turning/acceleration/speed now read from this ship's own real stat block
@@ -392,6 +421,16 @@ function init(self)
 	self.net_sent_pos = nil -- last broadcast state (nil = send on the next check) - see network_state_changed()
 	self.net_sent_rot = nil
 	self.net_sent_speed = 0
+	self.firing = false -- key 1's weapons toggle, see toggle_firing()
+	-- The server's outpost state for our system: hide destroyed outposts,
+	-- show returned ones. Socket callbacks run outside this script's
+	-- context (no go.* there), so update() does the re-placing.
+	self.outposts_changed = false
+	network.set_outposts_callback(function(system_id)
+		if system_id == self.current_system_id then
+			self.outposts_changed = true
+		end
+	end)
 	self.target_id = nil -- currently-targeted remote user_id (any ship, friend or foe - see cycle_target()/target_nearest_enemy() above), or nil
 	self.follow_friend = false -- Y's Follow Friend - see update()'s targeting/movement block
 	msg.post("flight_camera#camera", "disable")
@@ -422,6 +461,7 @@ local function start_flight(self)
 	self.net_sent_pos = nil -- broadcast this launch straight away
 	self.target_id = nil
 	self.follow_friend = false
+	self.firing = false
 
 	-- Which of main/main.collection's 24 pre-embedded model components to
 	-- show (per direct instruction: the ship actually flown must match
@@ -461,68 +501,41 @@ local function start_flight(self)
 	-- fixed 0.2 ambient floor.
 	go.set("#" .. self.model_component_id, "tint", AMBIENT_TINT)
 
-	local outpost_pos = FACTION_OUTPOST[faction]
-	local pos, rot = random_spawn(outpost_pos, LAUNCH_DISTANCE)
+	-- Flights start in the system whose outpost the player is docked at
+	-- (session.launch() above picked it: the current system if their faction
+	-- has an outpost there, otherwise home). Stored on self so
+	-- toggle_map()/on_input can reach it later in the flight.
+	self.current_system_id = session.get_current_system()
+	place_outposts(self.current_system_id)
+	local pos, rot = arrival_spawn(self.current_system_id, faction)
 	go.set_position(pos)
 	go.set_rotation(rot)
 	msg.post(".", "acquire_input_focus")
 	msg.post("flight_camera#camera", "enable")
 	msg.post("flight_hud#gui", "show_flight_hud")
 
-	-- Every flight starts at the player's own home system, same convention
-	-- main/outpost.gui_script's refresh_map() already uses (and the
-	-- reference project's own init()-time apply_system() call) - jumping
-	-- elsewhere during flight is arrive_at_system()'s job below. Stored on
-	-- self (not just a local) so toggle_map()/on_input, called at any
-	-- later point during flight, can still reach it.
-	self.current_system_id = star_systems.HOME_SYSTEM[faction]
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[self.current_system_id].name })
-	-- Realtime presence: join the home system's match.
+	-- Realtime presence: join this system's match.
 	enter_system_when_synced(self, self.current_system_id)
 end
 
--- Makes `system_id` the player's current system - the Galaxy-appropriate
--- slice of the reference project's own apply_system() (§0): repositions
--- the ship, respawns the asteroid field, and updates the HUD's system-name
--- readout. Called once from execute_jump()'s countdown-complete handler in
--- update() below (never from start_flight(), which always goes home - see
--- that function's own comment).
---
--- What this does NOT do, unlike the source: enable/disable per-system
--- outpost meshes, or switch any multiplayer room - main/main.collection
--- only has the ONE physical accord/swarm outpost pair (fixed-position,
--- used for docking), not a real per-system 3D world/outpost per
--- main/data/star_systems.lua's own M.has_outpost - flight mode is still
--- one generic scene regardless of which system_id is "current" (§4, a
--- known, larger, un-built gap - not this feature's job to invent a
--- multi-world architecture). Docking still degrades sensibly despite
--- this: jumping to a non-home system spawns you at the map origin
--- (jump_in_spawn below), physically far from FACTION_OUTPOST's fixed
--- position, so self.near_outpost's own plain distance check already
--- reads false there without any extra system-aware logic - the "no
--- outpost to dock at outside your own home system" behavior falls out of
--- the existing physical-distance check as a side effect, not a deliberate
--- per-system rule.
+-- Makes `system_id` the player's current system after a jump - the
+-- Galaxy-appropriate slice of the reference project's own apply_system()
+-- (§0): moves the outposts to this system's positions (place_outposts),
+-- repositions the ship (arrival_spawn), respawns the asteroid field,
+-- updates the HUD's system name and switches to the system's match. Called
+-- from update() when a jump's countdown completes. Docking then works at our
+-- faction's outpost here, if we have one (see update()'s docking block).
 local function arrive_at_system(self, system_id)
 	self.current_system_id = system_id
-	local faction = session.get_faction()
-	local home = star_systems.faction_home_of(system_id)
-
-	local pos, rot
-	if home == faction then
-		pos, rot = random_spawn(FACTION_OUTPOST[faction], DOCK_RANGE)
-	else
-		-- Same ring-spawn as random_spawn(), just centered on the map
-		-- origin instead of an outpost - ported technique from the
-		-- reference project's own jump_in_spawn() (§0), used whenever the
-		-- destination has no outpost of the player's own faction to
-		-- arrive near. Also conveniently right where main/data/asteroids.lua's
-		-- own field is centered, unlike the source (whose ambient drone
-		-- pool just happens to roam near its own map origin too, per that
-		-- function's own comment).
-		pos, rot = random_spawn(vmath.vector3(0, 0, 0), DOCK_RANGE)
-	end
+	self.target_id = nil
+	self.firing = false -- the old system's match stops our fire as we leave it
+	place_outposts(system_id)
+	-- Same rule as launching: LAUNCH_DISTANCE from our faction's outpost in
+	-- the new system (or from its centre if we have none there), facing
+	-- the centre.
+	local pos, rot = arrival_spawn(system_id, session.get_faction())
 	go.set_position(pos)
 	go.set_rotation(rot)
 	self.camera_rot = nil -- snap the chase camera to the new position/rotation instead of slerping from wherever it was before the jump (same convention start_flight() already uses for the exact same "ship just teleported" case)
@@ -540,7 +553,8 @@ end
 -- work, same as when faction_select first hands off there). Called once
 -- update()'s docking countdown reaches zero, see below.
 local function complete_dock(self)
-	network.leave_system() -- docked ships leave the system's match
+	network.leave_system() -- docked ships leave the system's match (which stops any fire)
+	self.firing = false
 	self.flying = false
 	self.docking = false
 	self.dock_time_left = 0
@@ -551,6 +565,21 @@ local function complete_dock(self)
 	msg.post("flight_camera#camera", "disable")
 	msg.post("flight_hud#gui", "hide_flight_hud")
 	msg.post("outpost#gui", "show_outpost")
+end
+
+-- The ship was destroyed: the player respawns at the outpost screen, which
+-- (like docking and quitting) is session.docked_system() - this system's
+-- outpost if their faction has one here, otherwise their home system's.
+-- The next launch starts there (session.launch(), also on the server).
+-- Nothing sends "ship_destroyed" yet; combat will.
+local function ship_destroyed(self)
+	if not self.flying then
+		return
+	end
+	self.jumping = false -- an unfinished jump is refunded by the next launch
+	self.jump_target_system = nil
+	self.jump_hydrogen_spent = 0
+	complete_dock(self)
 end
 
 -- Shared by on_input's "toggle_map" key (N) handler below - flight_map.gui_script
@@ -652,6 +681,40 @@ end
 -- fresh TAB/X press respects it. Same value as the source project's own
 -- TARGET_RANGE (a literal port, not a fresh guess).
 local TARGET_RANGE = 300
+-- Outposts are much bigger than ships, so TAB/X pick up the enemy outpost
+-- from further away - past every weapon's range (the longest, the
+-- Speculator's, is 1350 m), so it can be locked before closing in.
+local OUTPOST_TARGET_RANGE = 2000
+
+-- self.target_id is a remote user_id, or "outpost:<faction>" for an
+-- outpost - the same string the server takes as a FIRE target.
+local OUTPOST_TARGET_PREFIX = "outpost:"
+
+local function with_commas(n)
+	local formatted = tostring(math.floor(n)):reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (formatted:gsub("^,", ""))
+end
+
+local function outpost_target_faction(target_id)
+	return target_id and target_id:sub(1, #OUTPOST_TARGET_PREFIX) == OUTPOST_TARGET_PREFIX
+		and target_id:sub(#OUTPOST_TARGET_PREFIX + 1) or nil
+end
+
+-- The other faction's outpost here, as a target id, if it's standing and
+-- within OUTPOST_TARGET_RANGE of `pos`, with its distance squared.
+local function enemy_outpost_in_range(self, pos)
+	local enemy = session.get_faction() == "accord" and "swarm" or "accord"
+	local outpost_pos = outpost_position(self.current_system_id, enemy)
+	if not outpost_pos then
+		return nil
+	end
+	local d = outpost_pos - pos
+	local dist_sq = vmath.dot(d, d)
+	if dist_sq > OUTPOST_TARGET_RANGE * OUTPOST_TARGET_RANGE then
+		return nil
+	end
+	return OUTPOST_TARGET_PREFIX .. enemy, dist_sq
+end
 
 -- TAB cycles self.target_id among ANY remote ship (main/remote_registry.lua,
 -- populated by main/remote_ships.script from the current system's Nakama
@@ -670,6 +733,10 @@ local function cycle_target(self)
 		if vmath.length(ship.pos - pos) <= TARGET_RANGE then
 			table.insert(candidates, user_id)
 		end
+	end
+	local outpost_id = enemy_outpost_in_range(self, pos)
+	if outpost_id then
+		table.insert(candidates, outpost_id)
 	end
 	table.sort(candidates)
 
@@ -706,8 +773,36 @@ local function target_nearest_enemy(self)
 			end
 		end
 	end
+	local outpost_id = enemy_outpost_in_range(self, pos)
+	-- a ship in range is the more urgent target than the outpost
+	if outpost_id and not best_id then
+		best_id = outpost_id
+	end
 	if best_id then
 		self.target_id = best_id
+	end
+end
+
+-- Weapons (key 1, BSGO-style toggle): fire every installed weapon at the
+-- current target until pressed again. Only outposts can be shot so far.
+-- The server applies the damage while the target is within each weapon's
+-- range and firing arc (nakama-server/modules/system_match.lua), so firing
+-- stays on while out of range and hits once back in.
+local function stop_firing(self)
+	if self.firing then
+		self.firing = false
+		network.stop_fire()
+	end
+end
+
+local function toggle_firing(self)
+	if self.firing then
+		stop_firing(self)
+		return
+	end
+	local faction = outpost_target_faction(self.target_id)
+	if faction and faction ~= session.get_faction() and session.outpost_available(self.current_system_id, faction) then
+		self.firing = network.fire(self.target_id)
 	end
 end
 
@@ -718,6 +813,8 @@ end
 function on_message(self, message_id, message)
 	if message_id == hash("start_flight") then
 		start_flight(self)
+	elseif message_id == hash("ship_destroyed") then
+		ship_destroyed(self)
 	elseif message_id == hash("set_jump_preset") then
 		local faction = session.get_faction()
 		if star_systems.can_enter(message.system_id, faction) then
@@ -787,6 +884,7 @@ function on_input(self, action_id, action)
 		-- entirely (see update()'s targeting block) - it means nothing
 		-- without a target.
 		if action.pressed then
+			stop_firing(self)
 			self.target_id = nil
 			self.follow_friend = false
 		end
@@ -857,6 +955,10 @@ function on_input(self, action_id, action)
 				self.dock_time_left = DOCK_COUNTDOWN_SEC
 			end
 		end
+	elseif action_id == hash("weapon_1") then
+		if action.pressed then
+			toggle_firing(self)
+		end
 	elseif action_id == hash("execute_jump") then
 		-- "This is very handy when you need to FTL away rather than die" -
 		-- fires whatever's currently armed in self.jump_preset_system
@@ -886,8 +988,26 @@ function update(self, dt)
 	-- below needs the target's position/speed, and the HUD readout further
 	-- down reuses this same local. Ported technique from the source
 	-- project's own update() (§0).
-	local target_ship = self.target_id and remote_registry.ships[self.target_id]
-	if self.target_id and not target_ship then
+	if self.outposts_changed then
+		self.outposts_changed = false
+		place_outposts(self.current_system_id)
+	end
+
+	local target_outpost = outpost_target_faction(self.target_id)
+	local target_ship = self.target_id and not target_outpost and remote_registry.ships[self.target_id]
+	if target_outpost then
+		-- An outpost stays locked while destroyed (the HUD shows when it
+		-- returns), but can't be fired at.
+		if not star_systems.outpost_position(self.current_system_id, target_outpost) then
+			self.target_id, target_outpost = nil, nil
+		end
+		if self.firing and not (target_outpost and session.outpost_available(self.current_system_id, target_outpost)) then
+			stop_firing(self)
+		end
+	elseif self.firing then
+		stop_firing(self) -- retargeted to a ship (ships can't be shot yet)
+	end
+	if self.target_id and not target_outpost and not target_ship then
 		-- disconnected, or otherwise dropped out of the registry entirely
 		-- (see main/remote_ships.script's "remote_leave" handler) - NOT the
 		-- same as merely drifting out of TARGET_RANGE, which keeps the lock
@@ -1115,7 +1235,7 @@ function update(self, dt)
 	-- transition" shape start_flight()'s own Launch hand-off uses, just
 	-- reversed. Ported technique from the reference project's own
 	-- ship.script (§0).
-	local outpost_pos = FACTION_OUTPOST[session.get_faction()]
+	local outpost_pos = outpost_position(self.current_system_id, session.get_faction())
 	self.near_outpost = outpost_pos and vmath.length(pos - outpost_pos) <= DOCK_RANGE or false
 	if self.docking then
 		if not self.near_outpost then
@@ -1150,7 +1270,22 @@ function update(self, dt)
 	-- entirely with no target rather than always showing "TARGET: none",
 	-- matching this HUD's own dock_prompt/jump_preset convention.
 	local target_text = nil
-	if target_ship then
+	if target_outpost then
+		local st = network.outpost_state(self.current_system_id, target_outpost)
+		if not session.outpost_available(self.current_system_id, target_outpost) then
+			target_text = string.format("TARGET: %s outpost DESTROYED - returns in %d min", target_outpost,
+				math.ceil(network.outpost_returns_in(self.current_system_id, target_outpost) / 60))
+		else
+			local dist = vmath.length(outpost_position(self.current_system_id, target_outpost) - pos)
+			target_text = string.format("TARGET: %s outpost  %.0fm", target_outpost, dist)
+			if st then
+				target_text = target_text .. "  HULL " .. with_commas(st.hp) .. " / " .. with_commas(st.max_hp)
+			end
+		end
+		if self.firing then
+			target_text = target_text .. "  [FIRING]"
+		end
+	elseif target_ship then
 		local dist = vmath.length(target_ship.pos - pos)
 		if dist > TARGET_RANGE then
 			target_text = string.format("TARGET: %s (out of range)", target_ship.faction)
