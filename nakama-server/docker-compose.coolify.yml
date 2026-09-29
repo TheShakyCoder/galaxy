@@ -7,9 +7,13 @@
 #     terminates TLS, so clients connect on 443 (https / wss).
 #   - no `container_name:` - fixed names clash with Coolify's own naming and
 #     with any other stack on the same server (e.g. SuperShips).
-#   - every secret is required (`:?`), so Coolify lists them as variables to
-#     fill in and a deploy with one missing fails instead of running on
-#     Nakama's well-known defaults.
+#   - every secret is required. Coolify lists each ${VAR} as a variable to
+#     fill in, and nakama's entrypoint refuses to start (naming the missing
+#     setting) if any is empty, instead of running on Nakama's well-known
+#     defaults. The check is in the entrypoint, not `${VAR}` here, because
+#     Coolify runs `docker compose build` for the nakama image and compose
+#     would then demand every variable at build time too; this way none of
+#     them needs "Available at Buildtime" and no secret is passed to the build.
 #   - the runtime modules are baked into the nakama image (./Dockerfile)
 #     instead of bind-mounted: Coolify doesn't keep the repository on the
 #     host, so a `./` mount there is an empty folder and no modules load.
@@ -18,7 +22,7 @@ services:
     image: postgres:16.8-alpine
     environment:
       - POSTGRES_DB=nakama
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - data:/var/lib/postgresql/data
     expose:
@@ -33,22 +37,23 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       # Must equal the NAKAMA_SERVER_KEY build variable of the web app.
-      - NAKAMA_SERVER_KEY=${NAKAMA_SERVER_KEY:?}
-      - NAKAMA_CONSOLE_USERNAME=${NAKAMA_CONSOLE_USERNAME:?}
-      - NAKAMA_CONSOLE_PASSWORD=${NAKAMA_CONSOLE_PASSWORD:?}
-      - NAKAMA_CONSOLE_SIGNING_KEY=${NAKAMA_CONSOLE_SIGNING_KEY:?}
-      - NAKAMA_SESSION_ENCRYPTION_KEY=${NAKAMA_SESSION_ENCRYPTION_KEY:?}
-      - NAKAMA_REFRESH_ENCRYPTION_KEY=${NAKAMA_REFRESH_ENCRYPTION_KEY:?}
-      - NAKAMA_HTTP_KEY=${NAKAMA_HTTP_KEY:?}
+      - NAKAMA_SERVER_KEY=${NAKAMA_SERVER_KEY}
+      - NAKAMA_CONSOLE_USERNAME=${NAKAMA_CONSOLE_USERNAME}
+      - NAKAMA_CONSOLE_PASSWORD=${NAKAMA_CONSOLE_PASSWORD}
+      - NAKAMA_CONSOLE_SIGNING_KEY=${NAKAMA_CONSOLE_SIGNING_KEY}
+      - NAKAMA_SESSION_ENCRYPTION_KEY=${NAKAMA_SESSION_ENCRYPTION_KEY}
+      - NAKAMA_REFRESH_ENCRYPTION_KEY=${NAKAMA_REFRESH_ENCRYPTION_KEY}
+      - NAKAMA_HTTP_KEY=${NAKAMA_HTTP_KEY}
       # Email verification codes (modules/accounts.lua), sent through Resend.
-      # Required here so production can never fall back to logging codes.
-      - RESEND_API_KEY=${RESEND_API_KEY:?}
-      - EMAIL_FROM=${EMAIL_FROM:?}
+      # Required (see the entrypoint check) so production can never fall back
+      # to logging codes.
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
       # Signs star-system transfer tickets (modules/tickets.lua). Generate a
       # long random value; every Nakama node must share it.
-      - TICKET_SECRET=${TICKET_SECRET:?}
+      - TICKET_SECRET=${TICKET_SECRET}
       # This node's name and the public host clients use for its matches.
       # PUBLIC_ENDPOINT stays empty while there's a single node.
       - NODE_ID=${NODE_ID:-node1}
@@ -58,6 +63,11 @@ services:
       # -e only, not -x: tracing would print every secret below into the logs.
       - "-ec"
       - >
+          for v in POSTGRES_PASSWORD NAKAMA_SERVER_KEY NAKAMA_CONSOLE_USERNAME NAKAMA_CONSOLE_PASSWORD
+          NAKAMA_CONSOLE_SIGNING_KEY NAKAMA_SESSION_ENCRYPTION_KEY NAKAMA_REFRESH_ENCRYPTION_KEY
+          NAKAMA_HTTP_KEY RESEND_API_KEY EMAIL_FROM TICKET_SECRET; do
+          eval "val=\$$$$v"; if [ -z "$$val" ]; then echo "galaxy-server: required setting $$v is empty - set it in Coolify" >&2; exit 1; fi;
+          done;
           /nakama/nakama migrate up --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama &&
           exec /nakama/nakama --name nakama1
           --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama

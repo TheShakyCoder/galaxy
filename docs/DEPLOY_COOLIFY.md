@@ -78,8 +78,10 @@ change the API domain or server key, redeploy **galaxy-web** too.
    (`nakama-server/modules/accounts.lua`). Every player must verify their email
    before playing, so the game is unplayable without them.
 
-   A missing variable makes the deploy fail rather than fall back to Nakama's
-   well-known defaults. That's on purpose.
+   Mark them **Available at Runtime** only; none is needed at build time
+   (the image build just copies the modules). If one is missing, Nakama
+   refuses to start and its log says which ("required setting … is empty"),
+   rather than running on Nakama's well-known defaults. That's on purpose.
 
 3. **Domains:** on the `nakama` service, set
    `https://api1.fig.limited:7350`. The `:7350` tells Coolify's proxy
