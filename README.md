@@ -37,12 +37,16 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Targeting**: cycle targets, target the nearest enemy, match its speed, or
   follow a friendly ship.
 - **Resources**: Scrip, Water, Iron and Hydrogen.
-- **Accounts**: sign up with email and password and verify the email with a
-  6-digit code before playing. Your faction, Scrip, ships, fittings and skins
-  are saved to your account, and the game logs you back in automatically.
-  The server owns that progress: every purchase, sale, fitting change and FTL
-  jump is checked and applied by Nakama, so balances and items can't be
-  edited in the browser.
+- **Accounts**: everything account-related happens on the website
+  ([fig.limited](https://fig.limited), a separate Laravel project): register,
+  verify your email, log in, reset your password, and see your pilot on each
+  game server. **Play** there opens the game, which signs you in to a game
+  server with a short-lived token from the site; `play.fig.limited` only
+  serves the game to logged-in players. Each game server keeps its own
+  progress for you (faction, Scrip, ships, fittings, skins), so you can be
+  Accord on one server and Swarm on another. The server owns that progress:
+  every purchase, sale, fitting change and FTL jump is checked and applied by
+  Nakama, so balances and items can't be edited in the browser.
 - **Multiplayer**: each star system is an authoritative server match where you see
   other players' ships in real time. The server validates every move, and you can
   only enter the system you actually flew or jumped to. The client reconnects
@@ -84,22 +88,31 @@ for features that aren't built yet.
    **Project → Build**. The editor fetches the dependencies (Nakama and
    WebSocket) on first build.
 
-Every player needs a verified account. Locally, verification emails never go
-out: they land in the [Mailpit](https://mailpit.axllent.org) inbox that starts
-with the server, at <http://localhost:8035>. Any address works, e.g.
-`test1@example.com`.
+Players sign in with a play token from the website. For local builds, run the
+website locally (DDEV, see its README), register the local server there once
+and make a verified user:
+
+```sh
+php artisan galaxy:server local --host=127.0.0.1 --port=7350 --insecure \
+  --internal-url=http://host.docker.internal:7350 \
+  --http-key=local-dev-http-key --secret=local-dev-play-token-secret
+php artisan galaxy:dev-token you@example.test local   # prints a 30-day token
+```
+
+Then give the token to a debug build: set `GALAXY_PLAY_TOKEN` for a desktop
+build, or open an HTML5 build as `index.html#dev_token=<token>`. Release
+builds get their token from `play.fig.limited` instead and need the website.
 
 The server enforces the same rules as the game by running copies of
 `main/session.lua` and its data files. After changing any of them, run
 `python tools/sync_server_rules.py` and restart Nakama
 (`docker compose restart nakama`).
 
-To test multiplayer, use two accounts. Separate browsers each keep their own
-login; two builds run from the editor on the same Mac share the saved login,
-so log out in one and log in there with a second account.
+To test multiplayer, make two users and give each build its own token.
 
-The client reads its server address from the `[nakama]` section of `game.project`,
-which points at the local server by default.
+Debug builds read the game server address from the `[nakama]` section of
+`game.project`, which points at the local server by default; release builds
+get it from the website.
 
 ## Deployment
 
@@ -107,11 +120,12 @@ The live site runs on [Coolify](https://coolify.io/) as two services built from
 this repo:
 
 - **galaxy-web**: the HTML5 build, compiled by the root [`Dockerfile`](Dockerfile)
-  and served by nginx.
+  and served by nginx to players logged in on the website.
 - **galaxy-server**: Nakama and Postgres, from
   [`nakama-server/docker-compose.coolify.yml`](nakama-server/docker-compose.coolify.yml).
 
-For the full setup, required secrets and troubleshooting, see
+Accounts and the Play button are on the website (**galaxy-site**, its own
+repo). For the full setup, required secrets and troubleshooting, see
 [`docs/DEPLOY_COOLIFY.md`](docs/DEPLOY_COOLIFY.md).
 
 ## Versioning
@@ -161,5 +175,4 @@ Main next steps:
 - Server-authoritative game logic in `nakama-server/modules/` (Robots PvE,
   combat, economy)
 - Carriers, progression and ranks
-- Password reset for accounts
 - Stripe purchases (premium currency for real-money skins)

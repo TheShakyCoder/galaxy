@@ -33,3 +33,6 @@ server_key = defaultkey
 
 [model]
 max_count = 512
+
+[galaxy]
+account_url = https://galaxy.ddev.site/dashboard

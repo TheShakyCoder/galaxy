@@ -11,7 +11,7 @@ tools/sync_server_rules.py) and saves the result. Anything the rules reject
 reply carries the authoritative profile so the client can resync.
 
 The profile is storage object profile/state, readable by its owner but
-writable only by the server (permission_write = 0); modules/accounts.lua also
+writable only by the server (permission_write = 0); modules/auth.lua also
 refuses any client write to that collection.
 
 Reply: { ok = true, result, profile } or { ok = false, error, profile }.
@@ -107,6 +107,9 @@ local function economy(context, payload)
 	local ok_decode, input = pcall(nk.json_decode, payload ~= "" and payload or "{}")
 	if not ok_decode or type(input) ~= "table" then
 		return reply({ ok = false, error = "Bad request." })
+	end
+	if not context.user_id or context.user_id == "" then
+		return reply({ ok = false, error = "Sign in first." })
 	end
 	local op, args = input.op, input.args or {}
 	if type(op) ~= "string" or not ALLOWED[op] or not valid_args(args) then

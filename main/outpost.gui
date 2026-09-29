@@ -170,7 +170,7 @@ nodes {
 nodes {
   type: TYPE_TEXT
   id: "logout_button_label"
-  text: "Log out"
+  text: "Account"
   font: "default_font"
   position { x: 150.0 y: 1030.0 z: 0.0 w: 1.0 }
   size { x: 200.0 y: 50.0 z: 0.0 w: 1.0 }

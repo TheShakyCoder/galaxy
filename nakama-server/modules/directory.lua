@@ -30,11 +30,6 @@ local function reply(tbl)
 	return nk.json_encode(tbl)
 end
 
-local function is_verified(user_id)
-	local ok, acc = pcall(nk.account_get_id, user_id)
-	return ok and acc and acc.user and acc.user.metadata and acc.user.metadata.email_verified == true
-end
-
 local function current_system(user_id)
 	local objects = nk.storage_read({ { collection = "profile", key = "state", user_id = user_id } })
 	return objects[1] and objects[1].value and objects[1].value.current_system
@@ -75,8 +70,8 @@ local function enter_system(context, payload)
 	if type(system_id) ~= "string" then
 		return reply({ ok = false, error = "Missing system." })
 	end
-	if not is_verified(context.user_id) then
-		return reply({ ok = false, error = "Verify your email first." })
+	if not context.user_id or context.user_id == "" then
+		return reply({ ok = false, error = "Sign in first." })
 	end
 	if current_system(context.user_id) ~= system_id then
 		return reply({ ok = false, error = "You're not in that system." })

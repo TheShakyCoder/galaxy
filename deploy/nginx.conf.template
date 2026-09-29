@@ -1,0 +1,75 @@
+# Serves the Defold HTML5 bundle built by the root Dockerfile, only to players
+# logged in on the website. TLS is handled upstream by Coolify's proxy, so
+# this only listens on plain HTTP.
+#
+# A template: the nginx image substitutes the ${...} environment variables
+# below when the container starts (see Dockerfile):
+#   LARAVEL_URL     the website, e.g. https://fig.limited
+#   NGINX_RESOLVER  DNS server for reaching it (Docker's own by default)
+#
+# Every page load asks the website whether the visitor is logged in and
+# verified (auth_request -> /play/auth-check, forwarding their cookies; the
+# website's session cookie is shared across *.fig.limited). Anyone else is
+# sent to the website's login page. The game fetches its play token from
+# /play-token here, which is passed through to the website the same way, so
+# it's a same-origin request that carries the login cookie.
+resolver ${NGINX_RESOLVER} valid=30s ipv6=off;
+
+server {
+    listen 80;
+    # Also IPv6, so health checks against "localhost" (which may resolve to
+    # ::1 first) reach nginx.
+    listen [::]:80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # proxy_pass with a variable resolves the website's address at request
+    # time (through the resolver above) instead of once at startup.
+    set $laravel "${LARAVEL_URL}";
+
+    # wasm_streaming = 1 in game.project needs the correct MIME type, which
+    # nginx's stock mime.types already maps for .wasm.
+    gzip on;
+    gzip_types application/wasm application/javascript application/octet-stream text/css;
+    gzip_min_length 1024;
+
+    # Every file must be revalidated on each load: Defold's file names don't
+    # change between builds, and dmloader rejects a mix of old and new files
+    # (size mismatch -> stuck on the Defold logo). Unchanged files still come
+    # back as a cheap 304 via Last-Modified/ETag.
+    location / {
+        auth_request /_auth;
+        error_page 401 = @login;
+        try_files $uri $uri/ =404;
+        add_header Cache-Control "no-cache";
+    }
+
+    location @login {
+        return 302 ${LARAVEL_URL}/login;
+    }
+
+    location = /_auth {
+        internal;
+        proxy_pass $laravel/play/auth-check;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header Cookie $http_cookie;
+        proxy_set_header Accept "application/json";
+        proxy_ssl_server_name on;
+    }
+
+    location = /play-token {
+        proxy_pass $laravel/play/token;
+        proxy_set_header Cookie $http_cookie;
+        proxy_set_header Accept "application/json";
+        proxy_ssl_server_name on;
+        add_header Cache-Control "no-store";
+    }
+
+    # For Coolify's health check, which has no login.
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+    }
+}

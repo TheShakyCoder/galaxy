@@ -1,22 +1,29 @@
 # Deploying Galaxy on Coolify
 
-Galaxy runs as two Coolify resources, both built from this public repo
-(`https://github.com/TheShakyCoder/galaxy`):
+Galaxy runs as three Coolify resources:
 
 | Resource | Build pack | Source | Serves |
 |---|---|---|---|
-| **galaxy-server** | Docker Compose | `nakama-server/docker-compose.coolify.yml` | Nakama + Postgres at `https://api1.fig.limited` |
-| **galaxy-web** | Dockerfile | `Dockerfile` (repo root) | HTML5 build of the game at `https://play.fig.limited` |
+| **galaxy-site** | Dockerfile | the website repo (`TheShakyCoder/galaxy-laravel`) | Laravel website at `https://fig.limited`: accounts, dashboard, Play |
+| **galaxy-server** | Docker Compose | this repo, `nakama-server/docker-compose.coolify.yml` | a game server: Nakama + Postgres at `https://api1.fig.limited` |
+| **galaxy-web** | Dockerfile | this repo, `Dockerfile` (root) | HTML5 build of the game at `https://play.fig.limited` |
 
 ```
- browser ──https──▶ play.fig.limited      ──▶ galaxy-web (nginx, static files)
+ browser ──https──▶ fig.limited        ──▶ galaxy-site (Laravel): register, log in, Play
     │
-    └──https/wss──▶ api1.fig.limited  ──▶ galaxy-server: nakama :7350 ──▶ postgres
+    ├──https──▶ play.fig.limited ──▶ galaxy-web (nginx) ──asks──▶ fig.limited: logged in?
+    │             (game files only for logged-in players; /play-token passed to the site)
+    │
+    └──https/wss──▶ api1.fig.limited ──▶ galaxy-server: nakama :7350 ──▶ postgres
                     (Coolify proxy, TLS)
 ```
 
-The web build gets the server address when it's built, not at runtime. If you
-change the API domain or server key, redeploy **galaxy-web** too.
+Accounts live on the website. When a verified player presses Play, the site
+picks a game server (a row in its `game_servers` table) and the game fetches a
+short-lived **play token** from it, signed with that server's
+`PLAY_TOKEN_SECRET`. The game signs in to that server's Nakama with it
+(`nakama-server/modules/auth.lua`). The site tells the game which server to
+connect to at runtime, so adding a server needs no game rebuild.
 
 ---
 
@@ -24,8 +31,8 @@ change the API domain or server key, redeploy **galaxy-web** too.
 
 - A Coolify server with outbound internet (the web build downloads `bob.jar`
   and compiles native extensions on Defold's build server, `build.defold.com`).
-- Two DNS `A` records pointing at the Coolify server:
-  `play.fig.limited` and `api1.fig.limited`.
+- DNS `A` records pointing at the Coolify server: `fig.limited`,
+  `www.fig.limited`, `play.fig.limited` and `api1.fig.limited`.
 - Secrets to paste into Coolify. Generate them locally:
 
   ```sh
@@ -53,7 +60,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
    is for local development only: it publishes host ports 7349–7351 and uses
    fixed container names, which would clash with any other Nakama (e.g.
    SuperShips) on the same server. The `.coolify.yml` file also builds Nakama
-   from `nakama-server/Dockerfile`, which copies `modules/` (accounts,
+   from `nakama-server/Dockerfile`, which copies `modules/` (sign-in,
    economy and the shared game rules) into the image, so each deploy runs
    the modules from the commit being deployed.
 
@@ -63,20 +70,16 @@ change the API domain or server key, redeploy **galaxy-web** too.
    | Variable | Value |
    |---|---|
    | `POSTGRES_PASSWORD` | generated |
-   | `NAKAMA_SERVER_KEY` | generated. You'll reuse this for galaxy-web |
+   | `NAKAMA_SERVER_KEY` | generated. The website hands it to the game (`--server-key` in step 4) |
    | `NAKAMA_CONSOLE_USERNAME` | e.g. `admin` |
    | `NAKAMA_CONSOLE_PASSWORD` | generated |
    | `NAKAMA_CONSOLE_SIGNING_KEY` | generated |
    | `NAKAMA_SESSION_ENCRYPTION_KEY` | generated |
    | `NAKAMA_REFRESH_ENCRYPTION_KEY` | generated |
-   | `NAKAMA_HTTP_KEY` | generated |
-   | `RESEND_API_KEY` | from [Resend](https://resend.com): verify your sending domain, then create an API key |
-   | `EMAIL_FROM` | e.g. `Galaxy <noreply@fig.limited>`, on the domain verified in Resend |
+   | `NAKAMA_HTTP_KEY` | generated. The website uses it for server-to-server calls |
    | `TICKET_SECRET` | generated. Signs the tickets players use to enter a star system |
-
-   The last two send the 6-digit email verification codes
-   (`nakama-server/modules/accounts.lua`). Every player must verify their email
-   before playing, so the game is unplayable without them.
+   | `SERVER_ID` | this server's slug on the website, e.g. `api1` |
+   | `PLAY_TOKEN_SECRET` | printed by `php artisan galaxy:server` on the website (step 4 below) |
 
    Mark them **Available at Runtime** only; none is needed at build time
    (the image build just copies the modules). If one is missing, Nakama
@@ -102,6 +105,19 @@ change the API domain or server key, redeploy **galaxy-web** too.
    Postgres data is kept in the `data` volume and survives redeploys.
    Schedule backups under the resource's **Backups** / **Storages** tab.
 
+5. **Register it on the website.** In galaxy-site's **Terminal** (Coolify),
+   run:
+
+   ```sh
+   php artisan galaxy:server api1 --name="Api One" --host=api1.fig.limited \
+     --server-key=<NAKAMA_SERVER_KEY> --http-key=<NAKAMA_HTTP_KEY>
+   ```
+
+   It prints `SERVER_ID` and a new `PLAY_TOKEN_SECRET`. Set both on
+   galaxy-server and redeploy it. Run the command again with `--closed` to
+   stop players joining, or with new values to change them (secrets are kept
+   unless you pass new ones).
+
 ---
 
 ## 2. Deploy the web client (galaxy-web)
@@ -111,23 +127,19 @@ change the API domain or server key, redeploy **galaxy-web** too.
    - Base Directory: `/`
    - Dockerfile Location: `/Dockerfile`
    - Ports Exposes: `80`
+   - Health check path: `/healthz` (everything else needs a login)
 
-2. **Environment Variables:** add these and tick **Build Variable** /
-   **Available at Buildtime** on each (the label varies by Coolify version).
-   They go into the bundle at build time and do nothing at runtime.
+2. **Environment Variables:** none are required.
 
    | Variable | Value |
    |---|---|
-   | `NAKAMA_HOST` | `api1.fig.limited` (no `https://`, no port) |
-   | `NAKAMA_PORT` | `443` |
-   | `NAKAMA_USE_SSL` | `1` |
-   | `NAKAMA_SERVER_KEY` | same value as galaxy-server's `NAKAMA_SERVER_KEY` |
-   | `DEFOLD_VERSION` | *(optional)* defaults to `1.13.1` |
+   | `LARAVEL_URL` | *(optional, runtime)* the website, default `https://fig.limited` |
+   | `DEFOLD_VERSION` | *(optional, build-time)* defaults to `1.13.1` |
 
-   The server key ships inside every client build, so it identifies the
-   client rather than acting as a secret. The Docker `SecretsUsedInArgOrEnv`
-   warning about it in the build log is expected. The other galaxy-server
-   variables are real secrets and never go here.
+   nginx asks `LARAVEL_URL/play/auth-check` on every page load and sends
+   anyone not logged in to `LARAVEL_URL/login`. The game server address comes
+   from the website at runtime, so the old `NAKAMA_*` build variables are only
+   used by debug builds and can be removed.
 
 3. **Domains:** `https://play.fig.limited`
 
@@ -162,10 +174,29 @@ change:
 
 ---
 
+## The website (galaxy-site)
+
+Deployed from its own repo with its own Dockerfile (see that repo). Besides
+its database and mail settings, it needs:
+
+| Variable | Value |
+|---|---|
+| `SESSION_DOMAIN` | `.fig.limited`, so the login cookie also reaches `play.fig.limited` |
+| `GALAXY_PLAY_URL` | *(optional)* default `https://play.fig.limited` |
+
+## Switching to website accounts (0.2.0)
+
+Game servers no longer have email accounts, so existing players can't carry
+over. Wipe the game server's database once when deploying 0.2.0: stop
+galaxy-server, delete its `data` volume (**Storages** tab), then deploy. This
+permanently deletes all accounts and progress on that server.
+
 ## How the server address reaches the game
 
-`main/network.lua` reads its connection settings from the `[nakama]` section
-of `game.project`:
+Release builds get it from the website (`/play-token`). Debug builds signing
+in with a dev token (`php artisan galaxy:dev-token` on a local website, then
+`#dev_token=...` on the page or `GALAXY_PLAY_TOKEN` for desktop builds) use
+the `[nakama]` section of `game.project`:
 
 ```ini
 [nakama]
@@ -175,20 +206,16 @@ use_ssl = 0
 server_key = defaultkey
 ```
 
-The committed values point at the local docker-compose server, so running the
-game from the Defold editor still works with
-`docker compose up` in `nakama-server/`. The `Dockerfile` writes the build
-variables to an override file and passes it to bob with `--settings`, which
-replaces only those keys in the web build.
+The committed values point at the local docker-compose server
+(`docker compose up` in `nakama-server/`).
 
 ## Building and testing the web image locally
 
 ```sh
-docker build -t galaxy-web \
-  --build-arg NAKAMA_HOST=127.0.0.1 --build-arg NAKAMA_PORT=7350 .
-docker run --rm -p 8080:80 galaxy-web
-# open http://localhost:8080, with the local Nakama running
-# (cd nakama-server && docker compose up)
+docker build -t galaxy-web .
+docker run --rm -p 8080:80 -e LARAVEL_URL=https://fig.limited galaxy-web
+curl -i http://localhost:8080/          # 302 to the login page
+curl -i http://localhost:8080/healthz   # 200
 ```
 
 Only the single-threaded `wasm-web` target is built. The pthread variant needs
@@ -207,9 +234,11 @@ match. The editor's JDK is in
 
 | Symptom | Likely cause |
 |---|---|
-| Game loads but never connects; console shows *mixed content* | `NAKAMA_USE_SSL` isn't `1`. An https page can't open `ws://`. |
-| `401` / *Server key invalid* | `NAKAMA_SERVER_KEY` differs between the two resources. Fix it, then redeploy galaxy-web. |
-| Still connecting to the old server after changing variables | Build variables apply only on rebuild. Redeploy galaxy-web and hard-refresh the browser. |
+| `play.fig.limited` always redirects to the login page, even when logged in | galaxy-site's `SESSION_DOMAIN` isn't `.fig.limited` (log in again after changing it), or `LARAVEL_URL` is wrong. |
+| Game says *Your login has expired* straight away | The game server refused the play token: `PLAY_TOKEN_SECRET` or `SERVER_ID` on galaxy-server doesn't match the website's `galaxy:server` row. |
+| Game loads but never connects; console shows *mixed content* | The website's server row is `--insecure`. An https page can't open `ws://`. |
+| `401` / *Server key invalid* | The website's `--server-key` for that server differs from galaxy-server's `NAKAMA_SERVER_KEY`. |
+| Dashboard says a server can't be reached | Wrong `--http-key`, or the website can't reach the server's address. |
 | Build fails at `resolve` or `Building engine` | No outbound internet from the build, or `build.defold.com` is down. Retry. |
 | Build fails with `UnsatisfiedLinkError … .so` | The build image is missing a system library bob needs. Add it to the `apt-get install` line. |
 | `Platform … not supported` | `bob.jar` version doesn't match the flags. Keep `DEFOLD_VERSION` current. |

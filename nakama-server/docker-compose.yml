@@ -24,34 +24,31 @@ services:
   nakama:
     container_name: nakama
     image: registry.heroiclabs.com/heroiclabs/nakama:3.37.0
-    # No third-party social login wired in yet (plan.md §3.2/§3.3: only
-    # Guest and Register/Log In, both plain Nakama auth - device-session
-    # for the ephemeral guest path, email/password or similar for
-    # registered accounts). Add provider-specific env vars/entrypoint
-    # flags here if/when a social login is actually decided on.
+    # Players sign in with play tokens from the website (Laravel); see
+    # modules/auth.lua. No other sign-in methods are allowed.
     environment:
       # Same default/override as postgres's own POSTGRES_PASSWORD above -
       # must match it exactly (this is the password Nakama itself uses to
       # connect to postgres), which is why both read from the same
       # POSTGRES_PASSWORD env var rather than being set independently.
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-localdb}
-      # Email verification (modules/accounts.lua). Locally, emails always go to
-      # the mailpit service below (inbox at http://localhost:8035), never out
-      # through Resend. Set MAILPIT_URL= (empty) in .env to use Resend instead.
-      - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - EMAIL_FROM=${EMAIL_FROM:-Galaxy <noreply@galaxy.localhost>}
-      - MAILPIT_URL=${MAILPIT_URL:-http://mailpit:8025}
+      # Play tokens from the website (modules/auth.lua). Must match the local
+      # website's game server row: php artisan galaxy:server local ...
+      - PLAY_TOKEN_SECRET=${PLAY_TOKEN_SECRET:-local-dev-play-token-secret}
+      - SERVER_ID=${SERVER_ID:-local}
+      # Server-to-server calls from the website (modules/players.lua).
+      - NAKAMA_HTTP_KEY=${NAKAMA_HTTP_KEY:-local-dev-http-key}
       # Star-system matches (modules/directory.lua, tickets.lua, registry.lua).
       - TICKET_SECRET=${TICKET_SECRET:-local-dev-ticket-secret}
       - NODE_ID=${NODE_ID:-node1}
       - PUBLIC_ENDPOINT=${PUBLIC_ENDPOINT:-}
     entrypoint:
       - "/bin/sh"
-      # -e only, not -x: tracing would print RESEND_API_KEY into the logs.
+      # -e only, not -x: tracing would print the secrets into the logs.
       - "-ec"
       - >
           /nakama/nakama migrate up --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama &&
-          exec /nakama/nakama --name nakama1 --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200 --runtime.env "RESEND_API_KEY=$$RESEND_API_KEY" --runtime.env "EMAIL_FROM=$$EMAIL_FROM" --runtime.env "MAILPIT_URL=$$MAILPIT_URL" --runtime.env "TICKET_SECRET=$$TICKET_SECRET" --runtime.env "NODE_ID=$$NODE_ID" --runtime.env "PUBLIC_ENDPOINT=$$PUBLIC_ENDPOINT"
+          exec /nakama/nakama --name nakama1 --database.address postgres:$$POSTGRES_PASSWORD@postgres:5432/nakama --logger.level DEBUG --session.token_expiry_sec 7200 --runtime.http_key "$$NAKAMA_HTTP_KEY" --runtime.env "PLAY_TOKEN_SECRET=$$PLAY_TOKEN_SECRET" --runtime.env "SERVER_ID=$$SERVER_ID" --runtime.env "TICKET_SECRET=$$TICKET_SECRET" --runtime.env "NODE_ID=$$NODE_ID" --runtime.env "PUBLIC_ENDPOINT=$$PUBLIC_ENDPOINT"
     restart: always
     links:
       - "postgres:db"
@@ -73,14 +70,5 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  # Local-only mail catcher: every email the server sends (verification
-  # codes) lands in the web inbox at http://localhost:8035 instead of being
-  # delivered. Not in docker-compose.coolify.yml - production uses Resend.
-  mailpit:
-    container_name: mailpit
-    image: axllent/mailpit:v1.27
-    restart: always
-    ports:
-      - "8035:8025" # web inbox + HTTP API (8035 on the host: ddev already uses 8025-8026)
 volumes:
   data:

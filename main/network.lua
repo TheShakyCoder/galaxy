@@ -2,15 +2,15 @@
 -- means this module is the same table everywhere it's required).
 --
 -- Ported from ~/Defold/SuperShips/main/network.lua (§0 - mechanics, not
--- creative expression, reuse is fine), including its email login, minus
--- Steam and username generation.
+-- creative expression, reuse is fine), minus its login.
 --
 -- Responsibilities:
---   1. Accounts. Every player registers/logs in with email + password
---      (Nakama email auth) and must verify the email with a 6-digit code
---      before playing (nakama-server/modules/accounts.lua enforces that
---      server-side). The session is stored on the device so returning
---      players skip the login screen (M.resume()). Driven by
+--   1. Signing in. Accounts live on the website (Laravel, fig.limited), not
+--      in the game: players register, verify and log in there, then press
+--      Play. The game (served from play.fig.limited behind the website's
+--      login) asks the website for a play token and which game server to
+--      use (M.start()), and signs in to that server's Nakama with it
+--      (nakama-server/modules/auth.lua checks the token). Driven by
 --      main/start_screen.gui_script.
 --   2. Saved progress: M.load_profile() reads the player's profile storage
 --      object; M.economy() asks the server to change it (both used by
@@ -27,15 +27,15 @@ local defold = require "nakama.engine.defold"
 local nakama = require "nakama.nakama"
 local json = require "nakama.util.json"
 local nakama_session = require "nakama.session"
+local b64 = require "nakama.util.b64"
 local session = require "main.session"
 
 local M = {}
 
--- Read from game.project's [nakama] section, whose committed defaults point
--- at the local docker-compose dev server (nakama-server/docker-compose.yml).
--- The deployed web build overrides them at bundle time via bob's --settings
--- (see Dockerfile and docs/DEPLOY_COOLIFY.md), so the production host never
--- has to be hard-coded here.
+-- The game server to connect to. The website says which one when it hands
+-- out the play token (M.start()); game.project's [nakama] section is only
+-- used by debug builds signing in with a dev token (see M.start()), and
+-- points at the local docker-compose server (nakama-server/docker-compose.yml).
 local SERVER_CONFIG = {
 	host = sys.get_config_string("nakama.host", "127.0.0.1"),
 	port = sys.get_config_int("nakama.port", 7350),
@@ -125,22 +125,6 @@ session.set_outpost_availability(function(system_id, faction)
 	return st == nil or st.available
 end)
 
--- Where the logged-in session is kept between visits (a sys.save file -
--- IndexedDB on the web). Not nakama/session.lua's own store()/restore():
--- those call sys.get_config, which Defold 1.13 no longer has.
-local function session_file()
-	return sys.get_save_file("galaxy", "account_session")
-end
-
-local function store_session(session_obj)
-	sys.save(session_file(), session_obj or {})
-end
-
-local function restore_session()
-	local saved = sys.load(session_file())
-	return saved and saved.token and saved or nil
-end
-
 -- False after M.logout(), so a pending reconnect doesn't bring a logged-out
 -- player back online.
 local online_wanted = false
@@ -191,12 +175,12 @@ end
 local function use_session(session_obj)
 	M.session = session_obj
 	nakama.set_bearer_token(client(), session_obj.token)
-	store_session(session_obj)
 end
 
 -- Refreshes the access token if it's about to expire (tokens last 2 h;
 -- the refresh token much longer). Must run inside nakama.sync(). Returns
--- false if the session can't be used any more (player has to log in).
+-- false if the session can't be used any more (the page has to be reloaded
+-- for a new play token).
 local function ensure_fresh_session()
 	local s = M.session
 	if not s then
@@ -216,57 +200,121 @@ local function ensure_fresh_session()
 	return true
 end
 
--- Email login/registration. `create`: true registers a new account (Nakama
--- rejects an email that's already taken with a different password).
--- callback(ok, error_message)
-local function authenticate(email, password, create, callback)
-	nakama.sync(function()
-		local result = nakama.authenticate_email(client(), email, password, nil, create, nil)
-		if not result or result.error or not result.token then
-			-- authenticate_email clears the client's bearer token even on
-			-- failure (nakama-defold quirk, see SuperShips) - restore it.
-			if M.session then
-				nakama.set_bearer_token(client(), M.session.token)
-			end
-			local fallback = create and "Couldn't create the account." or "Wrong email or password."
-			local message = error_message(result, fallback)
-			if message == "Invalid credentials." then
-				message = create and "That email is already registered." or "Wrong email or password."
-			end
-			print("[network] " .. (create and "register" or "login") .. " failed: " .. tostring(message))
-			if callback then callback(false, message) end
+-- Where to send players for anything account-related (the website's
+-- dashboard). Set by M.start() from the website's reply.
+M.account_url = sys.get_config_string("galaxy.account_url", "https://fig.limited/dashboard")
+
+local function is_html5()
+	return html5 ~= nil and sys.get_sys_info().system_name == "HTML5"
+end
+
+-- Debug builds only: a dev play token (php artisan galaxy:dev-token on the
+-- website) from the page's #dev_token= fragment or the GALAXY_PLAY_TOKEN
+-- environment variable, for builds that aren't served behind the website.
+local function dev_token()
+	if not sys.get_engine_info().is_debug then
+		return nil
+	end
+	local token
+	if is_html5() then
+		token = html5.run("new URLSearchParams(location.hash.slice(1)).get('dev_token') || ''")
+	else
+		token = os.getenv("GALAXY_PLAY_TOKEN")
+	end
+	return token ~= nil and token ~= "" and token or nil
+end
+
+-- The claims of a JWT, unchecked (the server checks it); nil if unreadable.
+local function token_claims(token)
+	local payload = token:match("^[^.]+%.([^.]+)%.")
+	if not payload then
+		return nil
+	end
+	payload = payload:gsub("-", "+"):gsub("_", "/")
+	payload = payload .. string.rep("=", (4 - #payload % 4) % 4)
+	local ok, claims = pcall(json.decode, b64.decode(payload))
+	return ok and claims or nil
+end
+
+-- Asks the website (through play.fig.limited, which forwards the login
+-- cookie) for a play token. callback(play) with the website's reply
+-- { token, user_id, server = { host, port, ssl, server_key }, account_url },
+-- or callback(nil, failure) with failure = { kind, message, url }:
+--   kind "login"   not logged in on the website (url: its login page)
+--   kind "choose"  several servers and none chosen (url: the server list)
+--   kind "error"   anything else (retry)
+local function fetch_play(callback)
+	local token = dev_token()
+	if token then
+		local claims = token_claims(token)
+		if not claims or not claims.sub then
+			callback(nil, { kind = "error", message = "That dev token can't be read." })
 			return
 		end
-		use_session(result)
-		print("[network] " .. (create and "registered" or "logged in") .. " as " .. tostring(result.user_id))
-		if callback then callback(true) end
-	end)
-end
-
-function M.register(email, password, callback)
-	authenticate(email, password, true, callback)
-end
-
-function M.login(email, password, callback)
-	authenticate(email, password, false, callback)
-end
-
--- Picks up the session stored by an earlier visit. callback(ok)
-function M.resume(callback)
-	local stored = restore_session()
-	if not stored then
-		callback(false)
+		callback({
+			token = token, user_id = claims.sub,
+			server = { host = SERVER_CONFIG.host, port = SERVER_CONFIG.port, ssl = SERVER_CONFIG.use_ssl, server_key = SERVER_CONFIG.username },
+		})
 		return
 	end
-	M.session = stored
-	nakama.set_bearer_token(client(), stored.token)
-	nakama.sync(function()
-		local ok = ensure_fresh_session()
-		if not ok then
-			M.session = nil
+	if not is_html5() then
+		callback(nil, { kind = "error", message = "Set GALAXY_PLAY_TOKEN to a dev token\n(php artisan galaxy:dev-token on the website)." })
+		return
+	end
+	local origin = html5.run("location.origin")
+	http.request(origin .. "/play-token", "GET", function(_, _, response)
+		local ok, reply = pcall(json.decode, response.response or "")
+		reply = ok and type(reply) == "table" and reply or {}
+		if response.status == 200 and reply.token and reply.server then
+			callback(reply)
+		elseif response.status == 401 then
+			callback(nil, { kind = "login", message = "Please log in on the website.", url = reply.login_url })
+		elseif response.status == 409 then
+			callback(nil, { kind = "choose", message = "Choose a game server on the website.", url = reply.play_url })
+		else
+			callback(nil, { kind = "error", message = "Couldn't reach Galaxy (" .. tostring(response.status) .. ")." })
 		end
-		callback(ok)
+	end, { ["Accept"] = "application/json" })
+end
+
+-- Signs in to the game server the website chose. callback(ok, failure) -
+-- failure as in fetch_play above.
+function M.start(callback)
+	fetch_play(function(play, failure)
+		if not play then
+			callback(false, failure)
+			return
+		end
+		M.account_url = play.account_url or M.account_url
+		SERVER_CONFIG.host = play.server.host
+		SERVER_CONFIG.port = play.server.port
+		SERVER_CONFIG.use_ssl = play.server.ssl == true
+		SERVER_CONFIG.username = play.server.server_key
+		M.client = nil -- a new client for this server
+		nakama.sync(function()
+			local result = nakama.authenticate_custom(client(), play.user_id, { token = play.token }, true, nil)
+			if not result or result.error or not result.token then
+				print("[network] sign-in refused: " .. tostring(error_message(result, "?")))
+				callback(false, { kind = "login", message = "Your login has expired - please log in again.", url = M.account_url })
+				return
+			end
+			use_session(result)
+			online_wanted = true
+			print("[network] signed in as " .. tostring(result.user_id))
+			callback(true)
+		end)
 	end)
+end
+
+-- Opens the website's account pages in place of the game (logging out and
+-- everything account-related happens there).
+function M.open_account(url)
+	url = url or M.account_url
+	if is_html5() then
+		html5.run("location.href = " .. json.encode(url))
+	else
+		sys.open_url(url)
+	end
 end
 
 -- Calls a server RPC (nakama-server/modules/*.lua) with a JSON payload.
@@ -274,7 +322,7 @@ end
 local function rpc(id, payload, callback)
 	nakama.sync(function()
 		if not ensure_fresh_session() then
-			callback(nil, "Your session has expired. Please log in again.")
+			callback(nil, "Your session has expired - please reload the page.")
 			return
 		end
 		local result = nakama.rpc_func(client(), id, json.encode(payload or {}), nil)
@@ -291,19 +339,9 @@ local function rpc(id, payload, callback)
 	end)
 end
 
--- callback({ email, verified } or nil, error)
-function M.account_status(callback)
-	rpc("account_status", {}, callback)
-end
-
--- callback({ ok, error?, retry_in_s? } or nil, error)
-function M.send_code(callback)
-	rpc("send_verification_code", {}, callback)
-end
-
--- callback({ ok, error? } or nil, error)
-function M.verify(code, callback)
-	rpc("verify_email", { code = code }, callback)
+-- callback({ version } or nil, error): the server's release.
+function M.server_version(callback)
+	rpc("server_version", {}, callback)
 end
 
 -- Saved progress: one storage object per player, readable by its owner,
@@ -315,7 +353,7 @@ local PROFILE_KEY = "state"
 function M.load_profile(callback)
 	nakama.sync(function()
 		if not ensure_fresh_session() then
-			callback(nil, "Your session has expired. Please log in again.")
+			callback(nil, "Your session has expired - please reload the page.")
 			return
 		end
 		local result = nakama.read_storage_objects(client(), {
@@ -432,12 +470,11 @@ function M.logout()
 		socket.disconnect()
 	end
 	M.session = nil
-	current_system_id = nil -- the next account may be in a different faction's home system
+	current_system_id = nil
 	if M.client then
 		nakama.set_bearer_token(M.client, nil)
 	end
-	store_session(nil) -- overwrite with an empty (token-less) session
-	print("[network] logged out")
+	print("[network] signed out")
 end
 
 -- Registers who hears about other ships: on_transform(user_id,

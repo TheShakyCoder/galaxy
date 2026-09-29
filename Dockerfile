@@ -40,6 +40,10 @@ RUN printf '[nakama]\nhost = %s\nport = %s\nuse_ssl = %s\nserver_key = %s\n' \
     && mv "/out/$(ls /out | head -n 1)" /out/web
 
 FROM nginx:1.29-alpine
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+# The website that logs players in (see deploy/nginx.conf.template); set
+# LARAVEL_URL in Coolify if it isn't https://fig.limited.
+ENV LARAVEL_URL=https://fig.limited \
+    NGINX_RESOLVER=127.0.0.11
+COPY deploy/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /out/web /usr/share/nginx/html
 EXPOSE 80

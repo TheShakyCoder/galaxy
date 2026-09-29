@@ -412,8 +412,9 @@ function init(self)
 	self.water_node = gui.get_node("water_label")
 	self.iron_node = gui.get_node("iron_label")
 	self.hydrogen_node = gui.get_node("hydrogen_label")
-	-- Log out (top-left, outside every tab): saves, logs out and returns to
-	-- the account screen (main/start_screen.gui_script).
+	-- Account (top-left, outside every tab): saves, then opens the website's
+	-- account pages in place of the game (logging out and everything else
+	-- account-related happens there, not in the game).
 	self.logout_node = gui.get_node("logout_button")
 
 	self.tab_nodes = {
@@ -2850,9 +2851,8 @@ function on_input(self, action_id, action)
 			self.active = false
 			msg.post("#gui", "disable")
 			profile.flush(function()
-				profile.unload()
 				network.logout()
-				msg.post("start_screen#gui", "show_account")
+				network.open_account()
 			end)
 			return true
 		elseif hits(self.launch_node, action) then

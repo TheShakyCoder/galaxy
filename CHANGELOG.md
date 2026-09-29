@@ -4,6 +4,39 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.2.0-alpha.1] - 2026-09-29
+
+### Accounts move to the website
+- Registering, verifying your email, logging in, resetting your password and
+  deleting your account all happen on the website (fig.limited), not in the
+  game. The game's login and verification screens are gone.
+- **Play** on the website opens the game. `play.fig.limited` only serves the
+  game to players logged in (and verified) on the website; everyone else is
+  sent to the login page.
+- The game signs in to a game server with a short-lived token from the
+  website, signed for that one server. Nakama accepts no other way of signing
+  in (email, device, social and account linking are all refused).
+- The website keeps a list of game servers and tells the game which one to
+  connect to. With one server, Play goes straight in; a server list appears
+  once there are more.
+- You have the same identity on every game server, with separate progress on
+  each, so you can pick a different faction per server.
+- The website's dashboard shows your pilot on each server you've played:
+  faction, ship, location, Scrip and Hydrogen.
+- In the outpost, **Log out** is now **Account**, which saves and opens the
+  website.
+
+### Breaking
+- Existing game accounts and progress are wiped: everyone registers again on
+  the website.
+- Game servers need `PLAY_TOKEN_SECRET` and `SERVER_ID`; `RESEND_API_KEY`,
+  `EMAIL_FROM` and the local Mailpit are gone (the website sends email).
+
+### Development
+- Debug builds sign in with a dev token (`php artisan galaxy:dev-token` on a
+  local website): `#dev_token=` on the HTML5 page, or `GALAXY_PLAY_TOKEN` for
+  desktop builds.
+
 ## [0.1.0-alpha.3] - 2026-09-29
 
 ### Combat
