@@ -367,7 +367,14 @@ end
 -- light-years x the ship's FTL Cost (main/data/ships.lua's
 -- ftl_cost_hydrogen_per_ly - the wiki's "Tyl/LY"). Rounded up so a jump
 -- never costs less than the rate says. `distance` is in map units.
+-- TEMPORARY: FTL jumps are free while this is true (range limits still
+-- apply). Delete this line to charge Hydrogen again.
+M.FREE_JUMPS = true
+
 function M.hydrogen_cost(distance, cost_per_ly)
+	if M.FREE_JUMPS then
+		return 0
+	end
 	return math.ceil(M.map_units_to_ly(distance) * cost_per_ly - 1e-9)
 end
 
