@@ -25,6 +25,8 @@ while the game is in alpha they carry an `-alpha.N` label. The current version l
   faction, ship, location, Scrip and Hydrogen.
 - In the outpost, **Log out** is now **Account**, which saves and opens the
   website.
+- When the game can't sign in, it says why: the game server didn't accept the
+  game's key, didn't accept your login, or couldn't be reached.
 
 ### Breaking
 - Existing game accounts and progress are wiped: everyone registers again on

@@ -277,6 +277,25 @@ local function fetch_play(callback)
 	end, { ["Accept"] = "application/json" })
 end
 
+-- Why the game server refused to sign us in, as a failure for the start
+-- screen (see fetch_play). nakama-defold passes on Nakama's gRPC status
+-- code: 16 (unauthenticated) is a server key the server doesn't accept,
+-- 5 (not found) is modules/auth.lua refusing the play token; no reply at
+-- all means the server couldn't be reached.
+local function sign_in_failure(result, server)
+	local address = tostring(server.host) .. ":" .. tostring(server.port)
+	local code = result and result.code
+	if code == 16 then
+		return { kind = "error", message = "The game server didn't accept the game's key.\n"
+			.. "Its settings on the website need fixing (server key for " .. address .. ")." }
+	elseif code == 5 then
+		return { kind = "login", message = "The game server didn't accept your login.\nPlease press Play on the website again.", url = M.account_url }
+	elseif not result or not code then
+		return { kind = "error", message = "Couldn't reach the game server (" .. address .. ")." }
+	end
+	return { kind = "error", message = "Couldn't sign in: " .. error_message(result, "unknown error") .. " (code " .. tostring(code) .. ")." }
+end
+
 -- Signs in to the game server the website chose. callback(ok, failure) -
 -- failure as in fetch_play above.
 function M.start(callback)
@@ -294,8 +313,8 @@ function M.start(callback)
 		nakama.sync(function()
 			local result = nakama.authenticate_custom(client(), play.user_id, { token = play.token }, true, nil)
 			if not result or result.error or not result.token then
-				print("[network] sign-in refused: " .. tostring(error_message(result, "?")))
-				callback(false, { kind = "login", message = "Your login has expired - please log in again.", url = M.account_url })
+				print("[network] sign-in refused: " .. tostring(error_message(result, "?")) .. " (code " .. tostring(result and result.code) .. ")")
+				callback(false, sign_in_failure(result, play.server))
 				return
 			end
 			use_session(result)
