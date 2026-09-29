@@ -5,14 +5,25 @@
 -- spawning" pattern the other local reference project's own
 -- main/asteroid_hub.script establishes (§0 - mechanics, not creative
 -- expression, reuse is fine), simplified down to just position/size since
--- there's no mining/resource/HP system here (yet, per direct instruction
--- - "for now").
+-- there's no mining/HP system here (yet, per direct instruction - "for
+-- now").
 --
 -- Each asteroid is main/asteroid.go's shared unit-diameter sphere
 -- (assets/models/asteroids/asteroid.model), spawned at a uniform scale of
 -- that asteroid's own diameter_m - see tools/build_asteroid_model.py's
 -- header comment on why the prototype is built at unit size rather than
 -- baking a separate mesh per size.
+--
+-- Asteroid Analyser (main/data/modules/computer_modules.lua): the
+-- "analyse" message from player_ship.script (P, with the module fitted)
+-- scans every asteroid within range - they pulse for the scan time, then
+-- turn the colour of what they're made of (main/data/asteroids.lua
+-- M.RESOURCES). Only this player's game knows: nothing is sent to the
+-- server or other players. What's been analysed is remembered per system
+-- until the page is reloaded, so a field looks the same after jumping away
+-- and back. SuperShips' Mineral Analysis Module scan block in
+-- main/ship.script is the reference (one targeted rock there; everything in
+-- range here, per direct instruction).
 
 local asteroids = require("main.data.asteroids")
 
@@ -27,27 +38,148 @@ local asteroids = require("main.data.asteroids")
 -- follows elsewhere in this project).
 local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
 
-local spawned_ids = {}
+-- While being analysed, an asteroid pulses between its normal look and
+-- this bright cyan, SCAN_PULSE_S per half-cycle.
+local SCAN_TINT = vmath.vector4(0.5, 2.2, 2.6, 1.0)
+local SCAN_PULSE_S = 0.25
+
+-- How long the result stays on the HUD.
+local RESULT_SHOWN_S = 6
+
+-- Spawned asteroids of the current system: { id, pos, radius, resource,
+-- index } (index = position in asteroids.field_for(system_id)).
+local spawned = {}
+local current_system = nil
+
+-- system_id -> { [index] = true } for asteroids this player has analysed.
+local analysed = {}
+
+-- The scan in progress, if any: { asteroids = {...}, timer = handle }.
+local scan = nil
+
+-- Bumped by every HUD message, so an older "clear the result" timer
+-- doesn't hide a newer message.
+local status_generation = 0
+
+local function model_url(id)
+	return msg.url(nil, id, "model")
+end
+
+local function resource_tint(resource_id)
+	local c = asteroids.RESOURCE_BY_ID[resource_id].tint
+	return vmath.vector4(c[1] * AMBIENT_TINT.x, c[2] * AMBIENT_TINT.y, c[3] * AMBIENT_TINT.z, 1.0)
+end
+
+-- Shows `text` on the flight HUD (nil hides it); with `for_s`, hides it
+-- again after that long unless something newer was shown.
+local function show_status(text, for_s)
+	status_generation = status_generation + 1
+	local generation = status_generation
+	msg.post("flight_hud#gui", "scan_status", { text = text })
+	if text and for_s then
+		timer.delay(for_s, false, function()
+			if generation == status_generation then
+				msg.post("flight_hud#gui", "scan_status", { text = nil })
+			end
+		end)
+	end
+end
+
+local function cancel_scan()
+	if not scan then
+		return
+	end
+	timer.cancel(scan.timer)
+	for _, a in ipairs(scan.asteroids) do
+		go.cancel_animations(model_url(a.id), "tint")
+	end
+	scan = nil
+	show_status(nil)
+end
 
 local function despawn_all()
-	for _, id in ipairs(spawned_ids) do
-		go.delete(id)
+	cancel_scan()
+	for _, a in ipairs(spawned) do
+		go.delete(a.id)
 	end
-	spawned_ids = {}
+	spawned = {}
 end
 
 local function spawn_field(system_id)
 	despawn_all()
-	for _, a in ipairs(asteroids.field_for(system_id)) do
+	current_system = system_id
+	local known = analysed[system_id] or {}
+	for index, a in ipairs(asteroids.field_for(system_id)) do
 		local pos = vmath.vector3(a.x, a.y, a.z)
 		local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
-		go.set(msg.url(nil, id, "model"), "tint", AMBIENT_TINT)
-		table.insert(spawned_ids, id)
+		go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
+		table.insert(spawned, { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index })
 	end
+end
+
+-- "ANALYSED 7 ASTEROIDS: 2 HYDROGEN, 1 IRON, 4 INERT"
+local function result_text(found)
+	local counts = {}
+	for _, a in ipairs(found) do
+		counts[a.resource] = (counts[a.resource] or 0) + 1
+	end
+	local parts = {}
+	for _, resource in ipairs(asteroids.RESOURCES) do
+		if counts[resource.id] then
+			table.insert(parts, counts[resource.id] .. " " .. resource.name:upper())
+		end
+	end
+	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
+	return string.format("ANALYSED %d %s: %s", #found, noun, table.concat(parts, ", "))
+end
+
+local function finish_scan()
+	local found = scan.asteroids
+	scan = nil
+	local known = analysed[current_system] or {}
+	analysed[current_system] = known
+	for _, a in ipairs(found) do
+		local url = model_url(a.id)
+		go.cancel_animations(url, "tint")
+		go.set(url, "tint", resource_tint(a.resource))
+		known[a.index] = true
+	end
+	show_status(result_text(found), RESULT_SHOWN_S)
+end
+
+-- Starts analysing every asteroid within `range` metres of `pos` (surface
+-- distance, so a big rock counts as soon as its edge is in range).
+local function analyse(pos, range, scan_time)
+	if scan then
+		return -- one scan at a time; the analyser is busy until it finishes
+	end
+	local found = {}
+	for _, a in ipairs(spawned) do
+		if vmath.length(a.pos - pos) - a.radius <= range then
+			table.insert(found, a)
+		end
+	end
+	if #found == 0 then
+		show_status(string.format("NO ASTEROIDS WITHIN %d m", range), 3)
+		return
+	end
+	for _, a in ipairs(found) do
+		local url = model_url(a.id)
+		go.set(url, "tint", AMBIENT_TINT)
+		go.animate(url, "tint", go.PLAYBACK_LOOP_PINGPONG, SCAN_TINT, go.EASING_INOUTSINE, SCAN_PULSE_S)
+	end
+	scan = { asteroids = found, timer = timer.delay(scan_time, false, finish_scan) }
+	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
+	show_status(string.format("ANALYSING %d %s...", #found, noun))
 end
 
 function on_message(self, message_id, message)
 	if message_id == hash("spawn_field") then
 		spawn_field(message.system_id)
+	elseif message_id == hash("analyse") then
+		analyse(message.position, message.range, message.scan_time)
+	elseif message_id == hash("analyser_status") then
+		-- player_ship.script's own messages (e.g. no analyser fitted)
+		show_status(message.text, 3)
 	end
 end

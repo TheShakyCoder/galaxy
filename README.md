@@ -37,6 +37,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Targeting**: cycle targets, target the nearest enemy, match its speed, or
   follow a friendly ship.
 - **Resources**: Scrip, Water, Iron and Hydrogen.
+- **Asteroid Analyser**: a Computer module. Press P to analyse every asteroid
+  within 500 m: they pulse for two seconds, then turn the colour of what
+  they're made of (red inert rock, yellow hydrogen, purple iron, blue
+  water). Only you see what you've analysed.
 - **Accounts**: everything account-related happens on the website
   ([fig.limited](https://fig.limited), a separate Laravel project): register,
   verify your email, log in, reset your password, and see your pilot on each
@@ -71,9 +75,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | J | Execute FTL jump |
 | K | Dock at a nearby outpost, or cancel a jump |
 | 1 | Fire / stop firing all weapons at the target (enemy outposts only, so far) |
+| P | Asteroid Analyser (if fitted): reveal what every asteroid within 500 m is made of |
 | Mouse wheel | Zoom |
 
-Other keys (weapons 2–9, G, F, scanner, slide thrusters and so on) are reserved
+Other keys (weapons 2–9, G, F, slide thrusters and so on) are reserved
 for features that aren't built yet.
 
 ## Running it locally

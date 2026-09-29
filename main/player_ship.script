@@ -22,6 +22,7 @@
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
 local session = require("main.session")
+local catalog = require("main.data.modules.catalog")
 local network = require("main.network")
 local remote_registry = require("main.remote_registry")
 local skin_flight = require("main.skin_flight")
@@ -795,6 +796,30 @@ local function stop_firing(self)
 	end
 end
 
+-- The fitted module with catalog key `item_key` (its catalog entry), or nil.
+local function installed_module(item_key)
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		local instance = session.get_instance(entry.instance_id)
+		if instance and instance.item_key == item_key then
+			return catalog.get(item_key)
+		end
+	end
+	return nil
+end
+
+-- P: the Asteroid Analyser (a Computer module) analyses every asteroid in
+-- its range - main/asteroid_hub.script runs the scan and shows the result.
+local function activate_analyser(self)
+	local analyser = installed_module("asteroid_analyser")
+	if not analyser then
+		msg.post("asteroid_hub#script", "analyser_status", { text = "NO ASTEROID ANALYSER FITTED" })
+		return
+	end
+	msg.post("asteroid_hub#script", "analyse", {
+		position = go.get_position(), range = analyser.range_m, scan_time = analyser.scan_time_s,
+	})
+end
+
 local function toggle_firing(self)
 	if self.firing then
 		stop_firing(self)
@@ -958,6 +983,10 @@ function on_input(self, action_id, action)
 	elseif action_id == hash("weapon_1") then
 		if action.pressed then
 			toggle_firing(self)
+		end
+	elseif action_id == hash("activate_scanner") then
+		if action.pressed then
+			activate_analyser(self)
 		end
 	elseif action_id == hash("execute_jump") then
 		-- "This is very handy when you need to FTL away rather than die" -

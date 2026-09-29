@@ -1,8 +1,10 @@
 -- Per-system asteroid field: a default procedural scatter around each
 -- system's centre, used unless a system specifically overrides it (per
 -- direct instruction - "create a default algorithm... used unless a
--- system specifically overrides that"). Position and size only for now -
--- no resource types/mining/HP (represented as plain spheres, per direct
+-- system specifically overrides that"). Each asteroid has a position, a
+-- size and what it's made of (M.RESOURCES below: inert rock, hydrogen, iron
+-- or water), which the Asteroid Analyser reveals (main/asteroid_hub.script).
+-- No mining or HP yet (represented as plain spheres, per direct
 -- instruction - "for now"), same staged-scope footing as the rest of
 -- flight mode (plan.md §4).
 --
@@ -53,6 +55,38 @@ M.DEFAULT = {
 -- to deviate from the default yet.
 M.OVERRIDES = {}
 
+-- What an asteroid is made of, rolled per asteroid with these weights (sum
+-- 1.0). Frequency order and scan colours are BSGO's (bsgo.fandom.com/wiki/
+-- Asteroid_Mining: red empty most common, then yellow Tylium, purple
+-- Titanium, blue Water - "in order of frequency found"); the weights are
+-- ~/Defold/SuperShips' main/asteroid_fields.lua split (0.55/0.25/0.12/
+-- 0.08), with Galaxy's names: Tylium is Hydrogen and, per direct
+-- instruction, Titanium is Iron. Inert rock has no use in the game.
+-- `tint` is the colour an analysed asteroid turns (main/asteroid_hub.script
+-- multiplies it by the flight lighting boost).
+M.RESOURCES = {
+	{ id = "inert", name = "Inert", weight = 0.55, tint = { 0.62, 0.26, 0.22 } },
+	{ id = "hydrogen", name = "Hydrogen", weight = 0.25, tint = { 0.9, 0.78, 0.22 } },
+	{ id = "iron", name = "Iron", weight = 0.12, tint = { 0.58, 0.36, 0.8 } },
+	{ id = "water", name = "Water", weight = 0.08, tint = { 0.28, 0.56, 0.92 } },
+}
+
+M.RESOURCE_BY_ID = {}
+for _, resource in ipairs(M.RESOURCES) do
+	M.RESOURCE_BY_ID[resource.id] = resource
+end
+
+local function roll_resource(r)
+	local cumulative = 0
+	for _, resource in ipairs(M.RESOURCES) do
+		cumulative = cumulative + resource.weight
+		if r < cumulative then
+			return resource.id
+		end
+	end
+	return M.RESOURCES[1].id
+end
+
 local function params_for(system_id)
 	local override = M.OVERRIDES[system_id]
 	if not override then
@@ -89,7 +123,7 @@ end
 
 local field_cache = {} -- system_id -> field, memoized (a field never changes once generated)
 
--- Returns a list of { x, y, z, diameter_m } for `system_id`, using
+-- Returns a list of { x, y, z, diameter_m, resource } for `system_id`, using
 -- params_for(system_id) (M.DEFAULT, merged with any M.OVERRIDES entry).
 -- Positions are scattered uniformly BY VOLUME within a ball of radius
 -- params.radius_m around the origin, excluding a min_radius_m pocket at
@@ -118,7 +152,8 @@ function M.field_for(system_id)
 		local y = r * math.cos(theta)
 		local z = r * math.sin(theta) * math.sin(phi)
 		local diameter = p.min_diameter_m + prng(seed, i, 4) * (p.max_diameter_m - p.min_diameter_m)
-		table.insert(field, { x = x, y = y, z = z, diameter_m = diameter })
+		local resource = roll_resource(prng(seed, i, 5))
+		table.insert(field, { x = x, y = y, z = z, diameter_m = diameter, resource = resource })
 	end
 
 	field_cache[system_id] = field

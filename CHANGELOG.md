@@ -4,6 +4,19 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [Unreleased]
+
+### Asteroid Analyser
+- The Asteroid Analyser (Computer module) works: press P to analyse every
+  asteroid within 500 m. They pulse while the 2-second scan runs, then turn
+  the colour of what they're made of: red inert rock, yellow hydrogen,
+  purple iron or blue water. The HUD counts what was found.
+- Asteroids are made of inert rock (55%), hydrogen (25%), iron (12%) or
+  water (8%): BSGO's frequency order and colours, with SuperShips' split
+  (Titanium becomes iron). Every player's game agrees what each asteroid is.
+- Only you see what you've analysed; it's remembered per system until you
+  reload the page. The analyser can't be used again until its scan finishes.
+
 ## [0.2.0-alpha.1] - 2026-09-29
 
 ### Accounts move to the website

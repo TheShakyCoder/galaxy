@@ -64,6 +64,8 @@ function init(self)
 	self.target_text_node = gui.get_node("target_text")
 	self.jump_preset_node = gui.get_node("jump_preset")
 	self.system_name_node = gui.get_node("system_name")
+	self.scan_status_node = gui.get_node("scan_status")
+	gui.set_enabled(self.scan_status_node, false)
 	self.scrip_node = gui.get_node("scrip_value")
 	self.water_node = gui.get_node("water_value")
 	self.iron_node = gui.get_node("iron_value")
@@ -133,6 +135,12 @@ function on_message(self, message_id, message)
 		gui.set_enabled(self.dock_prompt_node, message.text ~= nil)
 		if message.text then
 			gui.set_text(self.dock_prompt_node, message.text)
+		end
+	elseif message_id == hash("scan_status") then
+		-- Asteroid Analyser progress/result (main/asteroid_hub.script), nil hides
+		gui.set_enabled(self.scan_status_node, message.text ~= nil)
+		if message.text then
+			gui.set_text(self.scan_status_node, message.text)
 		end
 	elseif message_id == hash("jump_preset") then
 		-- Persistent readout of main/player_ship.script's own

@@ -5,9 +5,11 @@
 -- trigger, not passive/always-on) matches the "activate_scanner" input
 -- binding already reserved for a mineral-analysis-type module (§2.10,
 -- ported from the reference project's own "Mineral Analysis Module" key)
--- — PROPOSED, flag if this should be passive instead. Stat fields
--- (power_draw/cooldown/wear_per_use, §2.8's shared schema) not yet
--- specified, omitted rather than guessed.
+-- (P) - per direct instruction: pressing it analyses every asteroid within
+-- range_m, which pulse for scan_time_s and then turn the colour of what
+-- they're made of (main/asteroid_hub.script) - seen only by the player who
+-- analysed them. No cooldown beyond the scan itself, and no power cost
+-- (there's no energy system yet); wear_per_use not specified.
 
 local M = {}
 
@@ -18,6 +20,8 @@ M.COMPUTER_MODULES = {
 		behavior = "active", -- one-shot trigger (§2.8) — PROPOSED, see plan.md §4
 		ship_classes = { "Patrol", "Escort", "Frigate", "Carrier" }, -- fits anywhere for now
 		icon = "asteroid_analyser", -- main/images/icons.atlas region, see weapons_autocannons.lua's header comment
+		range_m = 500, -- per direct instruction (the Patrol ship's visual range)
+		scan_time_s = 2, -- per direct instruction
 	},
 }
 
