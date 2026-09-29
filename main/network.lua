@@ -16,16 +16,15 @@
 --      object; M.economy() asks the server to change it (both used by
 --      main/profile.lua). Only the server writes it.
 --   3. Realtime: once logged in and verified, M.connect() opens the socket
---      (reconnecting on its own whenever it drops) and joins a room per star
---      system (main/data/star_systems.lua) - a plain named channel every
---      client in that system joins by the same fixed string, used purely as
---      a broadcast bus for ship transforms.
+--      (reconnecting on its own whenever it drops). Each star system is an
+--      authoritative match on the server (nakama-server/modules/
+--      system_match.lua): M.enter_system() asks the directory
+--      (enter_system RPC) for the system's match and a one-use transfer
+--      ticket, then joins it. The server validates every position update and
+--      tells us who's there (JOIN), where (SNAPSHOT) and who left (LEAVE).
 
-local session = require "main.session"
-local star_systems = require "main.data.star_systems"
 local defold = require "nakama.engine.defold"
 local nakama = require "nakama.nakama"
-local nakama_socket = require "nakama.socket"
 local json = require "nakama.util.json"
 local nakama_session = require "nakama.session"
 
@@ -48,25 +47,16 @@ local SERVER_CONFIG = {
 	timeout = 10,
 }
 
--- One realtime room per star system (main/data/star_systems.lua), not one
--- fixed room for the whole game - so players in different systems don't see
--- each other's transforms, matching SuperShips' own room_name_for()/
--- M.rejoin_room_for_system() design.
-local SPACE_ROOM_PREFIX = "space_"
+-- Star-system match protocol (see nakama-server/modules/system_match.lua).
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE = 1, 2, 3, 4
 
--- Which system's room join_space_room()/rejoin_room_for_system() target -
--- kept local to this module (not main/player_ship.script's own
--- self.current_system_id) so this file doesn't need to require that script,
--- and so join_space_room() still works correctly no matter whether
--- main/remote_ships.script's init() or the player's own start_flight()
--- happens to run first. Defaults to the player's own faction's home system
--- the first time it's needed, same starting point start_flight() itself
--- independently arrives at.
+-- The system the player is in while flying (nil when docked or logged out).
+-- Every (re)connect enters it again with a fresh ticket.
 local current_system_id = nil
 
-local function room_name_for(system_id)
-	return SPACE_ROOM_PREFIX .. (system_id or "unknown")
-end
+-- Bumped by every enter/leave, so a slow enter_system reply for a system
+-- the player has already left is ignored.
+local system_generation = 0
 
 -- Automatic reconnection: any failed connect attempt or dropped socket
 -- schedules another M.connect() after `reconnect_delay` seconds, doubling
@@ -79,15 +69,10 @@ local reconnect_delay = RECONNECT_MIN_DELAY
 local reconnect_pending = false
 local connecting = false
 
--- True once join_space_room() has been called - i.e. something wants to be
--- in a room - so every successful (re)connect rejoins it automatically.
-local wants_room = false
-
--- Remote user_ids seen in the current room, so their ships can be removed
--- (via M.on_leave) when this client drops or changes room - no presence
--- "leave" events arrive for those cases, which would otherwise leave frozen
--- ghost ships behind.
-local room_senders = {}
+-- Other players in the current system: user_id -> { ship_id, faction,
+-- skin_id } from their JOIN message. Their ships are removed (M.on_leave)
+-- when we drop or change system, since no LEAVE arrives for those cases.
+local members = {}
 
 -- Where the logged-in session is kept between visits (a sys.save file -
 -- IndexedDB on the web). Not nakama/session.lua's own store()/restore():
@@ -114,7 +99,7 @@ M.socket = nil
 M.session = nil
 M.connected = false
 M.in_room = false
-M.channel_id = nil
+M.match_id = nil
 M.on_transform = nil
 M.on_leave = nil
 
@@ -123,11 +108,11 @@ local function client()
 	return M.client
 end
 
-local function clear_room_senders()
-	local senders = room_senders
-	room_senders = {}
+local function clear_members()
+	local previous = members
+	members = {}
 	if M.on_leave then
-		for user_id in pairs(senders) do
+		for user_id in pairs(previous) do
 			M.on_leave(user_id)
 		end
 	end
@@ -329,21 +314,27 @@ local function open_socket(session_obj, callback)
 		end
 		M.connected = false
 		M.in_room = false
-		M.channel_id = nil
-		clear_room_senders()
+		M.match_id = nil
+		clear_members()
 		print("[network] disconnected")
 		schedule_reconnect()
 	end)
 	socket.on_error(function(socket_err)
 		print("[network] socket error: " .. tostring(socket_err and socket_err.message or socket_err))
 	end)
+	socket.on_match_data(function(message)
+		local data = message.match_data
+		if M.socket == socket and data and data.match_id == M.match_id then
+			M.handle_match_data(tonumber(data.op_code), data.data)
+		end
+	end)
 
 	connecting = false
 	reconnect_delay = RECONNECT_MIN_DELAY
 	M.connected = true
 	print("[network] connected as " .. tostring(session_obj.user_id))
-	if wants_room then
-		M.join_space_room()
+	if current_system_id then
+		M.enter_system(current_system_id)
 	end
 	if callback then callback(true) end
 end
@@ -379,13 +370,13 @@ end
 -- Logs out: closes the realtime connection, forgets the stored session.
 function M.logout()
 	online_wanted = false
-	wants_room = false
+	system_generation = system_generation + 1
 	local socket = M.socket
 	M.socket = nil
 	M.connected = false
 	M.in_room = false
-	M.channel_id = nil
-	clear_room_senders()
+	M.match_id = nil
+	clear_members()
 	if socket then
 		socket.disconnect()
 	end
@@ -398,116 +389,119 @@ function M.logout()
 	print("[network] logged out")
 end
 
--- Joins the shared space room and starts listening for other ships'
--- transforms. on_transform(user_id, {x,y,z,qx,qy,qz,qw,faction,speed,ship_id,skin_id})
--- fires whenever another player's ship moves; on_leave(user_id) fires when
--- they disconnect or leave the room, and for every known ship when this
--- client itself drops or changes room. If not connected yet, the join
--- happens automatically once M.connect() succeeds - and again after every
--- reconnect - so call order with M.connect() doesn't matter.
-function M.join_space_room(on_transform, on_leave)
-	M.on_transform = on_transform or M.on_transform
-	M.on_leave = on_leave or M.on_leave
-	wants_room = true
-
-	if not M.connected or M.in_room then
-		return
-	end
-
-	M.socket.on_channel_message(function(message)
-		local chan = message.channel_message
-		if not chan or chan.sender_id == M.session.user_id then
-			return
-		end
-		local ok, payload = pcall(json.decode, chan.content)
-		if ok and payload and payload.x and M.on_transform then
-			room_senders[chan.sender_id] = true
-			M.on_transform(chan.sender_id, payload)
-		end
-	end)
-
-	M.socket.on_channel_presence_event(function(message)
-		local pres = message.channel_presence_event
-		if not pres or not pres.leaves then
-			return
-		end
-		for _, p in ipairs(pres.leaves) do
-			room_senders[p.user_id] = nil
-			if M.on_leave then M.on_leave(p.user_id) end
-		end
-	end)
-
-	if not current_system_id then
-		current_system_id = star_systems.HOME_SYSTEM[session.get_faction()]
-	end
-
-	nakama.sync(function()
-		local result, err = M.socket.channel_join(room_name_for(current_system_id), nakama_socket.CHANNELTYPE_ROOM, false, false)
-		if not result then
-			print("[network] failed to join space room: " .. tostring(err and err.message))
-			-- try again shortly; if the socket itself has dropped, the
-			-- reconnect path rejoins instead and this retry no-ops
-			timer.delay(RECONNECT_MIN_DELAY, false, function()
-				M.join_space_room()
-			end)
-			return
-		end
-		M.channel_id = result.channel and result.channel.id or result.id
-		M.in_room = true
-		print("[network] joined space room: " .. room_name_for(current_system_id))
-	end)
+-- Registers who hears about other ships: on_transform(user_id,
+-- {x,y,z,qx,qy,qz,qw,speed,ship_id,faction,skin_id}) whenever another player
+-- in the current system moves (their ship/faction/skin are the ones the
+-- server read from their profile); on_leave(user_id) when they leave, and
+-- for everyone when we drop or change system.
+function M.set_space_callbacks(on_transform, on_leave)
+	M.on_transform = on_transform
+	M.on_leave = on_leave
 end
 
--- Called by main/player_ship.script's start_flight()/arrive_at_system() on
--- every system change (including the very first, harmless call at initial
--- launch, since current_system_id already matches by then and this just
--- no-ops). Leaves the old system's room and joins the new one, so players
--- in different systems don't see each other's transforms.
-function M.rejoin_room_for_system(system_id)
-	if system_id == current_system_id then
+function M.handle_match_data(op, raw)
+	local ok, data = pcall(json.decode, raw)
+	if not ok or type(data) ~= "table" then
 		return
 	end
-	current_system_id = system_id
-	if M.in_room and M.socket then
-		-- must run inside nakama.sync(), same as channel_join() above -
-		-- calling it bare fails an assertion in nakama/util/async.lua
-		local channel_id = M.channel_id
+	if op == OP_JOIN then
+		members[data.u] = { ship_id = data.ship_id, faction = data.faction, skin_id = data.skin_id }
+	elseif op == OP_LEAVE then
+		if members[data.u] then
+			members[data.u] = nil
+			if M.on_leave then M.on_leave(data.u) end
+		end
+	elseif op == OP_SNAPSHOT and M.on_transform then
+		for _, t in ipairs(data) do
+			local who = members[t.u]
+			if who and t.u ~= (M.session and M.session.user_id) then
+				t.ship_id, t.faction, t.skin_id = who.ship_id, who.faction, who.skin_id
+				M.on_transform(t.u, t)
+			end
+		end
+	end
+end
+
+local function leave_current_match()
+	local match_id = M.match_id
+	M.match_id = nil
+	M.in_room = false
+	clear_members()
+	if match_id and M.socket and M.connected then
+		local socket = M.socket
 		nakama.sync(function()
-			M.socket.channel_leave(channel_id)
+			socket.match_leave(match_id)
 		end)
 	end
-	M.in_room = false
-	M.channel_id = nil
-	clear_room_senders()
-	M.join_space_room(M.on_transform, M.on_leave)
 end
 
--- Broadcasts this ship's transform (plus its current speed and ship/faction
--- id) to everyone else in the room. Cheap fire-and-forget - safe to call
--- every frame, but callers should throttle (see player_ship.script's
--- NETWORK_SEND_INTERVAL) to keep traffic reasonable. Returns false without
--- sending while not in a room (still connecting or mid system change).
+-- Enters `system_id` (the player must be in it on the server - see
+-- nakama-server/modules/directory.lua): leaves the current system's match,
+-- gets the new one and a ticket from enter_system, joins. Called on launch
+-- and on arriving from a jump (main/player_ship.script), and again after
+-- every reconnect.
+function M.enter_system(system_id)
+	system_generation = system_generation + 1
+	local generation = system_generation
+	current_system_id = system_id
+	leave_current_match()
+	if not (M.connected and M.socket) then
+		return -- open_socket() enters current_system_id once connected
+	end
+	local socket = M.socket
+	rpc("enter_system", { system_id = system_id }, function(result, err)
+		if generation ~= system_generation or M.socket ~= socket then
+			return -- moved on (another system, docked, reconnected) meanwhile
+		end
+		if not (result and result.ok) then
+			print("[network] can't enter " .. system_id .. ": " .. tostring(result and result.error or err))
+			return
+		end
+		if result.endpoint and result.endpoint ~= "" then
+			-- Multi-node deployments: the system lives on another node. Not
+			-- used yet (single node); this is where the client would open a
+			-- socket to result.endpoint with the same session token.
+			print("[network] system " .. system_id .. " is hosted on " .. result.endpoint .. " (not supported yet)")
+			return
+		end
+		local joined = socket.match_join(result.match_id, nil, { ticket = result.ticket })
+		if generation ~= system_generation or M.socket ~= socket then
+			return
+		end
+		if not joined or joined.error then
+			print("[network] joining " .. system_id .. " failed: " .. tostring(joined and joined.error and joined.error.message))
+			return
+		end
+		M.match_id = result.match_id
+		M.in_room = true
+		print("[network] entered system: " .. system_id)
+	end)
+end
+
+-- Leaves the current system (docking).
+function M.leave_system()
+	system_generation = system_generation + 1
+	current_system_id = nil
+	leave_current_match()
+end
+
+-- Sends this ship's position to the system's match (the server validates it
+-- and relays it). Cheap fire-and-forget - callers throttle (see
+-- main/player_ship.script's NETWORK_SEND_INTERVAL). Returns false without
+-- sending while not in a system (connecting, or mid system change).
+-- `ship_id` is unused: the server knows the player's ship from their profile.
 function M.send_transform(pos, rot, speed, ship_id)
-	if not M.in_room then
+	if not M.match_id then
 		return false
 	end
+	local socket, match_id = M.socket, M.match_id
 	local payload = json.encode({
 		x = pos.x, y = pos.y, z = pos.z,
 		qx = rot.x, qy = rot.y, qz = rot.z, qw = rot.w,
-		faction = session.get_faction(),
 		speed = speed or 0,
-		-- main/data/ships.lua chassis id (e.g. "patrol_interceptor") - lets
-		-- main/remote_ships.script size the spawned stand-in roughly right;
-		-- nil/omitted (json.encode drops nil fields) falls back to a
-		-- default-sized marker, same as a client too old to send this.
-		ship_id = ship_id,
-		-- Equipped skin (main/data/skins.lua id), omitted for the default
-		-- model. Receivers only show it if it's valid for this ship_id and
-		-- faction - see main/skin_flight.lua's show().
-		skin_id = ship_id and session.get_equipped_skin(ship_id),
 	})
 	nakama.sync(function()
-		M.socket.channel_message_send(M.channel_id, payload)
+		socket.match_data_send(match_id, OP_STATE, payload)
 	end)
 	return true
 end

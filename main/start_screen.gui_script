@@ -4,11 +4,13 @@
 -- that server-side too). Views:
 --
 --   loading   "Connecting..." while a stored session is resumed
---   login     Email, Password                    [Log In] [Create account]
---   register  Email, Password, Confirm password  [Create account] [Back]
+--   login     "Log in" tab: Email, Password                        [Log In]
+--   register  "Create account" tab: Email, Password, Confirm       [Create account]
 --   verify    Code                               [Verify] [Resend code] [Log out]
 --
--- One set of nodes (three fields, three buttons) is relabelled per view.
+-- Log in and Create account are folder-style tabs on top of the form panel
+-- (the active one joins the panel). One set of nodes (three fields, three
+-- buttons) is relabelled per view.
 -- Text entry follows ~/Defold/SuperShips/main/station.gui_script: clicking a
 -- field focuses it; the `text`, `backspace` and `enter` input actions type
 -- into it; Tab (bound as `cycle_target`) moves to the next field.
@@ -22,8 +24,15 @@ local network = require("main.network")
 local profile = require("main.profile")
 local version = require("main.version")
 
-local FIELD_COLOR = vmath.vector4(0.1, 0.12, 0.17, 1.0)
+local FIELD_COLOR = vmath.vector4(0.05, 0.06, 0.09, 1.0)
 local FIELD_FOCUS_COLOR = vmath.vector4(0.16, 0.22, 0.32, 1.0)
+local TAB_ACTIVE_COLOR = vmath.vector4(0.09, 0.11, 0.16, 1.0) -- same as the form panel, so it joins it
+local TAB_INACTIVE_COLOR = vmath.vector4(0.04, 0.05, 0.08, 1.0)
+local TAB_ACTIVE_TEXT = vmath.vector4(1.0, 1.0, 1.0, 1.0)
+local TAB_INACTIVE_TEXT = vmath.vector4(0.5, 0.55, 0.62, 1.0)
+-- Typed text keeps this much clear of the field's right edge; longer entries
+-- show their end (where the cursor is).
+local FIELD_TEXT_WIDTH = 684
 local MAX_FIELD_LENGTH = 64
 local MIN_PASSWORD_LENGTH = 8 -- Nakama's own minimum for email accounts
 
@@ -32,14 +41,14 @@ local MIN_PASSWORD_LENGTH = 8 -- Nakama's own minimum for email accounts
 local VIEWS = {
 	loading = { heading = "", fields = {}, buttons = {} },
 	login = {
-		heading = "Log in",
+		heading = "", tab = "login",
 		fields = { "Email", "Password" }, masked = { [2] = true },
-		buttons = { "Log In", "Create account" },
+		buttons = { "Log In" },
 	},
 	register = {
-		heading = "Create account",
+		heading = "", tab = "register",
 		fields = { "Email", "Password (at least 8 characters)", "Confirm password" }, masked = { [2] = true, [3] = true },
-		buttons = { "Create account", "Back to log in" },
+		buttons = { "Create account" },
 	},
 	verify = {
 		heading = "Verify your email",
@@ -54,6 +63,19 @@ local function set_status(self, text)
 	gui.set_text(self.status_node, text or "")
 end
 
+-- Sets `text` on a field, dropping characters from the front until it fits
+-- the field (so the end being typed stays visible).
+local function set_field_text(node, text)
+	local font = gui.get_font_resource(gui.get_font(node))
+	local scale = gui.get_scale(node).x
+	local shown = text
+	while #text > 1 and resource.get_text_metrics(font, shown).width * scale > FIELD_TEXT_WIDTH do
+		text = text:sub(2)
+		shown = "..." .. text
+	end
+	gui.set_text(node, shown)
+end
+
 local function refresh_fields(self)
 	local view = VIEWS[self.view]
 	for i, field in ipairs(self.fields) do
@@ -62,7 +84,7 @@ local function refresh_fields(self)
 		if self.focus == i then
 			shown = shown .. "|"
 		end
-		gui.set_text(field.text, shown)
+		set_field_text(field.text, shown)
 		gui.set_color(field.box, self.focus == i and FIELD_FOCUS_COLOR or FIELD_COLOR)
 	end
 end
@@ -72,6 +94,13 @@ local function show_view(self, name, info)
 	local view = VIEWS[name]
 	gui.set_text(self.heading_node, view.heading)
 	gui.set_text(self.info_node, info or "")
+	-- Tabs only on the two account views; the active one joins the panel.
+	for id, tab in pairs(self.tabs) do
+		gui.set_enabled(tab.box, view.tab ~= nil)
+		gui.set_enabled(tab.label, view.tab ~= nil)
+		gui.set_color(tab.box, view.tab == id and TAB_ACTIVE_COLOR or TAB_INACTIVE_COLOR)
+		gui.set_color(tab.label, view.tab == id and TAB_ACTIVE_TEXT or TAB_INACTIVE_TEXT)
+	end
 	for i, field in ipairs(self.fields) do
 		local label = view.fields[i]
 		gui.set_enabled(field.label, label ~= nil)
@@ -245,6 +274,10 @@ function init(self)
 	self.info_node = gui.get_node("info")
 	self.status_node = gui.get_node("status")
 	gui.set_text(gui.get_node("version"), "v" .. version.VERSION)
+	self.tabs = {
+		login = { box = gui.get_node("tab_login"), label = gui.get_node("tab_login_label") },
+		register = { box = gui.get_node("tab_register"), label = gui.get_node("tab_register_label") },
+	}
 	self.fields = {}
 	for i = 1, 3 do
 		self.fields[i] = {
@@ -338,14 +371,19 @@ function on_input(self, action_id, action)
 	if self.busy then
 		return true
 	end
+	for id, tab in pairs(self.tabs) do
+		if hits(tab.box, action) then
+			if self.view ~= id then
+				show_view(self, id)
+				set_status(self, "")
+			end
+			return true
+		end
+	end
 	if hits(self.buttons[1].box, action) then
 		submit(self)
 	elseif hits(self.buttons[2].box, action) then
-		if self.view == "login" then
-			show_view(self, "register")
-		elseif self.view == "register" then
-			show_view(self, "login")
-		elseif self.view == "verify" then
+		if self.view == "verify" then
 			set_status(self, "Sending a new code...")
 			send_code(self, self.email)
 		end

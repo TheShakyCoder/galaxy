@@ -31,7 +31,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
   ```sh
   for v in POSTGRES_PASSWORD NAKAMA_SERVER_KEY NAKAMA_CONSOLE_PASSWORD \
            NAKAMA_CONSOLE_SIGNING_KEY NAKAMA_SESSION_ENCRYPTION_KEY \
-           NAKAMA_REFRESH_ENCRYPTION_KEY NAKAMA_HTTP_KEY; do
+           NAKAMA_REFRESH_ENCRYPTION_KEY NAKAMA_HTTP_KEY TICKET_SECRET; do
     echo "$v=$(openssl rand -hex 24)"
   done
   ```
@@ -72,6 +72,7 @@ change the API domain or server key, redeploy **galaxy-web** too.
    | `NAKAMA_HTTP_KEY` | generated |
    | `RESEND_API_KEY` | from [Resend](https://resend.com): verify your sending domain, then create an API key |
    | `EMAIL_FROM` | e.g. `Galaxy <noreply@stupidly.uk>`, on the domain verified in Resend |
+   | `TICKET_SECRET` | generated. Signs the tickets players use to enter a star system |
 
    The last two send the 6-digit email verification codes
    (`nakama-server/modules/accounts.lua`). Every player must verify their email

@@ -30,3 +30,6 @@ host = 127.0.0.1
 port = 7350
 use_ssl = 0
 server_key = defaultkey
+
+[model]
+max_count = 512

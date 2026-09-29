@@ -4,6 +4,32 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.1.0-alpha.2] - 2026-09-29
+
+### Multiplayer
+- Each star system is now an authoritative Nakama match instead of a chat channel. The
+  server checks every position update against the ship's speed, drops impossible ones
+  (teleports, over-speed) and kicks repeat offenders.
+- You can only enter the system your server-saved progress says you're in: a directory RPC
+  hands out a one-use, 60-second signed ticket for that system's match.
+- Other players' ships, factions and skins come from their server-saved profiles, not from
+  what their game claims.
+- Docked ships leave the system instead of lingering until they time out.
+- Built to spread systems across several server endpoints later (system registry, node
+  endpoints, tickets that work on any node).
+
+### Login
+- Log in and Create account are separate tabs; bigger labels and typed text.
+
+### Outpost
+- Ships grid: larger ship names with the price on its own line.
+
+### Fixes
+- Jumping no longer runs out of model slots when the new system's asteroids spawn.
+
+### Development
+- Local verification emails go to a Mailpit inbox (http://localhost:8035).
+
 ## [0.1.0-alpha.1] - 2026-09-28
 
 First versioned alpha release. Everything below is what the game contains at this point.

@@ -10,17 +10,21 @@ own, so this module adds it:
   * send_verification_code emails a 6-digit code (via Resend), stored
     server-only as a SHA-256 hash with an expiry and an attempt limit.
   * verify_email checks the code and marks the account verified.
-  * Before-hooks stop unverified players from joining realtime channels
-    (space rooms) or using storage, and stop every client from writing the
-    server-owned collections (saved progress lives in profile/state and is
-    only changed by modules/economy.lua).
+  * Before-hooks stop unverified players from using storage, and stop every
+    client from writing the server-owned collections (saved progress lives in
+    profile/state and is only changed by modules/economy.lua). Entering a
+    star system is checked by modules/directory.lua.
 
 Email is sent through Resend's HTTP API. Configure with runtime env vars
 (--runtime.env on the nakama command line):
-  RESEND_API_KEY  Resend API key. If empty, the code is written to the
-                  Nakama log instead (local development only).
+  RESEND_API_KEY  Resend API key. Production (docker-compose.coolify.yml)
+                  requires it.
   EMAIL_FROM      Sender, e.g. "Galaxy <noreply@stupidly.uk>", on a domain
                   verified in Resend.
+  MAILPIT_URL     Local development only (docker-compose.yml): emails go to
+                  this Mailpit instance instead of Resend, even if a Resend
+                  key is set (inbox at http://localhost:8035).
+With neither, the code is written to the Nakama log.
 ]]
 
 local nk = require("nakama")
@@ -67,29 +71,45 @@ local function write_code(user_id, value)
 	} })
 end
 
-local function send_email(context, to, code)
-	local api_key = context.env and context.env.RESEND_API_KEY or ""
-	if api_key == "" then
-		nk.logger_warn(string.format("RESEND_API_KEY not set - verification code for %s is %s", to, code))
-		return true
-	end
-	local body = nk.json_encode({
-		from = context.env.EMAIL_FROM,
-		to = { to },
-		subject = "Your Galaxy verification code: " .. code,
-		text = "Your Galaxy verification code is " .. code .. "\n\nIt expires in 15 minutes. "
-			.. "If you didn't create a Galaxy account, you can ignore this email.",
-		html = "<p>Your Galaxy verification code is</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"
-			.. code .. "</p><p>It expires in 15 minutes. If you didn't create a Galaxy account, you can ignore this email.</p>",
-	})
-	local ok, status, _, response = pcall(nk.http_request, "https://api.resend.com/emails", "POST", {
-		["Authorization"] = "Bearer " .. api_key,
-		["Content-Type"] = "application/json",
-	}, body, 10000)
+local function post_json(service, url, headers, body, to)
+	headers["Content-Type"] = "application/json"
+	local ok, status, _, response = pcall(nk.http_request, url, "POST", headers, nk.json_encode(body), 10000)
 	if not ok or status < 200 or status >= 300 then
-		nk.logger_error(string.format("Resend failed for %s: %s %s", to, tostring(status), tostring(response)))
+		nk.logger_error(string.format("%s failed for %s: %s %s", service, to, tostring(status), tostring(response)))
 		return false
 	end
+	return true
+end
+
+-- "Galaxy <noreply@x>" -> "Galaxy", "noreply@x" (Mailpit wants them apart).
+local function split_sender(from)
+	local name, email = tostring(from or ""):match("^%s*(.-)%s*<(.+)>%s*$")
+	if email then
+		return name, email
+	end
+	return "", tostring(from or "")
+end
+
+local function send_email(context, to, code)
+	local env = context.env or {}
+	local subject = "Your Galaxy verification code: " .. code
+	local text = "Your Galaxy verification code is " .. code .. "\n\nIt expires in 15 minutes. "
+		.. "If you didn't create a Galaxy account, you can ignore this email."
+	local html = "<p>Your Galaxy verification code is</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"
+		.. code .. "</p><p>It expires in 15 minutes. If you didn't create a Galaxy account, you can ignore this email.</p>"
+
+	-- Mailpit first: only the local compose file sets MAILPIT_URL, so local
+	-- development never sends real mail even with a Resend key in .env.
+	if (env.MAILPIT_URL or "") ~= "" then
+		local name, email = split_sender(env.EMAIL_FROM)
+		return post_json("Mailpit", env.MAILPIT_URL .. "/api/v1/send", {},
+			{ From = { Email = email, Name = name }, To = { { Email = to } }, Subject = subject, Text = text, HTML = html }, to)
+	end
+	if (env.RESEND_API_KEY or "") ~= "" then
+		return post_json("Resend", "https://api.resend.com/emails", { ["Authorization"] = "Bearer " .. env.RESEND_API_KEY },
+			{ from = env.EMAIL_FROM, to = { to }, subject = subject, text = text, html = html }, to)
+	end
+	nk.logger_warn(string.format("No email service configured - verification code for %s is %s", to, code))
 	return true
 end
 
@@ -187,7 +207,6 @@ local function client_writable(context, payload)
 	return payload
 end
 
-nk.register_rt_before(verified_only, "ChannelJoin")
 nk.register_req_before(verified_only, "ReadStorageObjects")
 nk.register_req_before(client_writable, "WriteStorageObjects")
 nk.register_req_before(verified_only, "ListStorageObjects")

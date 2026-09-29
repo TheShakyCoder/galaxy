@@ -299,7 +299,14 @@ local SHIPS_PANEL_HEIGHT = 575
 local GRID_GUTTER = 10
 local GRID_CELL_W = (1200 - (GRID_COLS + 1) * GRID_GUTTER) / GRID_COLS
 local GRID_CELL_H = (SHIPS_PANEL_HEIGHT - (GRID_ROWS_VISIBLE + 1) * GRID_GUTTER) / GRID_ROWS_VISIBLE
-local GRID_LABEL_H = 26 -- bottom strip of each cell reserved for name+price text
+local GRID_LABEL_H = 26 -- bottom strip of each Skins-grid card reserved for its name
+-- Ships grid: a taller strip with the ship's name on the top line and its
+-- price (or Current/Owned) on a second, smaller line.
+local SHIP_LABEL_H = 50
+local SHIP_NAME_SCALE = vmath.vector3(0.8, 0.8, 1)
+local SHIP_DETAIL_SCALE = vmath.vector3(0.6, 0.6, 1)
+local SHIP_NAME_OFFSET_Y = 10 -- name above the strip's centre, detail below
+local SHIP_DETAIL_OFFSET_Y = -12
 -- Half a row per wheel notch (not a full row) - finer-grained on top of the
 -- two-row change above, and further smoothed by the animated scroll below
 -- (SCROLL_LERP_SPEED) so a notch no longer feels like an abrupt snap.
@@ -1213,6 +1220,9 @@ local function clear_card_list(list)
 		if card.strip then
 			gui.delete_node(card.strip)
 		end
+		if card.detail then
+			gui.delete_node(card.detail)
+		end
 	end
 end
 
@@ -1488,20 +1498,20 @@ local function ship_forsale_rows(faction, active_ship)
 		local is_active = ship_id == active_ship
 		local name = ship_display_name(ship_id, faction)
 		local advanced_tag = session.is_ship_advanced(ship_id) and "  [Advanced]" or ""
-		local label, color
+		local label, detail, color = name, nil, nil
 		if is_active then
-			label = name .. "  (current)" .. advanced_tag
+			detail = "Current" .. advanced_tag
 			color = SHIP_CARD_CURRENT_COLOR
 		elseif owned then
-			label = name .. "  (owned)" .. advanced_tag
+			detail = "Owned" .. advanced_tag
 			color = SHIP_CARD_OWNED_COLOR
 		else
-			label = name .. "  (" .. ship_price_text(ship_id) .. ")"
-			color = nil
+			detail = ship_price_text(ship_id)
 		end
 		table.insert(rows, {
 			item_key = ship_id,
 			label = label,
+			detail = detail,
 			color = color,
 			source = "ship_forsale",
 			-- Carried through to build_ship_forsale_grid's own card entries
@@ -1586,23 +1596,30 @@ local function build_ship_forsale_grid(out_list, panel_node, rows)
 		-- comment) - so it would paint OVER this strip if given the cell's
 		-- full rect. compute_forsale_preview_items (below, near
 		-- show_ship_detail) instead sends only the rect ABOVE this strip
-		-- (cell height minus GRID_LABEL_H) as the 3D viewport, so the strip
+		-- (cell height minus SHIP_LABEL_H) as the 3D viewport, so the strip
 		-- always stays on top, never buried under the model.
-		local base_strip_cy = base_cy - GRID_CELL_H * 0.5 + GRID_LABEL_H * 0.5
-		local strip = gui.new_box_node(vmath.vector3(cx, base_strip_cy, 0), vmath.vector3(GRID_CELL_W, GRID_LABEL_H, 0))
+		local base_strip_cy = base_cy - GRID_CELL_H * 0.5 + SHIP_LABEL_H * 0.5
+		local strip = gui.new_box_node(vmath.vector3(cx, base_strip_cy, 0), vmath.vector3(GRID_CELL_W, SHIP_LABEL_H, 0))
 		gui.set_pivot(strip, gui.PIVOT_CENTER)
 		gui.set_color(strip, vmath.vector4(0.03, 0.035, 0.05, 0.85))
 		gui.set_parent(strip, panel_node, true)
 
-		local label = gui.new_text_node(vmath.vector3(cx, base_strip_cy, 0), row.label)
+		local label = gui.new_text_node(vmath.vector3(cx, base_strip_cy + SHIP_NAME_OFFSET_Y, 0), row.label)
 		gui.set_pivot(label, gui.PIVOT_CENTER)
 		gui.set_font(label, "default_font")
 		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
-		gui.set_scale(label, vmath.vector3(0.55, 0.55, 1))
+		gui.set_scale(label, SHIP_NAME_SCALE)
 		gui.set_parent(label, panel_node, true)
 
+		local detail = gui.new_text_node(vmath.vector3(cx, base_strip_cy + SHIP_DETAIL_OFFSET_Y, 0), row.detail or "")
+		gui.set_pivot(detail, gui.PIVOT_CENTER)
+		gui.set_font(detail, "default_font")
+		gui.set_color(detail, vmath.vector4(0.7, 0.76, 0.84, 1.0))
+		gui.set_scale(detail, SHIP_DETAIL_SCALE)
+		gui.set_parent(detail, panel_node, true)
+
 		table.insert(out_list, {
-			box = box, label = label, strip = strip,
+			box = box, label = label, detail = detail, strip = strip,
 			item_key = row.item_key, source = "ship_forsale",
 			model_path = row.model_path,
 			cell_x = cx, base_cy = base_cy, base_strip_cy = base_strip_cy,
@@ -1634,7 +1651,10 @@ local function apply_forsale_scroll_display(self)
 		if card.source == "ship_forsale" and card.box and card.base_cy then
 			gui.set_position(card.box, vmath.vector3(card.cell_x - panel_pos.x, card.base_cy + offset - panel_pos.y, 0))
 			local strip_y = card.base_strip_cy + offset - panel_pos.y
-			gui.set_position(card.label, vmath.vector3(card.cell_x - panel_pos.x, strip_y, 0))
+			gui.set_position(card.label, vmath.vector3(card.cell_x - panel_pos.x, strip_y + SHIP_NAME_OFFSET_Y, 0))
+			if card.detail then
+				gui.set_position(card.detail, vmath.vector3(card.cell_x - panel_pos.x, strip_y + SHIP_DETAIL_OFFSET_Y, 0))
+			end
 			if card.strip then
 				gui.set_position(card.strip, vmath.vector3(card.cell_x - panel_pos.x, strip_y, 0))
 			end
@@ -2365,7 +2385,7 @@ end
 -- that actually has a model, in the same {rect, target_pos, eye_offset, far}
 -- shape PREVIEW_WORLD_POS/PREVIEW_CAMERA already use for the single ship
 -- detail modal preview above. `rect` only covers the area ABOVE each cell's
--- name+price strip (build_ship_forsale_grid's own GRID_LABEL_H), so the 3D
+-- name+price strip (build_ship_forsale_grid's own SHIP_LABEL_H), so the 3D
 -- overlay - drawn LAST each frame, after the normal GUI pass - never paints
 -- over that strip.
 --
@@ -2396,11 +2416,11 @@ local function compute_forsale_preview_items(self)
 				local cell_bottom = pos.y - size.y * 0.5
 				if cell_top <= panel_top and cell_bottom >= panel_bottom then
 					local camera = PREVIEW_CAMERA[card.model_path]
-					local preview_h = size.y - GRID_LABEL_H
+					local preview_h = size.y - SHIP_LABEL_H
 					table.insert(items, {
 						rect = {
 							x = pos.x - size.x / 2,
-							y = cell_bottom + GRID_LABEL_H,
+							y = cell_bottom + SHIP_LABEL_H,
 							w = size.x,
 							h = preview_h,
 						},

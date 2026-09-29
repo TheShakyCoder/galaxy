@@ -46,6 +46,13 @@ services:
       # Required here so production can never fall back to logging codes.
       - RESEND_API_KEY=${RESEND_API_KEY:?}
       - EMAIL_FROM=${EMAIL_FROM:?}
+      # Signs star-system transfer tickets (modules/tickets.lua). Generate a
+      # long random value; every Nakama node must share it.
+      - TICKET_SECRET=${TICKET_SECRET:?}
+      # This node's name and the public host clients use for its matches.
+      # PUBLIC_ENDPOINT stays empty while there's a single node.
+      - NODE_ID=${NODE_ID:-node1}
+      - PUBLIC_ENDPOINT=${PUBLIC_ENDPOINT:-}
     entrypoint:
       - "/bin/sh"
       # -e only, not -x: tracing would print every secret below into the logs.
@@ -62,6 +69,9 @@ services:
           --runtime.http_key "$$NAKAMA_HTTP_KEY"
           --runtime.env "RESEND_API_KEY=$$RESEND_API_KEY"
           --runtime.env "EMAIL_FROM=$$EMAIL_FROM"
+          --runtime.env "TICKET_SECRET=$$TICKET_SECRET"
+          --runtime.env "NODE_ID=$$NODE_ID"
+          --runtime.env "PUBLIC_ENDPOINT=$$PUBLIC_ENDPOINT"
           --console.username "$$NAKAMA_CONSOLE_USERNAME"
           --console.password "$$NAKAMA_CONSOLE_PASSWORD"
           --console.signing_key "$$NAKAMA_CONSOLE_SIGNING_KEY"

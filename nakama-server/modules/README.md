@@ -9,6 +9,12 @@
   RPC replays each change (purchases, fitting, skins, FTL jump Hydrogen) with
   the game's own rules and saves the result; the profile is server-write-only,
   so currencies and items can't be tampered with.
+- `directory.lua`, `system_match.lua`, `tickets.lua`, `registry.lua`: one
+  authoritative match per star system. `enter_system` (directory) checks the
+  player is really in that system, finds or creates its match via the registry
+  and returns a one-use signed ticket; the match validates movement and relays
+  it. Designed so systems can later be spread over several Nakama nodes (see
+  the header of `directory.lua`).
 - `main/`: **generated** copies of `main/session.lua` and the data it needs,
   made by `python tools/sync_server_rules.py`. Don't edit them here. Rerun the
   tool (and restart Nakama) after changing any of those files;

@@ -43,9 +43,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   The server owns that progress: every purchase, sale, fitting change and FTL
   jump is checked and applied by Nakama, so balances and items can't be
   edited in the browser.
-- **Multiplayer**: each star system is a shared room where you see other players'
-  ships in real time. The client reconnects automatically and uses dead
-  reckoning to keep network traffic low.
+- **Multiplayer**: each star system is an authoritative server match where you see
+  other players' ships in real time. The server validates every move, and you can
+  only enter the system you actually flew or jumped to. The client reconnects
+  automatically and uses dead reckoning to keep network traffic low.
 - **Ship skins**: twelve paint and model collections for every ship, 288 skins
   in all, bought and equipped in the outpost's Skins tab (see
   [`assets/skins/`](assets/skins/README.md)).
@@ -82,13 +83,10 @@ for features that aren't built yet.
    **Project → Build**. The editor fetches the dependencies (Nakama and
    WebSocket) on first build.
 
-Every player needs a verified account. With no `RESEND_API_KEY` in
-`nakama-server/.env`, verification codes aren't emailed; read them from the
-server log instead:
-
-```sh
-docker logs nakama 2>&1 | grep "verification code"
-```
+Every player needs a verified account. Locally, verification emails never go
+out: they land in the [Mailpit](https://mailpit.axllent.org) inbox that starts
+with the server, at <http://localhost:8035>. Any address works, e.g.
+`test1@example.com`.
 
 The server enforces the same rules as the game by running copies of
 `main/session.lua` and its data files. After changing any of them, run

@@ -115,13 +115,10 @@ local function remote_factory_id(ship_id, faction)
 	return "#remote_ship_factory", true
 end
 
--- network.lua's callbacks run in the url context of whatever script called
--- network.join_space_room() (this script's own init(), here - unlike the
--- source project there's no separate bootstrap collection, so this is
--- already this instance's own context), but msg.post() to SELF_URL keeps
--- the same "callback posts, on_message does the real work" shape the
--- source file uses, so on_leave / factory.create() below always run
--- predictably from on_message rather than from inside a Nakama callback.
+-- network.lua's callbacks run from socket events, in the context of
+-- whichever script opened the socket - not necessarily this one - so they
+-- only msg.post() to SELF_URL, and on_message below does the real work
+-- (factory.create(), go.delete()) in this script's own context.
 local function on_transform(user_id, t)
 	msg.post(SELF_URL, "remote_transform", {
 		user_id = user_id,
@@ -140,9 +137,9 @@ end
 
 function init(self)
 	-- No connect() here: main/start_screen.gui_script connects once the player
-	-- has logged in and verified their email. join_space_room() just
-	-- registers the callbacks and joins as soon as that connection exists.
-	network.join_space_room(on_transform, on_leave)
+	-- has logged in and verified their email, and main/player_ship.script
+	-- enters each system's match as the player flies there.
+	network.set_space_callbacks(on_transform, on_leave)
 end
 
 function on_message(self, message_id, message)

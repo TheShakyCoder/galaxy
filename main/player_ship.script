@@ -25,6 +25,7 @@ local session = require("main.session")
 local network = require("main.network")
 local remote_registry = require("main.remote_registry")
 local skin_flight = require("main.skin_flight")
+local profile = require("main.profile")
 
 -- Two DIFFERENT "forward" concepts, deliberately kept separate - conflating
 -- them into one shared FORWARD constant was a real bug, found via live
@@ -126,6 +127,18 @@ local DEFAULT_SHIP_ID = "patrol_interceptor"
 -- shape main/outpost.gui_script's own ship-preview rigs already use for
 -- the exact same reason, just via component enable/disable here instead
 -- of camera targeting.
+-- Enters `system_id`'s server match (main/network.lua) once the server has
+-- caught up: the launch / jump arrival that put us there is a queued
+-- progress change (main/profile.lua), and the server only lets players into
+-- the system its copy says they're in. Skipped if we've moved on meanwhile.
+local function enter_system_when_synced(self, system_id)
+	profile.flush(function()
+		if self.flying and self.current_system_id == system_id then
+			network.enter_system(system_id)
+		end
+	end)
+end
+
 local function model_component_id(ship_id, faction)
 	return "model_" .. ship_id .. "_" .. faction
 end
@@ -465,11 +478,8 @@ local function start_flight(self)
 	self.current_system_id = star_systems.HOME_SYSTEM[faction]
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = self.current_system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[self.current_system_id].name })
-	-- Realtime presence - the account screen (main/start_screen.gui_script)
-	-- already connected after login and joined this same home-system room as
-	-- its default, so this call is normally a same-system no-op - it's here
-	-- so launching still joins correctly even if that ever stops matching.
-	network.rejoin_room_for_system(self.current_system_id)
+	-- Realtime presence: join the home system's match.
+	enter_system_when_synced(self, self.current_system_id)
 end
 
 -- Makes `system_id` the player's current system - the Galaxy-appropriate
@@ -519,10 +529,9 @@ local function arrive_at_system(self, system_id)
 
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[system_id].name })
-	-- Leave the old system's room and join the new one, so players in
-	-- different systems don't see each other's transforms (Realtime
-	-- presence only slice - see main/network.lua's own comment).
-	network.rejoin_room_for_system(system_id)
+	-- Leave the old system's match and join the new one, so players in
+	-- different systems don't see each other (main/network.lua).
+	enter_system_when_synced(self, system_id)
 end
 
 -- Mirror image of start_flight() - returns to the outpost menu the same
@@ -531,6 +540,7 @@ end
 -- work, same as when faction_select first hands off there). Called once
 -- update()'s docking countdown reaches zero, see below.
 local function complete_dock(self)
+	network.leave_system() -- docked ships leave the system's match
 	self.flying = false
 	self.docking = false
 	self.dock_time_left = 0
