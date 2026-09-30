@@ -19,7 +19,7 @@ Galaxy runs as three Coolify resources:
 ```
 
 Accounts live on the website. When a verified player presses Play, the site
-picks a game server (a row in its `game_servers` table) and the game fetches a
+picks a game server (a row in its `servers` table) and the game fetches a
 short-lived **play token** from it, signed with that server's
 `PLAY_TOKEN_SECRET`. The game signs in to that server's Nakama with it
 (`nakama-server/modules/auth.lua`). The site tells the game which server to
