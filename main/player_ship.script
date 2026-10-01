@@ -25,6 +25,8 @@ local session = require("main.session")
 local catalog = require("main.data.modules.catalog")
 local network = require("main.network")
 local remote_registry = require("main.remote_registry")
+local asteroid_registry = require("main.asteroid_registry")
+local asteroid_data = require("main.data.asteroids")
 local skin_flight = require("main.skin_flight")
 local profile = require("main.profile")
 
@@ -422,7 +424,11 @@ function init(self)
 	self.net_sent_pos = nil -- last broadcast state (nil = send on the next check) - see network_state_changed()
 	self.net_sent_rot = nil
 	self.net_sent_speed = 0
-	self.firing = false -- key 1's weapons toggle, see toggle_firing()
+	self.firing = false -- switched-on weapons are firing at the target (update_firing)
+	self.fire_order = nil -- the fire order last sent to the server
+	self.fire_match = nil
+	self.weapons_on = {}
+	self.shift_held = false
 	-- The server's outpost state for our system: hide destroyed outposts,
 	-- show returned ones. Socket callbacks run outside this script's
 	-- context (no go.* there), so update() does the re-placing.
@@ -436,6 +442,9 @@ function init(self)
 	self.follow_friend = false -- Y's Follow Friend - see update()'s targeting/movement block
 	msg.post("flight_camera#camera", "disable")
 end
+
+-- Defined with the weapons further down; start_flight shows it on launch.
+local show_hotkeys
 
 local function start_flight(self)
 	self.flying = true
@@ -463,6 +472,15 @@ local function start_flight(self)
 	self.target_id = nil
 	self.follow_friend = false
 	self.firing = false
+	self.fire_order = nil
+	-- Every fitted weapon starts switched on (Shift+n toggles it).
+	self.weapons_on = {}
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		if entry.slot:sub(1, 1) == "W" then
+			self.weapons_on[entry.slot] = true
+		end
+	end
+	show_hotkeys(self)
 
 	-- Which of main/main.collection's 24 pre-embedded model components to
 	-- show (per direct instruction: the ship actually flown must match
@@ -532,6 +550,7 @@ local function arrive_at_system(self, system_id)
 	self.current_system_id = system_id
 	self.target_id = nil
 	self.firing = false -- the old system's match stops our fire as we leave it
+	self.fire_order = nil
 	place_outposts(system_id)
 	-- Same rule as launching: LAUNCH_DISTANCE from our faction's outpost in
 	-- the new system (or from its centre if we have none there), facing
@@ -556,6 +575,8 @@ end
 local function complete_dock(self)
 	network.leave_system() -- docked ships leave the system's match (which stops any fire)
 	self.firing = false
+	self.fire_order = nil
+	msg.post("flight_hud#gui", "hotkeys", { text = nil })
 	self.flying = false
 	self.docking = false
 	self.dock_time_left = 0
@@ -676,20 +697,29 @@ end
 -- All are pre-existing, unrelated gaps, not new discrepancies this task
 -- introduced.
 --
--- How far away TAB/X will still pick up a ship to target - an
--- already-locked target isn't force-cleared just for later drifting past
--- this (see update()'s "out of range" dock_prompt-style HUD text), only a
--- fresh TAB/X press respects it. Same value as the source project's own
--- TARGET_RANGE (a literal port, not a fresh guess).
-local TARGET_RANGE = 300
--- Outposts are much bigger than ships, so TAB/X pick up the enemy outpost
--- from further away - past every weapon's range (the longest, the
--- Speculator's, is 1350 m), so it can be locked before closing in.
-local OUTPOST_TARGET_RANGE = 2000
-
--- self.target_id is a remote user_id, or "outpost:<faction>" for an
--- outpost - the same string the server takes as a FIRE target.
+-- Targeting (BSGO's controls): Tab cycles through everything targetable
+-- within the ship's sensor range, nearest first; X targets the nearest
+-- enemy, F1 the nearest friendly, C cancels, and a left-click targets
+-- whatever is under the cursor. Targetable: other players' ships, both
+-- factions' outposts and asteroids. The target is marked on screen
+-- (main/flight_hud.gui_script) and described in the top-middle panel.
+--
+-- Target ids: a ship's user_id, "outpost:<faction>" (also the server's FIRE
+-- target) or "asteroid:<index>" (main/asteroid_registry.lua).
 local OUTPOST_TARGET_PREFIX = "outpost:"
+local ASTEROID_TARGET_PREFIX = "asteroid:"
+local DEFAULT_SENSOR_RANGE = 3000 -- m, for a ship without its own sensor_range_m
+local SHIP_RADIUS = 15 -- m, rough size of a ship for clicking and the marker
+local OUTPOST_RADIUS = 150 -- m, same for an outpost
+local CLICK_MIN_RADIUS = 28 -- px: small or distant objects are still easy to click
+local FACTION_NAMES = { accord = "Accord", swarm = "Swarm" }
+
+-- The flight camera's projection (main/flight_camera.camera), for putting
+-- world positions on screen.
+local CAMERA_FOV = 0.7
+local CAMERA_ASPECT = 1.7778
+local CAMERA_NEAR, CAMERA_FAR = 0.5, 20000
+local SCREEN_W, SCREEN_H = 1920, 1080 -- game.project display size (GUI and input coordinates)
 
 local function with_commas(n)
 	local formatted = tostring(math.floor(n)):reverse():gsub("(%d%d%d)", "%1,"):reverse()
@@ -701,99 +731,277 @@ local function outpost_target_faction(target_id)
 		and target_id:sub(#OUTPOST_TARGET_PREFIX + 1) or nil
 end
 
--- The other faction's outpost here, as a target id, if it's standing and
--- within OUTPOST_TARGET_RANGE of `pos`, with its distance squared.
-local function enemy_outpost_in_range(self, pos)
-	local enemy = session.get_faction() == "accord" and "swarm" or "accord"
-	local outpost_pos = outpost_position(self.current_system_id, enemy)
-	if not outpost_pos then
-		return nil
-	end
-	local d = outpost_pos - pos
-	local dist_sq = vmath.dot(d, d)
-	if dist_sq > OUTPOST_TARGET_RANGE * OUTPOST_TARGET_RANGE then
-		return nil
-	end
-	return OUTPOST_TARGET_PREFIX .. enemy, dist_sq
+local function asteroid_target_index(target_id)
+	return target_id and target_id:sub(1, #ASTEROID_TARGET_PREFIX) == ASTEROID_TARGET_PREFIX
+		and tonumber(target_id:sub(#ASTEROID_TARGET_PREFIX + 1)) or nil
 end
 
--- TAB cycles self.target_id among ANY remote ship (main/remote_registry.lua,
--- populated by main/remote_ships.script from the current system's Nakama
--- room - no NPCs exist yet, so remote players are the only candidates) in
--- TARGET_RANGE, friend or foe alike - not faction-filtered, since Y's own
--- follow-friend needs to be able to lock a same-faction ship through this
--- same slot. Stable (id-sorted) order so repeated presses step through the
--- same list even though ship positions change every frame; if the current
--- target's dropped out of the candidate list, the next press starts over
--- from the first candidate. Ported technique from the source project's own
--- cycle_target() (§0).
-local function cycle_target(self)
-	local pos = go.get_position()
-	local candidates = {}
-	for user_id, ship in pairs(remote_registry.ships) do
-		if vmath.length(ship.pos - pos) <= TARGET_RANGE then
-			table.insert(candidates, user_id)
+local function sensor_range(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	return (ship and ship.data and ship.data.sensor_range_m) or DEFAULT_SENSOR_RANGE
+end
+
+local function asteroid_target(a)
+	local resource = a.analysed and asteroid_data.RESOURCE_BY_ID[a.resource]
+	return {
+		id = ASTEROID_TARGET_PREFIX .. a.index, pos = a.pos, radius = a.radius, kind = "asteroid",
+		relation = "neutral", name = resource and ("Asteroid: " .. resource.name) or "Asteroid (not analysed)",
+	}
+end
+
+-- The target `id` as { id, pos, radius, kind, relation, name, faction,
+-- destroyed }, or nil if it's gone. An outpost stays a target while it's
+-- destroyed (the panel says when it returns).
+local function resolve_target(self, id)
+	if not id then
+		return nil
+	end
+	local faction = outpost_target_faction(id)
+	if faction then
+		local p = star_systems.outpost_position(self.current_system_id, faction)
+		if not p then
+			return nil
+		end
+		return {
+			id = id, pos = vmath.vector3(p.x, p.y, p.z), radius = OUTPOST_RADIUS, kind = "outpost", faction = faction,
+			relation = faction == session.get_faction() and "friendly" or "enemy",
+			name = FACTION_NAMES[faction] .. " outpost",
+			destroyed = not session.outpost_available(self.current_system_id, faction),
+		}
+	end
+	local index = asteroid_target_index(id)
+	if index then
+		local a = asteroid_registry.by_index[index]
+		return a and asteroid_target(a) or nil
+	end
+	local ship = remote_registry.ships[id]
+	if not ship then
+		return nil
+	end
+	return {
+		id = id, pos = ship.pos, radius = SHIP_RADIUS, kind = "ship", faction = ship.faction, speed = ship.speed,
+		relation = ship.faction == session.get_faction() and "friendly" or "enemy",
+		name = (FACTION_NAMES[ship.faction] or "?") .. " ship",
+	}
+end
+
+-- Everything that can be targeted right now (standing outposts only).
+local function target_candidates(self)
+	local list = {}
+	for user_id in pairs(remote_registry.ships) do
+		table.insert(list, resolve_target(self, user_id))
+	end
+	for _, faction in ipairs(OUTPOST_FACTIONS) do
+		local target = resolve_target(self, OUTPOST_TARGET_PREFIX .. faction)
+		if target and not target.destroyed then
+			table.insert(list, target)
 		end
 	end
-	local outpost_id = enemy_outpost_in_range(self, pos)
-	if outpost_id then
-		table.insert(candidates, outpost_id)
+	for _, a in ipairs(asteroid_registry.asteroids) do
+		table.insert(list, asteroid_target(a))
 	end
-	table.sort(candidates)
+	return list
+end
 
-	if #candidates == 0 then
+-- Candidates within sensor range of the ship, nearest first; with
+-- `relation`, only enemies or only friendlies.
+local function targets_in_range(self, relation)
+	local pos = go.get_position()
+	local range = sensor_range(self.ship_id)
+	local list = {}
+	for _, target in ipairs(target_candidates(self)) do
+		local dist = vmath.length(target.pos - pos)
+		if dist <= range and (not relation or target.relation == relation) then
+			target.dist = dist
+			table.insert(list, target)
+		end
+	end
+	table.sort(list, function(a, b) return a.dist < b.dist end)
+	return list
+end
+
+-- Tab: the next target after the current one, nearest first (wrapping).
+local function cycle_target(self)
+	local list = targets_in_range(self)
+	if #list == 0 then
 		self.target_id = nil
 		return
 	end
-
 	local next_index = 1
-	for i, id in ipairs(candidates) do
-		if id == self.target_id then
-			next_index = (i % #candidates) + 1
+	for i, target in ipairs(list) do
+		if target.id == self.target_id then
+			next_index = (i % #list) + 1
 			break
 		end
 	end
-	self.target_id = candidates[next_index]
+	self.target_id = list[next_index].id
 end
 
--- X - picks the nearest OPPOSITE-faction remote ship in TARGET_RANGE as
--- self.target_id (same slot cycle_target() above fills), by distance
--- rather than by stepping a stable list. A miss (nothing in range) leaves
--- whatever's already targeted alone. Ported technique from the source
--- project's own target_nearest_enemy() (§0).
-local function target_nearest_enemy(self)
-	local pos = go.get_position()
-	local own_faction = session.get_faction()
-	local best_id, best_dist_sq = nil, TARGET_RANGE * TARGET_RANGE
-	for user_id, ship in pairs(remote_registry.ships) do
-		if ship.faction ~= own_faction then
-			local d = ship.pos - pos
-			local dist_sq = vmath.dot(d, d)
-			if dist_sq <= best_dist_sq then
-				best_id, best_dist_sq = user_id, dist_sq
+-- X / F1: the nearest enemy or friendly in range (nothing changes if none).
+local function target_nearest(self, relation)
+	local list = targets_in_range(self, relation)
+	if list[1] then
+		self.target_id = list[1].id
+	end
+end
+
+-- Where `world_pos` is on screen (GUI/input coordinates), how big an object
+-- of `radius` metres looks there (px), and whether it's in front of the
+-- camera. Uses the view-projection from the last frame's camera.
+local function project(self, world_pos, radius)
+	if not self.view_proj then
+		return nil
+	end
+	local v = self.view_proj * vmath.vector4(world_pos.x, world_pos.y, world_pos.z, 1)
+	local w = v.w
+	local in_front = w > 0.001
+	local inv = 1 / (in_front and w or -math.max(-w, 0.001))
+	local x = (v.x * inv + 1) * 0.5 * SCREEN_W
+	local y = (v.y * inv + 1) * 0.5 * SCREEN_H
+	local size = in_front and (radius or 0) * (SCREEN_H * 0.5) / (math.abs(w) * math.tan(CAMERA_FOV / 2)) or 0
+	return x, y, size, in_front
+end
+
+-- Left-click: target the object under the cursor (the nearest one, if
+-- several overlap). Returns true if something was targeted.
+local function pick_target(self, x, y)
+	local best, best_dist = nil, math.huge
+	local cam = self.camera_pos or go.get_position()
+	for _, target in ipairs(target_candidates(self)) do
+		local sx, sy, size, in_front = project(self, target.pos, target.radius)
+		if sx and in_front then
+			local reach = math.max(size, CLICK_MIN_RADIUS)
+			local dx, dy = sx - x, sy - y
+			local dist = vmath.length(target.pos - cam)
+			if dx * dx + dy * dy <= reach * reach and dist < best_dist then
+				best, best_dist = target, dist
 			end
 		end
 	end
-	local outpost_id = enemy_outpost_in_range(self, pos)
-	-- a ship in range is the more urgent target than the outpost
-	if outpost_id and not best_id then
-		best_id = outpost_id
+	if best then
+		self.target_id = best.id
+		return true
 	end
-	if best_id then
-		self.target_id = best_id
-	end
+	return false
 end
 
--- Weapons (key 1, BSGO-style toggle): fire every installed weapon at the
--- current target until pressed again. Only outposts can be shot so far.
--- The server applies the damage while the target is within each weapon's
--- range and firing arc (nakama-server/modules/system_match.lua), so firing
--- stays on while out of range and hits once back in.
-local function stop_firing(self)
-	if self.firing then
-		self.firing = false
-		network.stop_fire()
+-- The on-screen marker for the current target (main/flight_hud.gui_script):
+-- a bracket around it, or an arrow at the screen edge pointing to it when
+-- it's off screen.
+local function update_target_marker(self, target)
+	if not target then
+		msg.post("flight_hud#gui", "target_marker", { visible = false })
+		return
 	end
+	local x, y, size, in_front = project(self, target.pos, target.radius)
+	if not x then
+		return
+	end
+	local margin = 40
+	local on_screen = in_front and x >= 0 and x <= SCREEN_W and y >= 0 and y <= SCREEN_H
+	if on_screen then
+		msg.post("flight_hud#gui", "target_marker", {
+			visible = true, on_screen = true, x = x, y = y, size = math.max(size, 18), relation = target.relation,
+		})
+		return
+	end
+	-- Off screen (or behind): point from the centre towards it, clamped to
+	-- the edge.
+	local cx, cy = SCREEN_W / 2, SCREEN_H / 2
+	local dx, dy = x - cx, y - cy
+	if not in_front then
+		dx, dy = -dx, -dy
+	end
+	if dx == 0 and dy == 0 then
+		dy = -1
+	end
+	local scale = math.min((cx - margin) / math.max(math.abs(dx), 0.0001), (cy - margin) / math.max(math.abs(dy), 0.0001))
+	msg.post("flight_hud#gui", "target_marker", {
+		visible = true, on_screen = false, x = cx + dx * scale, y = cy + dy * scale,
+		dx = dx, dy = dy, relation = target.relation,
+	})
+end
+
+-- Weapons (per direct instruction): each fitted weapon is switched on and
+-- off with Shift + its slot number (Wn = Shift+n, session.slot_hotkey), and
+-- all start on at launch. Switched-on weapons fire by themselves at the
+-- current target whenever it's the other faction's standing outpost
+-- (BSGO-style; only outposts can be shot so far). The server applies the
+-- damage while the target is inside each weapon's range and firing arc
+-- (nakama-server/modules/system_match.lua).
+
+-- The fitted weapon slots that are switched on, in slot order.
+local function weapons_on_slots(self)
+	local slots = {}
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		if entry.slot:sub(1, 1) == "W" and self.weapons_on[entry.slot] then
+			table.insert(slots, entry.slot)
+		end
+	end
+	table.sort(slots)
+	return slots
+end
+
+-- Keeps the server's fire order in step with the target and the switched-on
+-- weapons. Only changes are sent; a new match (another system, or a
+-- reconnect) gets the order again.
+local function update_firing(self, target_outpost)
+	local slots = {}
+	if target_outpost and target_outpost ~= session.get_faction()
+		and session.outpost_available(self.current_system_id, target_outpost) then
+		slots = weapons_on_slots(self)
+	end
+	local order = #slots > 0 and (self.target_id .. "|" .. table.concat(slots, ",")) or nil
+	if network.match_id ~= self.fire_match then
+		self.fire_match = network.match_id
+		self.fire_order = nil
+	end
+	if order ~= self.fire_order then
+		if order then
+			self.fire_order = network.fire(self.target_id, slots) and order or nil
+		else
+			if self.fire_order then
+				network.stop_fire()
+			end
+			self.fire_order = nil
+		end
+	end
+	self.firing = self.fire_order ~= nil
+end
+
+-- One line for the flight HUD: each weapon's key and whether it's on, then
+-- the keys of the fitted active modules.
+local function hotkeys_text(self)
+	local ship_id = session.get_ship_id()
+	local weapon_parts, module_parts = {}, {}
+	local loadout = {}
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		table.insert(loadout, entry)
+	end
+	table.sort(loadout, function(a, b) return (session.slot_hotkey(ship_id, a.slot) or 99) < (session.slot_hotkey(ship_id, b.slot) or 99) end)
+	for _, entry in ipairs(loadout) do
+		local key = session.slot_hotkey(ship_id, entry.slot)
+		local module = key and session.module_in_slot(entry.slot)
+		if module and entry.slot:sub(1, 1) == "W" then
+			table.insert(weapon_parts, "SHIFT+" .. key .. " " .. module.name:upper() .. (self.weapons_on[entry.slot] and " ON" or " OFF"))
+		elseif module and module.behavior == "active" then
+			table.insert(module_parts, key .. " " .. module.name:upper())
+		end
+	end
+	local text = table.concat(weapon_parts, "   ")
+	if #module_parts > 0 then
+		text = text .. "      " .. table.concat(module_parts, "   ")
+	end
+	return text
+end
+
+show_hotkeys = function(self)
+	msg.post("flight_hud#gui", "hotkeys", { text = hotkeys_text(self) })
+end
+
+-- Short message on the flight HUD's status line (the analyser's line).
+local function flash_status(text)
+	msg.post("asteroid_hub#script", "analyser_status", { text = text })
 end
 
 -- The fitted module with catalog key `item_key` (its catalog entry), or nil.
@@ -818,17 +1026,96 @@ local function activate_analyser(self)
 	msg.post("asteroid_hub#script", "analyse", {
 		position = go.get_position(), range = analyser.range_m, scan_time = analyser.scan_time_s,
 	})
+	-- The server runs the same scan and awards XP for new asteroids.
+	network.analyse()
 end
 
-local function toggle_firing(self)
-	if self.firing then
-		stop_firing(self)
+-- Shift+n: switch weapon slot Wn on or off.
+local function toggle_weapon(self, n)
+	local slot = "W" .. n
+	local module = session.module_in_slot(slot)
+	if not module then
+		flash_status("SHIFT+" .. n .. ": NO WEAPON IN " .. slot)
 		return
 	end
-	local faction = outpost_target_faction(self.target_id)
-	if faction and faction ~= session.get_faction() and session.outpost_available(self.current_system_id, faction) then
-		self.firing = network.fire(self.target_id)
+	self.weapons_on[slot] = not self.weapons_on[slot]
+	flash_status(module.name:upper() .. " (" .. slot .. ") " .. (self.weapons_on[slot] and "ON" or "OFF"))
+	show_hotkeys(self)
+end
+
+-- G: switch every fitted weapon off if any is on, otherwise all on.
+local function toggle_all_weapons(self)
+	local any_on = false
+	for _, on in pairs(self.weapons_on) do
+		any_on = any_on or on
 	end
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		if entry.slot:sub(1, 1) == "W" then
+			self.weapons_on[entry.slot] = not any_on
+		end
+	end
+	flash_status(any_on and "ALL WEAPONS OFF" or "ALL WEAPONS ON")
+	show_hotkeys(self)
+end
+
+-- Visible weapon fire: each switched-on weapon shoots at the target (an
+-- enemy outpost or any asteroid; not ships yet, and never friendlies)
+-- once per reload while the target is inside its range and firing arc -
+-- the same test the server uses for outpost damage. Purely visual: the
+-- server decides outpost damage, and asteroids take none until mining
+-- exists.
+local DEFAULT_RELOAD_S = 0.5
+local MUZZLE_OFFSET = 6 -- m ahead of the ship's centre
+
+local function update_weapon_fire(self, dt, target, pos, rot)
+	self.gun_timers = self.gun_timers or {}
+	local can_shoot = target and not target.destroyed and target.relation ~= "friendly" and target.kind ~= "ship"
+	local shot = false
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		local slot = entry.slot
+		if slot:sub(1, 1) == "W" then
+			local timer = math.max(0, (self.gun_timers[slot] or 0) - dt)
+			local module = can_shoot and self.weapons_on[slot] and session.module_in_slot(slot)
+			if module and module.max_range_m and timer <= 0 then
+				local to_target = target.pos - pos
+				local dist = vmath.length(to_target)
+				local reach = target.kind == "asteroid" and dist - target.radius or dist
+				local forward = vmath.rotate(rot, SHIP_FORWARD)
+				local dir = dist > 0 and to_target / dist or forward
+				if reach <= module.max_range_m and vmath.dot(forward, dir) >= math.cos(math.rad((module.arc or 0) / 2)) then
+					local aim = target.kind == "asteroid" and (pos + dir * math.max(0, dist - target.radius)) or target.pos
+					msg.post("asteroid_hub#script", "shot", { from = pos + forward * MUZZLE_OFFSET, to = aim })
+					timer = module.reload_s or DEFAULT_RELOAD_S
+					shot = true
+				end
+			end
+			self.gun_timers[slot] = timer
+		end
+	end
+	if shot then
+		self.last_shot_time = socket.gettime()
+	end
+end
+
+-- n (1-9): use the active Computer/Engine/Hull module in that key's slot.
+local function activate_module(self, n)
+	local slot = session.module_slot_for_hotkey(session.get_ship_id(), n)
+	local module = slot and session.module_in_slot(slot)
+	if not module then
+		flash_status(n .. ": NOTHING FITTED" .. (slot and (" IN " .. slot) or ""))
+	elseif module.behavior ~= "active" then
+		flash_status(module.name:upper() .. " IS PASSIVE (ALWAYS ON)")
+	elseif module.range_m and module.scan_time_s then
+		activate_analyser(self)
+	else
+		flash_status(module.name:upper() .. ": NOT BUILT YET")
+	end
+end
+
+-- key_trigger actions weapon_1..weapon_9 (keys 1-9)
+local NUMBER_KEYS = {}
+for n = 1, 9 do
+	NUMBER_KEYS[hash("weapon_" .. n)] = n
 end
 
 -- Selecting a system on main/flight_map.gui arms it as a preset -
@@ -909,7 +1196,6 @@ function on_input(self, action_id, action)
 		-- entirely (see update()'s targeting block) - it means nothing
 		-- without a target.
 		if action.pressed then
-			stop_firing(self)
 			self.target_id = nil
 			self.follow_friend = false
 		end
@@ -919,9 +1205,24 @@ function on_input(self, action_id, action)
 			cycle_target(self)
 		end
 	elseif action_id == hash("target_nearest_enemy") then
-		-- X - see target_nearest_enemy()'s own comment above
+		-- X - nearest enemy ship or outpost (see target_nearest above)
 		if action.pressed then
-			target_nearest_enemy(self)
+			target_nearest(self, "enemy")
+		end
+	elseif action_id == hash("target_nearest_friendly") then
+		-- F1 - nearest friendly ship or outpost
+		if action.pressed then
+			target_nearest(self, "friendly")
+		end
+	elseif action_id == hash("touch") then
+		-- left-click: target whatever is under the cursor
+		if action.pressed then
+			pick_target(self, action.x, action.y)
+		end
+	elseif action_id == hash("toggle_guns") then
+		-- G (BSGO): all weapons on, or all off if any are on
+		if action.pressed then
+			toggle_all_weapons(self)
 		end
 	elseif action_id == hash("target_nearest_missile") then
 		-- Z - NOT IMPLEMENTED: no missile/projectile-in-flight entity
@@ -980,9 +1281,21 @@ function on_input(self, action_id, action)
 				self.dock_time_left = DOCK_COUNTDOWN_SEC
 			end
 		end
-	elseif action_id == hash("weapon_1") then
+	elseif action_id == hash("shift") then
 		if action.pressed then
-			toggle_firing(self)
+			self.shift_held = true
+		elseif action.released then
+			self.shift_held = false
+		end
+		return false
+	elseif NUMBER_KEYS[action_id] then
+		-- Shift+1-9: weapon on/off; 1-9: use an active module
+		if action.pressed then
+			if self.shift_held then
+				toggle_weapon(self, NUMBER_KEYS[action_id])
+			else
+				activate_module(self, NUMBER_KEYS[action_id])
+			end
 		end
 	elseif action_id == hash("activate_scanner") then
 		if action.pressed then
@@ -1022,27 +1335,16 @@ function update(self, dt)
 		place_outposts(self.current_system_id)
 	end
 
-	local target_outpost = outpost_target_faction(self.target_id)
-	local target_ship = self.target_id and not target_outpost and remote_registry.ships[self.target_id]
-	if target_outpost then
-		-- An outpost stays locked while destroyed (the HUD shows when it
-		-- returns), but can't be fired at.
-		if not star_systems.outpost_position(self.current_system_id, target_outpost) then
-			self.target_id, target_outpost = nil, nil
-		end
-		if self.firing and not (target_outpost and session.outpost_available(self.current_system_id, target_outpost)) then
-			stop_firing(self)
-		end
-	elseif self.firing then
-		stop_firing(self) -- retargeted to a ship (ships can't be shot yet)
-	end
-	if self.target_id and not target_outpost and not target_ship then
-		-- disconnected, or otherwise dropped out of the registry entirely
-		-- (see main/remote_ships.script's "remote_leave" handler) - NOT the
-		-- same as merely drifting out of TARGET_RANGE, which keeps the lock
-		-- (see the "out of range" HUD text further down).
+	-- The current target, if it still exists (a ship that left the system,
+	-- an asteroid of a system we've jumped away from, ...). Drifting out of
+	-- range keeps the lock; an outpost stays locked while destroyed.
+	local target = resolve_target(self, self.target_id)
+	if not target then
 		self.target_id = nil
 	end
+	local target_outpost = target and target.kind == "outpost" and target.faction or nil
+	local target_ship = target and target.kind == "ship" and remote_registry.ships[target.id] or nil
+	update_firing(self, target_outpost)
 	if self.follow_friend and not (target_ship and target_ship.faction == session.get_faction()) then
 		-- target gone entirely, or (shouldn't normally happen - on_input's
 		-- "follow_friend" handler already only turns this on for a
@@ -1299,33 +1601,27 @@ function update(self, dt)
 	-- entirely with no target rather than always showing "TARGET: none",
 	-- matching this HUD's own dock_prompt/jump_preset convention.
 	local target_text = nil
-	if target_outpost then
-		local st = network.outpost_state(self.current_system_id, target_outpost)
-		if not session.outpost_available(self.current_system_id, target_outpost) then
-			target_text = string.format("TARGET: %s outpost DESTROYED - returns in %d min", target_outpost,
-				math.ceil(network.outpost_returns_in(self.current_system_id, target_outpost) / 60))
-		else
-			local dist = vmath.length(outpost_position(self.current_system_id, target_outpost) - pos)
-			target_text = string.format("TARGET: %s outpost  %.0fm", target_outpost, dist)
+	if target then
+		local details = {}
+		if target.kind == "outpost" and target.destroyed then
+			table.insert(details, string.format("DESTROYED - returns in %d min",
+				math.ceil(network.outpost_returns_in(self.current_system_id, target.faction) / 60)))
+		elseif target.kind == "outpost" then
+			local st = network.outpost_state(self.current_system_id, target.faction)
 			if st then
-				target_text = target_text .. "  HULL " .. with_commas(st.hp) .. " / " .. with_commas(st.max_hp)
+				table.insert(details, "HULL " .. with_commas(st.hp) .. " / " .. with_commas(st.max_hp))
 			end
 		end
-		if self.firing then
-			target_text = target_text .. "  [FIRING]"
-		end
-	elseif target_ship then
-		local dist = vmath.length(target_ship.pos - pos)
-		if dist > TARGET_RANGE then
-			target_text = string.format("TARGET: %s (out of range)", target_ship.faction)
-		else
-			target_text = string.format("TARGET: %s  %.0fm", target_ship.faction, dist)
+		table.insert(details, with_commas(vmath.length(target.pos - pos)) .. " m")
+		if self.firing or (self.last_shot_time and socket.gettime() - self.last_shot_time < 1) then
+			table.insert(details, "[FIRING]")
 		end
 		if self.follow_friend then
-			target_text = target_text .. "  [FOLLOWING]"
+			table.insert(details, "[FOLLOWING]")
 		end
+		target_text = target.name:upper() .. "\n" .. table.concat(details, "   ")
 	end
-	msg.post("flight_hud#gui", "target", { text = target_text })
+	msg.post("flight_hud#gui", "target", { text = target_text, relation = target and target.relation })
 
 	-- Radar (per direct instruction: "each ship has its own visible
 	-- range" / "a gooey that shows a radar indicating all ships within
@@ -1365,4 +1661,14 @@ function update(self, dt)
 		+ vmath.rotate(self.camera_rot, UP) * camera_height
 	go.set_position(camera_pos, "flight_camera")
 	go.set_rotation(self.camera_rot, "flight_camera")
+
+	-- The camera's view-projection, for the target marker and click
+	-- targeting (same settings as main/flight_camera.camera).
+	self.camera_pos = camera_pos
+	local look = vmath.rotate(self.camera_rot, CAMERA_FORWARD)
+	local up = vmath.rotate(self.camera_rot, UP)
+	self.view_proj = vmath.matrix4_perspective(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR)
+		* vmath.matrix4_look_at(camera_pos, camera_pos + look, up)
+	update_weapon_fire(self, dt, target, pos, go.get_rotation())
+	update_target_marker(self, target)
 end

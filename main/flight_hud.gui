@@ -120,11 +120,57 @@ nodes {
 }
 nodes {
   type: TYPE_TEXT
+  id: "hotkeys"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 40.0 z: 0.0 w: 1.0 }
+  size { x: 1500.0 y: 40.0 z: 0.0 w: 1.0 }
+  color { x: 0.75 y: 0.8 z: 0.88 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  outline_alpha: 1.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
+  id: "progress_toast"
+  text: ""
+  font: "default_font"
+  position { x: 960.0 y: 820.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 110.0 z: 0.0 w: 1.0 }
+  color { x: 1.0 y: 0.85 z: 0.35 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  outline_alpha: 1.0
+  shadow_alpha: 0.0
+  line_break: true
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+}
+nodes {
+  type: TYPE_TEXT
   id: "target_text"
   text: ""
   font: "default_font"
   position { x: 960.0 y: 950.0 z: 0.0 w: 1.0 }
-  size { x: 700.0 y: 34.0 z: 0.0 w: 1.0 }
+  size { x: 1200.0 y: 70.0 z: 0.0 w: 1.0 }
   color { x: 1.0 y: 0.85 z: 0.3 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
@@ -134,7 +180,7 @@ nodes {
   alpha: 1.0
   outline_alpha: 0.0
   shadow_alpha: 0.0
-  line_break: false
+  line_break: true
   text_leading: 1.0
   text_tracking: 0.0
   parent: ""

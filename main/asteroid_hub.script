@@ -26,6 +26,7 @@
 -- range here, per direct instruction).
 
 local asteroids = require("main.data.asteroids")
+local asteroid_registry = require("main.asteroid_registry")
 
 -- Same ambient-lighting boost applied to every model this project renders
 -- during flight (per direct instruction: "increase the general ambient
@@ -47,8 +48,18 @@ local SCAN_PULSE_S = 0.25
 local RESULT_SHOWN_S = 6
 
 -- Spawned asteroids of the current system: { id, pos, radius, resource,
--- index } (index = position in asteroids.field_for(system_id)).
+-- index, analysed } (index = position in asteroids.field_for(system_id)).
+-- Also published to main/asteroid_registry.lua for targeting.
 local spawned = {}
+
+-- Weapon fire (main/player_ship.script "shot"): a bright pellet flies from
+-- the gun to the target at SHOT_SPEED, purely visual (only outposts take
+-- damage, decided by the server).
+local SHOT_SPEED = 1200 -- m/s
+-- A tracer streak (the unit sphere stretched along its flight path), long
+-- and bright enough to see at weapon range.
+local SHOT_SCALE = vmath.vector3(2, 2, 24)
+local SHOT_TINT = vmath.vector4(10.0, 7.5, 2.5, 1.0)
 local current_system = nil
 
 -- system_id -> { [index] = true } for asteroids this player has analysed.
@@ -103,6 +114,7 @@ local function despawn_all()
 		go.delete(a.id)
 	end
 	spawned = {}
+	asteroid_registry.set({})
 end
 
 local function spawn_field(system_id)
@@ -113,8 +125,9 @@ local function spawn_field(system_id)
 		local pos = vmath.vector3(a.x, a.y, a.z)
 		local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
 		go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
-		table.insert(spawned, { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index })
+		table.insert(spawned, { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index, analysed = known[index] == true })
 	end
+	asteroid_registry.set(spawned)
 end
 
 -- "ANALYSED 7 ASTEROIDS: 2 HYDROGEN, 1 IRON, 4 INERT"
@@ -143,6 +156,7 @@ local function finish_scan()
 		go.cancel_animations(url, "tint")
 		go.set(url, "tint", resource_tint(a.resource))
 		known[a.index] = true
+		a.analysed = true
 	end
 	show_status(result_text(found), RESULT_SHOWN_S)
 end
@@ -178,6 +192,21 @@ function on_message(self, message_id, message)
 		spawn_field(message.system_id)
 	elseif message_id == hash("analyse") then
 		analyse(message.position, message.range, message.scan_time)
+	elseif message_id == hash("shot") then
+		local from, to = message.from, message.to
+		local dir = to - from
+		local rot = vmath.length(dir) > 0.001 and vmath.quat_from_to(vmath.vector3(0, 0, 1), vmath.normalize(dir)) or vmath.quat()
+		local id = factory.create("#shot_factory", from, rot, nil, SHOT_SCALE)
+		local model = msg.url(nil, id, "model")
+		go.set(model, "tint", SHOT_TINT)
+		-- model.material's point light defaults to near the system's origin,
+		-- which would leave the side the player sees dark: light the tracer
+		-- from high above instead (the chase camera looks down on it).
+		go.set(model, "light", vmath.vector4(from.x, from.y + 5000, from.z, 1))
+		local duration = math.max(0.05, vmath.length(to - from) / SHOT_SPEED)
+		go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, to, go.EASING_LINEAR, duration, 0, function()
+			go.delete(id)
+		end)
 	elseif message_id == hash("analyser_status") then
 		-- player_ship.script's own messages (e.g. no analyser fitted)
 		show_status(message.text, 3)

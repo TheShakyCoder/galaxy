@@ -139,6 +139,10 @@ key_trigger {
   action: "target_nearest_enemy"
 }
 key_trigger {
+  input: KEY_F1
+  action: "target_nearest_friendly"
+}
+key_trigger {
   input: KEY_Z
   action: "target_nearest_missile"
 }

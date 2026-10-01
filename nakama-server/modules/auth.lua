@@ -106,7 +106,7 @@ end
 -- Saved progress (profile/state) is written only by modules/economy.lua.
 -- Its permission_write = 0 already stops clients overwriting it, but a new
 -- player could otherwise create their own before the server does.
-local SERVER_ONLY_COLLECTIONS = { profile = true }
+local SERVER_ONLY_COLLECTIONS = { profile = true, analysed = true }
 
 local function client_writable(_, payload)
 	for _, object in ipairs((payload and (payload.objects or payload.object_ids)) or {}) do

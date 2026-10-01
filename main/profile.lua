@@ -61,6 +61,10 @@ local function send_next()
 		end
 		if response.ok then
 			table.remove(queue, 1)
+			-- e.g. first arrival in a system: XP, assignment progress
+			if response.progress then
+				network.report_progress(response.progress, item.op)
+			end
 			if #queue == 0 then
 				if response.profile then
 					adopt(response.profile)

@@ -1,0 +1,28 @@
+-- Daily assignments (BSGO: bsgo.fandom.com/wiki/Daily_Assignments - e.g.
+-- "Asteroid Recon: scan a set number of asteroids with a mineral analysis
+-- scanner, starting at 20"). Every player gets all of these each day
+-- (00:00 UTC); nakama-server/modules/progress.lua counts progress and pays
+-- the rewards when one is completed.
+--
+-- `event` is the progress event that counts towards it (see progress.lua):
+-- asteroid_analysed (per new asteroid), system_arrival (per arrival in a
+-- different system that day) and outpost_damage (per point of hull damage).
+-- Targets and rewards are PLACEHOLDERS to tune (BSGO's 20 asteroids aside).
+
+local M = {}
+
+M.DAILY = {
+	{ id = "asteroid_recon", name = "Asteroid Recon", description = "Analyse 20 asteroids you haven't analysed before",
+		event = "asteroid_analysed", target = 20, xp = 1000, scrip = 250 },
+	{ id = "survey", name = "Survey", description = "Arrive in 3 different star systems",
+		event = "system_arrival", target = 3, xp = 1000, scrip = 250 },
+	{ id = "outpost_raid", name = "Outpost Raid", description = "Deal 2,000 damage to enemy outposts",
+		event = "outpost_damage", target = 2000, xp = 1000, scrip = 250 },
+}
+
+M.BY_ID = {}
+for _, assignment in ipairs(M.DAILY) do
+	M.BY_ID[assignment.id] = assignment
+end
+
+return M

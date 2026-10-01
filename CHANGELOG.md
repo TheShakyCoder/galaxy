@@ -4,7 +4,58 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
-## [Unreleased]
+## [0.3.0-alpha.1] - 2026-09-30
+
+### XP, levels and ranks
+- Earn XP on each game server, decided by the server (it can't be faked):
+  - arriving in a star system for the first time: 100 XP;
+  - analysing an asteroid for the first time: 10 XP each (the server now checks
+    the analyser is fitted and which asteroids were in range);
+  - damaging the other faction's outposts: 1 XP per 10 hull damage;
+  - destroying one: 1,000 XP, shared by its attackers by damage dealt.
+- XP gives a level (BSGO's curve: level n needs 1,000 x (n-1)^2 XP) and a
+  faction rank for levels 1-20: naval ranks for the Accord (Cadet to Fleet
+  Admiral), flock and bird-of-prey ranks for the Swarm (Hatchling to Apex).
+- Ship classes need a level to buy: Escort 5, Frigate 10. Ships you own are
+  never locked.
+- Daily assignments (reset 00:00 UTC), each +1,000 XP and +250 Scrip: Asteroid
+  Recon (analyse 20 new asteroids), Survey (arrive in 3 different systems),
+  Outpost Raid (deal 2,000 outpost damage).
+- The outpost's Overview shows your rank, XP and today's assignments; the HUD
+  shows XP, promotions and completed assignments as they happen; the website
+  dashboard shows each server's rank, level and XP.
+- XP amounts, class levels and assignment rewards are first guesses (the BSGO
+  wiki gives none) and will be tuned.
+
+### Controls
+- Weapons are switched on and off one at a time with Shift + their slot number
+  (W1 is Shift+1, W2 Shift+2, ...). They all start on, and the ones that are on
+  fire by themselves at your target; the old fire-everything key is gone.
+- Active Computer, Engine and Hull modules are used with 1-9: slots are
+  numbered C1, C2, then E1..., then H1... (on a Patrol ship C1 is 1 and H2 is
+  8). The Asteroid Analyser still also works with P. Passive modules (armour
+  plating and so on) are always on and have no key.
+- The Fitting tab shows each slot's key under it, and the flight HUD lists your
+  weapons (on/off) and module keys.
+- After a reconnect, the game tells the server again what it's firing at.
+- Targeting, with BSGO's keys: Tab cycles through everything in sensor range
+  (other players' ships, both outposts and asteroids), nearest first; X targets
+  the nearest enemy, F1 the nearest friendly, C clears the target, and a
+  left-click targets whatever is under the cursor. G switches all weapons on or
+  off at once.
+- The target is marked: a bracket around it (red enemy, blue friendly, grey
+  neutral), or an arrow at the screen edge when it's off screen, and a panel at
+  the top with its name (an analysed asteroid shows its resource), hull for
+  outposts, distance and [FIRING].
+- Switched-on weapons visibly fire tracer shots at an enemy outpost or any
+  asteroid within their range and firing arc. Asteroids take no damage yet
+  (mining isn't built); outposts take damage as before.
+
+### Fixes
+- The server now tracks where a ship is between its position updates (games
+  only send one when speed or heading changes), so analysing asteroids and
+  firing at an outpost while flying straight use the ship's real position,
+  not where it was when the run began.
 
 ### Asteroid Analyser
 - The Asteroid Analyser (Computer module) works: press P to analyse every

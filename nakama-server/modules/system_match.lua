@@ -32,7 +32,16 @@ Wire protocol (JSON match data):
   5 OUTPOSTS  server -> client  {accord = state, swarm = state, now}
               state = {exists, hp, max_hp, available, destroyed_until}
               (ms; `now` is the server's clock, for the countdown)
-  6 FIRE      client -> server  {target = "outpost:<faction>"} to fire, {} to stop
+  6 FIRE      client -> server  {target = "outpost:<faction>", slots = ["W1", ...]}
+              to fire the weapons in those slots (all fitted weapons if slots
+              is missing), {} to stop
+  7 ANALYSE   client -> server  {} - Asteroid Analyser (P): analyse every
+              asteroid within the fitted analyser's range of the player's last
+              validated position; after its scan time, XP for each one this
+              player hasn't analysed before (modules/progress.lua)
+  8 PROGRESS  server -> client  {reason, xp_gained, scrip_gained, xp, level,
+              level_before, rank, completed = [{id, name, xp, scrip}]} - XP
+              this player just earned here (only sent to them)
 ]]
 
 local nk = require("nakama")
@@ -43,8 +52,11 @@ local weapons = require("main.data.modules.weapons_autocannons")
 local tickets = require("tickets")
 local registry = require("registry")
 local outposts = require("outposts")
+local asteroids = require("main.data.asteroids")
+local rewards = require("main.data.xp_rewards")
+local progress = require("progress")
 
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE = 1, 2, 3, 4, 5, 6
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS = 1, 2, 3, 4, 5, 6, 7, 8
 
 local TICK_RATE = 10
 local HEARTBEAT_TICKS = 5 * TICK_RATE
@@ -52,6 +64,8 @@ local IDLE_TICKS = 5 * 60 * TICK_RATE -- empty for 5 minutes -> shut down
 local MAX_STRIKES = 20 -- invalid updates before a player is kicked
 local OUTPOST_BROADCAST_TICKS = 5 -- hull updates at most twice a second
 local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed hull every 5 seconds
+local XP_FLUSH_TICKS = 5 * TICK_RATE -- award outpost damage XP every 5 seconds
+local ANALYSED_COLLECTION = "analysed" -- per player, key = system id (server-only, modules/auth.lua)
 
 -- Validation slack: speed limit is the ship's boost speed + 10%; a move may
 -- cover 1.5x what that speed allows in the time since the last update, plus
@@ -78,11 +92,27 @@ local function installed_weapons(profile)
 		if module and tostring(entry.slot):sub(1, 1) == "W" and module.max_range_m then
 			local dps = weapons.dps_at_level(module, inst.level)
 			if dps > 0 then
-				table.insert(list, { dps = dps, range = module.max_range_m, cos_half_arc = math.cos(math.rad((module.arc or 0) / 2)) })
+				table.insert(list, { slot = entry.slot, dps = dps, range = module.max_range_m, cos_half_arc = math.cos(math.rad((module.arc or 0) / 2)) })
 			end
 		end
 	end
 	return list
+end
+
+-- The fitted Asteroid Analyser's { range, scan_time }, or nil.
+local function installed_analyser(profile)
+	local instances = {}
+	for _, inst in ipairs(profile.owned or {}) do
+		instances[inst.id] = inst
+	end
+	for _, entry in ipairs(profile.loadout or {}) do
+		local inst = instances[entry.instance_id]
+		local module = inst and catalog.get(inst.item_key)
+		if module and module.range_m and module.scan_time_s then
+			return { range = module.range_m, scan_time = module.scan_time_s }
+		end
+	end
+	return nil
 end
 
 local function load_identity(user_id)
@@ -94,7 +124,97 @@ local function load_identity(user_id)
 		faction = profile.faction,
 		skin_id = profile.equipped_skins and ship_id and profile.equipped_skins[ship_id] or nil,
 		weapons = installed_weapons(profile),
+		analyser = installed_analyser(profile),
+		pending_damage = 0, -- outpost damage not yet turned into XP
 	}
+end
+
+-- Progress --------------------------------------------------------------
+
+-- Tells the player what they just earned (if they're still here).
+local function send_progress(dispatcher, state, user_id, reason, result)
+	local player = state.players[user_id]
+	if not (player and result) or (result.xp_gained == 0 and #result.completed == 0) then
+		return
+	end
+	result.reason = reason
+	dispatcher.broadcast_message(OP_PROGRESS, nk.json_encode(result), { player.presence })
+end
+
+-- Turns the player's outpost damage so far into XP (whole multiples of the
+-- damage worth 1 XP; the remainder carries over).
+local function flush_damage(dispatcher, state, user_id, player)
+	local per_xp = rewards.OUTPOST_DAMAGE_PER_XP
+	local damage = math.floor(player.pending_damage / per_xp) * per_xp
+	if damage <= 0 then
+		return
+	end
+	player.pending_damage = player.pending_damage - damage
+	send_progress(dispatcher, state, user_id, "outpost_damage", progress.apply(user_id, "outpost_damage", damage))
+end
+
+-- The destruction bonus, split by damage between everyone who hit the
+-- outpost recently (whether or not they're still in the system).
+local function award_destruction(dispatcher, state, outpost, now)
+	local total, recent = 0, {}
+	for user_id, a in pairs(outpost.attackers or {}) do
+		if now - a.last <= rewards.OUTPOST_ATTACKER_WINDOW_S * 1000 then
+			recent[user_id] = a.damage
+			total = total + a.damage
+		end
+	end
+	outpost.attackers = {}
+	if total <= 0 then
+		return
+	end
+	for user_id, damage in pairs(recent) do
+		local player = state.players[user_id]
+		if player then
+			flush_damage(dispatcher, state, user_id, player)
+		end
+		local share = math.floor(rewards.OUTPOST_DESTROYED * damage / total)
+		if share > 0 then
+			send_progress(dispatcher, state, user_id, "outpost_destroyed", progress.apply(user_id, "outpost_destroyed", share))
+		end
+	end
+end
+
+-- Asteroid Analyser -------------------------------------------------------
+
+-- The asteroids (indices into state.field) within `range` of position `s`.
+local function asteroids_in_range(state, s, range)
+	local found = {}
+	for index, a in ipairs(state.field) do
+		local dx, dy, dz = a.x - s.x, a.y - s.y, a.z - s.z
+		if math.sqrt(dx * dx + dy * dy + dz * dz) - a.diameter_m / 2 <= range then
+			table.insert(found, index)
+		end
+	end
+	return found
+end
+
+-- Records a finished scan and grants XP for the asteroids this player hadn't
+-- analysed before (kept as a "0"/"1" string, one character per asteroid of
+-- the system's field).
+local function finish_scan(dispatcher, state, user_id, indices)
+	local objects = nk.storage_read({ { collection = ANALYSED_COLLECTION, key = state.system, user_id = user_id } })
+	local mask = objects[1] and objects[1].value and objects[1].value.mask or ""
+	mask = mask .. string.rep("0", #state.field - #mask)
+	local new = 0
+	for _, index in ipairs(indices) do
+		if mask:sub(index, index) ~= "1" then
+			mask = mask:sub(1, index - 1) .. "1" .. mask:sub(index + 1)
+			new = new + 1
+		end
+	end
+	if new == 0 then
+		return
+	end
+	nk.storage_write({ {
+		collection = ANALYSED_COLLECTION, key = state.system, user_id = user_id, value = { mask = mask },
+		permission_read = 1, permission_write = 0,
+	} })
+	send_progress(dispatcher, state, user_id, "asteroid_analysed", progress.apply(user_id, "asteroid_analysed", new))
 end
 
 -- Outposts ----------------------------------------------------------------
@@ -140,10 +260,38 @@ local function forward(t)
 	return 2 * (x * z + w * y), 2 * (y * z - w * x), 1 - 2 * (x * x + y * y)
 end
 
--- Damage this player's weapons deal to `outpost` over `dt` seconds: each
--- weapon counts if the outpost is within its range and firing arc.
-local function outpost_damage(player, outpost, dt)
+-- Longest the server will carry a position forward. Games send their state
+-- whenever speed or heading changes, so a longer silence means a stalled
+-- connection rather than a long straight run.
+local MAX_PREDICT_S = 30
+
+-- Where the player's ship is now, as every other player's game shows it:
+-- games only send their state when it stops matching dead reckoning
+-- (main/player_ship.script network_state_changed), so a ship flying straight
+-- at a steady speed sends nothing - its last reported position, carried
+-- forward along its heading at its reported speed. Used for anything that
+-- needs where the ship actually is (outpost range and arc, the analyser's
+-- snapshot), not for checking the next update (plausible uses the last
+-- reported one). Returns a copy of the state with x, y, z moved, or nil.
+local function predicted_state(player, now)
 	local s = player.state
+	if not s then
+		return nil
+	end
+	local elapsed = math.min(math.max(0, now - (player.updated_at or now)) / 1000, MAX_PREDICT_S)
+	local fx, fy, fz = forward(s)
+	local distance = (s.speed or 0) * elapsed
+	return {
+		x = s.x + fx * distance, y = s.y + fy * distance, z = s.z + fz * distance,
+		qx = s.qx, qy = s.qy, qz = s.qz, qw = s.qw, speed = s.speed,
+	}
+end
+
+-- Damage this player's weapons deal to `outpost` over `dt` seconds: each
+-- weapon counts if the outpost is within its range and firing arc of where
+-- the ship is now (predicted_state).
+local function outpost_damage(player, outpost, dt, now)
+	local s = predicted_state(player, now)
 	if not s then
 		return 0
 	end
@@ -156,7 +304,8 @@ local function outpost_damage(player, outpost, dt)
 	end
 	local damage = 0
 	for _, weapon in ipairs(player.weapons or {}) do
-		if dist <= weapon.range and cos_angle >= weapon.cos_half_arc then
+		local switched_on = not player.firing_slots or player.firing_slots[weapon.slot]
+		if switched_on and dist <= weapon.range and cos_angle >= weapon.cos_half_arc then
 			damage = damage + weapon.dps * dt
 		end
 	end
@@ -165,7 +314,7 @@ end
 
 -- Applies this tick's fire to the outposts, destroys any at zero hull and
 -- brings back any whose hour is up. Returns true if their state changed.
-local function update_outposts(state, now)
+local function update_outposts(dispatcher, state, now)
 	local changed = false
 	for faction, o in pairs(state.outposts) do
 		if not o.available and o.destroyed_until and now >= o.destroyed_until then
@@ -175,9 +324,17 @@ local function update_outposts(state, now)
 			changed = true
 		elseif o.available then
 			local damage = 0
-			for _, player in pairs(state.players) do
+			o.attackers = o.attackers or {}
+			for user_id, player in pairs(state.players) do
 				if player.firing == faction and player.faction ~= faction then
-					damage = damage + outpost_damage(player, o, 1 / TICK_RATE)
+					local dealt = outpost_damage(player, o, 1 / TICK_RATE, now)
+					if dealt > 0 then
+						damage = damage + dealt
+						player.pending_damage = player.pending_damage + dealt
+						local a = o.attackers[user_id] or { damage = 0 }
+						a.damage, a.last = a.damage + dealt, now
+						o.attackers[user_id] = a
+					end
 				end
 			end
 			if damage > 0 then
@@ -193,6 +350,7 @@ local function update_outposts(state, now)
 							player.firing = nil
 						end
 					end
+					award_destruction(dispatcher, state, o, now)
 				end
 			end
 		end
@@ -245,7 +403,8 @@ function M.match_init(context, params)
 		players = {}, -- user_id -> { presence, ship_id, faction, skin_id, weapons, firing, state, updated_at, strikes }
 		used_tickets = {}, -- jti -> expiry (seconds)
 		idle_ticks = 0,
-		outposts = load_outposts(system), -- faction -> { hp, max_hp, available, destroyed_until, pos, dirty }
+		outposts = load_outposts(system), -- faction -> { hp, max_hp, available, destroyed_until, pos, dirty, attackers }
+		field = asteroids.field_for(system), -- the system's asteroids (the same list every game has)
 		outposts_changed = false,
 		last_outposts_broadcast = 0,
 	}
@@ -314,6 +473,7 @@ function M.match_leave(context, dispatcher, tick, state, presences)
 		local player = state.players[presence.user_id]
 		-- Ignore the old session of a player who has already rejoined.
 		if player and player.presence.session_id == presence.session_id then
+			flush_damage(dispatcher, state, presence.user_id, player)
 			state.players[presence.user_id] = nil
 			dispatcher.broadcast_message(OP_LEAVE, nk.json_encode({ u = presence.user_id }))
 		end
@@ -332,8 +492,30 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 			-- Only the other faction's outpost in this system can be a target.
 			if faction and state.outposts[faction] and faction ~= player.faction then
 				player.firing = faction
+				-- Which weapons are switched on (Shift+1-9 in the game).
+				player.firing_slots = nil
+				if type(t.slots) == "table" then
+					player.firing_slots = {}
+					for _, slot in pairs(t.slots) do
+						if type(slot) == "string" then
+							player.firing_slots[slot] = true
+						end
+					end
+				end
 			else
 				player.firing = nil
+			end
+		elseif player and message.op_code == OP_ANALYSE and player.presence.session_id == message.sender.session_id then
+			-- Needs a fitted analyser, a known position and no scan running.
+			-- The asteroids are those in range of where the ship is at this
+			-- moment (predicted_state): the same snapshot the game takes when
+			-- P is pressed, revealed after the scan time.
+			local position = predicted_state(player, now)
+			if player.analyser and position and not player.scan then
+				player.scan = {
+					done_tick = tick + math.ceil(player.analyser.scan_time * TICK_RATE),
+					indices = asteroids_in_range(state, position, player.analyser.range),
+				}
 			end
 		elseif player and message.op_code == OP_STATE and player.presence.session_id == message.sender.session_id then
 			local ok, t = pcall(nk.json_decode, message.data)
@@ -359,8 +541,18 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		dispatcher.broadcast_message(OP_SNAPSHOT, nk.json_encode(batch))
 	end
 
-	if update_outposts(state, now) then
+	if update_outposts(dispatcher, state, now) then
 		state.outposts_changed = true
+	end
+	for user_id, player in pairs(state.players) do
+		if player.scan and tick >= player.scan.done_tick then
+			local indices = player.scan.indices
+			player.scan = nil
+			finish_scan(dispatcher, state, user_id, indices)
+		end
+		if tick % XP_FLUSH_TICKS == 0 then
+			flush_damage(dispatcher, state, user_id, player)
+		end
 	end
 	if state.outposts_changed and tick - state.last_outposts_broadcast >= OUTPOST_BROADCAST_TICKS then
 		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state))
@@ -400,6 +592,9 @@ end
 
 function M.match_terminate(context, dispatcher, tick, state, grace_seconds)
 	save_dirty_outposts(state)
+	for user_id, player in pairs(state.players) do
+		flush_damage(dispatcher, state, user_id, player)
+	end
 	registry.release(context, state.system)
 	return state
 end

@@ -20,6 +20,8 @@ local skin_prices = require("main.data.skin_prices")
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
 local catalog = require("main.data.modules.catalog")
+local ranks = require("main.data.ranks")
+local ship_class_levels = require("main.data.ship_class_levels")
 
 local M = {}
 
@@ -48,6 +50,15 @@ M.equipped_skins = nil
 -- server needs these to price FTL jumps itself - see M.start_jump().
 M.current_system = nil
 M.pending_jump = nil -- { to = system_id, cost = hydrogen } or nil
+-- Progression (main/data/ranks.lua): total XP, the systems arrived in so far
+-- ({ [system_id] = true }, for first-arrival XP) and today's assignments
+-- ({ date = "YYYY-MM-DD", list = { { id, progress, done } } }). Only the
+-- server changes these (nakama-server/modules/progress.lua): no operation
+-- below does, and they're carried through serialize()/restore() untouched so
+-- the server's economy operations never drop them.
+M.xp = 0
+M.visited = nil
+M.assignments = nil
 -- `owned`: list of OWNED INSTANCES, NOT catalog type-keys — decided (§4) that
 -- module upgrades are per PHYSICAL COPY, not a shared per-type "blueprint"
 -- upgrade, so two owned Gnats need to be distinguishable and independently
@@ -142,6 +153,9 @@ local function start_character(faction)
 	M.equipped_skins = {}
 	M.current_system = star_systems.HOME_SYSTEM[faction]
 	M.pending_jump = nil
+	M.xp = 0
+	M.visited = { [M.current_system] = true } -- no first-arrival XP for home
+	M.assignments = nil
 	next_instance_id = 1
 	M.owned = {}
 	M.loadout = {}
@@ -160,6 +174,98 @@ end
 -- profile that has no faction yet (nakama-server/modules/economy.lua).
 function M.choose_faction(faction)
 	start_character(faction)
+end
+
+function M.get_xp()
+	return M.xp or 0
+end
+
+function M.get_level()
+	return ranks.level_for_xp(M.xp)
+end
+
+function M.get_rank()
+	return ranks.rank_name(M.faction, M.get_level())
+end
+
+-- Today's assignments as saved by the server, or nil before any progress.
+function M.get_assignments()
+	return M.assignments
+end
+
+-- Slot counts in effect for `ship_id`: its advanced tier's once upgraded,
+-- otherwise its normal `components` (main/data/ships.lua).
+function M.get_components(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return {}
+	end
+	if M.is_ship_advanced(ship_id) and ship.advanced then
+		return ship.advanced
+	end
+	return ship.components or {}
+end
+
+-- Hotkeys (per direct instruction, fixed per slot): weapon slot Wn is
+-- Shift+n; Computer, Engine and Hull slots share 1-9, numbered C1.., then
+-- E1.., then H1.. across the active ship's slots. Only numbers 1-9 are
+-- keys; slots past 9 have none.
+M.MODULE_HOTKEY_ORDER = { "C", "E", "H" }
+
+-- The hotkey number for `slot` ("W2" -> 2, "E1" -> 3 on a ship with two
+-- Computer slots), or nil.
+function M.slot_hotkey(ship_id, slot)
+	local prefix, number = tostring(slot):match("^(%a)(%d+)$")
+	number = tonumber(number)
+	if not number then
+		return nil
+	end
+	if prefix == "W" then
+		return number <= 9 and number or nil
+	end
+	local counts = M.get_components(ship_id)
+	local offset = 0
+	for _, kind in ipairs(M.MODULE_HOTKEY_ORDER) do
+		if kind == prefix then
+			local key = offset + number
+			return key <= 9 and key or nil
+		end
+		offset = offset + (counts[kind] or 0)
+	end
+	return nil
+end
+
+-- The Computer/Engine/Hull slot that key `n` (1-9) belongs to, or nil.
+function M.module_slot_for_hotkey(ship_id, n)
+	local counts = M.get_components(ship_id)
+	local offset = 0
+	for _, kind in ipairs(M.MODULE_HOTKEY_ORDER) do
+		local count = counts[kind] or 0
+		if n > offset and n <= offset + count then
+			return kind .. (n - offset)
+		end
+		offset = offset + count
+	end
+	return nil
+end
+
+-- The catalog entry of the module fitted in `slot` (main/data/modules/
+-- catalog.lua) and its instance, or nil.
+function M.module_in_slot(slot)
+	for _, entry in ipairs(M.loadout or {}) do
+		if entry.slot == slot then
+			local instance = M.get_instance(entry.instance_id)
+			return instance and catalog.get(instance.item_key), instance
+		end
+	end
+	return nil
+end
+
+-- Level needed to buy `ship_id` (main/data/ship_class_levels.lua), 1 if its
+-- class has no requirement.
+function M.ship_level_required(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	return ship and ship_class_levels.LEVELS[ship.class] or 1
 end
 
 function M.get_faction()
@@ -421,6 +527,9 @@ end
 function M.purchase_ship(ship_id)
 	local amount, currency = M.get_ship_price(ship_id)
 	if not amount or M.is_ship_owned(ship_id) then
+		return false
+	end
+	if M.get_level() < M.ship_level_required(ship_id) then
 		return false
 	end
 	if M.get_balance(currency) < amount then
@@ -726,6 +835,9 @@ function M.serialize()
 		equipped_skins = M.equipped_skins,
 		current_system = M.current_system,
 		pending_jump = M.pending_jump,
+		xp = M.xp,
+		visited = M.visited,
+		assignments = M.assignments,
 	}
 end
 
@@ -748,6 +860,9 @@ function M.restore(data)
 	M.equipped_skins = data.equipped_skins or {}
 	M.current_system = data.current_system or M.current_system
 	M.pending_jump = data.pending_jump
+	M.xp = data.xp or 0
+	M.visited = data.visited or M.visited
+	M.assignments = data.assignments
 end
 
 -- Clears everything (logging out).
@@ -756,6 +871,7 @@ function M.reset()
 	M.owned, M.loadout, M.owned_skins, M.equipped_skins = nil, nil, nil, nil
 	M.scrip, M.water, M.iron, M.hydrogen = nil, nil, nil, nil
 	M.current_system, M.pending_jump = nil, nil
+	M.xp, M.visited, M.assignments = 0, nil, nil
 	next_instance_id = 1
 end
 

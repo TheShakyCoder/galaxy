@@ -7,7 +7,8 @@ session are refused.
   player_summary { user_ids = [uuid, ...] }  (at most 100)
     -> { players = { [uuid] = summary } }  (players who never joined are
        missing). summary = { faction, faction_name, ship_id, ship_name,
-       scrip, hydrogen, water, iron, current_system, system_name }
+       scrip, hydrogen, water, iron, current_system, system_name, xp, level,
+       rank }
 
   delete_player { user_id = uuid } -> { deleted = true|false }
     Deletes the account and everything it owns (the website's account
@@ -17,6 +18,7 @@ session are refused.
 local nk = require("nakama")
 local ships = require("main.data.ships") -- copied from the game by tools/sync_server_rules.py
 local star_systems = require("main.data.star_systems")
+local ranks = require("main.data.ranks")
 
 local MAX_USERS = 100
 local FACTION_NAMES = { accord = "The Accord", swarm = "The Swarm" }
@@ -67,6 +69,9 @@ local function summary(profile)
 		iron = profile.iron,
 		current_system = profile.current_system,
 		system_name = system and system.name or nil,
+		xp = profile.xp or 0,
+		level = ranks.level_for_xp(profile.xp),
+		rank = ranks.rank_name(profile.faction, ranks.level_for_xp(profile.xp)),
 	}
 end
 

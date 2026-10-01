@@ -37,6 +37,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Targeting**: cycle targets, target the nearest enemy, match its speed, or
   follow a friendly ship.
 - **Resources**: Scrip, Water, Iron and Hydrogen.
+- **Progression**: earn XP by exploring new systems, analysing asteroids and
+  attacking enemy outposts, and from three daily assignments. XP gives a level
+  and a faction rank (naval for the Accord, avian for the Swarm); Escorts need
+  level 5 and Frigates level 10. The game server awards all XP.
 - **Asteroid Analyser**: a Computer module. Press P to analyse every asteroid
   within 500 m: they pulse for two seconds, then turn the colour of what
   they're made of (red inert rock, yellow hydrogen, purple iron, blue
@@ -68,17 +72,22 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | = / −, keypad + / − | Throttle up / down |
 | E / Q | Full throttle / stop |
 | Space (hold) | Boost (uses Hydrogen) |
-| Tab / X / C | Cycle target / nearest enemy / clear target |
+| Tab | Cycle through targets in sensor range (ships, outposts, asteroids), nearest first |
+| X / F1 | Target the nearest enemy / nearest friendly |
+| Left-click | Target whatever is under the cursor |
+| C | Clear the target |
+| G | All weapons on, or all off |
 | T | Match target's speed |
 | Y | Follow friendly target |
 | N | Star map |
 | J | Execute FTL jump |
 | K | Dock at a nearby outpost, or cancel a jump |
-| 1 | Fire / stop firing all weapons at the target (enemy outposts only, so far) |
+| Shift+1–9 | Switch the weapon in slot W1–W9 on or off. Weapons that are on fire by themselves at your target (enemy outposts only, so far) |
+| 1–9 | Use the active module in that Computer/Engine/Hull slot (numbered C1…, then E1…, then H1…; the Fitting tab shows each slot's key) |
 | P | Asteroid Analyser (if fitted): reveal what every asteroid within 500 m is made of |
 | Mouse wheel | Zoom |
 
-Other keys (weapons 2–9, G, F, slide thrusters and so on) are reserved
+Other keys (G, F, slide thrusters and so on) are reserved
 for features that aren't built yet.
 
 ## Running it locally

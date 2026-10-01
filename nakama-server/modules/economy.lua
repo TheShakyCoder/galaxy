@@ -18,6 +18,7 @@ Reply: { ok = true, result, profile } or { ok = false, error, profile }.
 ]]
 
 local nk = require("nakama")
+local progress = require("progress")
 local session = require("main.session")
 local outposts = require("outposts")
 
@@ -89,6 +90,12 @@ local function apply(user_id, op, args)
 	end
 
 	local profile = session.serialize()
+	-- Arriving somewhere can earn XP (first visit) and assignment progress,
+	-- saved in the same write as the jump itself.
+	local gained = nil
+	if op == "arrive_jump" and profile.current_system then
+		gained = progress.grant(profile, "system_arrival", profile.current_system, nk.time())
+	end
 	local ok, err = pcall(nk.storage_write, { {
 		collection = COLLECTION, key = KEY, user_id = user_id, value = profile,
 		version = version or "*", -- "*": only create if it doesn't exist yet
@@ -100,7 +107,7 @@ local function apply(user_id, op, args)
 		nk.logger_warn(string.format("economy write conflict for %s (%s): %s", user_id, op, tostring(err)))
 		return nil, true
 	end
-	return { ok = true, result = type(result) ~= "table" and result or nil, profile = profile }, false
+	return { ok = true, result = type(result) ~= "table" and result or nil, profile = profile, progress = gained }, false
 end
 
 local function economy(context, payload)

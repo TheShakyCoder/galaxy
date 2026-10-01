@@ -7,3 +7,8 @@ embedded_components {
   type: "factory"
   data: "prototype: \"/main/asteroid.go\"\n"
 }
+embedded_components {
+  id: "shot_factory"
+  type: "factory"
+  data: "prototype: \"/main/shot.go\"\n"
+}

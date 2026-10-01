@@ -58,6 +58,105 @@ local DOT_POOL_SIZE = 16
 local DOT_SIZE = vmath.vector3(6, 6, 0)
 local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
 
+local PROGRESS_SHOWN_S = 5
+
+local PROGRESS_REASONS = {
+	asteroid_analysed = "asteroids analysed",
+	outpost_damage = "outpost damage",
+	outpost_destroyed = "outpost destroyed",
+	arrive_jump = "new system discovered",
+	system_arrival = "new system discovered",
+}
+
+local function with_commas(n)
+	local formatted = tostring(math.floor(n)):reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (formatted:gsub("^,", ""))
+end
+
+-- "+240 XP  (asteroids analysed)", plus a promotion line and a line per
+-- completed assignment; nil if there's nothing to show.
+local function progress_text(p)
+	local lines = {}
+	local assignment_xp = 0
+	for _, c in pairs(p.completed or {}) do
+		assignment_xp = assignment_xp + (c.xp or 0)
+	end
+	local earned = (p.xp_gained or 0) - assignment_xp
+	if earned > 0 then
+		table.insert(lines, "+" .. with_commas(earned) .. " XP  (" .. (PROGRESS_REASONS[p.reason] or "progress") .. ")")
+	end
+	for _, c in pairs(p.completed or {}) do
+		table.insert(lines, "ASSIGNMENT COMPLETE: " .. tostring(c.name) .. "  +" .. with_commas(c.xp or 0) .. " XP  +"
+			.. with_commas(c.scrip or 0) .. " Scrip")
+	end
+	if p.level and p.level_before and p.level > p.level_before then
+		table.insert(lines, "PROMOTED: " .. tostring(p.rank) .. "  (level " .. p.level .. ")")
+	end
+	return #lines > 0 and table.concat(lines, "\n") or nil
+end
+
+-- Target marker colours by relation to the player (BSGO: red enemies,
+-- blue friendlies) and the targeted object's panel in the same colour.
+local RELATION_COLORS = {
+	enemy = vmath.vector4(1.0, 0.32, 0.26, 1.0),
+	friendly = vmath.vector4(0.35, 0.72, 1.0, 1.0),
+	neutral = vmath.vector4(0.85, 0.85, 0.82, 1.0),
+}
+local BRACKET_THICKNESS = 3
+local BRACKET_PADDING = 8 -- px between the object and its bracket
+
+-- The bracket: an L at each corner (two thin boxes), built once.
+local function create_marker(self)
+	self.bracket = {}
+	for i = 1, 8 do
+		local node = gui.new_box_node(vmath.vector3(), vmath.vector3(1, 1, 0))
+		gui.set_pivot(node, gui.PIVOT_CENTER)
+		gui.set_enabled(node, false)
+		self.bracket[i] = node
+	end
+	self.marker_arrow = gui.new_text_node(vmath.vector3(), "")
+	gui.set_font(self.marker_arrow, "default_font")
+	gui.set_pivot(self.marker_arrow, gui.PIVOT_CENTER)
+	gui.set_scale(self.marker_arrow, vmath.vector3(2.2, 2.2, 1))
+	gui.set_enabled(self.marker_arrow, false)
+end
+
+local function update_marker(self, m)
+	local color = RELATION_COLORS[m.relation] or RELATION_COLORS.neutral
+	local show_bracket = m.visible and m.on_screen
+	for _, node in ipairs(self.bracket) do
+		gui.set_enabled(node, show_bracket)
+	end
+	gui.set_enabled(self.marker_arrow, m.visible and not m.on_screen or false)
+	if show_bracket then
+		local half = m.size + BRACKET_PADDING
+		local arm = math.max(8, half * 0.45)
+		local i = 0
+		for _, sx in ipairs({ -1, 1 }) do
+			for _, sy in ipairs({ -1, 1 }) do
+				i = i + 1
+				local h, v = self.bracket[i], self.bracket[i + 4]
+				gui.set_position(h, vmath.vector3(m.x + sx * (half - arm / 2), m.y + sy * half, 0))
+				gui.set_size(h, vmath.vector3(arm, BRACKET_THICKNESS, 0))
+				gui.set_position(v, vmath.vector3(m.x + sx * half, m.y + sy * (half - arm / 2), 0))
+				gui.set_size(v, vmath.vector3(BRACKET_THICKNESS, arm, 0))
+				gui.set_color(h, color)
+				gui.set_color(v, color)
+			end
+		end
+	elseif m.visible then
+		local arrow
+		if math.abs(m.dx) > math.abs(m.dy) then
+			arrow = m.dx > 0 and ">" or "<"
+		else
+			arrow = m.dy > 0 and "^" or "v"
+		end
+		gui.set_text(self.marker_arrow, arrow)
+		gui.set_position(self.marker_arrow, vmath.vector3(m.x, m.y, 0))
+		gui.set_color(self.marker_arrow, color)
+	end
+end
+
 function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
@@ -66,6 +165,12 @@ function init(self)
 	self.system_name_node = gui.get_node("system_name")
 	self.scan_status_node = gui.get_node("scan_status")
 	gui.set_enabled(self.scan_status_node, false)
+	create_marker(self)
+	self.hotkeys_node = gui.get_node("hotkeys")
+	gui.set_enabled(self.hotkeys_node, false)
+	self.progress_node = gui.get_node("progress_toast")
+	gui.set_enabled(self.progress_node, false)
+	self.progress_generation = 0
 	self.scrip_node = gui.get_node("scrip_value")
 	self.water_node = gui.get_node("water_value")
 	self.iron_node = gui.get_node("iron_value")
@@ -136,6 +241,25 @@ function on_message(self, message_id, message)
 		if message.text then
 			gui.set_text(self.dock_prompt_node, message.text)
 		end
+	elseif message_id == hash("hotkeys") then
+		-- weapon (Shift+n) and active module (n) keys, from player_ship.script
+		gui.set_enabled(self.hotkeys_node, message.text ~= nil and message.text ~= "")
+		gui.set_text(self.hotkeys_node, message.text or "")
+	elseif message_id == hash("progress") then
+		-- XP / promotion / assignment rewards from the server
+		-- (main/network.lua report_progress), shown for a few seconds.
+		local text = progress_text(message)
+		if text then
+			self.progress_generation = self.progress_generation + 1
+			local generation = self.progress_generation
+			gui.set_text(self.progress_node, text)
+			gui.set_enabled(self.progress_node, true)
+			timer.delay(PROGRESS_SHOWN_S, false, function()
+				if generation == self.progress_generation then
+					gui.set_enabled(self.progress_node, false)
+				end
+			end)
+		end
 	elseif message_id == hash("scan_status") then
 		-- Asteroid Analyser progress/result (main/asteroid_hub.script), nil hides
 		gui.set_enabled(self.scan_status_node, message.text ~= nil)
@@ -160,7 +284,12 @@ function on_message(self, message_id, message)
 		gui.set_enabled(self.target_text_node, message.text ~= nil)
 		if message.text then
 			gui.set_text(self.target_text_node, message.text)
+			gui.set_color(self.target_text_node, RELATION_COLORS[message.relation] or RELATION_COLORS.neutral)
 		end
+	elseif message_id == hash("target_marker") then
+		-- player_ship.script, every frame: bracket around the target, or an
+		-- arrow at the screen edge towards it
+		update_marker(self, message)
 	elseif message_id == hash("system_changed") then
 		gui.set_text(self.system_name_node, message.text)
 	elseif message_id == hash("currency") then

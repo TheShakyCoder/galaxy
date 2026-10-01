@@ -74,6 +74,7 @@ local skin_collections = require("main.data.skin_collections")
 local skin_flight = require("main.skin_flight")
 local network = require("main.network")
 local profile = require("main.profile")
+local ranks = require("main.data.ranks")
 
 local FACTION_DISPLAY = { accord = "The Accord", swarm = "The Swarm" }
 
@@ -94,6 +95,8 @@ local SLOT_EMPTY_ICON = { weapon = "Octagon W", computer = "Octagon C", engine =
 -- 8-vertex pie is inscribed in an ellipse that only degenerates into a
 -- circle (and therefore a regular octagon) when width == height.
 local MARKER_SIZE = vmath.vector3(74, 74, 0)
+-- Colour of the in-flight key under each slot marker ("Shift+1", "Key 3").
+local HOTKEY_LABEL_COLOR = vmath.vector4(1.0, 0.85, 0.35, 1.0)
 -- Slightly transparent per direct instruction (alpha 0.65, was fully
 -- opaque) - lets the ship visual underneath show through the slot
 -- markers a bit rather than fully hiding it. Scoped to just the marker's
@@ -803,6 +806,10 @@ end
 -- invented "progress %" or rank/XP system that doesn't actually exist
 -- anywhere in this project (plan.md §0/§4's "don't invent unconfirmed
 -- numbers" rule extends to not inventing progression systems either).
+-- Today's assignments as last fetched from the server (network.assignments,
+-- on every show_outpost), for the Overview; nil until the first reply.
+local assignments_cache = nil
+
 local function overview_text()
 	local faction = session.get_faction()
 	local faction_label = FACTION_DISPLAY[faction] or faction
@@ -856,8 +863,11 @@ local function overview_text()
 		total_levels = total_levels + (inst.level or 0)
 	end
 
+	local level = session.get_level()
 	local lines = {
 		"Faction: " .. faction_label,
+		"Rank: " .. (session.get_rank() or "?") .. "  (level " .. level .. ")",
+		"XP: " .. with_commas(session.get_xp()) .. "  (level " .. (level + 1) .. " at " .. with_commas(ranks.xp_for_level(level + 1)) .. ")",
 		"Home system: " .. home_name,
 		"Docked at: " .. system_name(docked_system_id()) .. " outpost",
 		"",
@@ -876,6 +886,16 @@ local function overview_text()
 	table.insert(lines, "Components owned: " .. #owned_instances
 		.. "  (" .. installed_count .. " installed, " .. spare_count .. " spare)")
 	table.insert(lines, "Total upgrades applied: " .. total_levels)
+
+	if assignments_cache and assignments_cache.list then
+		table.insert(lines, "")
+		table.insert(lines, "Today's assignments:")
+		for _, a in ipairs(assignments_cache.list) do
+			local state = a.done and "done" or (with_commas(a.progress) .. "/" .. with_commas(a.target))
+			table.insert(lines, "    " .. a.name .. ": " .. state .. "  --  " .. a.description
+				.. (a.done and "" or ("  (+" .. with_commas(a.xp) .. " XP, +" .. with_commas(a.scrip) .. " Scrip)")))
+		end
+	end
 
 	return table.concat(lines, "\n")
 end
@@ -931,6 +951,7 @@ local function clear_markers(self)
 		gui.delete_node(marker.icon)
 		gui.delete_node(marker.label)
 		gui.delete_node(marker.level_label)
+		gui.delete_node(marker.hotkey_label)
 		gui.delete_node(marker.invalid_mark)
 	end
 	self.markers = {}
@@ -1037,6 +1058,15 @@ local function build_markers(self)
 		gui.set_color(level_label, vmath.vector4(1.0, 0.85, 0.3, 1.0))
 		gui.set_scale(level_label, vmath.vector3(0.5, 0.5, 1))
 
+		-- The key that uses this slot in flight (session.slot_hotkey):
+		-- "Shift+1" under a fitted weapon, "Key 3" under an active module -
+		-- text set in refresh_markers, blank when nothing usable is fitted.
+		local hotkey_label = gui.new_text_node(vmath.vector3(pos.x, pos.y - MARKER_SIZE.y / 2 - 14, 0), "")
+		gui.set_pivot(hotkey_label, gui.PIVOT_CENTER)
+		gui.set_font(hotkey_label, "default_font")
+		gui.set_color(hotkey_label, HOTKEY_LABEL_COLOR)
+		gui.set_scale(hotkey_label, vmath.vector3(0.55, 0.55, 1))
+
 		local invalid_mark = gui.new_text_node(pos, "X")
 		gui.set_pivot(invalid_mark, gui.PIVOT_CENTER)
 		gui.set_font(invalid_mark, "default_font")
@@ -1045,7 +1075,7 @@ local function build_markers(self)
 		gui.set_enabled(invalid_mark, false)
 
 		self.markers[slot_id] = {
-			box = box, icon = icon, label = label, level_label = level_label,
+			box = box, icon = icon, label = label, level_label = level_label, hotkey_label = hotkey_label,
 			border = border, invalid_mark = invalid_mark,
 			type = SLOT_TYPE_BY_PREFIX[slot_id:sub(1, 1)],
 			locked = locked,
@@ -1147,6 +1177,14 @@ local function refresh_markers(self)
 			gui.set_color(marker.icon, vmath.vector4(1.0, 1.0, 1.0, 1.0))
 		end
 		gui.set_text(marker.level_label, (inst and inst.level > 0) and ("+" .. inst.level) or "")
+		local key = module and session.slot_hotkey(session.get_ship_id(), slot_id)
+		local hotkey_text = ""
+		if key and marker.type == "weapon" then
+			hotkey_text = "Shift+" .. key
+		elseif key and module.behavior == "active" then
+			hotkey_text = "Key " .. key
+		end
+		gui.set_text(marker.hotkey_label, hotkey_text)
 	end
 	refresh_ship_stats(self) -- keep the Ship Statistics panel in sync with whatever just changed
 end
@@ -1518,6 +1556,8 @@ local function ship_forsale_rows(faction, active_ship)
 		elseif owned then
 			detail = "Owned" .. advanced_tag
 			color = SHIP_CARD_OWNED_COLOR
+		elseif session.get_level() < session.ship_level_required(ship_id) then
+			detail = "Level " .. session.ship_level_required(ship_id) .. " required"
 		else
 			detail = ship_price_text(ship_id)
 		end
@@ -2219,7 +2259,10 @@ local function show_ship_detail(self, ship_id)
 
 	local stats = ship_stats_text(ship_id)
 	if not owned then
-		stats = "Price: " .. ship_price_text(ship_id) .. "\n\n" .. stats
+		local required = session.ship_level_required(ship_id)
+		local locked = session.get_level() < required
+			and ("Requires level " .. required .. " (you're level " .. session.get_level() .. ")\n") or ""
+		stats = locked .. "Price: " .. ship_price_text(ship_id) .. "\n\n" .. stats
 	end
 	local model_path = ship and faction and ship.faction_skins[faction] and ship.faction_skins[faction].model
 	local world_pos = model_path and PREVIEW_WORLD_POS[model_path]
@@ -2535,6 +2578,15 @@ function on_message(self, message_id, message, sender)
 		gui.set_text(self.ship_node, faction_label .. "  --  " .. ship_name)
 		refresh_currency(self)
 		set_page(self, "overview") -- default tab, per direct instruction
+		-- Today's assignments, for the Overview (progress is kept on the server).
+		network.assignments(function(result)
+			if result and result.list then
+				assignments_cache = result
+				if self.active and not self.launching and self.active_page == "overview" then
+					refresh_overview(self)
+				end
+			end
+		end)
 		-- Is this system's outpost still standing? If it has been destroyed
 		-- (main/network.lua outpost_state), docked_system() is home instead:
 		-- redraw the title and "Docked at" once the server has answered.
@@ -2682,7 +2734,12 @@ function on_input(self, action_id, action)
 				else
 					local name = ship_display_name(ship_id, session.get_faction())
 					local price, currency = session.get_ship_price(ship_id)
-					if price and session.get_balance(currency) < price then
+					local required = session.ship_level_required(ship_id)
+					if session.get_level() < required then
+						show_confirm(self, name .. " needs level " .. required .. " (you're level " .. session.get_level()
+							.. ", " .. session.get_rank() .. "). Earn XP by exploring, analysing asteroids,"
+							.. " attacking enemy outposts and completing assignments.", function() end, false)
+					elseif price and session.get_balance(currency) < price then
 						show_confirm(self, "Not enough " .. CURRENCY_NAME[currency] .. " to buy " .. name
 							.. " (need " .. with_commas(price) .. ", have " .. with_commas(session.get_balance(currency)) .. ").", function() end, false)
 					elseif session.purchase_ship(ship_id) then

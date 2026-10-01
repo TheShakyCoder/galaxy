@@ -49,7 +49,7 @@ local SERVER_CONFIG = {
 }
 
 -- Star-system match protocol (see nakama-server/modules/system_match.lua).
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE = 1, 2, 3, 4, 5, 6
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS = 1, 2, 3, 4, 5, 6, 7, 8
 
 -- The system the player is in while flying (nil when docked or logged out).
 -- Every (re)connect enters it again with a fresh ticket.
@@ -363,6 +363,12 @@ function M.server_version(callback)
 	rpc("server_version", {}, callback)
 end
 
+-- callback({ date, list = { { id, name, description, target, progress,
+-- done, xp, scrip } } } or nil, error): today's assignments.
+function M.assignments(callback)
+	rpc("assignments", {}, callback)
+end
+
 -- Saved progress: one storage object per player, readable by its owner,
 -- written only by the server.
 local PROFILE_COLLECTION = "profile"
@@ -506,6 +512,26 @@ function M.set_space_callbacks(on_transform, on_leave)
 	M.on_leave = on_leave
 end
 
+-- XP and assignment rewards the server just granted (nakama-server/modules/
+-- progress.lua): from the system's match (OP_PROGRESS) or with an economy
+-- reply (arriving somewhere, via main/profile.lua). The local copy of the
+-- player's XP and Scrip catch up at once (the server's saved copy replaces
+-- them at the next resync anyway), then the flight HUD shows what was
+-- earned.
+function M.report_progress(result, reason)
+	if type(result) ~= "table" then
+		return
+	end
+	result.reason = result.reason or reason
+	if type(result.xp) == "number" then
+		session.xp = result.xp
+	end
+	if type(result.scrip_gained) == "number" and result.scrip_gained > 0 and session.scrip then
+		session.scrip = session.scrip + result.scrip_gained
+	end
+	msg.post("flight_hud#gui", "progress", result)
+end
+
 -- on_outposts(system_id) is called whenever the current system's outpost
 -- state arrives (on joining its match and whenever a hull changes).
 function M.set_outposts_callback(on_outposts)
@@ -530,7 +556,9 @@ function M.handle_match_data(op, raw)
 	if not ok or type(data) ~= "table" then
 		return
 	end
-	if op == OP_OUTPOSTS then
+	if op == OP_PROGRESS then
+		M.report_progress(data)
+	elseif op == OP_OUTPOSTS then
 		if current_system_id then
 			store_outposts(current_system_id, data)
 			if M.on_outposts then M.on_outposts(current_system_id) end
@@ -637,15 +665,16 @@ function M.send_transform(pos, rot, speed, ship_id)
 	return true
 end
 
--- Fires this ship's weapons at `target` ("outpost:<faction>") until
--- M.stop_fire(). The server decides the damage: each installed weapon hits
--- while the target is inside its range and firing arc.
-function M.fire(target)
+-- Fires the weapons in `slots` (e.g. { "W1", "W3" }: the ones switched on)
+-- at `target` ("outpost:<faction>") until M.stop_fire(). The server decides
+-- the damage: each of those weapons hits while the target is inside its
+-- range and firing arc.
+function M.fire(target, slots)
 	if not M.match_id then
 		return false
 	end
 	local socket, match_id = M.socket, M.match_id
-	local payload = json.encode(target and { target = target } or {})
+	local payload = json.encode(target and { target = target, slots = slots } or {})
 	nakama.sync(function()
 		socket.match_data_send(match_id, OP_FIRE, payload)
 	end)
@@ -654,6 +683,21 @@ end
 
 function M.stop_fire()
 	return M.fire(nil)
+end
+
+-- Asks the server to analyse the asteroids around this ship (Asteroid
+-- Analyser, P): it checks the analyser is fitted and awards XP for new
+-- ones after the scan (OP_PROGRESS). The colours are shown locally
+-- (main/asteroid_hub.script) either way.
+function M.analyse()
+	if not M.match_id then
+		return false
+	end
+	local socket, match_id = M.socket, M.match_id
+	nakama.sync(function()
+		socket.match_data_send(match_id, OP_ANALYSE, "{}")
+	end)
+	return true
 end
 
 return M
