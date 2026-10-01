@@ -1061,11 +1061,11 @@ local function build_markers(self)
 		-- The key that uses this slot in flight (session.slot_hotkey):
 		-- "Shift+1" under a fitted weapon, "Key 3" under an active module -
 		-- text set in refresh_markers, blank when nothing usable is fitted.
-		local hotkey_label = gui.new_text_node(vmath.vector3(pos.x, pos.y - MARKER_SIZE.y / 2 - 14, 0), "")
+		local hotkey_label = gui.new_text_node(vmath.vector3(pos.x, pos.y - MARKER_SIZE.y / 2 - 18, 0), "")
 		gui.set_pivot(hotkey_label, gui.PIVOT_CENTER)
 		gui.set_font(hotkey_label, "default_font")
 		gui.set_color(hotkey_label, HOTKEY_LABEL_COLOR)
-		gui.set_scale(hotkey_label, vmath.vector3(0.55, 0.55, 1))
+		gui.set_scale(hotkey_label, vmath.vector3(0.85, 0.85, 1))
 
 		local invalid_mark = gui.new_text_node(pos, "X")
 		gui.set_pivot(invalid_mark, gui.PIVOT_CENTER)
