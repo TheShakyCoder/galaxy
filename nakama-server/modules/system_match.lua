@@ -42,6 +42,13 @@ Wire protocol (JSON match data):
   8 PROGRESS  server -> client  {reason, xp_gained, scrip_gained, xp, level,
               level_before, rank, completed = [{id, name, xp, scrip}]} - XP
               this player just earned here (only sent to them)
+  9 ASTEROIDS server -> client  {now, rocks = [{i, hp, max_hp, destroyed_until}]}
+              the hull of every asteroid of this system that isn't at full
+              hull (or is destroyed, destroyed_until = ms); absent = full.
+              Sent on joining and whenever a hull changes.
+ 10 RESOURCE  server -> client  {resource, amount, total} - an asteroid the
+              player's final shot depleted, credited to their saved
+              inventory (only sent to them)
 ]]
 
 local nk = require("nakama")
@@ -55,8 +62,9 @@ local outposts = require("outposts")
 local asteroids = require("main.data.asteroids")
 local rewards = require("main.data.xp_rewards")
 local progress = require("progress")
+local resources = require("resources")
 
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS = 1, 2, 3, 4, 5, 6, 7, 8
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 local TICK_RATE = 10
 local HEARTBEAT_TICKS = 5 * TICK_RATE
@@ -64,6 +72,8 @@ local IDLE_TICKS = 5 * 60 * TICK_RATE -- empty for 5 minutes -> shut down
 local MAX_STRIKES = 20 -- invalid updates before a player is kicked
 local OUTPOST_BROADCAST_TICKS = 5 -- hull updates at most twice a second
 local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed hull every 5 seconds
+local ASTEROID_BROADCAST_TICKS = 5 -- asteroid hull updates, same twice-a-second cap
+local ASTEROID_RESPAWN_MS = 5 * 60 * 1000 -- a depleted asteroid is gone for 5 minutes
 local XP_FLUSH_TICKS = 5 * TICK_RATE -- award outpost damage XP every 5 seconds
 local ANALYSED_COLLECTION = "analysed" -- per player, key = system id (server-only, modules/auth.lua)
 
@@ -358,6 +368,131 @@ local function update_outposts(dispatcher, state, now)
 	return changed
 end
 
+-- Asteroids ---------------------------------------------------------------
+
+-- Damage this player's weapons deal to asteroid `a` (an entry of
+-- state.field) over `dt` seconds: the same range/arc test the game uses for
+-- its visible fire (main/player_ship.script update_weapon_fire), measured to
+-- the rock's surface rather than its centre.
+local function asteroid_damage(player, a, dt, now)
+	local s = predicted_state(player, now)
+	if not s then
+		return 0
+	end
+	local dx, dy, dz = a.x - s.x, a.y - s.y, a.z - s.z
+	local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
+	local cos_angle = 1
+	if dist > 0 then
+		local fx, fy, fz = forward(s)
+		cos_angle = (fx * dx + fy * dy + fz * dz) / dist
+	end
+	local reach = math.max(0, dist - a.diameter_m / 2) -- surface distance
+	local damage = 0
+	for _, weapon in ipairs(player.weapons or {}) do
+		local switched_on = not player.firing_slots or player.firing_slots[weapon.slot]
+		if switched_on and reach <= weapon.range and cos_angle >= weapon.cos_half_arc then
+			damage = damage + weapon.dps * dt
+		end
+	end
+	return damage
+end
+
+-- A depleted asteroid's resource goes to the player whose damage brought
+-- its hull to zero (direct instruction) - the FINAL BLOW, not merely the
+-- largest or most recent attacker. The amount is the asteroid's own
+-- resource content (main/data/asteroids.lua resource_amount) saved to that
+-- player's inventory (modules/resources.lua); inert rock holds nothing and
+-- awards nothing. The player is told their new balance (OP_RESOURCE) if
+-- they're still in the system - the credit itself doesn't need them there.
+local function deplete_asteroid(dispatcher, state, index, a, user_id)
+	local amount = asteroids.resource_amount(a.resource, a.diameter_m)
+	nk.logger_info(string.format("asteroid %d (%s) in %s depleted by %s", index, a.resource, state.system, user_id))
+	if amount <= 0 then
+		return
+	end
+	local total = resources.apply(user_id, a.resource, amount)
+	if not total then
+		return
+	end
+	local player = state.players[user_id]
+	if player then
+		dispatcher.broadcast_message(OP_RESOURCE,
+			nk.json_encode({ resource = a.resource, amount = amount, total = total }), { player.presence })
+	end
+end
+
+-- Applies this tick's fire to the system's asteroids: each rock loses hull
+-- while a firing player has it in range and arc; at zero it's depleted for
+-- ASTEROID_RESPAWN_MS, then comes back at full hull. Returns true if any
+-- hull changed. state.rocks holds only the rocks that aren't at full hull:
+-- index -> { hp, destroyed_until? }. A depleted asteroid is in that table
+-- only while its timer runs; once it elapses the entry is dropped and the
+-- rock counts as full again (the same shape outposts.lua uses).
+local function update_asteroids(dispatcher, state, now)
+	state.rocks = state.rocks or {}
+	local changed = false
+	for index, r in pairs(state.rocks) do
+		if r.destroyed_until and now >= r.destroyed_until then
+			state.rocks[index] = nil
+			changed = true
+		end
+	end
+	-- This tick's damage, kept PER PLAYER so a depleted rock can be credited
+	-- to whoever brought it to zero: by_rock[index] = { {user_id, damage}, ... }.
+	local by_rock = {}
+	for user_id, player in pairs(state.players) do
+		local index = player.firing_asteroid
+		local a = index and state.field[index]
+		local r = index and state.rocks[index]
+		if a and not (r and r.destroyed_until) then
+			local damage = asteroid_damage(player, a, 1 / TICK_RATE, now)
+			if damage > 0 then
+				by_rock[index] = by_rock[index] or {}
+				table.insert(by_rock[index], { user_id = user_id, damage = damage })
+			end
+		end
+	end
+	for index, hits in pairs(by_rock) do
+		local a = state.field[index]
+		local r = state.rocks[index] or { hp = asteroids.max_hull(a.diameter_m) }
+		local killer = nil
+		for _, hit in ipairs(hits) do
+			if r.hp <= 0 then
+				break -- already depleted earlier this tick; later shots hit nothing
+			end
+			r.hp = r.hp - hit.damage
+			if r.hp <= 0 then
+				r.hp, killer = 0, hit.user_id
+			end
+		end
+		if killer then
+			r.destroyed_until = now + ASTEROID_RESPAWN_MS
+			for _, player in pairs(state.players) do
+				if player.firing_asteroid == index then
+					player.firing_asteroid = nil
+				end
+			end
+			deplete_asteroid(dispatcher, state, index, a, killer)
+		end
+		state.rocks[index] = r
+		changed = true
+	end
+	return changed
+end
+
+-- { now, rocks = [{i, hp, max_hp, destroyed_until}] }: every asteroid of
+-- this system that isn't at full hull (or is depleted). The game
+-- (main/network.lua) turns this into the HULL <hp> / <max_hp> line and hides
+-- depleted rocks.
+local function asteroids_message(state)
+	local rocks = {}
+	for index, r in pairs(state.rocks or {}) do
+		local max_hp = asteroids.max_hull(state.field[index].diameter_m)
+		table.insert(rocks, { i = index, hp = math.floor(r.hp + 0.5), max_hp = max_hp, destroyed_until = r.destroyed_until })
+	end
+	return nk.json_encode({ now = nk.time(), rocks = rocks })
+end
+
 local function max_speed(ship_id)
 	local ship = ships.SHIPS[ship_id]
 	return (ship and ship.data and ship.data.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED
@@ -405,8 +540,11 @@ function M.match_init(context, params)
 		idle_ticks = 0,
 		outposts = load_outposts(system), -- faction -> { hp, max_hp, available, destroyed_until, pos, dirty, attackers }
 		field = asteroids.field_for(system), -- the system's asteroids (the same list every game has)
+		rocks = {}, -- index -> { hp, destroyed_until? } for asteroids not at full hull
 		outposts_changed = false,
 		last_outposts_broadcast = 0,
+		asteroids_changed = false,
+		last_asteroids_broadcast = 0,
 	}
 	local label = nk.json_encode({ system = system, node = registry.node_id(context) })
 	return state, TICK_RATE, label
@@ -450,6 +588,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
 			dispatcher.broadcast_message(OP_SNAPSHOT, nk.json_encode(others), { presence })
 		end
 		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state), { presence })
+		dispatcher.broadcast_message(OP_ASTEROIDS, asteroids_message(state), { presence })
 		-- ...and everyone else about the newcomer (a reconnect replaces the
 		-- previous session silently).
 		if not old then
@@ -488,13 +627,23 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		local player = state.players[message.sender.user_id]
 		if player and message.op_code == OP_FIRE and player.presence.session_id == message.sender.session_id then
 			local ok, t = pcall(nk.json_decode, message.data)
-			local faction = ok and type(t) == "table" and type(t.target) == "string" and t.target:match("^outpost:(%a+)$")
-			-- Only the other faction's outpost in this system can be a target.
+			local target = ok and type(t) == "table" and type(t.target) == "string" and t.target or nil
+			local faction = target and target:match("^outpost:(%a+)$")
+			local asteroid_index = target and tonumber(target:match("^asteroid:(%d+)$"))
+			-- Only the other faction's outpost in this system, or one of this
+			-- system's standing asteroids, can be a target.
 			if faction and state.outposts[faction] and faction ~= player.faction then
-				player.firing = faction
+				player.firing, player.firing_asteroid = faction, nil
+			elseif asteroid_index and state.field[asteroid_index]
+				and not (state.rocks[asteroid_index] and state.rocks[asteroid_index].destroyed_until) then
+				player.firing, player.firing_asteroid = nil, asteroid_index
+			else
+				player.firing, player.firing_asteroid = nil, nil
+			end
+			if player.firing or player.firing_asteroid then
 				-- Which weapons are switched on (Shift+1-9 in the game).
 				player.firing_slots = nil
-				if type(t.slots) == "table" then
+				if ok and type(t) == "table" and type(t.slots) == "table" then
 					player.firing_slots = {}
 					for _, slot in pairs(t.slots) do
 						if type(slot) == "string" then
@@ -502,8 +651,6 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 						end
 					end
 				end
-			else
-				player.firing = nil
 			end
 		elseif player and message.op_code == OP_ANALYSE and player.presence.session_id == message.sender.session_id then
 			-- Needs a fitted analyser, a known position and no scan running.
@@ -544,6 +691,9 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 	if update_outposts(dispatcher, state, now) then
 		state.outposts_changed = true
 	end
+	if update_asteroids(dispatcher, state, now) then
+		state.asteroids_changed = true
+	end
 	for user_id, player in pairs(state.players) do
 		if player.scan and tick >= player.scan.done_tick then
 			local indices = player.scan.indices
@@ -558,6 +708,11 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state))
 		state.outposts_changed = false
 		state.last_outposts_broadcast = tick
+	end
+	if state.asteroids_changed and tick - state.last_asteroids_broadcast >= ASTEROID_BROADCAST_TICKS then
+		dispatcher.broadcast_message(OP_ASTEROIDS, asteroids_message(state))
+		state.asteroids_changed = false
+		state.last_asteroids_broadcast = tick
 	end
 	if tick % OUTPOST_PERSIST_TICKS == 0 then
 		save_dirty_outposts(state)

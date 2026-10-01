@@ -428,6 +428,11 @@ function init(self)
 	self.fire_order = nil -- the fire order last sent to the server
 	self.fire_match = nil
 	self.weapons_on = {}
+	-- Per-slot end time (socket.gettime() clock) of an active module's
+	-- running effect, e.g. the Asteroid Analyser's scan window - the
+	-- flight HUD's ship diagram shows those slots "live" until then (see
+	-- slot_states below).
+	self.module_live_until = {}
 	self.shift_held = false
 	-- The server's outpost state for our system: hide destroyed outposts,
 	-- show returned ones. Socket callbacks run outside this script's
@@ -745,6 +750,9 @@ local function asteroid_target(a)
 	local resource = a.analysed and asteroid_data.RESOURCE_BY_ID[a.resource]
 	return {
 		id = ASTEROID_TARGET_PREFIX .. a.index, pos = a.pos, radius = a.radius, kind = "asteroid",
+		index = a.index,
+		-- Only known (and shown) once analysed, like the resource itself.
+		resource_amount = resource and asteroid_data.resource_amount(a.resource, a.radius * 2) or nil,
 		relation = "neutral", name = resource and ("Asteroid: " .. resource.name) or "Asteroid (not analysed)",
 	}
 end
@@ -925,10 +933,12 @@ end
 -- Weapons (per direct instruction): each fitted weapon is switched on and
 -- off with Shift + its slot number (Wn = Shift+n, session.slot_hotkey), and
 -- all start on at launch. Switched-on weapons fire by themselves at the
--- current target whenever it's the other faction's standing outpost
--- (BSGO-style; only outposts can be shot so far). The server applies the
+-- current target whenever it's the other faction's standing outpost or an
+-- asteroid (BSGO-style; ships can't be shot yet). The server applies the
 -- damage while the target is inside each weapon's range and firing arc
--- (nakama-server/modules/system_match.lua).
+-- (nakama-server/modules/system_match.lua) - outposts lose hull for XP, an
+-- asteroid is mined out (hull, main/data/asteroids.lua) and comes back after
+-- a while.
 
 -- The fitted weapon slots that are switched on, in slot order.
 local function weapons_on_slots(self)
@@ -945,10 +955,13 @@ end
 -- Keeps the server's fire order in step with the target and the switched-on
 -- weapons. Only changes are sent; a new match (another system, or a
 -- reconnect) gets the order again.
-local function update_firing(self, target_outpost)
+local function update_firing(self, target)
 	local slots = {}
-	if target_outpost and target_outpost ~= session.get_faction()
-		and session.outpost_available(self.current_system_id, target_outpost) then
+	local can_fire = target and (
+		(target.kind == "outpost" and target.faction ~= session.get_faction()
+			and session.outpost_available(self.current_system_id, target.faction))
+		or target.kind == "asteroid")
+	if can_fire then
 		slots = weapons_on_slots(self)
 	end
 	local order = #slots > 0 and (self.target_id .. "|" .. table.concat(slots, ",")) or nil
@@ -1061,9 +1074,10 @@ end
 -- Visible weapon fire: each switched-on weapon shoots at the target (an
 -- enemy outpost or any asteroid; not ships yet, and never friendlies)
 -- once per reload while the target is inside its range and firing arc -
--- the same test the server uses for outpost damage. Purely visual: the
--- server decides outpost damage, and asteroids take none until mining
--- exists.
+-- the same test the server uses to apply damage. Purely visual on the
+-- client: the server owns the damage - outposts lose hull, and an asteroid
+-- is mined out (destroyed_until, main/network.lua asteroid_state), which
+-- main/asteroid_hub.script turns into a despawn.
 local DEFAULT_RELOAD_S = 0.5
 local MUZZLE_OFFSET = 6 -- m ahead of the ship's centre
 
@@ -1106,10 +1120,47 @@ local function activate_module(self, n)
 	elseif module.behavior ~= "active" then
 		flash_status(module.name:upper() .. " IS PASSIVE (ALWAYS ON)")
 	elseif module.range_m and module.scan_time_s then
+		-- The flight HUD's ship diagram shows this slot "live" while the
+		-- effect runs (slot_states below).
+		self.module_live_until[slot] = socket.gettime() + module.scan_time_s
 		activate_analyser(self)
 	else
 		flash_status(module.name:upper() .. ": NOT BUILT YET")
 	end
+end
+
+-- Per-slot live/cooldown state for the flight HUD's bottom-left ship
+-- diagram (main/flight_hud.gui_script's "slot_states" handler), one entry
+-- per fitted slot: a switched-on weapon is "live" and reports its reload
+-- countdown as "cooldown" (frac = remaining/total of reload_s), a passive
+-- module is always "live", and an active module is "live" only while its
+-- effect runs (activate_module's scan window above) - anything else
+-- (weapon switched off, active module on standby) is "off".
+local function slot_states(self)
+	local states = {}
+	local now = socket.gettime()
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		local module = session.module_in_slot(entry.slot)
+		if module then
+			local state, frac = "off", 0
+			if entry.slot:sub(1, 1) == "W" then
+				local timer = (self.gun_timers or {})[entry.slot] or 0
+				if self.weapons_on[entry.slot] then
+					if timer > 0 then
+						state, frac = "cooldown", timer / (module.reload_s or DEFAULT_RELOAD_S)
+					else
+						state = "live"
+					end
+				end
+			elseif module.behavior == "passive" then
+				state = "live"
+			elseif now < (self.module_live_until[entry.slot] or 0) then
+				state = "live"
+			end
+			states[entry.slot] = { state = state, frac = frac }
+		end
+	end
+	return states
 end
 
 -- key_trigger actions weapon_1..weapon_9 (keys 1-9)
@@ -1342,9 +1393,8 @@ function update(self, dt)
 	if not target then
 		self.target_id = nil
 	end
-	local target_outpost = target and target.kind == "outpost" and target.faction or nil
 	local target_ship = target and target.kind == "ship" and remote_registry.ships[target.id] or nil
-	update_firing(self, target_outpost)
+	update_firing(self, target)
 	if self.follow_friend and not (target_ship and target_ship.faction == session.get_faction()) then
 		-- target gone entirely, or (shouldn't normally happen - on_input's
 		-- "follow_friend" handler already only turns this on for a
@@ -1611,6 +1661,15 @@ function update(self, dt)
 			if st then
 				table.insert(details, "HULL " .. with_commas(st.hp) .. " / " .. with_commas(st.max_hp))
 			end
+		elseif target.kind == "asteroid" then
+			-- Hull the server (or the shared rule, until it says otherwise)
+			-- gives a rock this size: main/data/asteroids.lua max_hull.
+			local max_hp = asteroid_data.max_hull(target.radius * 2)
+			local st = network.asteroid_state(self.current_system_id, target.index)
+			table.insert(details, "HULL " .. with_commas(st and st.hp or max_hp) .. " / " .. with_commas(max_hp))
+			if target.resource_amount then
+				table.insert(details, "RESOURCE " .. with_commas(target.resource_amount))
+			end
 		end
 		table.insert(details, with_commas(vmath.length(target.pos - pos)) .. " m")
 		if self.firing or (self.last_shot_time and socket.gettime() - self.last_shot_time < 1) then
@@ -1670,5 +1729,8 @@ function update(self, dt)
 	self.view_proj = vmath.matrix4_perspective(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR)
 		* vmath.matrix4_look_at(camera_pos, camera_pos + look, up)
 	update_weapon_fire(self, dt, target, pos, go.get_rotation())
+	-- Ship diagram's live/cooldown state (flight HUD) - every frame like
+	-- the other HUD updates above, so cooldown bars drain smoothly.
+	msg.post("flight_hud#gui", "slot_states", { states = slot_states(self) })
 	update_target_marker(self, target)
 end

@@ -56,6 +56,22 @@ M.DEFAULT = {
 -- to deviate from the default yet.
 M.OVERRIDES = {}
 
+-- Hull: how much damage an asteroid can take before it's mined out, so the
+-- target readout can show "HULL <hp> / <max_hp>" and the server knows when
+-- one is depleted (nakama-server/modules/system_match.lua). Bigger rocks
+-- have more hull. Both numbers are PLACEHOLDERS (plan.md §4) pending a real
+-- mining balance pass - at the basic Gnat autocannon's 11 damage/second a
+-- 10 m rock (100 hull) takes ~9 s and a 50 m one (500 hull) ~45 s.
+M.HULL_PER_METER = 10
+M.MIN_HULL = 100
+
+-- The hull an asteroid of `diameter_m` metres starts with. Shared by the
+-- game (the HUD readout) and the server (its damage resolution), so both
+-- agree on what "full hull" means.
+function M.max_hull(diameter_m)
+	return math.max(M.MIN_HULL, math.floor((diameter_m or 0) * M.HULL_PER_METER))
+end
+
 -- What an asteroid is made of, rolled per asteroid with these weights (sum
 -- 1.0). Frequency order and scan colours are BSGO's (bsgo.fandom.com/wiki/
 -- Asteroid_Mining: red empty most common, then yellow Tylium, purple
@@ -64,17 +80,34 @@ M.OVERRIDES = {}
 -- 0.08), with Galaxy's names: Tylium is Hydrogen and, per direct
 -- instruction, Titanium is Iron. Inert rock has no use in the game.
 -- `tint` is the colour an analysed asteroid turns (main/asteroid_hub.script
--- multiplies it by the flight lighting boost).
+-- multiplies it by the flight lighting boost). `yield` is the fraction of
+-- the rock's own hull it holds as mineable resource (see resource_amount()
+-- below) - per direct instruction, hydrogen and iron hold 2/3 of their hull
+-- and water 1/3; inert rock is worthless, so it holds nothing.
 M.RESOURCES = {
-	{ id = "inert", name = "Inert", weight = 0.55, tint = { 0.62, 0.26, 0.22 } },
-	{ id = "hydrogen", name = "Hydrogen", weight = 0.25, tint = { 0.9, 0.78, 0.22 } },
-	{ id = "iron", name = "Iron", weight = 0.12, tint = { 0.58, 0.36, 0.8 } },
-	{ id = "water", name = "Water", weight = 0.08, tint = { 0.28, 0.56, 0.92 } },
+	{ id = "inert", name = "Inert", weight = 0.55, yield = 0, tint = { 0.62, 0.26, 0.22 } },
+	{ id = "hydrogen", name = "Hydrogen", weight = 0.25, yield = 2 / 3, tint = { 0.9, 0.78, 0.22 } },
+	{ id = "iron", name = "Iron", weight = 0.12, yield = 2 / 3, tint = { 0.58, 0.36, 0.8 } },
+	{ id = "water", name = "Water", weight = 0.08, yield = 1 / 3, tint = { 0.28, 0.56, 0.92 } },
 }
 
 M.RESOURCE_BY_ID = {}
 for _, resource in ipairs(M.RESOURCES) do
 	M.RESOURCE_BY_ID[resource.id] = resource
+end
+
+-- How much resource an asteroid of `diameter_m` metres holds - revealed
+-- (along with what it's made of) once the Asteroid Analyser has scanned it.
+-- For now this is just a fixed proportion of the rock's own hull
+-- (M.RESOURCES[].yield above), a PLACEHOLDER (plan.md §4) until the real
+-- formula is designed: the requirement is that it will depend on several
+-- factors, the asteroid's size and the threat level of the system it's in
+-- among them. The server will own the amount LEFT once mining exists; this
+-- is only the starting amount (main/player_ship.script shows it when the
+-- asteroid is targeted).
+function M.resource_amount(resource_id, diameter_m)
+	local resource = M.RESOURCE_BY_ID[resource_id]
+	return math.floor(M.max_hull(diameter_m) * (resource and resource.yield or 0))
 end
 
 local function roll_resource(r)

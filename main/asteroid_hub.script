@@ -27,6 +27,7 @@
 
 local asteroids = require("main.data.asteroids")
 local asteroid_registry = require("main.asteroid_registry")
+local network = require("main.network")
 
 -- Same ambient-lighting boost applied to every model this project renders
 -- during flight (per direct instruction: "increase the general ambient
@@ -117,15 +118,24 @@ local function despawn_all()
 	asteroid_registry.set({})
 end
 
+-- Spawns one rock (by its index in the current system's field): its own
+-- model at the field's position/size, tinted by what's already been
+-- analysed. Used when a field first appears and whenever the server says a
+-- depleted asteroid has returned - see update().
+local function spawn_rock(index)
+	local a = asteroids.field_for(current_system)[index]
+	local pos = vmath.vector3(a.x, a.y, a.z)
+	local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
+	local known = analysed[current_system] or {}
+	go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
+	return { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index, analysed = known[index] == true }
+end
+
 local function spawn_field(system_id)
 	despawn_all()
 	current_system = system_id
-	local known = analysed[system_id] or {}
-	for index, a in ipairs(asteroids.field_for(system_id)) do
-		local pos = vmath.vector3(a.x, a.y, a.z)
-		local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
-		go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
-		table.insert(spawned, { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index, analysed = known[index] == true })
+	for index = 1, #asteroids.field_for(system_id) do
+		table.insert(spawned, spawn_rock(index))
 	end
 	asteroid_registry.set(spawned)
 end
@@ -185,6 +195,47 @@ local function analyse(pos, range, scan_time)
 	scan = { asteroids = found, timer = timer.delay(scan_time, false, finish_scan) }
 	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
 	show_status(string.format("ANALYSING %d %s...", #found, noun))
+end
+
+-- Keeps the standing field in step with the server's hull state (OP_ASTEROIDS,
+-- main/network.lua asteroid_state): a depleted asteroid leaves the world and
+-- the registry, a returned one is spawned again. Only asteroids the server has
+-- reported (i.e. not at full hull) are affected - everything else is left as
+-- spawned, and a fresh field assumes all present until told otherwise.
+function update(self, dt)
+	if not current_system then
+		return
+	end
+	local field = asteroids.field_for(current_system)
+	local standing = {}
+	for _, a in ipairs(spawned) do
+		standing[a.index] = a
+	end
+	local next_spawned = {}
+	local changed = false
+	for index = 1, #field do
+		local st = network.asteroid_state(current_system, index)
+		local available = not (st and not st.available)
+		local a = standing[index]
+		if available then
+			if a then
+				table.insert(next_spawned, a)
+			else
+				table.insert(next_spawned, spawn_rock(index))
+				changed = true
+			end
+		elseif a then
+			-- Cancel any scan that includes it first: cancel_scan() touches
+			-- every rock it found, and this one is about to be deleted.
+			cancel_scan()
+			go.delete(a.id)
+			changed = true
+		end
+	end
+	spawned = next_spawned
+	if changed then
+		asteroid_registry.set(spawned)
+	end
 end
 
 function on_message(self, message_id, message)

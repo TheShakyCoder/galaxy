@@ -35,7 +35,8 @@ local M = {}
 -- The game server to connect to. The website says which one when it hands
 -- out the play token (M.start()); game.project's [nakama] section is only
 -- used by debug builds signing in with a dev token (see M.start()), and
--- points at the local docker-compose server (nakama-server/docker-compose.yml).
+-- points at the local Nakama server through its DDEV hostname
+-- (laravel/.ddev/docker-compose.nakama.yaml, i.e. nakama.ddev.site).
 local SERVER_CONFIG = {
 	host = sys.get_config_string("nakama.host", "127.0.0.1"),
 	port = sys.get_config_int("nakama.port", 7350),
@@ -49,7 +50,7 @@ local SERVER_CONFIG = {
 }
 
 -- Star-system match protocol (see nakama-server/modules/system_match.lua).
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS = 1, 2, 3, 4, 5, 6, 7, 8
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 -- The system the player is in while flying (nil when docked or logged out).
 -- Every (re)connect enters it again with a fresh ticket.
@@ -115,6 +116,40 @@ function M.outpost_returns_in(system_id, faction)
 		return 0
 	end
 	return math.max(0, st.returns_at - socket.gettime())
+end
+
+-- Asteroids' hull as last heard from the server's system match (OP_ASTEROIDS):
+-- system_id -> index -> { hp, max_hp, available, returns_at }. Each message
+-- lists the whole of the server's own table (every asteroid of the system
+-- that isn't at full hull), so this REPLACES the cache rather than merging -
+-- an index with no entry is a full, standing rock. `returns_at` is
+-- destroyed_until on the local clock, like the outposts' own `returns_at`, so
+-- a countdown doesn't depend on this computer's clock matching the server's.
+local asteroid_cache = {}
+
+local function store_asteroids(system_id, data)
+	local now = socket.gettime()
+	local by_index = {}
+	for _, rock in ipairs(data.rocks or {}) do
+		local st = { hp = rock.hp, max_hp = rock.max_hp, available = true }
+		if rock.destroyed_until and data.now then
+			st.available, st.hp = false, 0
+			st.returns_at = now + (rock.destroyed_until - data.now) / 1000
+		end
+		by_index[rock.i] = st
+	end
+	asteroid_cache[system_id] = by_index
+end
+
+-- The asteroid `index`'s last known hull, or nil if it's at full hull. A
+-- depleted asteroid whose timer is up counts as back (the server removes it
+-- from its own table at the same point).
+function M.asteroid_state(system_id, index)
+	local st = asteroid_cache[system_id] and asteroid_cache[system_id][index]
+	if st and not st.available and st.returns_at and socket.gettime() >= st.returns_at then
+		st.available, st.hp, st.returns_at = true, st.max_hp, nil
+	end
+	return st
 end
 
 -- Docking, launching and respawning (main/session.lua docked_system) treat
@@ -532,6 +567,25 @@ function M.report_progress(result, reason)
 	msg.post("flight_hud#gui", "progress", result)
 end
 
+-- A resource mined from an asteroid, credited by the system's match to the
+-- player whose final shot depleted it (OP_RESOURCE, sent only to them): the
+-- local balance catches up to the server's, and the flight HUD shows the
+-- pickup. `resource` is one of main/data/asteroids.lua's mineable ids
+-- (hydrogen/iron/water); `total` is the server's authoritative new balance.
+function M.report_resource(result)
+	if type(result) ~= "table" then
+		return
+	end
+	if result.resource == "water" then
+		session.water = result.total
+	elseif result.resource == "iron" then
+		session.iron = result.total
+	elseif result.resource == "hydrogen" then
+		session.hydrogen = result.total
+	end
+	msg.post("flight_hud#gui", "resource", result)
+end
+
 -- on_outposts(system_id) is called whenever the current system's outpost
 -- state arrives (on joining its match and whenever a hull changes).
 function M.set_outposts_callback(on_outposts)
@@ -558,10 +612,16 @@ function M.handle_match_data(op, raw)
 	end
 	if op == OP_PROGRESS then
 		M.report_progress(data)
+	elseif op == OP_RESOURCE then
+		M.report_resource(data)
 	elseif op == OP_OUTPOSTS then
 		if current_system_id then
 			store_outposts(current_system_id, data)
 			if M.on_outposts then M.on_outposts(current_system_id) end
+		end
+	elseif op == OP_ASTEROIDS then
+		if current_system_id then
+			store_asteroids(current_system_id, data)
 		end
 	elseif op == OP_JOIN then
 		members[data.u] = { ship_id = data.ship_id, faction = data.faction, skin_id = data.skin_id }

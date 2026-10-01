@@ -4,6 +4,26 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 while the game is in alpha they carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.3.0-alpha.2] - 2026-10-01
+
+### Asteroids
+- Asteroids now have hull, decided by the server like outposts: each rock's
+  maximum is scaled from its size (main/data/asteroids.lua `max_hull`, ~100 for
+  a 10 m rock to ~500 for a 50 m one), and a switched-on weapon inside its
+  range and firing arc mines it down over time. At zero hull the asteroid is
+  depleted and disappears for five minutes, then comes back at full hull.
+- Targeting an asteroid now shows `HULL <hp> / <max_hp>` next to its distance
+  in the top panel, updating as it takes damage.
+- Each asteroid also holds a mineable resource amount, shown as `RESOURCE <n>`
+  once analysed: for now a fixed proportion of its hull (2/3 for hydrogen and
+  iron, 1/3 for water, nothing for inert rock), until the real formula - size,
+  system threat level and more - is designed.
+- Depleting an asteroid credits its whole resource amount to the player's
+  saved inventory (Water, Iron or Hydrogen, shown on the outpost screen), and
+  tells them with a HUD toast. When several players are shooting, it goes to
+  the one whose final shot brought its hull to zero. Inert rock holds nothing.
+- Hull and resource values are placeholders pending a real mining balance pass.
+
 ## [0.3.0-alpha.1] - 2026-09-30
 
 ### XP, levels and ranks

@@ -45,6 +45,10 @@
 --    real mechanic wired up" status that script's own comment on Water/
 --    Iron/Hydrogen already flags), so today these values just sit static
 --    for the whole flight.
+--  - "slot_states" - { states = { [slot_id] = { state = "live"/"cooldown"/"off", frac = 0..1 } } }
+--    for every fitted slot, every frame - drives the bottom-left ship
+--    diagram's per-slot live/cooldown markers (build_ship_diagram/
+--    apply_slot_states below).
 -- this gui_script just formats/shows/positions whatever it's given -
 -- radar projection technique (flat world-fixed X/Z, doesn't rotate with
 -- the ship's own heading) ported from the other local reference
@@ -157,6 +161,234 @@ local function update_marker(self, m)
 	end
 end
 
+-- Bottom-left ship diagram (per direct instruction: "the top down
+-- view of the ship that is shown on the fittings page needs to be
+-- rendered at the bottom of the screen when the ship is flying with an
+-- indicator to which components are live and or cool down mode. this
+-- diagram also needs to show the key to press for that slot") - a scaled
+-- copy of main/outpost.gui_script's fitting view: the same top-down
+-- silhouette (main/images/topdown/) with one octagon marker per
+-- main/data/ships.lua slot_position, the fitted module's icon
+-- (main/images/icons.atlas) on it, and that slot's own key ("Shift+1" /
+-- "Key 3", session.slot_hotkey) under it. Where the fitting page colors
+-- markers filled/empty, this one shows STATE - green = live, amber =
+-- cooldown (with a thin bar under the marker draining as a weapon
+-- reloads), grey = off/standby/empty - driven by player_ship.script's
+-- every-frame "slot_states" message below.
+local session = require("main.session")
+local ships = require("main.data.ships")
+
+-- slot_positions' {x, y} are screen-pixel offsets in the fitting page's
+-- own 440x640 ship_visual space (centre origin, +y = bow); DIAGRAM_SCALE
+-- shrinks that whole space onto diagram_panel (main/flight_hud.gui), so
+-- the marker/label layout stays proportional to the fitting page. That
+-- panel sits in the bottom-left corner of the screen (moved there from
+-- the bottom-centre spot it started on), close to the bottom edge but
+-- clear of it. Grew from 0.62 when the slot markers doubled in size - the
+-- panel and the slot spacing had to grow with them, but stayed small
+-- enough to fit under the currency readouts.
+local DIAGRAM_CENTER = vmath.vector3(210, 335, 0)
+local DIAGRAM_SCALE = 0.8
+local SLOT_TYPE_BY_PREFIX = { W = "weapon", C = "computer", E = "engine", H = "hull" }
+local SLOT_EMPTY_ICON = { weapon = "Octagon W", computer = "Octagon C", engine = "Octagon E", hull = "Octagon H" }
+local ICON_TEXTURE = "icons"
+-- Twice the size they started at (per direct instruction: the slot
+-- indicators were too small to read in flight). 60px is as large as they
+-- can go without colliding: the tightest slot spacing is 90 units = 72px
+-- at DIAGRAM_SCALE above, leaving the same 12px gap between markers that
+-- the fitting page's own 74px-on-90px markers have.
+local MARKER_SIZE = vmath.vector3(60, 60, 0)
+-- The module icon is drawn smaller than its marker box, unlike the fitting
+-- page's face-covering icons: the marker's STATE colour has to stay
+-- visible as a ring around it.
+local ICON_SIZE = vmath.vector3(MARKER_SIZE.x * 0.82, MARKER_SIZE.y * 0.82, 0)
+-- The key label sits snug under the marker - the slot row below is only
+-- 12px away at the tightest spots.
+local KEY_LABEL_OFFSET_Y = -34
+local KEY_LABEL_SCALE = vmath.vector3(0.65, 0.65, 1)
+local HOTKEY_LABEL_COLOR = vmath.vector4(1.0, 0.85, 0.35, 1.0)
+-- The reload/scan progress bar is drawn INSIDE the marker, across the
+-- bottom of the icon (there's no spare room below the marker now that the
+-- key label is snug against it).
+local COOLDOWN_BAR_OFFSET_Y = -21
+local COOLDOWN_BAR_THICKNESS = 7
+local COOLDOWN_BAR_COLOR = vmath.vector4(0.95, 0.72, 0.2, 1.0)
+-- Marker box colour = the slot's STATE (see the header comment above):
+-- live (switched-on weapon ready to fire / passive module / active
+-- module mid-effect), cooldown (weapon reloading), off (switched off,
+-- standby, or empty slot), locked (advanced-only slot on a non-advanced
+-- ship - same greyed-not-hidden rule as the fitting page).
+local STATE_COLORS = {
+	live = vmath.vector4(0.3, 0.85, 0.45, 0.85),
+	cooldown = vmath.vector4(0.95, 0.72, 0.2, 0.85),
+	off = vmath.vector4(0.35, 0.38, 0.42, 0.65),
+	locked = vmath.vector4(0.18, 0.19, 0.2, 0.45),
+}
+local ICON_STATE_COLORS = {
+	live = vmath.vector4(1, 1, 1, 1),
+	cooldown = vmath.vector4(1, 0.9, 0.7, 1),
+	off = vmath.vector4(0.5, 0.5, 0.5, 0.5),
+	locked = vmath.vector4(0.5, 0.5, 0.5, 0.5),
+}
+
+-- Copy of main/outpost.gui_script's octagon marker node (8-vertex pie
+-- rotated 22.5 degrees so flat edges - not vertices - sit on the four
+-- sides). The API names below are correct as-is: the fill-angle setter
+-- is gui.set_fill_angle and the bounds enum is gui.PIEBOUNDS_ELLIPSE
+-- (a guessed gui.set_pie_fill_angle throws at runtime).
+local function new_octagon_node(pos, size)
+	local node = gui.new_pie_node(pos, size)
+	gui.set_perimeter_vertices(node, 8)
+	gui.set_outer_bounds(node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(node, 360)
+	gui.set_inner_radius(node, 0)
+	gui.set_rotation(node, vmath.vector3(0, 0, 22.5))
+	return node
+end
+
+-- Same top-down silhouette loader as outpost.gui_script's
+-- show_ship_silhouette (tools/render_topdown_silhouettes.py output,
+-- bundled via game.project's custom_resources) - but into a runtime box
+-- node at the diagram's scaled size, since this scene has no authored
+-- ship_visual node of its own.
+local function show_ship_silhouette(self, ship)
+	local skin = ship and ship.faction_skins and ship.faction_skins[session.get_faction()]
+	local name = skin and skin.model and skin.model:match("([^/]+)%.model$")
+	if not name or name == self.silhouette_name then
+		return
+	end
+	local png = sys.load_resource("/main/images/topdown/" .. name .. ".png")
+	local img = png and image.load(png, { premultiply_alpha = true })
+	if not img then
+		print("[flight_hud] no top-down silhouette for " .. name)
+		return
+	end
+	local texture_id = "diagram_silhouette_" .. name
+	if not gui.new_texture(texture_id, img.width, img.height, img.type, img.buffer, false) then
+		return
+	end
+	if self.diagram_silhouette then
+		gui.delete_node(self.diagram_silhouette)
+	end
+	self.diagram_silhouette = gui.new_box_node(DIAGRAM_CENTER,
+		vmath.vector3(img.width * DIAGRAM_SCALE, img.height * DIAGRAM_SCALE, 0))
+	gui.set_pivot(self.diagram_silhouette, gui.PIVOT_CENTER)
+	-- MANUAL (not AUTO, which would snap the node back to the texture's
+	-- own 440x640 pixels) so it stays at the scaled size above.
+	gui.set_size_mode(self.diagram_silhouette, gui.SIZE_MODE_MANUAL)
+	gui.set_texture(self.diagram_silhouette, texture_id)
+	if self.silhouette_name then
+		gui.delete_texture("diagram_silhouette_" .. self.silhouette_name)
+	end
+	self.silhouette_name = name
+end
+
+-- Applies player_ship.script's "slot_states" payload to the markers built
+-- by build_ship_diagram below: state -> marker/icon colour, and the
+-- cooldown bar's width is the reload's remaining fraction. Defined
+-- before build_ship_diagram because it calls this once at the end.
+local function apply_slot_states(self, states)
+	for slot_id, marker in pairs(self.diagram_markers or {}) do
+		local s = states and states[slot_id]
+		local state = s and s.state or "off"
+		if marker.locked then
+			state = "locked"
+		end
+		gui.set_color(marker.box, STATE_COLORS[state] or STATE_COLORS.off)
+		gui.set_color(marker.icon, ICON_STATE_COLORS[state] or ICON_STATE_COLORS.off)
+		local frac = s and s.frac or 0
+		if state == "cooldown" and frac > 0 then
+			gui.set_enabled(marker.cooldown_bar, true)
+			gui.set_size(marker.cooldown_bar,
+				vmath.vector3(ICON_SIZE.x * math.min(1, frac), COOLDOWN_BAR_THICKNESS, 0))
+		else
+			gui.set_enabled(marker.cooldown_bar, false)
+		end
+	end
+end
+
+-- (Re)builds the diagram for whatever the player is flying now - called
+-- on every "show_flight_hud" (the loadout can change between flights in
+-- the outpost's Fitting tab), no-op-ing the silhouette when the ship
+-- didn't change. Marker layout is the fitting page's build_markers
+-- reduced to what matters in flight: box + icon + key label + the
+-- cooldown bar, with no hover/drag/level-badge machinery.
+local function build_ship_diagram(self)
+	for _, marker in pairs(self.diagram_markers or {}) do
+		gui.delete_node(marker.box)
+		gui.delete_node(marker.icon)
+		gui.delete_node(marker.key_label)
+		gui.delete_node(marker.cooldown_bar)
+	end
+	self.diagram_markers = {}
+	local ship_id = session.get_ship_id()
+	local ship = ship_id and ships.SHIPS[ship_id]
+	if not ship then
+		return
+	end
+	show_ship_silhouette(self, ship)
+	-- Locked = past the ship's effective component count for that slot's
+	-- type (advanced hulls unlock ship.advanced's extra slots), same rule
+	-- as outpost.gui_script's build_markers.
+	local counts = (session.is_ship_advanced(ship_id) and ship.advanced) or ship.components or {}
+	for slot_id, offset in pairs(ship.slot_positions or {}) do
+		local prefix, number = slot_id:match("^(%a)(%d+)$")
+		local slot_total = prefix and counts[prefix]
+		local locked = slot_total ~= nil and tonumber(number) > slot_total
+		local slot_type = prefix and SLOT_TYPE_BY_PREFIX[prefix]
+		local module = session.module_in_slot(slot_id)
+		local pos = vmath.vector3(
+			DIAGRAM_CENTER.x + offset.x * DIAGRAM_SCALE,
+			DIAGRAM_CENTER.y + offset.y * DIAGRAM_SCALE, 0)
+
+		local box = new_octagon_node(pos, MARKER_SIZE)
+		gui.set_pivot(box, gui.PIVOT_CENTER)
+
+		-- ICON_SIZE, smaller than the marker box (see its own comment).
+		local icon = gui.new_box_node(pos, ICON_SIZE)
+		gui.set_pivot(icon, gui.PIVOT_CENTER)
+		gui.set_texture(icon, ICON_TEXTURE)
+		-- forced MANUAL so the high-res "Octagon *" icons render at exactly
+		-- MARKER_SIZE (AUTO inflates the node to the image's own pixels),
+		-- same as outpost.gui_script's marker icons.
+		gui.set_size_mode(icon, gui.SIZE_MODE_MANUAL)
+		local icon_id = (module and module.icon) or (slot_type and SLOT_EMPTY_ICON[slot_type])
+		if icon_id then
+			gui.play_flipbook(icon, icon_id)
+		end
+
+		local cooldown_bar = gui.new_box_node(
+			vmath.vector3(pos.x, pos.y + COOLDOWN_BAR_OFFSET_Y, 0),
+			vmath.vector3(ICON_SIZE.x, COOLDOWN_BAR_THICKNESS, 0))
+		gui.set_pivot(cooldown_bar, gui.PIVOT_CENTER)
+		gui.set_color(cooldown_bar, COOLDOWN_BAR_COLOR)
+		gui.set_enabled(cooldown_bar, false)
+
+		-- The key that uses this slot in flight, same wording as the
+		-- fitting page's markers: "Shift+n" for weapons, "n" for active
+		-- modules; blank for passive/empty/locked slots.
+		local key = module and session.slot_hotkey(ship_id, slot_id)
+		local key_text = ""
+		if key and slot_type == "weapon" then
+			key_text = "Shift+" .. key
+		elseif key and module.behavior == "active" then
+			key_text = "Key " .. key
+		end
+		local key_label = gui.new_text_node(
+			vmath.vector3(pos.x, pos.y + KEY_LABEL_OFFSET_Y, 0), key_text)
+		gui.set_pivot(key_label, gui.PIVOT_CENTER)
+		gui.set_font(key_label, "default_font")
+		gui.set_color(key_label, HOTKEY_LABEL_COLOR)
+		gui.set_scale(key_label, KEY_LABEL_SCALE)
+
+		self.diagram_markers[slot_id] = {
+			box = box, icon = icon, key_label = key_label, cooldown_bar = cooldown_bar,
+			locked = locked,
+		}
+	end
+	apply_slot_states(self) -- everything starts grey; player_ship refreshes it every frame
+end
+
 function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
@@ -229,9 +461,28 @@ local function refresh_radar(self, message)
 	end
 end
 
+-- Shows `text` in the progress/reward toast for a few seconds (XP,
+-- promotions, completed assignments, mined resources). A newer message
+-- replaces an older one rather than the older message's timer hiding it.
+local function show_toast(self, text)
+	if not text then
+		return
+	end
+	self.progress_generation = self.progress_generation + 1
+	local generation = self.progress_generation
+	gui.set_text(self.progress_node, text)
+	gui.set_enabled(self.progress_node, true)
+	timer.delay(PROGRESS_SHOWN_S, false, function()
+		if generation == self.progress_generation then
+			gui.set_enabled(self.progress_node, false)
+		end
+	end)
+end
+
 function on_message(self, message_id, message)
 	if message_id == hash("show_flight_hud") then
 		msg.post("#gui", "enable")
+		build_ship_diagram(self)
 	elseif message_id == hash("hide_flight_hud") then
 		msg.post("#gui", "disable")
 	elseif message_id == hash("set_speed") then
@@ -248,18 +499,11 @@ function on_message(self, message_id, message)
 	elseif message_id == hash("progress") then
 		-- XP / promotion / assignment rewards from the server
 		-- (main/network.lua report_progress), shown for a few seconds.
-		local text = progress_text(message)
-		if text then
-			self.progress_generation = self.progress_generation + 1
-			local generation = self.progress_generation
-			gui.set_text(self.progress_node, text)
-			gui.set_enabled(self.progress_node, true)
-			timer.delay(PROGRESS_SHOWN_S, false, function()
-				if generation == self.progress_generation then
-					gui.set_enabled(self.progress_node, false)
-				end
-			end)
-		end
+		show_toast(self, progress_text(message))
+	elseif message_id == hash("resource") then
+		-- A resource mined from an asteroid, credited to the player whose
+		-- final shot depleted it (main/network.lua report_resource).
+		show_toast(self, "+" .. with_commas(message.amount or 0) .. " " .. tostring(message.resource):upper() .. "  (mined)")
 	elseif message_id == hash("scan_status") then
 		-- Asteroid Analyser progress/result (main/asteroid_hub.script), nil hides
 		gui.set_enabled(self.scan_status_node, message.text ~= nil)
@@ -299,5 +543,9 @@ function on_message(self, message_id, message)
 		gui.set_text(self.hydrogen_node, "Hydrogen: " .. message.hydrogen)
 	elseif message_id == hash("contacts") then
 		refresh_radar(self, message)
+	elseif message_id == hash("slot_states") then
+		-- player_ship.script, every frame: live/cooldown/off per fitted
+		-- slot for the ship diagram.
+		apply_slot_states(self, message.states)
 	end
 end
