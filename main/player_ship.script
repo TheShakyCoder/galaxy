@@ -853,26 +853,78 @@ local function target_nearest(self, relation)
 	end
 end
 
--- Where `world_pos` is on screen (GUI/input coordinates), how big an object
--- of `radius` metres looks there (px), and whether it's in front of the
--- camera. Uses the view-projection from the last frame's camera.
+-- The GUI scene (main/flight_hud.gui, so every node in it, the target
+-- marker included) is laid out in the project's display coordinates
+-- (SCREEN_W x SCREEN_H) around the CENTRE of the window, scaled by one
+-- uniform "fit" factor and letterboxed on whichever axis is left over - the
+-- engine applies exactly this to the ADJUST_MODE_FIT / no-anchors nodes this
+-- HUD is built from, and main/render/custom.render_script already relies on
+-- the same mapping for its own design-space preview rects:
+--
+--     screen = design * u + (window - design * u) / 2,  u = min(w/1920, h/1080)
+--
+-- The chase camera instead fills the WHOLE window (the render script's
+-- full-window viewport, main/flight_camera.camera's fixed 1.7778 aspect), so
+-- its pixels only agree with those design coordinates on an exactly 16:9
+-- window. Treating the camera's NDC as design pixels - the obvious
+-- (ndc + 1) * 0.5 * 1920 - is what slid the bracket off a target that had
+-- moved away from the middle of any other window shape; inverting the GUI's
+-- own mapping above, as project() does, places the marker where the engine
+-- actually draws the node.
+--
+-- self.gui_half_w/h are the window's half-extent in DESIGN pixels (960/540
+-- at exactly 16:9), and self.gui_win_scale the extra size factor that keeps
+-- the bracket as tall on screen as the object it surrounds.
+local function update_gui_mapping(self)
+	local w, h = window.get_size()
+	if not w or not h or w <= 0 or h <= 0 then
+		w, h = SCREEN_W, SCREEN_H -- no window to ask about: assume 16:9
+	end
+	local u = math.min(w / SCREEN_W, h / SCREEN_H)
+	self.gui_half_w = w / (2 * u)
+	self.gui_half_h = h / (2 * u)
+	self.gui_win_scale = (h / SCREEN_H) / u
+end
+
+-- Where `world_pos` is on screen (main/flight_hud.gui_script's own design
+-- coordinates - update_gui_mapping above is how those relate to the window),
+-- how big an object of `radius` metres looks there (px), and whether it's in
+-- front of the camera. Uses the view-projection the renderer will draw with
+-- this frame (see update()'s chase-camera block).
 local function project(self, world_pos, radius)
 	if not self.view_proj then
 		return nil
+	end
+	if not self.gui_half_w then
+		update_gui_mapping(self)
 	end
 	local v = self.view_proj * vmath.vector4(world_pos.x, world_pos.y, world_pos.z, 1)
 	local w = v.w
 	local in_front = w > 0.001
 	local inv = 1 / (in_front and w or -math.max(-w, 0.001))
-	local x = (v.x * inv + 1) * 0.5 * SCREEN_W
-	local y = (v.y * inv + 1) * 0.5 * SCREEN_H
-	local size = in_front and (radius or 0) * (SCREEN_H * 0.5) / (math.abs(w) * math.tan(CAMERA_FOV / 2)) or 0
+	local x = SCREEN_W * 0.5 + v.x * inv * self.gui_half_w
+	local y = SCREEN_H * 0.5 + v.y * inv * self.gui_half_h
+	local size = 0
+	if in_front then
+		size = (radius or 0) * (SCREEN_H * 0.5) / (math.abs(w) * math.tan(CAMERA_FOV / 2)) * self.gui_win_scale
+	end
 	return x, y, size, in_front
 end
 
 -- Left-click: target the object under the cursor (the nearest one, if
 -- several overlap). Returns true if something was targeted.
 local function pick_target(self, x, y)
+	if not self.gui_half_w then
+		update_gui_mapping(self)
+	end
+	-- on_input's action.x/y are spread across the whole window (the engine
+	-- scales the window's physical size up to the project's display size),
+	-- while project() hands back the GUI's own centre-fit coordinates - so
+	-- convert here, or a click would land off the bracket the same way the
+	-- marker used to.
+	local cx, cy = SCREEN_W * 0.5, SCREEN_H * 0.5
+	x = cx + (x - cx) * (self.gui_half_w / cx)
+	y = cy + (y - cy) * (self.gui_half_h / cy)
 	local best, best_dist = nil, math.huge
 	local cam = self.camera_pos or go.get_position()
 	for _, target in ipairs(target_candidates(self)) do
@@ -906,7 +958,12 @@ local function update_target_marker(self, target)
 		return
 	end
 	local margin = 40
-	local on_screen = in_front and x >= 0 and x <= SCREEN_W and y >= 0 and y <= SCREEN_H
+	local cx, cy = SCREEN_W * 0.5, SCREEN_H * 0.5
+	local half_w, half_h = self.gui_half_w or cx, self.gui_half_h or cy
+	-- "On screen" means the window's own edge, half_w/h away from the GUI's
+	-- centre - on a window that isn't 16:9 the visible area reaches past
+	-- SCREEN_W/SCREEN_H in these design coordinates.
+	local on_screen = in_front and math.abs(x - cx) <= half_w and math.abs(y - cy) <= half_h
 	if on_screen then
 		msg.post("flight_hud#gui", "target_marker", {
 			visible = true, on_screen = true, x = x, y = y, size = math.max(size, 18), relation = target.relation,
@@ -915,7 +972,6 @@ local function update_target_marker(self, target)
 	end
 	-- Off screen (or behind): point from the centre towards it, clamped to
 	-- the edge.
-	local cx, cy = SCREEN_W / 2, SCREEN_H / 2
 	local dx, dy = x - cx, y - cy
 	if not in_front then
 		dx, dy = -dx, -dy
@@ -923,7 +979,7 @@ local function update_target_marker(self, target)
 	if dx == 0 and dy == 0 then
 		dy = -1
 	end
-	local scale = math.min((cx - margin) / math.max(math.abs(dx), 0.0001), (cy - margin) / math.max(math.abs(dy), 0.0001))
+	local scale = math.min((half_w - margin) / math.max(math.abs(dx), 0.0001), (half_h - margin) / math.max(math.abs(dy), 0.0001))
 	msg.post("flight_hud#gui", "target_marker", {
 		visible = true, on_screen = false, x = cx + dx * scale, y = cy + dy * scale,
 		dx = dx, dy = dy, relation = target.relation,
@@ -1721,9 +1777,18 @@ function update(self, dt)
 	go.set_position(camera_pos, "flight_camera")
 	go.set_rotation(self.camera_rot, "flight_camera")
 
-	-- The camera's view-projection, for the target marker and click
-	-- targeting (same settings as main/flight_camera.camera).
+	-- The camera's view-projection, built from the transform just set
+	-- (identical settings and construction to the engine's own camera
+	-- component), i.e. the one this frame's render will use. Deliberately
+	-- NOT read back with camera.get_view/camera.get_projection: the camera
+	-- component only refreshes its cached matrices in its OWN late update,
+	-- which runs after this script's update, so those are still last
+	-- frame's - reading them made the marker lag a frame behind the camera
+	-- and drift off the target whenever the ship was turning.
 	self.camera_pos = camera_pos
+	-- The window's own shape (a browser window resize, ...) - see
+	-- update_gui_mapping for what the target marker does with it.
+	update_gui_mapping(self)
 	local look = vmath.rotate(self.camera_rot, CAMERA_FORWARD)
 	local up = vmath.rotate(self.camera_rot, UP)
 	self.view_proj = vmath.matrix4_perspective(CAMERA_FOV, CAMERA_ASPECT, CAMERA_NEAR, CAMERA_FAR)

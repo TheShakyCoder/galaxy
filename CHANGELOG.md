@@ -1,8 +1,17 @@
 # Changelog
 
 All notable changes to Galaxy. Versions follow [Semantic Versioning](https://semver.org);
-while the game is in alpha they carry an `-alpha.N` label. The current version lives in
+alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
+
+## [0.3.1] - 2026-10-02
+
+### Fixes
+- The in-flight target bracket stays on its target while you turn. The HUD is a
+  GUI scene, laid out in the project's 1920x1080 design space (centred, one
+  uniform fit scale, letterboxed), while the chase camera fills the whole
+  window; the bracket and left-click targeting are now mapped through the same
+  centre-fit transform, so they line up at any window shape, not only 16:9.
 
 ## [0.3.0-alpha.2] - 2026-10-01
 

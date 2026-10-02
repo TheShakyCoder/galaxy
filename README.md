@@ -144,9 +144,10 @@ repo). For the full setup, required secrets and troubleshooting, see
 
 ## Versioning
 
-Galaxy uses [Semantic Versioning](https://semver.org) with an alpha label while the game
-is in alpha: `0.1.0-alpha.1`, `0.1.0-alpha.2`, ... A bigger step bumps the minor version
-(`0.2.0-alpha.1`); beta and `1.0.0` come later. Changes are listed in
+Galaxy uses [Semantic Versioning](https://semver.org). Alpha milestones carry an
+`-alpha.N` label while the game is in alpha (`0.3.0-alpha.1`, `0.3.0-alpha.2`, ...); a
+small fix bumps the patch version (`0.3.1`), and a bigger step bumps the minor version
+(`0.4.0`). Beta and `1.0.0` come later. Changes are listed in
 [`CHANGELOG.md`](CHANGELOG.md).
 
 The version lives in one place, `main/version.lua`. The game shows it on the login screen,

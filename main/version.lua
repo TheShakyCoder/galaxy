@@ -6,10 +6,11 @@
 -- Semantic Versioning (https://semver.org) with a pre-release label while
 -- the game is in alpha: MAJOR.MINOR.PATCH-alpha.N. To release, bump this,
 -- add a CHANGELOG.md entry, run tools/sync_server_rules.py, commit, and tag
--- the commit vX.Y.Z-alpha.N. See README.md "Versioning".
+-- the commit vX.Y.Z (or vX.Y.Z-alpha.N while pre-release). See README.md
+-- "Versioning".
 
 local M = {}
 
-M.VERSION = "0.3.0-alpha.2"
+M.VERSION = "0.3.1"
 
 return M
