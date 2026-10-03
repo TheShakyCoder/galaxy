@@ -27,8 +27,30 @@ ADD https://github.com/defold/defold/releases/download/${DEFOLD_VERSION}/bob.jar
 COPY . .
 
 # Overrides game.project's [nakama] section for this build only.
+#
+# `resolve` downloads the game.project dependencies from github.com (a
+# transient fetch failure there is the most common build failure - see the
+# troubleshooting table in docs/DEPLOY_COOLIFY.md), so retry just that cheap
+# step a few times with a backoff. Only once the dependencies are cached does
+# the expensive `build bundle` run - it compiles the native extension on
+# Defold's build server, which we don't want to repeat on every retry.
 RUN printf '[nakama]\nhost = %s\nport = %s\nuse_ssl = %s\nserver_key = %s\n' \
         "$NAKAMA_HOST" "$NAKAMA_PORT" "$NAKAMA_USE_SSL" "$NAKAMA_SERVER_KEY" > /tmp/deploy.ini \
+    && rm -rf /out \
+    && resolved=0 \
+    && for attempt in 1 2 3 4 5; do \
+        if java -jar /opt/bob.jar \
+            --platform wasm-web \
+            --architectures wasm-web \
+            --variant release \
+            --archive \
+            --settings /tmp/deploy.ini \
+            --bundle-output /out \
+            resolve; then resolved=1; break; fi; \
+        echo "bob resolve attempt $attempt failed; retrying"; \
+        sleep $((attempt * 15)); \
+    done \
+    && [ "$resolved" = 1 ] \
     && java -jar /opt/bob.jar \
         --platform wasm-web \
         --architectures wasm-web \
@@ -36,7 +58,7 @@ RUN printf '[nakama]\nhost = %s\nport = %s\nuse_ssl = %s\nserver_key = %s\n' \
         --archive \
         --settings /tmp/deploy.ini \
         --bundle-output /out \
-        resolve build bundle \
+        build bundle \
     && mv "/out/$(ls /out | head -n 1)" /out/web
 
 FROM nginx:1.29-alpine

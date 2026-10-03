@@ -239,7 +239,8 @@ match. The editor's JDK is in
 | Game loads but never connects; console shows *mixed content* | The website's server row is `--insecure`. An https page can't open `ws://`. |
 | `401` / *Server key invalid* | The website's `--server-key` for that server differs from galaxy-server's `NAKAMA_SERVER_KEY`. |
 | Dashboard says a server can't be reached | Wrong `--http-key`, or the website can't reach the server's address. |
-| Build fails at `resolve` or `Building engine` | No outbound internet from the build, or `build.defold.com` is down. Retry. |
+| Build fails at `resolve` (`Failed to fetch library … github.com/…zip`) | A transient failure downloading a `game.project` dependency. The Dockerfile already retries `resolve` five times; if it still fails, the build host can't reach `github.com`. Retry the deploy. |
+| Build fails at `Building engine` | `build.defold.com` is down or unreachable. Retry the deploy. |
 | Build fails with `UnsatisfiedLinkError … .so` | The build image is missing a system library bob needs. Add it to the `apt-get install` line. |
 | `Platform … not supported` | `bob.jar` version doesn't match the flags. Keep `DEFOLD_VERSION` current. |
 | Nakama container restarts in a loop | A required variable is empty, or `POSTGRES_PASSWORD` changed after the database was first created. Postgres keeps the original password; restore it or reset the volume. |
