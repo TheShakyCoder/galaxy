@@ -1630,7 +1630,7 @@ function update(self, dt)
 	-- each resource that the player has") - same four main/session.lua
 	-- getters main/outpost.gui_script's own refresh_currency() reads.
 	msg.post("flight_hud#gui", "currency", {
-		scrip = session.get_scrip(),
+		tope = session.get_tope(),
 		water = session.get_water(),
 		iron = session.get_iron(),
 		hydrogen = session.get_hydrogen(),

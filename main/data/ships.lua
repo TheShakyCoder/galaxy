@@ -148,7 +148,7 @@ M.SHIPS = {
 	},
 	["patrol_support"] = {
 		class = "Patrol",
-		-- Purchase price from bsgo.fandom.com (Raptor / Cylon Heavy Raider), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Raptor / Cylon Heavy Raider), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 		price = { amount = 75000, currency = "hydrogen" },
 		flight_camera = { distance = 27.504, height = 3.212 },
@@ -204,9 +204,9 @@ M.SHIPS = {
 	},
 	["patrol_assault"] = {
 		class = "Patrol",
-		-- Purchase price from bsgo.fandom.com (Rhino / Marauder), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Rhino / Marauder), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 36000, currency = "scrip" },
+		price = { amount = 36000, currency = "tope" },
 		flight_camera = { distance = 26.725, height = 3.211 },
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Assault.
 		role = "Assault",
@@ -260,9 +260,9 @@ M.SHIPS = {
 	},
 	["patrol_tactical"] = {
 		class = "Patrol",
-		-- Purchase price from bsgo.fandom.com (Viper Mark VII / Cylon War Raider), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Viper Mark VII / Cylon War Raider), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 45000, currency = "scrip" },
+		price = { amount = 45000, currency = "tope" },
 		flight_camera = { distance = 26.534, height = 3.137 },
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Tactical.
 		role = "Tactical",
@@ -315,7 +315,7 @@ M.SHIPS = {
 	},
 	["escort_interceptor"] = {
 		class = "Escort",
-		-- Purchase price from bsgo.fandom.com (Scythe / Banshee), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Scythe / Banshee), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 		price = { amount = 600000, currency = "hydrogen" },
 		-- Full stat block (plan.md §2.1.1's Hull/Engine/FTL/Computer Systems
@@ -378,9 +378,9 @@ M.SHIPS = {
 	},
 	["escort_support"] = {
 		class = "Escort",
-		-- Purchase price from bsgo.fandom.com (Glaive / Spectre), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Glaive / Spectre), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 60000, currency = "scrip" },
+		price = { amount = 60000, currency = "tope" },
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Support.
 		role = "Support",
 		-- Full stat block: the unmodified universal baseline (§2.1.1), same as
@@ -433,9 +433,9 @@ M.SHIPS = {
 	},
 	["escort_tactical"] = {
 		class = "Escort",
-		-- Purchase price from bsgo.fandom.com (Halberd / Liche), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Halberd / Liche), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 75000, currency = "scrip" },
+		price = { amount = 75000, currency = "tope" },
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Tactical.
 		role = "Tactical",
 		-- Full stat block sourced from https://bsgo.fandom.com/wiki/Liche (per
@@ -450,7 +450,7 @@ M.SHIPS = {
 		-- so this replaces the shared universal-baseline block below for BOTH
 		-- Lionfish and Osprey, not Osprey alone. `repair_cost_iron` is left at
 		-- its existing baseline value - the wiki page's own stats don't include
-		-- a repair cost, only a 75,000-cubit PURCHASE price (not a Scrip
+		-- a repair cost, only a 75,000-cubit PURCHASE price (not a Tope
 		-- conversion this project has decided yet, so not applied either -
 		-- §0/§4, don't invent unconfirmed numbers). Equipment Slots (Liche:
 		-- Weapon 6/Hull 3/Engine 3/Computer 3) also NOT applied here - that's
@@ -504,7 +504,7 @@ M.SHIPS = {
 	},
 	["escort_assault"] = {
 		class = "Escort",
-		-- Purchase price from bsgo.fandom.com (Maul / Wraith), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Maul / Wraith), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 		price = { amount = 600000, currency = "hydrogen" },
 		-- `role` (see `frigate_support`'s own entry for the field's rationale): Assault.
@@ -559,7 +559,7 @@ M.SHIPS = {
 	},
 	["frigate_support"] = {
 		class = "Frigate",
-		-- Purchase price from bsgo.fandom.com (Vanir / Hel), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Vanir / Hel), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 		price = { amount = 2000000, currency = "hydrogen" },
 		flight_camera = { distance = 353.428, height = 55.768 },
@@ -648,9 +648,9 @@ M.SHIPS = {
 	},
 	["frigate_interceptor"] = {
 		class = "Frigate",
-		-- Purchase price from bsgo.fandom.com (Fenrir / Aesir), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Fenrir / Aesir), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 135000, currency = "scrip" },
+		price = { amount = 135000, currency = "tope" },
 		flight_camera = { distance = 403.553, height = 49.803 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Interceptor.
 		role = "Interceptor",
@@ -728,9 +728,9 @@ M.SHIPS = {
 	},
 	["frigate_tactical"] = {
 		class = "Frigate",
-		-- Purchase price from bsgo.fandom.com (Gungnir / Nidhogg), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Gungnir / Nidhogg), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
-		price = { amount = 250000, currency = "scrip" },
+		price = { amount = 250000, currency = "tope" },
 		flight_camera = { distance = 416.144, height = 54.873 },
 		-- `role` (see `frigate_support` above for the field's own rationale): Tactical.
 		role = "Tactical",
@@ -808,7 +808,7 @@ M.SHIPS = {
 	},
 	["frigate_assault"] = {
 		class = "Frigate",
-		-- Purchase price from bsgo.fandom.com (Jotunn / Jormung), as-is: cubits -> Scrip,
+		-- Purchase price from bsgo.fandom.com (Jotunn / Jormung), as-is: cubits -> Tope,
 		-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 		price = { amount = 2000000, currency = "hydrogen" },
 		flight_camera = { distance = 385.522, height = 50.957 },

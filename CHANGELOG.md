@@ -47,7 +47,7 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
   Admiral), flock and bird-of-prey ranks for the Swarm (Hatchling to Apex).
 - Ship classes need a level to buy: Escort 5, Frigate 10. Ships you own are
   never locked.
-- Daily assignments (reset 00:00 UTC), each +1,000 XP and +250 Scrip: Asteroid
+- Daily assignments (reset 00:00 UTC), each +1,000 XP and +250 Tope: Asteroid
   Recon (analyse 20 new asteroids), Survey (arrive in 3 different systems),
   Outpost Raid (deal 2,000 outpost damage).
 - The outpost's Overview shows your rank, XP and today's assignments; the HUD
@@ -115,7 +115,7 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
 - You have the same identity on every game server, with separate progress on
   each, so you can pick a different faction per server.
 - The website's dashboard shows your pilot on each server you've played:
-  faction, ship, location, Scrip and Hydrogen.
+  faction, ship, location, Tope and Hydrogen.
 - In the outpost, **Log out** is now **Account**, which saves and opens the
   website.
 - When the game can't sign in, it says why: the game server didn't accept the
@@ -205,8 +205,8 @@ First versioned alpha release. Everything below is what the game contains at thi
 - Flight with chase camera, throttle, boost, targeting and a star map of 58 systems.
 - FTL jumps at the original game's scale (20 map units per light-year), costing light-years
   × the ship's Hydrogen per light-year.
-- Ship prices from the original game (Scrip or Hydrogen); the starter ship isn't for sale.
-- New players start with 1,000 Scrip and 5,000 Hydrogen.
+- Ship prices from the original game (Tope or Hydrogen); the starter ship isn't for sale.
+- New players start with 1,000 Tope and 5,000 Hydrogen.
 
 ### Skins
 - 288 skins (12 collections for every ship), bought and equipped in the outpost's Skins tab.
@@ -222,5 +222,5 @@ First versioned alpha release. Everything below is what the game contains at thi
 
 ### Known gaps
 - No password reset yet.
-- No way to earn Scrip yet, so no ship beyond the starter is affordable.
+- No way to earn Tope yet, so no ship beyond the starter is affordable.
 - The login screen doesn't support mobile on-screen keyboards or pasting.

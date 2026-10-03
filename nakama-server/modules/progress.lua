@@ -19,7 +19,7 @@ Saved in the profile (profile/state, see main/session.lua):
                  systems = { [system_id] = true } } - today's (00:00 UTC)
 
 RPC assignments -> { date, list = { { id, name, description, target,
-progress, done, xp, scrip } } } for the player's current profile, as it
+progress, done, xp, tope } } } for the player's current profile, as it
 would be today (a new day shows fresh ones before any progress is saved).
 ]]
 
@@ -79,13 +79,13 @@ local function assignment_units(event, units, assignments)
 end
 
 -- Applies `event` to the profile table: XP, first-arrival bookkeeping and
--- assignment progress (completing one pays its XP and Scrip). Returns
--- { xp_gained, scrip_gained, xp, level, level_before, rank, completed }.
+-- assignment progress (completing one pays its XP and Tope). Returns
+-- { xp_gained, tope_gained, xp, level, level_before, rank, completed }.
 function M.grant(profile, event, units, now_ms)
 	profile.xp = profile.xp or 0
 	profile.visited = profile.visited or {}
 	local level_before = ranks.level_for_xp(profile.xp)
-	local xp, scrip = 0, 0
+	local xp, tope = 0, 0
 
 	if event == "outpost_damage" then
 		xp = math.floor(units / rewards.OUTPOST_DAMAGE_PER_XP)
@@ -111,18 +111,18 @@ function M.grant(profile, event, units, now_ms)
 				if entry.progress >= template.target then
 					entry.done = true
 					xp = xp + template.xp
-					scrip = scrip + template.scrip
-					table.insert(completed, { id = template.id, name = template.name, xp = template.xp, scrip = template.scrip })
+					tope = tope + template.tope
+					table.insert(completed, { id = template.id, name = template.name, xp = template.xp, tope = template.tope })
 				end
 			end
 		end
 	end
 
 	profile.xp = profile.xp + xp
-	profile.scrip = (profile.scrip or 0) + scrip
+	profile.tope = (profile.tope or 0) + tope
 	local level = ranks.level_for_xp(profile.xp)
 	return {
-		xp_gained = xp, scrip_gained = scrip, xp = profile.xp, level = level, level_before = level_before,
+		xp_gained = xp, tope_gained = tope, xp = profile.xp, level = level, level_before = level_before,
 		rank = ranks.rank_name(profile.faction, level), completed = completed,
 	}
 end
@@ -163,7 +163,7 @@ function M.describe_assignments(profile, now_ms)
 		if template then
 			table.insert(list, {
 				id = template.id, name = template.name, description = template.description, target = template.target,
-				progress = entry.progress or 0, done = entry.done == true, xp = template.xp, scrip = template.scrip,
+				progress = entry.progress or 0, done = entry.done == true, xp = template.xp, tope = template.tope,
 			})
 		end
 	end

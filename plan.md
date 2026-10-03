@@ -260,7 +260,7 @@ Accord (fish) matrix — Carrier column intentionally not yet addressed:
 | **Tactical** | **Anglerfish** (proposed) — small, wins by trickery/lures rather than speed | **Lionfish** (proposed) — mid-size, venomous, precise ambush predator | **Hammerhead** (proposed) — large shark famous for its sensory/tactical edge |
 
 - **Patrol Interceptor's proposed names** — same confirm-or-correct pattern as
-  Scrip/Valor: Accord = **Sardine**, Swarm = **Hummingbird**. Set in
+  Tope/Valor: Accord = **Sardine**, Swarm = **Hummingbird**. Set in
   `main/data/ships.lua`'s `faction_skins`, replacing the old `<TBD>` name
   placeholders — flag if you want different species. (Sardine specifically maps
   to the **Interceptor** row above.)
@@ -683,23 +683,23 @@ Titanium renamed to Hydrogen:**
 
 | Our name | Role | Reference-game role it replaces (internal only, never player-facing) |
 |---|---|---|
-| **Hydrogen** (renamed from Titanium) | Base/general resource — **does not convert into Scrip**. Instead, Hydrogen is spent **directly** as a basic-tier currency-resource: cheap/everyday shop purchases can be paid for with Hydrogen alone. More advanced purchases require an additional resource/currency **on top of** Hydrogen (Scrip being the main example) — mirrors the source game's pattern where its base resource paid for most things outright, but pricier items needed it combined with the premium currency. Also confirmed as **ship fuel** — FTL jumps and boost both cost Hydrogen (§2.1.1). | Replaces **"Trillium"** (per confirmed intent — same name-association as when this resource was still called Titanium, just carried over to the rename). |
+| **Hydrogen** (renamed from Titanium) | Base/general resource — **does not convert into Tope**. Instead, Hydrogen is spent **directly** as a basic-tier currency-resource: cheap/everyday shop purchases can be paid for with Hydrogen alone. More advanced purchases require an additional resource/currency **on top of** Hydrogen (Tope being the main example) — mirrors the source game's pattern where its base resource paid for most things outright, but pricier items needed it combined with the premium currency. Also confirmed as **ship fuel** — FTL jumps and boost both cost Hydrogen (§2.1.1). | Replaces **"Trillium"** (per confirmed intent — same name-association as when this resource was still called Titanium, just carried over to the rename). |
 | **Iron** | Dedicated **repair** resource — repairs ship wear/tear over time (hull + module wear, §2.8). Swapped from Hydrogen/Titanium's old role. | Replaces **"Deuterium"** (per confirmed intent). |
-| **Water** | Sells toward **Scrip** (Marque abandoned — see below; Water's sale now
-feeds Scrip directly instead) — an efficient farming resource. | Water (name unchanged) — in the source game Water was a minor/flavor resource whose main gameplay purpose was conversion into the premium currency |
+| **Water** | Sells toward **Tope** (Marque abandoned — see below; Water's sale now
+feeds Tope directly instead) — an efficient farming resource. | Water (name unchanged) — in the source game Water was a minor/flavor resource whose main gameplay purpose was conversion into the premium currency |
 
-**Two currencies** (Marque abandoned — folded into Scrip; down from the earlier
+**Two currencies** (Marque abandoned — folded into Tope; down from the earlier
 three-currency draft):
 
 | Currency | Tier | Earned via | Spent on |
 |---|---|---|---|
-| **Scrip** | General | **For now, exactly two sources, decided**: (1) mining an asteroid that contains Water and selling that Water for Scrip; (2) buying Scrip directly with real money. No other earn source (combat rewards, daily assignments, Robot kills, etc.) is active yet — those were provisional ideas from the Marque-merge, not confirmed for Scrip. | Everything beyond basic Hydrogen-only purchases — advanced items, ships, ship upgrades, booster items, resources — typically **required alongside Hydrogen** rather than replacing it |
+| **Tope** | General | **For now, exactly two sources, decided**: (1) mining an asteroid that contains Water and selling that Water for Tope; (2) buying Tope directly with real money. No other earn source (combat rewards, daily assignments, Robot kills, etc.) is active yet — those were provisional ideas from the Marque-merge, not confirmed for Tope. | Everything beyond basic Hydrogen-only purchases — advanced items, ships, ship upgrades, booster items, resources — typically **required alongside Hydrogen** rather than replacing it |
 | **Valor** (new, replaces "Merits") | PvP-only | **PvP kills only** (never from PvE/Robots) — small amount per kill, a bonus for damaging/forcing the retreat of an enemy siege objective (ties directly into the contested-node siege mechanic, §2.5), and a bigger bonus for destroying an enemy Carrier | Nuclear ordinance specifically (Nuclear Torpedoes/Launchers, §2.8) and Carrier-class ships — gates the highest-end purchases behind PvP performance, not spending |
 
-- Proposed name **Valor** is a placeholder pending confirmation, same as Scrip was —
+- Proposed name **Valor** is a placeholder pending confirmation, same as Tope was —
   flag if you want a different name.
 - Marque (the premium-tier currency) is **abandoned** — its spend role (ships,
-  upgrades, boosters) has folded into Scrip, which is now the single non-PvP
+  upgrades, boosters) has folded into Tope, which is now the single non-PvP
   currency. Only two of Marque's former earn sources (selling Water, real-money
   purchase) carried over — see the confirmed two-source list above.
 - Deliberately not carried over: the source game's specific named ships tied to its
@@ -708,20 +708,20 @@ three-currency draft):
 - Resources convert to refined material for crafting/fitting.
 - Module fitting: weapon / armor / engine / utility slots per ship tier.
 - Poki/F2P monetization: cosmetics, convenience (queue skips, extra ship slots), and
-  **direct real-money purchase of Scrip**, which buys most fitting/upgrades —
+  **direct real-money purchase of Tope**, which buys most fitting/upgrades —
   pay-to-win is accepted as part of the monetization model (the earlier "no
   pay-to-win" stance is abandoned).
 
-#### 2.6.1 Scrip balance implemented (decided — with placeholder prices)
+#### 2.6.1 Tope balance implemented (decided — with placeholder prices)
 
-Per direct instruction: the outpost screen now **always shows the player's Scrip
+Per direct instruction: the outpost screen now **always shows the player's Tope
 balance, updating live as items/ships are bought and sold**. This needed a real,
 working balance and real transaction amounts to do honestly, not just a static
-number on screen — so `main/session.lua` now tracks an actual `scrip` value, and
+number on screen — so `main/session.lua` now tracks an actual `tope` value, and
 every buy/sell function spends or credits it for real.
 
 - **Starting balance and every price/refund are FLAT PLACEHOLDER values** — 500
-  starting Scrip, 100 to buy any module (flat, not per-item), 50 refund selling one,
+  starting Tope, 100 to buy any module (flat, not per-item), 50 refund selling one,
   500 to buy a ship (flat, not per-ship), 250 refund selling one. **Not real economy
   design** (§2.6's actual pricing is still fully open work) — introduced purely so
   the currency display has something genuine to show and update, per §0/§4's "don't
@@ -731,10 +731,10 @@ every buy/sell function spends or credits it for real.
 - **Insufficient funds are handled, not ignored**: `session.purchase`/
   `purchase_ship` refuse (return `nil`/`false`, spend nothing) if the balance is too
   low. The outpost screen checks affordability before opening the normal purchase
-  dialog and shows a distinct "Not enough Scrip to buy X (need N, have M)" notice
+  dialog and shows a distinct "Not enough Tope to buy X (need N, have M)" notice
   instead — reusing the same confirmation-dialog UI (§2.8.6) with a no-op callback,
   rather than a new dialog type.
-- **UI**: a `scrip_label` node in `main/outpost.gui`, positioned outside all three
+- **UI**: a `tope_label` node in `main/outpost.gui`, positioned outside all three
   tabs' static-node groups (top-right, alongside the title) so it's never hidden
   regardless of active tab — "always show," literally. `refresh_currency` in
   `main/outpost.gui_script` keeps it in sync, called on `show_outpost` and
@@ -754,16 +754,16 @@ every buy/sell function spends or credits it for real.
 #### 2.6.2 Water/Iron/Hydrogen readouts added (decided — display only, static values)
 
 Per direct instruction: the outpost screen's always-visible currency header
-(§2.6.1) now shows **all four** of the player's balances — Scrip, **Water**,
+(§2.6.1) now shows **all four** of the player's balances — Tope, **Water**,
 **Iron**, and **Hydrogen** (the "fourth resource," §2.6's renamed fuel stat) —
-stacked in a column at the top-right, `scrip_label` on top and the other three
+stacked in a column at the top-right, `tope_label` on top and the other three
 below it in the same style.
 
 - `main/session.lua` gained `M.water`/`M.iron`/`M.hydrogen`, each a flat
   placeholder starting balance of 500 (`STARTING_WATER`/`STARTING_IRON`/
-  `STARTING_HYDROGEN`), set in `choose_faction` exactly like `M.scrip`, plus
+  `STARTING_HYDROGEN`), set in `choose_faction` exactly like `M.tope`, plus
   `get_water()`/`get_iron()`/`get_hydrogen()` getters.
-- **Unlike Scrip, these three are honestly static** — no mining, repair, or
+- **Unlike Tope, these three are honestly static** — no mining, repair, or
   FTL/boost mechanic exists yet to actually spend or earn them, so nothing
   ever changes them after the starting value is set. `ships.lua`'s
   `repair_cost_iron`/`boost_cost_hydrogen_per_sec`/`ftl_cost_hydrogen_per_ly`
@@ -774,9 +774,9 @@ below it in the same style.
   `repair_cost_iron`'s existing placeholder value (10,000) — nothing spends
   against either number yet, so that scale mismatch is open work (§4).
 - **UI**: `water_label`/`iron_label`/`hydrogen_label` text nodes in
-  `main/outpost.gui`, stacked below `scrip_label` in the same top-right
+  `main/outpost.gui`, stacked below `tope_label` in the same top-right
   column (all four outside every tab's static-node group, so none are ever
-  hidden regardless of active tab). `scrip_label` itself shrank from 60px to
+  hidden regardless of active tab). `tope_label` itself shrank from 60px to
   32px tall to fit the four-row stack in the available space above the
   Fitting tab's Shop panel. `refresh_currency` in `main/outpost.gui_script`
   now sets all four texts in one place, called at the same two sites as
@@ -784,7 +784,7 @@ below it in the same style.
 - **Verified**: both outpost-screen test harnesses extended with assertions
   that all four readouts show the correct starting values on `show_outpost`,
   and that Water/Iron/Hydrogen remain exactly unchanged after unrelated
-  Scrip-spending flows (module/ship purchases and sales) elsewhere in the
+  Tope-spending flows (module/ship purchases and sales) elsewhere in the
   same test run. A real `bob.jar build` compiles cleanly.
 
 ### 2.7 Star system map (decided — real data file now exists)
@@ -1158,7 +1158,7 @@ display):
   off the silhouette.
 - **Drag and drop** (unchanged mechanics from the previous version): drag a card from
   Shop/Owned onto a matching-type slot marker to install it (Shop items purchased
-  first, for real — a flat placeholder Scrip price, §2.6.1 — through the
+  first, for real — a flat placeholder Tope price, §2.6.1 — through the
   confirmation dialog, §2.8.6); drag an installed marker off to uninstall it back to
   Owned; mismatched-type or empty-space drops cancel with no change; dragging a
   slot's item onto another matching slot moves it there (displacing the target's
@@ -1206,7 +1206,7 @@ make it the active one):
   differently). Plain click-to-act, not drag-and-drop — there's no "slot" concept
   for ships to be dropped onto.
 - Clicking a **For Sale** ship purchases it — for real, spending a flat placeholder
-  Scrip price (§2.6.1) through the confirmation dialog (§2.8.6) — and selects it as
+  Tope price (§2.6.1) through the confirmation dialog (§2.8.6) — and selects it as
   active on success.
 - **`main/session.lua`** gained `owned_ships`/`active_ship_id` (replacing the old
   singular `ship_id` — same accessor name, `get_ship_id()`, so nothing else needed to
@@ -1859,7 +1859,7 @@ is already purchased put a Select link and a Cancel link."** Clarified with the 
 before building: the 3D render had to be a genuine **live** render (not a reuse of
 the existing static top-down PNG), and the modal's Purchase/Select button acts
 **immediately** — no follow-up plain confirm dialog (§2.8.6) — except insufficient
-Scrip on a Purchase, which still falls back to that plain notice-only dialog.
+Tope on a Purchase, which still falls back to that plain notice-only dialog.
 
 This is the first 3D content ever rendered in this project (every screen before this
 was pure 2D GUI), so it needed a real render-to-texture pipeline, not just another
@@ -1881,7 +1881,7 @@ bigger panel. Clicking a Ships-tab card (`ship_forsale` or `owned_ship`) now cal
   active → no primary button at all (view-only + Cancel) — this used to be a silent
   no-op click on the card itself; now it's an explicit state instead of a dead end.
 - Purchase/Select act immediately in `on_input`'s new `self.ship_detail` gate.
-  Insufficient Scrip on Purchase closes the modal and falls back to the existing
+  Insufficient Tope on Purchase closes the modal and falls back to the existing
   plain `show_confirm` notice.
 - Sell (§2.8.7) is unchanged — still the card's own inline Sell button + the plain
   confirm dialog, untouched by this feature.
@@ -2491,8 +2491,8 @@ combat-cannon naming scale already has.
   entries originally placeholder-shared "Octagon H"/"Octagon E" - the SAME
   icons `SLOT_EMPTY_ICON.hull`/`.engine` (`main/outpost.gui_script`) already
   use for an UNFILLED slot of that type. Reported after live testing: "when I
-  drag a hull component onto the ship, it deducted [Scrip] but it did not show
-  on the ship" - the purchase/install actually succeeded every time (Scrip
+  drag a hull component onto the ship, it deducted [Tope] but it did not show
+  on the ship" - the purchase/install actually succeeded every time (Tope
   correctly spent, `session.install` correctly ran), but the installed
   module's icon was visually IDENTICAL to the slot's own empty-state icon, so
   nothing appeared to change. Fixed in two steps: first a same-session
@@ -2510,7 +2510,7 @@ combat-cannon naming scale already has.
   "Octagon Empty" stopgap, then again after the real per-module icons replaced
   it - both times via a real drag-and-drop (synthetic mouseDown/dragged/
   mouseUp, not just a click) of Armor Plating onto H1, confirming the purchase
-  dialog, the Scrip deduction (500→400), and - the actual bug - that H1 now
+  dialog, the Tope deduction (500→400), and - the actual bug - that H1 now
   renders visibly differently from the still-empty H2 slot next to it (the
   final pass shows H1 with its own distinct bronze pentagon icon, not just a
   color change).
@@ -2920,7 +2920,7 @@ accounts), while Nakama runs actual game state.
 - **Storage**: Nakama's storage engine covers saved game history/achievements
   (§1, registered-account requirement).
 - **Wallet**: Nakama's built-in wallet (balance + transaction ledger) is a natural
-  fit for the two-currency economy — **Scrip** and **Valor** (§2.6) — as separate
+  fit for the two-currency economy — **Tope** and **Valor** (§2.6) — as separate
   wallet balances on the same account.
 - **Groups**: maps onto player-formed "wings"/"fleets" (§2.4).
 - **Leaderboards**: maps onto rank/PvP progression (§2.2).
@@ -3095,7 +3095,7 @@ project:
       already-installed item from one ship's loadout after switching to a
       differently-classed ship, once that's possible at all).
 - [ ] Design real upgrade cost/effect: `session.upgrade(instance_id)` (§2.8.2) exists
-      and increments an instance's `level`, but has no cost (Scrip? materials?) wired
+      and increments an instance's `level`, but has no cost (Tope? materials?) wired
       up yet, and no stat effect defined for what a level actually changes (§2.8's
       shared module-stat schema) — both still undesigned, per §0/§4's "don't invent
       unconfirmed numbers" rule. There's also no in-game UI trigger for it yet (no
@@ -3143,17 +3143,17 @@ project:
       implement (§2.7). No further work needed here.
 - [ ] Tune the 58 systems' `threat` values for real (currently a carried-over
       reference, same caveat as other researched numbers, §0/§4).
-- [x] ~~Clarify whether Scrip is general-purpose or Water-scoped~~ — resolved:
-      Scrip is earned from combat/mining/dailies/selling Water/real money — a single
+- [x] ~~Clarify whether Tope is general-purpose or Water-scoped~~ — resolved:
+      Tope is earned from combat/mining/dailies/selling Water/real money — a single
       general-purpose currency (Marque abandoned and folded into it); see §2.6.
 - [ ] Confirm **Valor** as the final name for the PvP-only currency (proposed,
-      pending confirmation like Scrip was).
+      pending confirmation like Tope was).
 - [ ] Confirm final yield/conversion rates across Hydrogen/Iron/Water →
-      Scrip/Valor and crafting material, using the researched BSGO structure
+      Tope/Valor and crafting material, using the researched BSGO structure
       in §2.6 as a starting point only (not copied 1:1).
-- [ ] Define which specific purchases require Hydrogen alone vs. Hydrogen+Scrip
+- [ ] Define which specific purchases require Hydrogen alone vs. Hydrogen+Tope
       together, now that Hydrogen is a direct-spend resource rather than a
-      Scrip-source (§2.6).
+      Tope-source (§2.6).
 - [x] ~~Define the repair mechanic for module wear~~ — resolved: **Iron** repairs
       hull/module wear (§2.6, §2.8). Still open: where repairing is allowed (station/
       home system only vs. mid-mission).
@@ -3166,12 +3166,12 @@ project:
 - [ ] Decide whether destroying an enemy Carrier or damaging/routing a siege
       objective (§2.5) grants a Valor bonus exactly as researched, and tune the
       PvP-kill Valor amount vs. the Valor-bonus-for-siege-objectives ratio.
-- [x] ~~Decide whether Robots pay out Scrip on defeat~~ — resolved for now: no.
-      Scrip has exactly two sources (selling mined Water, real-money purchase);
-      Robot kills, combat rewards, and daily assignments are not currently Scrip
+- [x] ~~Decide whether Robots pay out Tope on defeat~~ — resolved for now: no.
+      Tope has exactly two sources (selling mined Water, real-money purchase);
+      Robot kills, combat rewards, and daily assignments are not currently Tope
       sources (§2.6).
-- [x] ~~Design a pay-to-win mitigation for Scrip~~ — moot: the no-pay-to-win stance
-      itself is abandoned (§2.6). Real-money Scrip purchases can buy fitting/upgrades
+- [x] ~~Design a pay-to-win mitigation for Tope~~ — moot: the no-pay-to-win stance
+      itself is abandoned (§2.6). Real-money Tope purchases can buy fitting/upgrades
       without restriction.
 - [x] ~~Define fitting-slot counts for Patrol 1~~ — resolved: W=3, C=2, E=3, H=2
       (started from Viper Mk II standard tier, H then bumped 1→2, see above).
@@ -3281,7 +3281,7 @@ project:
 - [x] ~~Wire up actual install/purchase interaction on the outpost screen~~ —
       resolved: drag-and-drop from Owned/Shop onto a matching slot (§2.8), modeled
       on the reference project's in-flight component panel.
-- [ ] Define real, per-item Shop/ship pricing — currently a flat placeholder Scrip
+- [ ] Define real, per-item Shop/ship pricing — currently a flat placeholder Tope
       price for any module (100) and any ship (500) regardless of what it actually
       is, not real per-item economy design (§2.6.1).
 - [ ] Wire up real mining/repair/FTL-boost mechanics that actually spend/earn Water,
@@ -3313,7 +3313,7 @@ project:
       (§2.9's Ships tab) — deferred, not solved, since there's nothing to test it
       against yet.
 - [ ] Define real per-ship pricing for the Ships tab's For Sale list — currently a
-      flat 500-Scrip placeholder regardless of ship class, same as module Shop
+      flat 500-Tope placeholder regardless of ship class, same as module Shop
       pricing (§2.6.1).
 - [ ] Build flight mode — the outpost screen's Launch button currently just logs
       that it was pressed; there's no actual space-flight scene to enter yet. The

@@ -7,7 +7,7 @@ session are refused.
   player_summary { user_ids = [uuid, ...] }  (at most 100)
     -> { players = { [uuid] = summary } }  (players who never joined are
        missing). summary = { faction, faction_name, ship_id, ship_name,
-       scrip, hydrogen, water, iron, current_system, system_name, xp, level,
+       tope, hydrogen, water, iron, current_system, system_name, xp, level,
        rank }
 
   delete_player { user_id = uuid } -> { deleted = true|false }
@@ -63,7 +63,7 @@ local function summary(profile)
 		faction_name = FACTION_NAMES[profile.faction],
 		ship_id = profile.active_ship_id,
 		ship_name = ship_name(profile.active_ship_id, profile.faction),
-		scrip = profile.scrip,
+		tope = profile.tope,
 		hydrogen = profile.hydrogen,
 		water = profile.water,
 		iron = profile.iron,

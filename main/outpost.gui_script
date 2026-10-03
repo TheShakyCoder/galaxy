@@ -53,7 +53,7 @@
 -- Components can only be fitted here, at an outpost (§2.8) — there's no
 -- flight-mode screen yet to do this from mid-flight anyway.
 --
--- A Scrip balance readout sits outside all three tabs (always visible,
+-- A Tope balance readout sits outside all three tabs (always visible,
 -- per direct instruction) and updates after every purchase/sale -
 -- module and ship prices/refunds are flat PLACEHOLDER values from
 -- main/session.lua (not real per-item economy design yet, §2.6/§4), but
@@ -411,7 +411,7 @@ function init(self)
 	-- resource) - all four sit outside every tab's static-node group, so
 	-- none are ever hidden regardless of which tab is active.
 	-- refresh_currency (below) keeps all four in sync.
-	self.scrip_node = gui.get_node("scrip_label")
+	self.tope_node = gui.get_node("tope_label")
 	self.water_node = gui.get_node("water_label")
 	self.iron_node = gui.get_node("iron_label")
 	self.hydrogen_node = gui.get_node("hydrogen_label")
@@ -646,7 +646,7 @@ function init(self)
 	end
 end
 
-local CURRENCY_NAME = { scrip = "Scrip", hydrogen = "Hydrogen" }
+local CURRENCY_NAME = { tope = "Tope", hydrogen = "Hydrogen" }
 
 -- 36000 -> "36,000"
 local function with_commas(n)
@@ -655,7 +655,7 @@ local function with_commas(n)
 	return (formatted:gsub("^,", ""))
 end
 
--- "36,000 Scrip", "600,000 Hydrogen", or "Not for sale" for a ship with no
+-- "36,000 Tope", "600,000 Hydrogen", or "Not for sale" for a ship with no
 -- price (the starter ship).
 local function ship_price_text(ship_id)
 	local amount, currency = session.get_ship_price(ship_id)
@@ -773,17 +773,17 @@ local function ship_overview_text(faction)
 	return system_name(docked_system_id()), FACTION_DISPLAY[faction] or faction, ship_name
 end
 
--- Keeps the always-visible Scrip/Water/Iron/Hydrogen readouts in sync with
+-- Keeps the always-visible Tope/Water/Iron/Hydrogen readouts in sync with
 -- session state - called on show_outpost and after every
 -- confirmation-dialog resolution (buy/sell/swap/switch), since those are
--- the only things that ever change the Scrip balance (plan.md §4/§2.6).
+-- the only things that ever change the Tope balance (plan.md §4/§2.6).
 -- Water/Iron/Hydrogen have no earning/spending mechanic wired up anywhere
 -- yet (session.lua's own comment on M.water/M.iron/M.hydrogen), so those
 -- three will just keep re-displaying the same static starting value every
 -- call for now - still routed through the same refresh so they start
 -- updating for free the moment a real mechanic sets them.
 local function refresh_currency(self)
-	gui.set_text(self.scrip_node, "Scrip: " .. session.get_scrip())
+	gui.set_text(self.tope_node, "Tope: " .. session.get_tope())
 	gui.set_text(self.water_node, "Water: " .. session.get_water())
 	gui.set_text(self.iron_node, "Iron: " .. session.get_iron())
 	gui.set_text(self.hydrogen_node, "Hydrogen: " .. session.get_hydrogen())
@@ -893,7 +893,7 @@ local function overview_text()
 		for _, a in ipairs(assignments_cache.list) do
 			local state = a.done and "done" or (with_commas(a.progress) .. "/" .. with_commas(a.target))
 			table.insert(lines, "    " .. a.name .. ": " .. state .. "  --  " .. a.description
-				.. (a.done and "" or ("  (+" .. with_commas(a.xp) .. " XP, +" .. with_commas(a.scrip) .. " Scrip)")))
+				.. (a.done and "" or ("  (+" .. with_commas(a.xp) .. " XP, +" .. with_commas(a.tope) .. " Tope)")))
 		end
 	end
 
@@ -1471,7 +1471,7 @@ local function shop_rows(type_filter)
 		local module = catalog.get(item_key)
 		table.insert(rows, {
 			item_key = item_key,
-			label = (module and module.name or item_key) .. "  (" .. session.get_module_price() .. " Scrip)",
+			label = (module and module.name or item_key) .. "  (" .. session.get_module_price() .. " Tope)",
 			source = "shop",
 			color = module and TYPE_CARD_COLOR[module.type],
 		})
@@ -1927,7 +1927,7 @@ local function refresh_skin_cards(self)
 		elseif row.skin_id and row.owned then
 			badge_text, badge_color = "OWNED", vmath.mul_per_elem(SKIN_OWNED_COLOR, SKIN_BADGE_SHADE)
 		elseif row.skin_id then
-			badge_text, badge_color = row.price .. " Scrip", SKIN_PRICE_BADGE_COLOR
+			badge_text, badge_color = row.price .. " Tope", SKIN_PRICE_BADGE_COLOR
 		end
 		if badge_text then
 			local badge_pos = vmath.vector3(cx - SKIN_CELL_W * 0.5 + SKIN_FRAME + SKIN_BADGE_SIZE.x * 0.5,
@@ -2298,7 +2298,7 @@ local function show_ship_detail(self, ship_id)
 	-- ships will also receive an advanced option") and isn't already there.
 	local advanceable = owned and ship and ship.advanced ~= nil and not session.is_ship_advanced(ship_id)
 	if advanceable then
-		gui.set_text(self.ship_detail_nodes.advance_label, "Advance (" .. session.get_ship_advance_price() .. " Scrip)")
+		gui.set_text(self.ship_detail_nodes.advance_label, "Advance (" .. session.get_ship_advance_price() .. " Tope)")
 	end
 
 	-- Open the modal FIRST, before touching the preview below - keeps the
@@ -2389,8 +2389,8 @@ local function show_skin_detail(self, skin_id)
 		collection and collection.description or "",
 		"",
 		"Type: " .. (collection and SKIN_KIND_LABEL[collection.kind] or "?"),
-		"Price: " .. price .. " Scrip",
-		"Your Scrip: " .. session.get_scrip(),
+		"Price: " .. price .. " Tope",
+		"Your Tope: " .. session.get_tope(),
 		"",
 		"Cosmetic only: no stat changes.",
 		skin_flight.shown_in_flight(skin_id) and "Shown on your ship in flight." or "Not shown in flight yet.",
@@ -2705,7 +2705,7 @@ function on_input(self, action_id, action)
 				local on_confirm = self.confirm.on_confirm
 				hide_confirm(self)
 				on_confirm()
-				refresh_currency(self) -- Confirm is the only thing that can ever change the Scrip balance
+				refresh_currency(self) -- Confirm is the only thing that can ever change the Tope balance
 			elseif gui.is_enabled(self.confirm_nodes.no) and hits(self.confirm_nodes.no, action) then
 				hide_confirm(self)
 			end
@@ -2716,7 +2716,7 @@ function on_input(self, action_id, action)
 	-- Modal: the ship detail modal (§2.8.9) works the same way - swallow
 	-- everything else until Purchase/Select or Cancel is clicked. Unlike
 	-- self.confirm, Purchase/Select act immediately here (no further
-	-- confirm dialog), per direct instruction - except insufficient Scrip
+	-- confirm dialog), per direct instruction - except insufficient Tope
 	-- on a Purchase, which still falls back to the plain notice-only
 	-- confirm dialog (closing this one first).
 	if self.ship_detail then
@@ -2756,12 +2756,12 @@ function on_input(self, action_id, action)
 				local name = ship_display_name(ship_id, session.get_faction())
 				local price = session.get_ship_advance_price()
 				hide_ship_detail(self)
-				if session.get_scrip() < price then
-					show_confirm(self, "Not enough Scrip to advance " .. name
-						.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
+				if session.get_tope() < price then
+					show_confirm(self, "Not enough Tope to advance " .. name
+						.. " (need " .. price .. ", have " .. session.get_tope() .. ").", function() end)
 				else
 					show_confirm(self, "Advance " .. name .. " for " .. price
-						.. " Scrip? This cannot be undone.", function()
+						.. " Tope? This cannot be undone.", function()
 						session.advance_ship(ship_id)
 						refresh_ship_cards(self)
 						refresh_currency(self)
@@ -2772,7 +2772,7 @@ function on_input(self, action_id, action)
 				local name = ship_display_name(ship_id, session.get_faction())
 				local refund = session.get_ship_sell_refund()
 				hide_ship_detail(self)
-				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Scrip?", function()
+				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Tope?", function()
 					session.sell_ship(ship_id)
 					refresh_ship_cards(self)
 					local faction = session.get_faction()
@@ -2794,9 +2794,9 @@ function on_input(self, action_id, action)
 				local skin_id = self.skin_detail.skin_id
 				local price = session.get_skin_price(skin_id) or 0
 				hide_skin_detail(self)
-				if session.get_scrip() < price then
-					show_confirm(self, "Not enough Scrip for this skin (need " .. price
-						.. ", have " .. session.get_scrip() .. ").", function() end, false)
+				if session.get_tope() < price then
+					show_confirm(self, "Not enough Tope for this skin (need " .. price
+						.. ", have " .. session.get_tope() .. ").", function() end, false)
 				elseif session.purchase_skin(skin_id) then
 					session.equip_skin(session.get_ship_id(), skin_id)
 					refresh_currency(self)
@@ -3043,7 +3043,7 @@ function on_input(self, action_id, action)
 				local name = module and module.name or card.item_key
 				local instance_id = card.instance_id
 				local refund = session.get_module_sell_refund()
-				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Scrip?", function()
+				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Tope?", function()
 					session.sell(instance_id)
 					refresh_module_cards(self)
 				end)
@@ -3120,18 +3120,18 @@ function on_input(self, action_id, action)
 				local pending_slot = dropped_on_slot
 				end_drag(self) -- ends the drag visually either way; nothing installs until confirmed
 
-				if is_purchase and session.get_scrip() < price then
-					show_confirm(self, "Not enough Scrip to buy " .. module_name
-						.. " (need " .. price .. ", have " .. session.get_scrip() .. ").", function() end)
+				if is_purchase and session.get_tope() < price then
+					show_confirm(self, "Not enough Tope to buy " .. module_name
+						.. " (need " .. price .. ", have " .. session.get_tope() .. ").", function() end)
 					return true
 				end
 
 				local message
 				if is_purchase and is_swap then
-					message = "Buy " .. module_name .. " for " .. price .. " Scrip and swap it into " .. dropped_on_slot
+					message = "Buy " .. module_name .. " for " .. price .. " Tope and swap it into " .. dropped_on_slot
 						.. ", replacing " .. existing_name .. "?"
 				elseif is_purchase then
-					message = "Buy " .. module_name .. " for " .. price .. " Scrip and install it in " .. dropped_on_slot .. "?"
+					message = "Buy " .. module_name .. " for " .. price .. " Tope and install it in " .. dropped_on_slot .. "?"
 				else
 					message = "Swap " .. module_name .. " into " .. dropped_on_slot
 						.. ", replacing " .. existing_name .. "?"

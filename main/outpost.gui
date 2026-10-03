@@ -65,8 +65,8 @@ nodes {
 }
 nodes {
   type: TYPE_TEXT
-  id: "scrip_label"
-  text: "Scrip: 0"
+  id: "tope_label"
+  text: "Tope: 0"
   font: "default_font"
   position { x: 1770.0 y: 1030.0 z: 0.0 w: 1.0 }
   size { x: 280.0 y: 32.0 z: 0.0 w: 1.0 }

@@ -36,7 +36,7 @@
 --    other ship within it (always empty right now - no other ships exist
 --    anywhere in this project yet, see that script's own comment on this
 --    same block)
---  - "currency" - { scrip, water, iron, hydrogen } (per direct instruction:
+--  - "currency" - { tope, water, iron, hydrogen } (per direct instruction:
 --    "show the amount of currency for each resource that the player has")
 --    - same main/session.lua getters and "Name: N" text format
 --    main/outpost.gui_script's own refresh_currency() already uses, just
@@ -91,7 +91,7 @@ local function progress_text(p)
 	end
 	for _, c in pairs(p.completed or {}) do
 		table.insert(lines, "ASSIGNMENT COMPLETE: " .. tostring(c.name) .. "  +" .. with_commas(c.xp or 0) .. " XP  +"
-			.. with_commas(c.scrip or 0) .. " Scrip")
+			.. with_commas(c.tope or 0) .. " Tope")
 	end
 	if p.level and p.level_before and p.level > p.level_before then
 		table.insert(lines, "PROMOTED: " .. tostring(p.rank) .. "  (level " .. p.level .. ")")
@@ -403,7 +403,7 @@ function init(self)
 	self.progress_node = gui.get_node("progress_toast")
 	gui.set_enabled(self.progress_node, false)
 	self.progress_generation = 0
-	self.scrip_node = gui.get_node("scrip_value")
+	self.tope_node = gui.get_node("tope_value")
 	self.water_node = gui.get_node("water_value")
 	self.iron_node = gui.get_node("iron_value")
 	self.hydrogen_node = gui.get_node("hydrogen_value")
@@ -537,7 +537,7 @@ function on_message(self, message_id, message)
 	elseif message_id == hash("system_changed") then
 		gui.set_text(self.system_name_node, message.text)
 	elseif message_id == hash("currency") then
-		gui.set_text(self.scrip_node, "Scrip: " .. message.scrip)
+		gui.set_text(self.tope_node, "Tope: " .. message.tope)
 		gui.set_text(self.water_node, "Water: " .. message.water)
 		gui.set_text(self.iron_node, "Iron: " .. message.iron)
 		gui.set_text(self.hydrogen_node, "Hydrogen: " .. message.hydrogen)

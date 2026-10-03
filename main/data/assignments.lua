@@ -13,11 +13,11 @@ local M = {}
 
 M.DAILY = {
 	{ id = "asteroid_recon", name = "Asteroid Recon", description = "Analyse 20 asteroids you haven't analysed before",
-		event = "asteroid_analysed", target = 20, xp = 1000, scrip = 250 },
+		event = "asteroid_analysed", target = 20, xp = 1000, tope = 250 },
 	{ id = "survey", name = "Survey", description = "Arrive in 3 different star systems",
-		event = "system_arrival", target = 3, xp = 1000, scrip = 250 },
+		event = "system_arrival", target = 3, xp = 1000, tope = 250 },
 	{ id = "outpost_raid", name = "Outpost Raid", description = "Deal 2,000 damage to enemy outposts",
-		event = "outpost_damage", target = 2000, xp = 1000, scrip = 250 },
+		event = "outpost_damage", target = 2000, xp = 1000, tope = 250 },
 }
 
 M.BY_ID = {}

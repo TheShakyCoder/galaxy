@@ -33,7 +33,7 @@
 -- live: the original icon was "Octagon E", the SAME icon
 -- SLOT_EMPTY_ICON.engine already uses for an unfilled Engine slot
 -- (main/outpost.gui_script) - installing one of these modules was
--- therefore visually indistinguishable from the slot staying empty (Scrip
+-- therefore visually indistinguishable from the slot staying empty (Tope
 -- was correctly spent and the module was correctly installed, but nothing
 -- looked different on the ship).
 

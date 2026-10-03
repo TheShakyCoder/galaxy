@@ -1,4 +1,4 @@
--- Scrip price of one skin, by collection (main/data/skin_collections.lua's
+-- Tope price of one skin, by collection (main/data/skin_collections.lua's
 -- keys). Priced by how much work the collection adds: recolors only swap the
 -- texture, surface themes repaint panels, sculpted themes and Clockwork add
 -- new geometry. Flat PLACEHOLDER values, same footing as main/session.lua's

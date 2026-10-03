@@ -399,7 +399,7 @@ function M.server_version(callback)
 end
 
 -- callback({ date, list = { { id, name, description, target, progress,
--- done, xp, scrip } } } or nil, error): today's assignments.
+-- done, xp, tope } } } or nil, error): today's assignments.
 function M.assignments(callback)
 	rpc("assignments", {}, callback)
 end
@@ -550,7 +550,7 @@ end
 -- XP and assignment rewards the server just granted (nakama-server/modules/
 -- progress.lua): from the system's match (OP_PROGRESS) or with an economy
 -- reply (arriving somewhere, via main/profile.lua). The local copy of the
--- player's XP and Scrip catch up at once (the server's saved copy replaces
+-- player's XP and Tope catch up at once (the server's saved copy replaces
 -- them at the next resync anyway), then the flight HUD shows what was
 -- earned.
 function M.report_progress(result, reason)
@@ -561,8 +561,8 @@ function M.report_progress(result, reason)
 	if type(result.xp) == "number" then
 		session.xp = result.xp
 	end
-	if type(result.scrip_gained) == "number" and result.scrip_gained > 0 and session.scrip then
-		session.scrip = session.scrip + result.scrip_gained
+	if type(result.tope_gained) == "number" and result.tope_gained > 0 and session.tope then
+		session.tope = session.tope + result.tope_gained
 	end
 	msg.post("flight_hud#gui", "progress", result)
 end

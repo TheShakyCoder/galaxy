@@ -1,5 +1,5 @@
 -- The logged-in player's game state and the rules for changing it: faction,
--- Scrip/resources, ships, modules and skins.
+-- Tope/resources, ships, modules and skins.
 --
 -- The SAME file runs in two places:
 --   * the client (shared_state = 1 in game.project), which applies each
@@ -75,17 +75,17 @@ M.loadout = nil
 -- nothing to test per-ship segregation against yet. Flagged as an open
 -- question in plan.md §4 once more ships exist.
 
--- `scrip`: the player's balance of Scrip (§2.6's general currency, as
+-- `tope`: the player's balance of Tope (§2.6's general currency, as
 -- opposed to PvP-only Valor). Per direct instruction, the outpost screen
 -- always shows this and it updates as items/ships are bought and sold -
 -- which needs a REAL balance and REAL transaction amounts to do
--- honestly, not just a static display. STARTING_SCRIP and every price/
+-- honestly, not just a static display. STARTING_TOPE and every price/
 -- refund below are FLAT PLACEHOLDER values, not real per-item economy
 -- design (§2.6's actual pricing is still open work, §4) - introduced
 -- now purely so the currency display has something genuine to show and
 -- update, rather than a number that never changes.
-M.scrip = nil
-local STARTING_SCRIP = 1000
+M.tope = nil
+local STARTING_TOPE = 1000
 local MODULE_PRICE = 100
 local MODULE_SELL_REFUND = 50
 -- Ship purchase prices are per ship, in main/data/ships.lua's `price`
@@ -94,16 +94,16 @@ local SHIP_SELL_REFUND = 250
 local SHIP_ADVANCE_PRICE = 500
 
 -- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
--- (§2.6) - distinct from Scrip/Valor, which are the two CURRENCIES. Per
+-- (§2.6) - distinct from Tope/Valor, which are the two CURRENCIES. Per
 -- direct instruction, the outpost screen always shows all four of these
 -- balances together. Water/Iron are still honestly STATIC - no mining or
 -- repair mechanic exists yet to earn or spend them. Hydrogen is now the
 -- exception: main/player_ship.script's FTL jump (per direct instruction,
 -- "implement [the SuperShips jump mechanic] here") is the first real
 -- Hydrogen transaction - see M.start_jump/M.cancel_jump below,
--- mirroring M.spend_scrip's own shape. STARTING_WATER/IRON/HYDROGEN are
+-- mirroring M.spend_tope's own shape. STARTING_WATER/IRON/HYDROGEN are
 -- flat placeholder values with no economy-balancing behind them yet (same
--- caveat as STARTING_SCRIP above); note they're not even scaled against
+-- caveat as STARTING_TOPE above); note they're not even scaled against
 -- the existing repair_cost_iron = 10000 placeholder stat, since nothing
 -- spends against that one yet - reconciling that scale is open work,
 -- plan.md §4.
@@ -159,7 +159,7 @@ local function start_character(faction)
 	next_instance_id = 1
 	M.owned = {}
 	M.loadout = {}
-	M.scrip = STARTING_SCRIP
+	M.tope = STARTING_TOPE
 	M.water = STARTING_WATER
 	M.iron = STARTING_IRON
 	M.hydrogen = STARTING_HYDROGEN
@@ -272,8 +272,8 @@ function M.get_faction()
 	return M.faction
 end
 
-function M.get_scrip()
-	return M.scrip
+function M.get_tope()
+	return M.tope
 end
 
 function M.get_water()
@@ -404,7 +404,7 @@ end
 
 -- The flat placeholder price/refund a caller (e.g. the outpost screen's
 -- confirmation dialogs and Shop/For Sale card labels) should show and
--- charge for a given kind of transaction — see the STARTING_SCRIP
+-- charge for a given kind of transaction — see the STARTING_TOPE
 -- comment above on why these are placeholders, not real prices.
 function M.get_module_price()
 	return MODULE_PRICE
@@ -414,7 +414,7 @@ function M.get_module_sell_refund()
 	return MODULE_SELL_REFUND
 end
 
--- Purchase price of `ship_id`: amount, currency ("scrip" or "hydrogen"), or
+-- Purchase price of `ship_id`: amount, currency ("tope" or "hydrogen"), or
 -- nil for a ship that isn't for sale (the starter ship).
 function M.get_ship_price(ship_id)
 	local ship = ships.SHIPS[ship_id]
@@ -430,7 +430,7 @@ function M.get_balance(currency)
 	if currency == "hydrogen" then
 		return M.hydrogen
 	end
-	return M.scrip
+	return M.tope
 end
 
 function M.get_ship_sell_refund()
@@ -441,19 +441,19 @@ function M.get_ship_advance_price()
 	return SHIP_ADVANCE_PRICE
 end
 
--- Spends `amount` Scrip if (and only if) the player can afford it —
+-- Spends `amount` Tope if (and only if) the player can afford it —
 -- returns false and changes nothing otherwise. The balance never goes
 -- negative.
-local function spend_scrip(amount)
-	if M.scrip < amount then
+local function spend_tope(amount)
+	if M.tope < amount then
 		return false
 	end
-	M.scrip = M.scrip - amount
+	M.tope = M.tope - amount
 	return true
 end
 
-local function add_scrip(amount)
-	M.scrip = M.scrip + amount
+local function add_tope(amount)
+	M.tope = M.tope + amount
 end
 
 -- Kept as the existing accessor name (used throughout the outpost
@@ -486,7 +486,7 @@ end
 -- Upgrades an OWNED ship to its advanced tier in place - one-way (direct
 -- instruction: "once a ship has been advanced it cannot be returned back
 -- to the basic model"), so there's no M.revert_ship counterpart. Spends
--- get_ship_advance_price() Scrip (a flat placeholder, see STARTING_SCRIP's
+-- get_ship_advance_price() Tope (a flat placeholder, see STARTING_TOPE's
 -- comment). Refuses (returns false, spending nothing) if the ship isn't
 -- owned, is already advanced, or the player can't afford it. Deliberately
 -- does NOT check whether main/data/ships.lua even has an `advanced` table
@@ -505,7 +505,7 @@ function M.advance_ship(ship_id)
 	if M.is_ship_advanced(ship_id) then
 		return false
 	end
-	if not spend_scrip(SHIP_ADVANCE_PRICE) then
+	if not spend_tope(SHIP_ADVANCE_PRICE) then
 		return false
 	end
 	M.advanced_ships[ship_id] = true
@@ -522,7 +522,7 @@ function M.select_ship(ship_id)
 end
 
 -- Adds `ship_id` to owned ships if not already owned, paying its
--- get_ship_price() in Scrip or Hydrogen. Returns false, spending nothing, if
+-- get_ship_price() in Tope or Hydrogen. Returns false, spending nothing, if
 -- the ship isn't for sale, is already owned, or the player can't afford it.
 function M.purchase_ship(ship_id)
 	local amount, currency = M.get_ship_price(ship_id)
@@ -538,13 +538,13 @@ function M.purchase_ship(ship_id)
 	if currency == "hydrogen" then
 		M.hydrogen = M.hydrogen - amount
 	else
-		M.scrip = M.scrip - amount
+		M.tope = M.tope - amount
 	end
 	table.insert(M.owned_ships, ship_id)
 	return true
 end
 
--- Scrip price of `skin_id`, from its collection (main/data/skin_prices.lua),
+-- Tope price of `skin_id`, from its collection (main/data/skin_prices.lua),
 -- or nil for an unknown skin.
 function M.get_skin_price(skin_id)
 	local skin = skins.SKINS[skin_id]
@@ -555,7 +555,7 @@ function M.is_skin_owned(skin_id)
 	return M.owned_skins[skin_id] == true
 end
 
--- Buys `skin_id` for get_skin_price(skin_id) Scrip. Returns false, spending
+-- Buys `skin_id` for get_skin_price(skin_id) Tope. Returns false, spending
 -- nothing, for an unknown or already-owned skin or if the player can't
 -- afford it.
 function M.purchase_skin(skin_id)
@@ -563,7 +563,7 @@ function M.purchase_skin(skin_id)
 	if not price or M.is_skin_owned(skin_id) then
 		return false
 	end
-	if not spend_scrip(price) then
+	if not spend_tope(price) then
 		return false
 	end
 	M.owned_skins[skin_id] = true
@@ -656,8 +656,8 @@ end
 
 -- Grants a brand-new OWNED INSTANCE of `item_key` — decided (§4): every
 -- purchase creates its own separately-upgradeable physical copy, never
--- tops up a shared per-type count. Spends get_module_price() Scrip (a
--- flat placeholder, see STARTING_SCRIP's comment - not real per-item
+-- tops up a shared per-type count. Spends get_module_price() Tope (a
+-- flat placeholder, see STARTING_TOPE's comment - not real per-item
 -- pricing). Returns the new instance's id on success, so a caller (e.g.
 -- the outpost screen's "drag a Shop card onto a slot" flow) can install
 -- it immediately without a second lookup - or nil if the player can't
@@ -666,7 +666,7 @@ function M.purchase(item_key)
 	if not catalog.get(item_key) then
 		return nil -- not a real module
 	end
-	if not spend_scrip(MODULE_PRICE) then
+	if not spend_tope(MODULE_PRICE) then
 		return nil
 	end
 	local id = alloc_instance_id()
@@ -675,7 +675,7 @@ function M.purchase(item_key)
 end
 
 -- Upgrades one owned instance by a level. No cost/effect wired up yet —
--- real upgrade cost (Scrip? materials?) and what a level actually changes
+-- real upgrade cost (Tope? materials?) and what a level actually changes
 -- (stats, per §2.8) are both still undesigned (plan.md §4); this just
 -- moves the counter so the "does an upgrade survive uninstall/reinstall"
 -- mechanic (the reason this per-instance model exists at all) is real and
@@ -762,8 +762,8 @@ end
 -- rather than leaving a dangling loadout entry pointing at a
 -- now-nonexistent instance), then removes it from `owned` entirely -
 -- unlike M.uninstall, the instance itself stops existing, not just its
--- slot membership. Credits get_module_sell_refund() Scrip (a flat
--- placeholder, see STARTING_SCRIP's comment). Returns false if the
+-- slot membership. Credits get_module_sell_refund() Tope (a flat
+-- placeholder, see STARTING_TOPE's comment). Returns false if the
 -- instance doesn't exist.
 function M.sell(instance_id)
 	if not M.get_instance(instance_id) then
@@ -781,7 +781,7 @@ function M.sell(instance_id)
 			break
 		end
 	end
-	add_scrip(MODULE_SELL_REFUND)
+	add_tope(MODULE_SELL_REFUND)
 	return true
 end
 
@@ -792,8 +792,8 @@ end
 -- one ship. Selling the currently ACTIVE ship (while others remain) is
 -- allowed - the active ship just becomes whichever other owned ship
 -- happens to be first in the list afterward, so there's always a valid
--- active ship. Credits get_ship_sell_refund() Scrip (a flat placeholder,
--- see STARTING_SCRIP's comment).
+-- active ship. Credits get_ship_sell_refund() Tope (a flat placeholder,
+-- see STARTING_TOPE's comment).
 function M.sell_ship(ship_id)
 	if not M.is_ship_owned(ship_id) then
 		return false
@@ -811,7 +811,7 @@ function M.sell_ship(ship_id)
 		M.active_ship_id = M.owned_ships[1]
 	end
 	M.advanced_ships[ship_id] = nil
-	add_scrip(SHIP_SELL_REFUND)
+	add_tope(SHIP_SELL_REFUND)
 	return true
 end
 
@@ -827,7 +827,7 @@ function M.serialize()
 		owned = M.owned,
 		loadout = M.loadout,
 		next_instance_id = next_instance_id,
-		scrip = M.scrip,
+		tope = M.tope,
 		water = M.water,
 		iron = M.iron,
 		hydrogen = M.hydrogen,
@@ -852,7 +852,7 @@ function M.restore(data)
 	M.owned = data.owned or M.owned
 	M.loadout = data.loadout or M.loadout
 	next_instance_id = data.next_instance_id or next_instance_id
-	M.scrip = data.scrip or M.scrip
+	M.tope = data.tope or M.tope
 	M.water = data.water or M.water
 	M.iron = data.iron or M.iron
 	M.hydrogen = data.hydrogen or M.hydrogen
@@ -869,7 +869,7 @@ end
 function M.reset()
 	M.faction, M.owned_ships, M.active_ship_id, M.advanced_ships = nil, nil, nil, nil
 	M.owned, M.loadout, M.owned_skins, M.equipped_skins = nil, nil, nil, nil
-	M.scrip, M.water, M.iron, M.hydrogen = nil, nil, nil, nil
+	M.tope, M.water, M.iron, M.hydrogen = nil, nil, nil, nil
 	M.current_system, M.pending_jump = nil, nil
 	M.xp, M.visited, M.assignments = 0, nil, nil
 	next_instance_id = 1

@@ -35,7 +35,7 @@
 -- SAME icon SLOT_EMPTY_ICON.hull already uses for an unfilled Hull slot
 -- (main/outpost.gui_script) - installing one of these modules was
 -- therefore visually indistinguishable from the slot staying empty
--- (Scrip was correctly spent and the module was correctly installed, but
+-- (Tope was correctly spent and the module was correctly installed, but
 -- nothing looked different on the ship).
 
 local M = {}

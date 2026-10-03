@@ -39,8 +39,8 @@ Wire protocol (JSON match data):
               asteroid within the fitted analyser's range of the player's last
               validated position; after its scan time, XP for each one this
               player hasn't analysed before (modules/progress.lua)
-  8 PROGRESS  server -> client  {reason, xp_gained, scrip_gained, xp, level,
-              level_before, rank, completed = [{id, name, xp, scrip}]} - XP
+  8 PROGRESS  server -> client  {reason, xp_gained, tope_gained, xp, level,
+              level_before, rank, completed = [{id, name, xp, tope}]} - XP
               this player just earned here (only sent to them)
   9 ASTEROIDS server -> client  {now, rocks = [{i, hp, max_hp, destroyed_until}]}
               the hull of every asteroid of this system that isn't at full

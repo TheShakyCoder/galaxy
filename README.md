@@ -36,7 +36,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   range, which costs Hydrogen.
 - **Targeting**: cycle targets, target the nearest enemy, match its speed, or
   follow a friendly ship.
-- **Resources**: Scrip, Water, Iron and Hydrogen.
+- **Resources**: Tope, Water, Iron and Hydrogen.
 - **Progression**: earn XP by exploring new systems, analysing asteroids and
   attacking enemy outposts, and from three daily assignments. XP gives a level
   and a faction rank (naval for the Accord, avian for the Swarm); Escorts need
@@ -51,7 +51,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   game server. **Play** there opens the game, which signs you in to a game
   server with a short-lived token from the site; `play.fig.limited` only
   serves the game to logged-in players. Each game server keeps its own
-  progress for you (faction, Scrip, ships, fittings, skins), so you can be
+  progress for you (faction, Tope, ships, fittings, skins), so you can be
   Accord on one server and Swarm on another. The server owns that progress:
   every purchase, sale, fitting change and FTL jump is checked and applied by
   Nakama, so balances and items can't be edited in the browser.
