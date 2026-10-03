@@ -1,0 +1,6 @@
+key_trigger { input: KEY_SPACE action: "explode" }
+key_trigger { input: KEY_R action: "reseed" }
+key_trigger { input: KEY_A action: "auto" }
+key_trigger { input: KEY_1 action: "intact" }
+key_trigger { input: KEY_2 action: "fractured" }
+key_trigger { input: KEY_3 action: "dissolving" }

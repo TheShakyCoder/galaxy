@@ -1,0 +1,7 @@
+[
+  {"name":"position","type":"float32","count":3,"data":[0,0,0,0,0,0,0,0,0]},
+  {"name":"normal","type":"float32","count":3,"data":[0,1,0,0,1,0,0,1,0]},
+  {"name":"color","type":"float32","count":4,"data":[1,1,1,0,1,1,1,0,1,1,1,0]},
+  {"name":"fragment","type":"float32","count":4,"data":[0,1,0,0,0,1,0,0,0,1,0,0]},
+  {"name":"motion","type":"float32","count":4,"data":[1,0,0,1,1,0,0,1,1,0,0,1]}
+]

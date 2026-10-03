@@ -1,0 +1,48 @@
+local geometry = require("main.asteroid_geometry")
+go.property("seed", 1)
+local serial = 0
+local STREAMS = {{"position",3},{"normal",3},{"color",4},{"fragment",4},{"motion",4}}
+
+function init(self)
+	local data = geometry.generate(self.seed)
+	local declaration = {}
+	for _,s in ipairs(STREAMS) do
+		declaration[#declaration+1] = {name=hash(s[1]),type=buffer.VALUE_TYPE_FLOAT32,count=s[2]}
+	end
+	local buf = buffer.create(#data.position/3,declaration)
+	for _,s in ipairs(STREAMS) do
+		local stream = buffer.get_stream(buf,s[1])
+		for i,v in ipairs(data[s[1]]) do stream[i] = v end
+	end
+	buffer.set_metadata(buf,hash("AABB"),{-0.5,-0.5,-0.5,0.5,0.5,0.5},buffer.VALUE_TYPE_FLOAT32)
+	serial = serial+1
+	self.vertices = resource.create_buffer("/asteroid_runtime_"..serial..".bufferc",{buffer=buf,transfer_ownership=true})
+	self.placeholder = go.get("#model","vertices")
+	go.set("#model","vertices",self.vertices)
+end
+
+function on_message(self, message_id)
+	if message_id == hash("disintegrate") and not self.age then
+		self.age = 0
+		-- Include shader-displaced fragments in frustum culling bounds.
+		local buf = resource.get_buffer(self.vertices)
+		buffer.set_metadata(buf,hash("AABB"),{-2,-2,-2,2,2,2},buffer.VALUE_TYPE_FLOAT32)
+		resource.set_buffer(self.vertices,buf)
+	end
+end
+
+function update(self, dt)
+	if not self.age then return end
+	self.age = math.min(geometry.DURATION,self.age+dt)
+	go.set("#model","breakup",vmath.vector4(self.age,0,0,0))
+	if self.age >= geometry.DURATION then go.delete() end
+end
+
+function final(self)
+	if self.vertices then
+		-- Detach before releasing our resource reference; the shared placeholder
+		-- is never modified. This also handles jumps during an active breakup.
+		go.set("#model","vertices",self.placeholder)
+		resource.release(self.vertices)
+	end
+end

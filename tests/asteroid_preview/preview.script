@@ -1,0 +1,61 @@
+-- Isolated demo: SPACE breaks the rocks; R generates the next six seeds.
+-- Auto cycle exercises repeated resource creation/release without a server.
+local handle_action
+local function spawn(self)
+	self.ids={}
+	for i=1,6 do
+		local pos=vmath.vector3(((i-1)%3-1)*1.8,i<=3 and 0.9 or -0.9,0)
+		self.ids[i]=factory.create("#rock_factory",pos,nil,{seed=self.seed+i*104729},1.45)
+	end
+	self.age=0
+	self.broken=false
+end
+local function explode(self)
+	if self.broken then return end
+	self.broken=true
+	self.age=4
+	for _,id in ipairs(self.ids) do msg.post(msg.url(nil,id,"script"),"disintegrate") end
+end
+function init(self)
+	msg.post(".","acquire_input_focus")
+	self.seed=1729
+	spawn(self)
+	self.auto=false
+	print("ASTEROID_PREVIEW_READY: SPACE break; R new seeds; A auto cycle; 1/2/3 inspect stages")
+end
+function update(self,dt)
+	if html5 then
+		local command=html5.run("window.asteroidReviewCommand || ''")
+		if command~="" then
+			html5.run("window.asteroidReviewCommand = ''")
+			print("ASTEROID_REVIEW_ACTION: "..command)
+			handle_action(self,hash(command),{pressed=true})
+		end
+	end
+	self.age=self.age+dt
+	if not self.broken then
+		for _,id in ipairs(self.ids) do
+			go.set_rotation(vmath.quat_rotation_y(self.age*0.18)*vmath.quat_rotation_x(0.25),id)
+		end
+	end
+	if self.auto and self.age>=4 and not self.broken then explode(self) end
+	if self.auto and self.age>=8 then self.seed=self.seed+7919; spawn(self) end
+end
+handle_action=function(self,action_id,action)
+	if not action.pressed then return end
+	if action_id==hash("explode") then explode(self)
+	elseif action_id==hash("auto") then self.auto=not self.auto
+	elseif action_id==hash("intact") or action_id==hash("fractured") or action_id==hash("dissolving") then
+		for _,id in ipairs(self.ids) do if go.exists(id) then go.delete(id) end end
+		spawn(self)
+		local age=action_id==hash("intact") and 0 or (action_id==hash("fractured") and 0.65 or 1.5)
+		for _,id in ipairs(self.ids) do go.set(msg.url(nil,id,"model"),"breakup",vmath.vector4(age,0,0,0)) end
+		self.auto=false
+	elseif action_id==hash("reseed") then
+		for _,id in ipairs(self.ids) do if go.exists(id) then go.delete(id) end end
+		self.seed=self.seed+7919; spawn(self)
+	end
+end
+function on_input(self,action_id,action)
+	handle_action(self,action_id,action)
+end

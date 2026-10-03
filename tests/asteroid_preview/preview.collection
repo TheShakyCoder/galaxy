@@ -1,0 +1,6 @@
+name: "asteroid_preview"
+embedded_instances {
+  id: "preview"
+  data: "components {\n  id: \"script\"\n  component: \"/tests/asteroid_preview/preview.script\"\n}\n"
+        "embedded_components {\n  id: \"rock_factory\"\n  type: \"factory\"\n  data: \"prototype: \\\"/main/asteroid.go\\\"\\n\"\n}\n"
+}
