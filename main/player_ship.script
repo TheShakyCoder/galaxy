@@ -401,6 +401,7 @@ function init(self)
 	self.input = default_input()
 	self.throttle = 0.0
 	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
+	self.engine_sound_on = false -- whether the engine loop is currently playing - see set_engine_sound()
 	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
 	self.time_since_rotation_input = 0 -- seconds since the last pitch/yaw input - see AUTO_LEVEL_DELAY
 	self.camera_rot = nil -- nil = "snap on next update", same convention the reference uses
@@ -456,6 +457,7 @@ local function start_flight(self)
 	self.input = default_input()
 	self.throttle = 0.0
 	self.speed = 0 -- ship starts at rest and stays there until the player throttles up - see update()
+	self.engine_sound_on = false -- a fresh launch always starts at rest, so the engine loop is silent - see set_engine_sound()
 	self.angular_velocity = vmath.vector3()
 	self.time_since_rotation_input = 0
 	self.camera_rot = nil
@@ -577,7 +579,34 @@ end
 -- already does the "reset to Overview tab, refresh currency/ship text"
 -- work, same as when faction_select first hands off there). Called once
 -- update()'s docking countdown reaches zero, see below.
+-- The ship's engine hum (main/main.collection's "engine_sound" component,
+-- assets/audio/engine_loop.sound), looped while the engines are producing
+-- THRUST - not while the ship is moving (per direct instruction: "the engine
+-- is providing not the speed of the ship itself. So once the thrust has been
+-- set to 0 the engine noise should stop even if the ship is still slowing
+-- down"). The call site passes the COMMANDED speed (target_speed: the throttle
+-- lever, boost, or Follow Friend's speed-matching) rather than self.speed, so
+-- cutting thrust to 0 silences the loop immediately while the ship coasts down
+-- to a stop under its own deceleration. Also stopped on dock and on being
+-- destroyed (both route through complete_dock). Guarded by self.engine_sound_on
+-- so sound.play()/sound.stop() only cross a frame boundary when the state
+-- actually changes.
+local ENGINE_MIN_THRUST = 0.01 -- m/sec of commanded speed; below this the engines are idle
+
+local function set_engine_sound(self, on)
+	if on == self.engine_sound_on then
+		return
+	end
+	self.engine_sound_on = on
+	if on then
+		sound.play("#engine_sound")
+	else
+		sound.stop("#engine_sound")
+	end
+end
+
 local function complete_dock(self)
+	set_engine_sound(self, false) -- engines off before the ship leaves flight
 	network.leave_system() -- docked ships leave the system's match (which stops any fire)
 	self.firing = false
 	self.fire_order = nil
@@ -1604,6 +1633,14 @@ function update(self, dt)
 	else
 		self.speed = target_speed
 	end
+
+	-- Engines on while thrust is commanded (target_speed > 0), whatever
+	-- commands it - throttle, boost or Follow Friend's speed-matching. Using
+	-- target_speed rather than self.speed is the point: with the throttle at 0
+	-- target_speed is 0 even though self.speed is still bleeding off, so the
+	-- loop stops with the thrust instead of humming until the ship drifts to a
+	-- halt.
+	set_engine_sound(self, target_speed > ENGINE_MIN_THRUST)
 
 	local forward = vmath.rotate(rot, SHIP_FORWARD)
 	pos = pos + forward * self.speed * dt

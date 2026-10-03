@@ -846,6 +846,10 @@ embedded_instances {
   "  id: \"script\"\n"
   "  component: \"/main/player_ship.script\"\n"
   "}\n"
+  "components {\n"
+  "  id: \"engine_sound\"\n"
+  "  component: \"/assets/audio/engine_loop.sound\"\n"
+  "}\n"
   position {
     x: 0.0
     y: 0.0

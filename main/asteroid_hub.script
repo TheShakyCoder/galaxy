@@ -50,6 +50,12 @@ local RESULT_SHOWN_S = 6
 local spawned = {}
 local debris = {} -- visual-only objects, excluded from targeting immediately
 
+-- Audio (this hub owns both, since it's the one place that knows a shot
+-- was fired and a rock was destroyed - see on_message's "shot" and update()'s
+-- despawn). Both are one-shot components on this game object
+-- (main/asteroid_hub.go), played with sound.play(); the breakup sound is the
+-- placeholder for the destruction animation that's still to come.
+--
 -- Weapon fire (main/player_ship.script "shot"): a bright pellet flies from
 -- the gun to the target at SHOT_SPEED, purely visual (only outposts take
 -- damage, decided by the server).
@@ -231,6 +237,11 @@ function update(self, dt)
 				changed = true
 			end
 		elseif a then
+			-- The server says this rock is mined out (hp 0, destroyed_until
+			-- set): the asteroid breaks up. Play the breakup sound where the
+			-- rock was (sound.play() has no position of its own), then take it
+			-- out of the world.
+			sound.play("#breakup_sound")
 			-- Cancel any scan that includes it first: cancel_scan() touches
 			-- every rock it found, and this one is about to be deleted.
 			cancel_scan()
@@ -270,6 +281,10 @@ function on_message(self, message_id, message)
 		go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, to, go.EASING_LINEAR, duration, 0, function()
 			go.delete(id)
 		end)
+		-- The mining cannon firing (main/player_ship.script posts one "shot"
+		-- per weapon that actually fires, so this plays once per shot, not
+		-- once per frame).
+		sound.play("#hit_sound")
 	elseif message_id == hash("analyser_status") then
 		-- player_ship.script's own messages (e.g. no analyser fitted)
 		show_status(message.text, 3)
