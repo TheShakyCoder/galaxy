@@ -4,15 +4,10 @@
 -- main/player_ship.script's start_flight() sends. Same "one hub owns
 -- spawning" pattern the other local reference project's own
 -- main/asteroid_hub.script establishes (§0 - mechanics, not creative
--- expression, reuse is fine), simplified down to just position/size since
--- there's no mining/HP system here (yet, per direct instruction - "for
--- now").
+-- expression, reuse is fine). Depletion remains server-authoritative.
 --
--- Each asteroid is main/asteroid.go's shared unit-diameter sphere
--- (assets/models/asteroids/asteroid.model), spawned at a uniform scale of
--- that asteroid's own diameter_m - see tools/build_asteroid_model.py's
--- header comment on why the prototype is built at unit size rather than
--- baking a separate mesh per size.
+-- Each asteroid owns a procedural, unit-diameter rock mesh seeded by its
+-- system and index. Gameplay positions, radii and resources are unchanged.
 --
 -- Asteroid Analyser (main/data/modules/computer_modules.lua): the
 -- "analyse" message from player_ship.script (P, with the module fitted)
@@ -28,6 +23,7 @@
 local asteroids = require("main.data.asteroids")
 local asteroid_registry = require("main.asteroid_registry")
 local network = require("main.network")
+local asteroid_geometry = require("main.asteroid_geometry")
 
 -- Same ambient-lighting boost applied to every model this project renders
 -- during flight (per direct instruction: "increase the general ambient
@@ -52,6 +48,7 @@ local RESULT_SHOWN_S = 6
 -- index, analysed } (index = position in asteroids.field_for(system_id)).
 -- Also published to main/asteroid_registry.lua for targeting.
 local spawned = {}
+local debris = {} -- visual-only objects, excluded from targeting immediately
 
 -- Weapon fire (main/player_ship.script "shot"): a bright pellet flies from
 -- the gun to the target at SHOT_SPEED, purely visual (only outposts take
@@ -115,6 +112,10 @@ local function despawn_all()
 		go.delete(a.id)
 	end
 	spawned = {}
+	for _,id in ipairs(debris) do
+		if go.exists(id) then go.delete(id) end
+	end
+	debris = {}
 	asteroid_registry.set({})
 end
 
@@ -125,7 +126,8 @@ end
 local function spawn_rock(index)
 	local a = asteroids.field_for(current_system)[index]
 	local pos = vmath.vector3(a.x, a.y, a.z)
-	local id = factory.create("#asteroid_factory", pos, nil, nil, a.diameter_m)
+	local seed = asteroid_geometry.seed(current_system,index)
+	local id = factory.create("#asteroid_factory", pos, nil, {seed=seed}, a.diameter_m)
 	local known = analysed[current_system] or {}
 	go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
 	return { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index, analysed = known[index] == true }
@@ -135,7 +137,8 @@ local function spawn_field(system_id)
 	despawn_all()
 	current_system = system_id
 	for index = 1, #asteroids.field_for(system_id) do
-		table.insert(spawned, spawn_rock(index))
+		local st = network.asteroid_state(system_id,index)
+		if not st or st.available then table.insert(spawned, spawn_rock(index)) end
 	end
 	asteroid_registry.set(spawned)
 end
@@ -203,6 +206,9 @@ end
 -- reported (i.e. not at full hull) are affected - everything else is left as
 -- spawned, and a fresh field assumes all present until told otherwise.
 function update(self, dt)
+	for i = #debris,1,-1 do
+		if not go.exists(debris[i]) then table.remove(debris,i) end
+	end
 	if not current_system then
 		return
 	end
@@ -228,7 +234,9 @@ function update(self, dt)
 			-- Cancel any scan that includes it first: cancel_scan() touches
 			-- every rock it found, and this one is about to be deleted.
 			cancel_scan()
-			go.delete(a.id)
+			go.set(model_url(a.id), "tint", a.analysed and resource_tint(a.resource) or AMBIENT_TINT)
+			msg.post(msg.url(nil,a.id,"script"), "disintegrate")
+			table.insert(debris,a.id)
 			changed = true
 		end
 	end
@@ -236,6 +244,10 @@ function update(self, dt)
 	if changed then
 		asteroid_registry.set(spawned)
 	end
+end
+
+function final(self)
+	despawn_all()
 end
 
 function on_message(self, message_id, message)

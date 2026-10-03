@@ -35,6 +35,9 @@ server_key = defaultkey
 [model]
 max_count = 512
 
+[mesh]
+max_count = 256
+
 [galaxy]
 account_url = https://galaxy.ddev.site/dashboard
 
