@@ -112,8 +112,14 @@ local function cancel_scan()
 		return
 	end
 	timer.cancel(scan.timer)
+	-- Restore each rock that was mid-pulse to its proper colour (analysed
+	-- rocks keep their resource tint, the rest go back to ambient) - the
+	-- pulse is driven from update() below, so nothing else will.
+	local known = analysed[current_system] or {}
 	for _, a in ipairs(scan.asteroids) do
-		go.cancel_animations(model_url(a.id), "tint")
+		if go.exists(a.id) then
+			go.set(model_url(a.id), "tint", known[a.index] and resource_tint(a.resource) or AMBIENT_TINT)
+		end
 	end
 	scan = nil
 	show_status(nil)
@@ -178,9 +184,9 @@ local function finish_scan()
 	local known = analysed[current_system] or {}
 	analysed[current_system] = known
 	for _, a in ipairs(found) do
-		local url = model_url(a.id)
-		go.cancel_animations(url, "tint")
-		go.set(url, "tint", resource_tint(a.resource))
+		if go.exists(a.id) then
+			go.set(model_url(a.id), "tint", resource_tint(a.resource))
+		end
 		known[a.index] = true
 		a.analysed = true
 	end
@@ -194,19 +200,20 @@ local function analyse(pos, range, scan_time, origin)
 		return -- one scan at a time; the analyser is busy until it finishes
 	end
 	local found = {}
+	local nearest = nil -- nearest rock surface distance, for the "nothing in range" message
 	for _, a in ipairs(spawned) do
-		if vmath.length(a.pos - pos) - a.radius <= range then
+		local surface = vmath.length(a.pos - pos) - a.radius
+		if surface <= range then
 			table.insert(found, a)
+		end
+		if not nearest or surface < nearest then
+			nearest = surface
 		end
 	end
 	if #found == 0 then
-		show_status(string.format("NO ASTEROIDS WITHIN %d m", range), 3)
+		local detail = nearest and string.format(" (nearest %.0f m)", nearest) or " (no asteroids in this system)"
+		show_status(string.format("NO ASTEROIDS WITHIN %d m%s", range, detail), 3)
 		return
-	end
-	for _, a in ipairs(found) do
-		local url = model_url(a.id)
-		go.set(url, "tint", AMBIENT_TINT)
-		go.animate(url, "tint", go.PLAYBACK_LOOP_PINGPONG, SCAN_TINT, go.EASING_INOUTSINE, SCAN_PULSE_S)
 	end
 	-- The scan is starting: play its sound ONCE, here, not per rock and not
 	-- looped - per direct instruction ("scanning audio should run one time
@@ -218,7 +225,11 @@ local function analyse(pos, range, scan_time, origin)
 	-- Positioned at the analyser's own slot (`origin`, from
 	-- player_ship.script) rather than the ship's centre.
 	audio.play("#scan_sound", origin)
-	scan = { asteroids = found, timer = timer.delay(scan_time, false, finish_scan) }
+	-- The pulse itself is driven from update() below (one tint write per
+	-- scanned rock per frame) rather than go.animate on the model's `tint`
+	-- material constant - that call aborted the whole scan at runtime, which
+	-- is why the slot showed the scan but no rock ever reacted.
+	scan = { asteroids = found, elapsed = 0, timer = timer.delay(scan_time, false, finish_scan) }
 	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
 	show_status(string.format("ANALYSING %d %s...", #found, noun))
 end
@@ -275,6 +286,20 @@ function update(self, dt)
 	spawned = next_spawned
 	if changed then
 		asteroid_registry.set(spawned)
+	end
+	-- Pulse every rock the running scan found: ping-pong between its ambient
+	-- tint and the bright cyan SCAN_TINT, SCAN_PULSE_S per half-cycle. Done
+	-- with a plain per-frame go.set (the same call spawn_rock uses) so it
+	-- can't fail the way go.animate on a material constant did.
+	if scan then
+		scan.elapsed = scan.elapsed + dt
+		local t = 0.5 * (1 + math.sin(scan.elapsed * math.pi / SCAN_PULSE_S))
+		local tint = vmath.lerp(t, AMBIENT_TINT, SCAN_TINT)
+		for _, a in ipairs(scan.asteroids) do
+			if go.exists(a.id) then
+				go.set(model_url(a.id), "tint", tint)
+			end
+		end
 	end
 end
 

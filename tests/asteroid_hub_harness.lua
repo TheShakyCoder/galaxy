@@ -3,6 +3,7 @@ local vector = {}
 vector.__sub=function(a,b) return setmetatable({x=a.x-b.x,y=a.y-b.y,z=a.z-b.z},vector) end
 vmath={vector3=function(x,y,z) return setmetatable({x=x,y=y,z=z},vector) end,
  vector4=function(x,y,z,w) return {x=x,y=y,z=z,w=w} end,
+ lerp=function(t,a,b) return {x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t,z=a.z+(b.z-a.z)*t,w=(a.w or 0)+((b.w or 0)-(a.w or 0))*t} end,
  length=function(v) return math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z) end}
 local field={{x=1,y=2,z=3,diameter_m=10,resource="iron"},{x=2,y=3,z=4,diameter_m=20,resource="iron"}}
 local states, live, messages, timers, created = {}, {}, {}, {}, {}
@@ -19,6 +20,9 @@ factory={create=function(_,pos,rot,props,scale)
  local id=#created+1; created[id]={props=props,scale=scale}; live[id]=true; return id
 end}
 timer={delay=function(_,_,fn) timers[#timers+1]=fn; return #timers end,cancel=function(i) timers[i]=false end}
+-- main/audio.lua (required by the hub) calls these globals; the hub's scan
+-- sound goes through M.play, so they must exist for the harness to load.
+sound={play=function() end,stop=function() end,set_pan=function() end,set_gain=function() end}
 dofile('main/asteroid_hub.script')
 local self={}
 on_message(self,'spawn_field',{system_id='sol'})

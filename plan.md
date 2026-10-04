@@ -1118,7 +1118,10 @@ they weren't part of this decision. **Now enforced in the Shop/Owned lists** —
 
 **New Computer module: Asteroid Analyser** (decided) — `main/data/modules/computer_modules.lua`, `behavior = "active"` (one-shot
 trigger, matching the `activate_scanner` (P key) binding already reserved in §2.10 —
-proposed, flag if it should be passive instead). It is a **normal, separately fitted
+proposed, flag if it should be passive instead). Its scan covers every asteroid
+within **`range_m = 400 m` of the ship** (per direct instruction — set explicitly to
+400 m, no longer tied to a ship's visual range), revealed after `scan_time_s = 2`. It
+is a **normal, separately fitted
 component like any other module — never integral/hardcoded to the ship**. It is
 **not** part of the starting gift — available to purchase instead (demonstrates the
 Shop tab below).

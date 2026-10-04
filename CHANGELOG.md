@@ -4,6 +4,12 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [Unreleased]
+
+### Fixes
+- The Asteroid Analyser now scans every asteroid within 400 m of the ship,
+  shortened from 500 m per direct instruction.
+
 ## [0.3.1] - 2026-10-02
 
 ### Fixes

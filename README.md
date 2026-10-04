@@ -42,7 +42,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   and a faction rank (naval for the Accord, avian for the Swarm); Escorts need
   level 5 and Frigates level 10. The game server awards all XP.
 - **Asteroid Analyser**: a Computer module. Press P to analyse every asteroid
-  within 500 m: they pulse for two seconds, then turn the colour of what
+  within 400 m: they pulse for two seconds, then turn the colour of what
   they're made of (red inert rock, yellow hydrogen, purple iron, blue
   water). Only you see what you've analysed.
 - **Accounts**: everything account-related happens on the website
@@ -84,7 +84,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | K | Dock at a nearby outpost, or cancel a jump |
 | Shift+1–9 | Switch the weapon in slot W1–W9 on or off. Weapons that are on fire by themselves at your target (enemy outposts only, so far) |
 | 1–9 | Use the active module in that Computer/Engine/Hull slot (numbered C1…, then E1…, then H1…; the Fitting tab shows each slot's key) |
-| P | Asteroid Analyser (if fitted): reveal what every asteroid within 500 m is made of |
+| P | Asteroid Analyser (if fitted): reveal what every asteroid within 400 m is made of |
 | Mouse wheel | Zoom |
 
 Other keys (G, F, slide thrusters and so on) are reserved

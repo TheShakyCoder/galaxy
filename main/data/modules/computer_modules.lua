@@ -20,7 +20,7 @@ M.COMPUTER_MODULES = {
 		behavior = "active", -- one-shot trigger (§2.8) — PROPOSED, see plan.md §4
 		ship_classes = { "Patrol", "Escort", "Frigate", "Carrier" }, -- fits anywhere for now
 		icon = "asteroid_analyser", -- main/images/icons.atlas region, see weapons_autocannons.lua's header comment
-		range_m = 500, -- per direct instruction (the Patrol ship's visual range)
+		range_m = 400, -- per direct instruction (set to 400 m; no longer tied to the Patrol's 500 m visual range)
 		scan_time_s = 2, -- per direct instruction
 	},
 }
