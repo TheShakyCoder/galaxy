@@ -878,8 +878,43 @@ capital-ship siege" already is.
   midpoints. No external code calls either function yet (no docking/travel
   system exists to call them from) - purely a data-layer provision ahead of
   that, same footing as `M.reachable_from`/`M.hydrogen_cost` already were.
-- **Future gameplay, explicitly deferred**: how outposts can be attacked and what
-  defenses they have is not designed yet — flagged in §4, not invented here.
+- **Outpost defence (proposed — reference data in §2.13 I)**: how outposts can be
+  attacked and what defences they have is still not *decided* (§4), but the
+  second-pass BSGO research (§2.13) now supplies a concrete, reference-backed shape
+  to design from — recorded here so §4's TODO starts from a real proposal rather
+  than a blank page. Per §0, everything below is *structure/mechanics* usable as a
+  starting point, not final tuning; the names are BSG's and are reference-only.
+  - **The outpost is armed, not a passive hull**: the reference outpost carries
+    long-range cannons, long-range missile launchers and point-defence batteries
+    (the anti-missile role — its platform point defence has the highest accuracy in
+    the reference, ~700, and platform guns are omnidirectional, half-angle ≥180°).
+    Reference hull ladder: 50,000 regular → 55,000 upgraded → 60,000 fortified.
+    Our server's `nakama-server/modules/outposts.lua` `OUTPOST_HULL = 50000`
+    already matches the regular tier.
+  - **Sentry platforms are the real defence layer** — up to 4 immobile weapons
+    platforms placed equidistantly around the outpost, graded light/medium/heavy,
+    whose count and loadout scale with the system's control/outpost-progress level
+    (reference ladder: L3 → 2 light; L4 → 4 light; L5 → upgraded outpost + 2
+    light→medium; L6 → 4 medium; L7/L8 → heavy platforms in; ~L7–L8 (275–300%)
+    → fortified outpost ringed by 4 heavy). Reference stat blocks:
+    - **Light** — 7,500 hull / 3,000 power / armour 35 — 8× light autocannon
+      turrets + 2× interceptor missile launchers.
+    - **Medium** — 10,000 hull / 3,000 power / armour 60 — 8× medium cannon
+      turrets + 5× medium missile launchers.
+    - **Heavy** — 15,000 hull / 3,000 power / armour 75 — 2× flak cannons + 2×
+      point-defence turrets + 8× heavy cannon turrets + 5× heavy missile launchers.
+  - **Platform defensive behaviour (the AI shape we'd copy)**: dormant until
+    attacked or until a ship closes to ~1,200 m, then fires until the target is
+    destroyed or leaves range; gun range ~1,600 m (light) to ~2,000 m (heavy), with
+    missiles reaching ~3,500 m; no hull regen in combat (ships do, after 15 s); a
+    destroyed platform respawns in place after ~10 min.
+  - **Still to decide (§4)**: whether our outpost gets this layered defence at all;
+    whether the fortification level is driven by our own control points (§2.7's
+    opposing-ship cap / conflict zones) or is fixed per system; whether sentry
+    platforms are separate targetable objects (as in the reference) or folded into
+    the outpost's own hull/weapon numbers; whether they are server-simulated
+    (recommended — the server already owns all outpost damage) or client-visual
+    only; and how the whole layer scales with a system's threat rating (§2.7).
 
 **Outpost 3D models (decided, first pass — basic placeholder shapes, per direct
 instruction: "let's begin by building two basic shapes")**:
@@ -3172,6 +3207,29 @@ control levels 0–10 tied to an outpost-progress counter (capture at 50%, outpo
 appears at 90%, fortification and 4 heavy sentry platforms by 300%), including the
 ±36% dominant/underdog hull scaling. This is exactly the design material §4's
 "design outpost combat" TODO was waiting for.
+- **Sentry platform armament** (read per-platform from `bsgonline.fandom.com`'s
+  `*_Sentry_Platform` pages, agreeing with the main wiki's `Outposts` page):
+  - Light: 7,500 hull / 3,000 power / armour 35 — 8× 20 mm autocannon turrets +
+    2× interceptor missile launchers.
+  - Medium: 10,000 hull / 3,000 power / armour 60 — 8× 127 mm cannon turrets +
+    5× medium missile launchers.
+  - Heavy: 15,000 hull / 3,000 power / armour 75 — 2× 63 mm flak cannons + 2×
+    15 mm point-defence turrets + 8× 40.6 cm cannon turrets + 5× heavy missile
+    launchers.
+  (The two wikis disagree on whether heavies first appear at control L7 or L8/250%.)
+- **The outpost core's own armament** (both wikis): long-range cannons, long-range
+  missile launchers, point-defence batteries; power 4,500, visual range 1,300 m.
+  BSGO Nova's `game-features.html` frames fortification as an outpost score of
+  0–3,000 (active at 900, jump beacon at 1,000, "fortified hull plus four heavy
+  platforms" at 3,000); `combat-reference.html` confirms platform guns are
+  omnidirectional (arc ≥180°) with the platform's point defence at ~700 accuracy.
+- **Generic weapon platforms** (main wiki's `Platforms` page — a related AI-defence
+  shape): dormant until attacked or a ship is within ~1,200 m; light gun range
+  ~1,600 m, heavy ~2,000 m, missiles ~3,500 m; no hull regen; respawn in place after
+  ~10 min; Guardian = 2 cannons + 1 launcher, Suppression = 2 cannons + 2 launchers;
+  hull/power tiers Light 1,250/500, Medium 4,250–5,750/750, Heavy 7,250–8,750/1,000.
+- Folded into a concrete proposal in §2.7 ("Outpost defence (proposed)") and left as
+  an open §4 item; not implemented.
 
 **J. Mining, planetoids and the event loop.** Planetoid mining (scan → call a mining
 ship for a fee → defend it from escalating waves → it breaks up when drained) is a
@@ -3761,8 +3819,13 @@ project:
 - [x] ~~Decide outpost scope~~ — resolved: every system has an outpost per faction
       by default, with a home-region exception. Implemented in
       `main/data/star_systems.lua` (§2.7).
-- [ ] Design outpost combat: how outposts can be attacked and what defense systems
-      they have — explicitly deferred by the user, not designed yet (§2.7).
+- [ ] Implement the proposed outpost defence (§2.7, reference data in §2.13 I): an
+      armed outpost core plus up to 4 graded sentry platforms. Decide the
+      fortification/control-point scaling, whether platforms are separate
+      server-side targets or folded into the outpost's own numbers, and the
+      defensive AI (dormant until ~1,200 m, ~1,600–2,000 m guns, ~3,500 m missiles,
+      no hull regen, ~10 min respawn). The attack side already exists
+      (`nakama-server/modules/outposts.lua`, §2.7); only the defensive layer is new.
 - [ ] Tune the outpost corner-placement inset (`M.OUTPOST_CORNER_FRACTION = 0.8`,
       §2.7) — currently a placeholder, not real level-design placement.
 - [ ] Confirm the opposing-ship population cap value (`M.OPPOSING_SHIP_CAP = 50`,
