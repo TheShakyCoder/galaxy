@@ -29,6 +29,7 @@ local asteroid_registry = require("main.asteroid_registry")
 local asteroid_data = require("main.data.asteroids")
 local skin_flight = require("main.skin_flight")
 local profile = require("main.profile")
+local audio = require("main.audio")
 
 -- Two DIFFERENT "forward" concepts, deliberately kept separate - conflating
 -- them into one shared FORWARD constant was a real bug, found via live
@@ -593,20 +594,79 @@ end
 -- actually changes.
 local ENGINE_MIN_THRUST = 0.01 -- m/sec of commanded speed; below this the engines are idle
 
-local function set_engine_sound(self, on)
-	if on == self.engine_sound_on then
-		return
+-- Pitch scales with THRUST LEVEL rather than a fixed offset (per direct
+-- instruction: "scale the engine pitch with thrust level"). Thrust level is the
+-- commanded speed as a fraction of the ship's unboosted top speed, so the pitch
+-- rises smoothly from the recorded 1.0 at idle to 1 + ENGINE_PITCH_MAX (1.2, i.e.
+-- +20%) at full throttle, then holds there under boost - boost commands above
+-- max_speed, so the fraction is clamped. There's no sound.set_speed(), but
+-- `speed` is a component property and the engine retunes live voices when it
+-- changes (verified against 1.13.1's comp_sound.cpp,
+-- SoundSetParameter/PARAMETER_SPEED), so this is written with go.set via
+-- main/audio.lua's M.set_speed and can follow the throttle every frame.
+local ENGINE_PITCH_MAX = 0.2
+
+-- Commanded speed as a 0..1 fraction of the unboosted top speed. Clamped, so
+-- boost (above max_speed) sits at the same ceiling as full throttle.
+local function thrust_level(target_speed, max_speed)
+	if not max_speed or max_speed <= 0 then
+		return 0
 	end
-	self.engine_sound_on = on
+	return math.max(0, math.min(1, target_speed / max_speed))
+end
+
+-- How far astern the engine loop's origin sits, in metres, along the ship's
+-- own -Z (SHIP_FORWARD is +Z, so the stern is -forward). PLACEHOLDER
+-- (plan.md §4) - roughly the stern of the current Patrol hull rather than a
+-- per-ship value; a real per-chassis origin belongs in ships.lua next to
+-- `flight_camera` and `slot_positions`.
+local ENGINE_ORIGIN_OFFSET = 6
+
+-- Where a ship-local (x, z) offset sits in the world, given the ship's
+-- position and rotation. Ship-local axes: +z = bow, +x = starboard, +y = up
+-- - the same convention ships.lua's own slot_positions table uses.
+local function ship_local_to_world(pos, rot, local_x, local_z)
+	local forward = vmath.rotate(rot, SHIP_FORWARD)
+	local right = vmath.rotate(rot, RIGHT)
+	return pos + right * local_x + forward * local_z
+end
+
+local function engine_origin(self, pos, rot)
+	pos = pos or go.get_position()
+	rot = rot or go.get_rotation()
+	return ship_local_to_world(pos, rot, 0, -ENGINE_ORIGIN_OFFSET)
+end
+
+-- `level` is the thrust level (0..1, see thrust_level above): 0 means idle.
+-- Called every frame, so it both starts/stops the loop on the idle boundary and
+-- keeps the pitch following the throttle while it runs.
+local function set_engine_sound(self, level)
+	local on = level > 0
+	if on ~= self.engine_sound_on then
+		self.engine_sound_on = on
+		if on then
+			-- Positioned at the STERN (per direct instruction: "the engine
+			-- movement sound should be localised to the rear of the ship"), not
+			-- the ship's centre - so with the stock chase camera (looking at the
+			-- stern) it reads as centred-and-behind, and from any future camera
+			-- angle it still comes from where the engines actually are. The
+			-- offset is re-applied every frame in update() as the ship turns.
+			audio.play_loop("#engine_sound", engine_origin(self), { attenuate = false })
+		else
+			-- Thrust cut: restore the recorded pitch before stopping, so the next
+			-- activation starts clean rather than inheriting a raised value.
+			audio.set_speed("#engine_sound", 1)
+			audio.stop_loop("#engine_sound")
+		end
+	end
 	if on then
-		sound.play("#engine_sound")
-	else
-		sound.stop("#engine_sound")
+		-- Follow the throttle: +ENGINE_PITCH_MAX at full thrust, unity at idle.
+		audio.set_speed("#engine_sound", 1 + ENGINE_PITCH_MAX * level)
 	end
 end
 
 local function complete_dock(self)
-	set_engine_sound(self, false) -- engines off before the ship leaves flight
+	set_engine_sound(self, 0) -- engines off before the ship leaves flight
 	network.leave_system() -- docked ships leave the system's match (which stops any fire)
 	self.firing = false
 	self.fire_order = nil
@@ -1121,8 +1181,20 @@ local function activate_analyser(self)
 		msg.post("asteroid_hub#script", "analyser_status", { text = "NO ASTEROID ANALYSER FITTED" })
 		return
 	end
+	-- The slot the analyser is actually fitted in, so the hub can put the scan
+	-- sound at that mount rather than the ship's centre (plan.md §2.12).
+	local slot = nil
+	for _, entry in ipairs(session.get_loadout() or {}) do
+		local instance = session.get_instance(entry.instance_id)
+		if instance and instance.item_key == "asteroid_analyser" then
+			slot = entry.slot
+			break
+		end
+	end
+	local pos, rot = go.get_position(), go.get_rotation()
 	msg.post("asteroid_hub#script", "analyse", {
-		position = go.get_position(), range = analyser.range_m, scan_time = analyser.scan_time_s,
+		position = pos, range = analyser.range_m, scan_time = analyser.scan_time_s,
+		origin = slot and weapon_mount_position(self.ship_id, slot, pos, rot) or pos,
 	})
 	-- The server runs the same scan and awards XP for new asteroids.
 	network.analyse()
@@ -1166,6 +1238,22 @@ end
 local DEFAULT_RELOAD_S = 0.5
 local MUZZLE_OFFSET = 6 -- m ahead of the ship's centre
 
+-- The world position of weapon slot `slot`'s mount, from ships.lua's own
+-- slot_positions table (the same {x, y} the outpost screen draws the fitting
+-- markers from, where +y is toward the bow) - so the firing sound comes from
+-- the mount that actually fired, not the ship's centre. Falls back to the
+-- ship's centre for any slot without a position (Escort/Frigate ships have
+-- empty slot_positions, plan.md §2.1.2).
+local function weapon_mount_position(ship_id, slot, pos, rot)
+	local ship = ships.SHIPS[ship_id]
+	local positions = ship and ship.slot_positions
+	local entry = positions and positions[slot]
+	if not entry then
+		return pos
+	end
+	return ship_local_to_world(pos, rot, entry.x, entry.y)
+end
+
 local function update_weapon_fire(self, dt, target, pos, rot)
 	self.gun_timers = self.gun_timers or {}
 	local can_shoot = target and not target.destroyed and target.relation ~= "friendly" and target.kind ~= "ship"
@@ -1183,7 +1271,13 @@ local function update_weapon_fire(self, dt, target, pos, rot)
 				local dir = dist > 0 and to_target / dist or forward
 				if reach <= module.max_range_m and vmath.dot(forward, dir) >= math.cos(math.rad((module.arc or 0) / 2)) then
 					local aim = target.kind == "asteroid" and (pos + dir * math.max(0, dist - target.radius)) or target.pos
-					msg.post("asteroid_hub#script", "shot", { from = pos + forward * MUZZLE_OFFSET, to = aim })
+					msg.post("asteroid_hub#script", "shot", {
+						from = pos + forward * MUZZLE_OFFSET,
+						to = aim,
+						-- Where this shot's sound should come from - the firing
+						-- mount itself (plan.md §2.12).
+						origin = weapon_mount_position(self.ship_id, slot, pos, rot),
+					})
 					timer = module.reload_s or DEFAULT_RELOAD_S
 					shot = true
 				end
@@ -1639,8 +1733,10 @@ function update(self, dt)
 	-- target_speed rather than self.speed is the point: with the throttle at 0
 	-- target_speed is 0 even though self.speed is still bleeding off, so the
 	-- loop stops with the thrust instead of humming until the ship drifts to a
-	-- halt.
-	set_engine_sound(self, target_speed > ENGINE_MIN_THRUST)
+	-- halt. The thrust LEVEL (0..1, fraction of top speed) drives the loop's
+	-- pitch too - see set_engine_sound.
+	local thrust = target_speed > ENGINE_MIN_THRUST and thrust_level(target_speed, max_speed) or 0
+	set_engine_sound(self, thrust)
 
 	local forward = vmath.rotate(rot, SHIP_FORWARD)
 	pos = pos + forward * self.speed * dt
@@ -1823,6 +1919,18 @@ function update(self, dt)
 	-- frame's - reading them made the marker lag a frame behind the camera
 	-- and drift off the target whenever the ship was turning.
 	self.camera_pos = camera_pos
+	-- The camera IS the audio listener (plan.md §2.12): publish it every
+	-- frame so the hub's world sounds (asteroid shot/breakup/scan) pan and
+	-- fade relative to what the player is actually looking through. Because
+	-- the listener carries the camera's own rotation, a future camera mode
+	-- that re-orients (or relocates) the camera changes the panning for
+	-- free - nothing here assumes the camera sits behind the ship.
+	audio.set_listener(camera_pos, self.camera_rot)
+	-- Re-place the engine loop at the ship's stern as it turns. Cheap (two
+	-- property writes) and only while the loop is actually running.
+	if self.engine_sound_on then
+		audio.update_loop("#engine_sound", engine_origin(self, pos, rot), { attenuate = false })
+	end
 	-- The window's own shape (a browser window resize, ...) - see
 	-- update_gui_mapping for what the target marker does with it.
 	update_gui_mapping(self)

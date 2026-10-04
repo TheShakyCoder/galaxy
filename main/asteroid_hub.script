@@ -24,6 +24,7 @@ local asteroids = require("main.data.asteroids")
 local asteroid_registry = require("main.asteroid_registry")
 local network = require("main.network")
 local asteroid_geometry = require("main.asteroid_geometry")
+local audio = require("main.audio")
 
 -- Same ambient-lighting boost applied to every model this project renders
 -- during flight (per direct instruction: "increase the general ambient
@@ -50,11 +51,17 @@ local RESULT_SHOWN_S = 6
 local spawned = {}
 local debris = {} -- visual-only objects, excluded from targeting immediately
 
--- Audio (this hub owns both, since it's the one place that knows a shot
--- was fired and a rock was destroyed - see on_message's "shot" and update()'s
--- despawn). Both are one-shot components on this game object
--- (main/asteroid_hub.go), played with sound.play(); the breakup sound is the
--- placeholder for the destruction animation that's still to come.
+-- Audio (this hub owns all three, since it's the one place that knows a shot
+-- was fired, a rock was destroyed, and a scan started - see on_message's
+-- "shot", update()'s despawn, and analyse() below). All are one-shot
+-- components on this game object (main/asteroid_hub.go).
+--
+-- All three are positioned in the world through main/audio.lua (plan.md
+-- §2.12): the shot sound at the firing weapon's own mount (the sender passes
+-- `origin`), the breakup sound at the rock, the scan sound at the analyser's
+-- slot (also passed as `origin`). The hub itself has no camera, so it reads
+-- the listener main/player_ship.script publishes each frame - pan and gain
+-- come out relative to whatever the player is looking through.
 --
 -- Weapon fire (main/player_ship.script "shot"): a bright pellet flies from
 -- the gun to the target at SHOT_SPEED, purely visual (only outposts take
@@ -182,7 +189,7 @@ end
 
 -- Starts analysing every asteroid within `range` metres of `pos` (surface
 -- distance, so a big rock counts as soon as its edge is in range).
-local function analyse(pos, range, scan_time)
+local function analyse(pos, range, scan_time, origin)
 	if scan then
 		return -- one scan at a time; the analyser is busy until it finishes
 	end
@@ -201,6 +208,16 @@ local function analyse(pos, range, scan_time)
 		go.set(url, "tint", AMBIENT_TINT)
 		go.animate(url, "tint", go.PLAYBACK_LOOP_PINGPONG, SCAN_TINT, go.EASING_INOUTSINE, SCAN_PULSE_S)
 	end
+	-- The scan is starting: play its sound ONCE, here, not per rock and not
+	-- looped - per direct instruction ("scanning audio should run one time
+	-- only when the asteroid analyser is activated"). The early returns above
+	-- (already scanning, or nothing in range) never reach this line, so a
+	-- refused activation stays silent. This is a one-shot, unlike the engine
+	-- loop (main/player_ship.script): the 4.8 s clip simply plays out over the
+	-- 2 s scan, and finish_scan()/cancel_scan() deliberately don't stop it.
+	-- Positioned at the analyser's own slot (`origin`, from
+	-- player_ship.script) rather than the ship's centre.
+	audio.play("#scan_sound", origin)
 	scan = { asteroids = found, timer = timer.delay(scan_time, false, finish_scan) }
 	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
 	show_status(string.format("ANALYSING %d %s...", #found, noun))
@@ -241,7 +258,11 @@ function update(self, dt)
 			-- set): the asteroid breaks up. Play the breakup sound where the
 			-- rock was (sound.play() has no position of its own), then take it
 			-- out of the world.
-			sound.play("#breakup_sound")
+			-- Positioned at the rock's own position (per direct instruction: "the
+			-- asteroid destruction sound should be localised to the location of
+			-- the asteroid") - so a rock mined off to the player's right breaks
+			-- up on the right, and one far away fades with distance.
+			audio.play("#breakup_sound", a.pos)
 			-- Cancel any scan that includes it first: cancel_scan() touches
 			-- every rock it found, and this one is about to be deleted.
 			cancel_scan()
@@ -265,7 +286,7 @@ function on_message(self, message_id, message)
 	if message_id == hash("spawn_field") then
 		spawn_field(message.system_id)
 	elseif message_id == hash("analyse") then
-		analyse(message.position, message.range, message.scan_time)
+		analyse(message.position, message.range, message.scan_time, message.origin)
 	elseif message_id == hash("shot") then
 		local from, to = message.from, message.to
 		local dir = to - from
@@ -283,8 +304,10 @@ function on_message(self, message_id, message)
 		end)
 		-- The mining cannon firing (main/player_ship.script posts one "shot"
 		-- per weapon that actually fires, so this plays once per shot, not
-		-- once per frame).
-		sound.play("#hit_sound")
+		-- once per frame). Positioned at the firing weapon's own mount
+		-- (`message.origin`, from player_ship.script) - so the port gun sounds
+		-- left and the starboard gun right (per direct instruction).
+		audio.play("#hit_sound", message.origin, { attenuate = false })
 	elseif message_id == hash("analyser_status") then
 		-- player_ship.script's own messages (e.g. no analyser fitted)
 		show_status(message.text, 3)

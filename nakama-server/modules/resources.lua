@@ -4,7 +4,7 @@ Hydrogen.
 
 The three balances live in the player's saved profile (profile/state, see
 main/session.lua's own M.water/M.iron/M.hydrogen), separate from the two
-currencies Tope and Valor. They were static placeholders until mining
+currencies Tope and Valour. They were static placeholders until mining
 existed; now a player whose final shot depletes an asteroid is credited
 that asteroid's own resource amount (main/data/asteroids.lua
 resource_amount), decided by the system's match (system_match.lua) - never

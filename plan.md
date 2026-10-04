@@ -260,7 +260,7 @@ Accord (fish) matrix — Carrier column intentionally not yet addressed:
 | **Tactical** | **Anglerfish** (proposed) — small, wins by trickery/lures rather than speed | **Lionfish** (proposed) — mid-size, venomous, precise ambush predator | **Hammerhead** (proposed) — large shark famous for its sensory/tactical edge |
 
 - **Patrol Interceptor's proposed names** — same confirm-or-correct pattern as
-  Tope/Valor: Accord = **Sardine**, Swarm = **Hummingbird**. Set in
+  Tope/Valour: Accord = **Sardine**, Swarm = **Hummingbird**. Set in
   `main/data/ships.lua`'s `faction_skins`, replacing the old `<TBD>` name
   placeholders — flag if you want different species. (Sardine specifically maps
   to the **Interceptor** row above.)
@@ -678,13 +678,13 @@ per §0 (mechanics/structure are fair game; BSG-specific names are not). Numbers
 are intentionally not carried over 1:1 from the source — only the roles/relationships
 are; exact rates are a balancing pass for later (§4).
 
-**Three harvestable resources — roles swapped per confirmed correction, and
-Titanium renamed to Hydrogen:**
+**Three harvestable resources — renamed from the source's own three (confirmed
+BSGO reference: Tylium → Hydrogen, Titanium → Iron, Water → Water):**
 
 | Our name | Role | Reference-game role it replaces (internal only, never player-facing) |
 |---|---|---|
-| **Hydrogen** (renamed from Titanium) | Base/general resource — **does not convert into Tope**. Instead, Hydrogen is spent **directly** as a basic-tier currency-resource: cheap/everyday shop purchases can be paid for with Hydrogen alone. More advanced purchases require an additional resource/currency **on top of** Hydrogen (Tope being the main example) — mirrors the source game's pattern where its base resource paid for most things outright, but pricier items needed it combined with the premium currency. Also confirmed as **ship fuel** — FTL jumps and boost both cost Hydrogen (§2.1.1). | Replaces **"Trillium"** (per confirmed intent — same name-association as when this resource was still called Titanium, just carried over to the rename). |
-| **Iron** | Dedicated **repair** resource — repairs ship wear/tear over time (hull + module wear, §2.8). Swapped from Hydrogen/Titanium's old role. | Replaces **"Deuterium"** (per confirmed intent). |
+| **Hydrogen** (renamed from **Tylium**) | Base/general resource — **does not convert into Tope**. Instead, Hydrogen is spent **directly** as a basic-tier currency-resource: cheap/everyday shop purchases can be paid for with Hydrogen alone. More advanced purchases require an additional resource/currency **on top of** Hydrogen (Tope being the main example) — mirrors the source game's pattern where its base resource paid for most things outright, but pricier items needed it combined with the premium currency. Also confirmed as **ship fuel** — FTL jumps and boost both cost Hydrogen (§2.1.1). | Replaces **Tylium** (per confirmed intent — the source's base resource *and* ship fuel, matching Hydrogen's own double role). |
+| **Iron** | Dedicated **repair** resource — repairs ship wear/tear over time (hull + module wear, §2.8). | Replaces **Titanium** (per confirmed intent). |
 | **Water** | Sells toward **Tope** (Marque abandoned — see below; Water's sale now
 feeds Tope directly instead) — an efficient farming resource. | Water (name unchanged) — in the source game Water was a minor/flavor resource whose main gameplay purpose was conversion into the premium currency |
 
@@ -694,10 +694,10 @@ three-currency draft):
 | Currency | Tier | Earned via | Spent on |
 |---|---|---|---|
 | **Tope** | General | **For now, exactly two sources, decided**: (1) mining an asteroid that contains Water and selling that Water for Tope; (2) buying Tope directly with real money. No other earn source (combat rewards, daily assignments, Robot kills, etc.) is active yet — those were provisional ideas from the Marque-merge, not confirmed for Tope. | Everything beyond basic Hydrogen-only purchases — advanced items, ships, ship upgrades, booster items, resources — typically **required alongside Hydrogen** rather than replacing it |
-| **Valor** (new, replaces "Merits") | PvP-only | **PvP kills only** (never from PvE/Robots) — small amount per kill, a bonus for damaging/forcing the retreat of an enemy siege objective (ties directly into the contested-node siege mechanic, §2.5), and a bigger bonus for destroying an enemy Carrier | Nuclear ordinance specifically (Nuclear Torpedoes/Launchers, §2.8) and Carrier-class ships — gates the highest-end purchases behind PvP performance, not spending |
+| **Valour** (new, replaces "Merits") | PvP-only | **PvP kills only** (never from PvE/Robots) — small amount per kill, a bonus for damaging/forcing the retreat of an enemy siege objective (ties directly into the contested-node siege mechanic, §2.5), and a bigger bonus for destroying an enemy Carrier | Nuclear ordinance specifically (Nuclear Torpedoes/Launchers, §2.8) and Carrier-class ships — gates the highest-end purchases behind PvP performance, not spending |
 
-- Proposed name **Valor** is a placeholder pending confirmation, same as Tope was —
-  flag if you want a different name.
+- Name **Valour** is confirmed (British spelling, per direct instruction) — no
+  longer a placeholder.
 - Marque (the premium-tier currency) is **abandoned** — its spend role (ships,
   upgrades, boosters) has folded into Tope, which is now the single non-PvP
   currency. Only two of Marque's former earn sources (selling Water, real-money
@@ -765,7 +765,11 @@ below it in the same style.
   `get_water()`/`get_iron()`/`get_hydrogen()` getters.
 - **Unlike Tope, these three are honestly static** — no mining, repair, or
   FTL/boost mechanic exists yet to actually spend or earn them, so nothing
-  ever changes them after the starting value is set. `ships.lua`'s
+  ever changes them after the starting value is set. **(Since superseded:**
+  mining an asteroid now credits the depleting player's Water/Iron/Hydrogen,
+  and FTL jumps spend Hydrogen — see §2.11 and §2.10.1. The starting values
+  below are still placeholders, and the scale mismatch against
+  `repair_cost_iron` is still open, §4.**)** `ships.lua`'s
   `repair_cost_iron`/`boost_cost_hydrogen_per_sec`/`ftl_cost_hydrogen_per_ly`
   fields are stats a future mechanic will read, not something currently
   deducting against these balances — flagged explicitly in `session.lua`'s
@@ -2777,6 +2781,414 @@ in the new script are flagged placeholders, same footing as other TBC numbers,
   in a real engine and worth the player testing directly (W/A/S/D or arrow keys
   once in flight).
 
+### 2.11 Asteroid fields: hull, mining, procedural meshes and breakup
+
+Asteroids stopped being decorative and became real, server-authoritative mining
+targets, and each one now renders as its own seeded rock that visibly breaks apart
+when mined out. This replaces the "plain spheres, no mining/HP yet" placeholder this
+project shipped through §2.10.1 — that comment in `main/data/asteroids.lua` is now
+stale and should be read against this section.
+
+**Hull and mining (decided — server-authoritative, like outposts)**
+- `main/data/asteroids.lua` gained `M.max_hull(diameter_m)` = `max(100, diameter × 10)`
+  (`M.HULL_PER_METER`/`M.MIN_HULL`), shared by the game (the HUD readout) and the
+  server (its damage resolution) so both agree on what "full hull" means. Both
+  numbers are PLACEHOLDERS (§4) — at the Gnat autocannon's ~11 dmg/sec a 10 m rock
+  (100 hull) takes ~9 s and a 50 m one (500 hull) ~45 s.
+- Each rock also holds a mineable amount, `M.resource_amount(resource_id, diameter_m)`
+  — for now a fixed proportion of its own hull (`M.RESOURCES[].yield`: 2/3 for
+  hydrogen and iron, 1/3 for water, nothing for inert). Also a PLACEHOLDER: the real
+  formula is meant to depend on size and the system's threat level (§2.7), among
+  other factors.
+- `nakama-server/modules/system_match.lua` owns depletion. Two new ops: **OP_ASTEROIDS
+  (9)**, a twice-a-second broadcast of hull for every rock in the system that isn't at
+  full, and **OP_RESOURCE (10)**, sent only to the player whose final shot depleted a
+  rock. A mined-out rock is `available = false` for `ASTEROID_RESPAWN_MS` (5 minutes),
+  then returns at full hull. `nakama-server/modules/resources.lua` credits the
+  depleting player's Water/Iron/Hydrogen — the first thing to actually move those
+  balances, which §2.6.2 flagged as static display-only.
+- `main/network.lua`'s `asteroid_state(system_id, index)` is the client's view of that
+  hull, including a local `returns_at` so a rock coming back doesn't have to wait on a
+  round trip (same trick the outpost state already uses).
+- **Client fire stays visual only** — a switched-on weapon inside a rock's range and
+  firing arc mines it down, but the server decides the damage and the reward, exactly
+  as for outposts (§3.3's server-authoritative rule). Targeting an asteroid now shows
+  `HULL <hp> / <max_hp>` in the flight HUD.
+
+**Procedural rock meshes (decided — one seeded rock per asteroid, per direct
+instruction)**
+- `main/asteroid_geometry.lua` — a **pure-Lua, engine-independent** generator: no
+  engine APIs and no global random state, so a `(system_id, field index)` pair always
+  produces the same rock, including after a jump away and back or a respawn. Uses a
+  local integer PRNG (Lehmer) seeded from the same string hash the field data already
+  uses. Subdivides a 20-face icosahedron `M.SUBDIVISIONS = 3` times, stretches it on
+  three axes, carves nine overlapping crater depressions and adds broad + fine surface
+  detail, then recomputes smooth normals. Rescaled so every vertex stays inside radius
+  0.5, i.e. inside the existing gameplay/targeting sphere — **targeting radii,
+  positions, mining rewards and respawn rules are all unchanged**.
+- Split into 20 fracture wedges as it generates: each wedge gets its own centroid,
+  outward drift vector and random delay (`fragment`/`motion` vertex streams). Exterior
+  faces are 1,280 triangles; each wedge is closed with darker "freshly fractured"
+  interior walls, 480 more. **5,280 non-indexed vertices × 18 floats (~371 KiB per
+  mesh, ~18.1 MiB for the default 50-rock field)** — generated and uploaded once per
+  spawn, not per frame.
+- `main/asteroid.script` — owns one unique buffer resource per rock. It builds the
+  buffer from the generator's streams, wraps it with `resource.create_buffer()`, and
+  assigns it to the model's `vertices` property, so every asteroid shares the same
+  `rock.mesh` component while each carries its own geometry. It detaches and releases
+  that resource in `final()`, and widens the buffer's `AABB` metadata when the breakup
+  starts so the shader-displaced fragments don't get frustum-culled.
+- `assets/models/asteroids/rock.{mesh,material,vp,fp}` — a local-space mesh with a
+  custom material in the existing `model` render predicate. The vertex shader moves
+  fragments (per-wedge rotation about a random axis + outward drift + shrink), the
+  fragment shader lights the surface camera-relatively and applies a **screen-door
+  (Bayer-dithered) dissolution** — deliberately opaque and depth-writing, so it needs
+  no new transparent render pass and no global render-script change.
+- `game.project` gained `[mesh] max_count = 256`, sized for the default 50-rock field
+  plus deletion-in-progress and concurrent debris. Larger custom fields would need a
+  capacity review.
+- `main/asteroid_hub.script` passes each rock's seed to the factory and keeps a
+  separate `debris` list so a disintegrating rock leaves the targeting registry
+  **immediately** but keeps rendering until it's done.
+- **The old sphere is deliberately kept**: `main/shot.go` (weapon tracers) and
+  `main/remote_ship.go` (the remote-ship model fallback) still use
+  `asteroid.model`/`asteroid.glb`, and `tools/build_asteroid_model.py` still generates
+  it. `main/asteroid.go` is the only thing that moved to `rock.mesh`.
+- **Verified**: `bob.jar` compiles every new resource cleanly (`rock.meshc`,
+  `rock.bufferc`, `rock.materialc` and the compiled shader all present in
+  `build/default/`), and the generator itself was checked standalone with `luajit`:
+  50 unique seeds, repeatable output, finite values, unit normals, all vertices inside
+  radius 0.5, no degenerate triangles, and independence from global `math.random`
+  state. `tests/test_asteroids.py` (needs `lupa` in a disposable Python env) covers
+  the same plus the mocked depletion/scan/respawn/jump lifecycle.
+
+**Destruction animation (decided — 2-second fragment breakup)**
+- When the server marks a rock unavailable, the hub posts `disintegrate` to its
+  script, which then drives a `breakup` shader uniform from 0 to
+  `M.DURATION = 2` seconds: fragments separate over the first ~0.32 s, drift outward
+  and tumble, then shrink and dissolve from ~1.1 s, and the object deletes itself at
+  2 s. A second `disintegrate` cannot restart the effect, and jumping systems removes
+  any remaining debris immediately.
+- **Standalone visual review rig**: `tests/asteroid_preview/` is a tiny separate
+  collection (six rocks, its own bootstrap/render settings) built with
+  `--settings tests/asteroid_preview/preview.ini` and served locally, so the actual
+  runtime component, Lua generator and shaders can be inspected without a login or a
+  live game server. `tools/prepare_asteroid_preview.py` adds labelled buttons (Intact
+  / Fractured · 0.65 s / Dissolving · 1.5 s / Play breakup / New rocks / auto cycle).
+  Review screenshots are in `artifacts/asteroids/`.
+- **Not yet verified**: live multiplayer mining and mobile-device frame time/memory.
+  Those remain separate acceptance checks before deployment — flagged in §4.
+
+### 2.12 Audio (decided — first pass, per direct instruction)
+
+First sounds in the project; before this there was no `.sound` component, no sound
+file and no `[sound]`/`[audio]` section anywhere. Four `.sound` components in
+`assets/audio/`, all four now wired up:
+
+| Sound component | File | Plays when |
+|---|---|---|
+| `asteroid_hit.sound` | `08_asteroid_hit.wav` | The mining cannon fires |
+| `asteroid_breakup.sound` | `09_asteroid_breakup.wav` | An asteroid is destroyed |
+| `engine_loop.sound` | `19_engine_continuous_three_loops.wav` | The ship's engines are producing thrust (looping) |
+| `scan.sound` | `18_scanning_background_2s.wav` | The Asteroid Analyser's scan starts (one-shot) |
+
+- **Both asteroid sounds live on the hub**, not on the rock or the ship: it's the one
+  place that already knows a shot was fired and a rock was destroyed. `hit_sound`
+  plays on the existing `shot` message (`player_ship.script` posts exactly one per
+  weapon that actually fires, so it's once per shot, not once per frame);
+  `breakup_sound` plays at the despawn point, right before the rock is handed to its
+  disintegration.
+- **The engine loop follows THRUST, not speed** (per direct instruction: *"the engine
+  is providing not the speed of the ship itself. So once the thrust has been set to 0
+  the engine noise should stop even if the ship is still slowing down"*). It's keyed
+  off the **commanded** speed (`target_speed` — the throttle lever, boost, or Follow
+  Friend's speed-matching), not the ship's actual `self.speed`, which keeps bleeding
+  off under acceleration after the throttle is cut. So closing the throttle silences
+  it immediately while the ship coasts to a stop. It covers boost and Follow Friend
+  automatically for the same reason, and is force-stopped in `complete_dock()` — which
+  docking, quitting and ship destruction all route through — so it can't hum on the
+  outpost screen. A `self.engine_sound_on` guard means `sound.play()`/`sound.stop()`
+  only fire when the state actually changes, not every frame.
+- **Gain is left at unity** on all three: there's no existing mix in the project to
+  balance against, so rather than invent levels, the placeholder default is kept and
+  the balance pass is left open (§4).
+- **The scan sound plays once per activation, from the hub's `analyse()`** (per
+  direct instruction: *"scanning audio should run one time only when the asteroid
+  analyser is activated"*). `analyse()` has two early returns — already scanning, or
+  nothing in range — so a refused activation stays silent; the sound only plays on
+  the path that actually starts a scan, and it isn't played per rock. It's a plain
+  one-shot, deliberately unlike the engine loop: neither `finish_scan()` nor
+  `cancel_scan()` stops it early.
+- **The clip is 2.0 s — deliberately cut to match the scan's own length**
+  (`computer_modules.lua`'s `scan_time_s = 2`), so the sound ends as the scan does.
+  It replaced an earlier 4.8 s take (`16_scanning_background_only.wav`) that
+  overhung the scan; that file is now unreferenced and can be deleted.
+- **The engine loop's pitch scales with thrust level** (per direct instruction:
+  *"scale the engine pitch with thrust level"*), from the recorded pitch at idle to
+  **+20% at full thrust** (`ENGINE_PITCH_MAX = 0.2`). Thrust level is the *commanded*
+  speed as a 0..1 fraction of the ship's unboosted top speed, so it rises smoothly
+  with the throttle and clamps at the top — boost commands above top speed, so it
+  holds at +20% rather than running away. It rides the same thrust-vs-speed rule as
+  the loop itself: idle (0) both silences the loop and resets the pitch, and the
+  pitch is re-applied every frame while thrust is held so it follows the lever.
+  There is no `sound.set_speed()` — unlike `pan`/`gain`, `speed` is a component
+  property — so it's written with `go.set` (`main/audio.lua`'s `M.set_speed`).
+  **Verified against 1.13.1's `comp_sound.cpp`** that this is safe to do per frame:
+  `SoundSetParameter(PARAMETER_SPEED)` updates the component *and* retunes every live
+  voice (`dmSound::SetParameter`), so an already-playing loop follows the throttle
+  live rather than only on the next `sound.play`. The 0→1→1.2 mapping was checked
+  standalone with `luajit` (idle, half, full, boost-clamped, below-min-thrust, and
+  zero/nil top-speed safety).
+- **The engine loop uses `19_engine_continuous_three_loops.wav`** (18 s, three
+  seamless loops, per direct instruction), replacing the earlier 12 s
+  `12_movement_loop_preview.wav` preview take — which is now unreferenced and can
+  be deleted. The component keeps `looping: 1`/`loopcount: 0`, so the single
+  three-loop clip plays indefinitely while thrust is held.
+**Spatialisation (decided — camera-relative pan + gain, per direct instruction)**
+
+Every sound is positioned in the world, each at the origin that actually makes it:
+
+| Sound | Origin |
+|---|---|
+| Weapon fire | The **firing weapon's own mount** |
+| Asteroid breakup | The **rock's own position** |
+| Scan | The **analyser's fitted slot** |
+| Engine loop | The **rear of the ship** |
+
+- **The constraint that shapes this**: Defold's built-in sound system has **no
+  listener and no 3D position**. A component's only spatial controls are `pan`
+  (-1..1, i.e. ±45°) and `gain`; `sound.play` accepts both, and `sound.set_pan`/
+  `sound.set_gain` retarget an already-playing voice (verified against the pinned
+  **1.13.1** engine source, `script_sound.cpp`). True 3D positional audio —
+  elevation, HRTF, occlusion — would need a native extension (OpenAL, or FMOD).
+  **Not adopted**, because it would add a native dependency to a Docker build that
+  has already failed once fetching one, and FMOD additionally adds megabytes and
+  licensing terms. The built-in pan/gain route is the technique Defold's own engine
+  team recommends for positional audio.
+- **`main/audio.lua`** is the one place that does the maths, shared by
+  `player_ship.script` (the listener) and `asteroid_hub.script` (the world sounds).
+  `M.mix(world_pos)` returns pan and gain for a world position; `M.play` plays a
+  one-shot at a position; `M.play_loop`/`M.update_loop` drive a positioned loop.
+- **The listener is the chase camera, and its own axes drive everything**: pan is
+  the dot product of the unit direction-to-source with the listener's own local
+  `+X` (`RIGHT`), and gain falls off linearly from full at 20 m to silent at
+  2,000 m (both placeholders). Because it's derived from the listener's basis and
+  not from any assumption about where the camera sits, **a future camera mode
+  changes the panning for free** — a camera looking up from below the ship flips
+  left/right automatically, with no change to `audio.lua`. This was the deciding
+  factor in choosing this approach over the extensions.
+- **A sound dead ahead and one dead astern both pan centre** — correct for a
+  left/right control, and the reason elevation can't be represented (a rock
+  directly above pans identically to one directly below; height only shows up
+  through distance). Flagged as a known limit (§4).
+- **Origins come from data, not hardcoding**: weapon and analyser mounts use
+  `ships.lua`'s existing `slot_positions` table (the same `{x, y}` the outpost
+  screen draws its fitting markers from, `+y` toward the bow), converted to world
+  space with the ship's rotation; the ship-local axes (+z bow, +x starboard) are
+  the same convention that table already uses. The engine's stern offset is a
+  placeholder constant — a real per-chassis value belongs in `ships.lua` beside
+  `flight_camera` and `slot_positions` (§4). Ships with empty `slot_positions`
+  (Escort/Frigate, §2.1.2) fall back to the ship's centre rather than erroring.
+- **One-shots pass pan per-play; the loop drives it through the component.** Two
+  weapons can fire in the same frame from one shared component, and each needs its
+  own pan — so `sound.play`'s per-play pan (which *adds to* the component's) is
+  used, leaving the component at 0. A loop is alone on its component, so it uses
+  `set_pan`/`set_gain`, which is what lets an already-playing loop follow a moving
+  camera.
+- **Verified**: the pan/gain maths was checked standalone with `luajit` against a
+  stubbed `vmath` — right/left pan signs, centre for dead ahead/astern/above, the
+  ~0.707 pan at 45° off-axis, the 20 m/2,000 m falloff (including clamping to
+  silence beyond range), the no-listener fallback (centre, full gain — never
+  silent by ordering accident), `attenuate = false` keeping full gain, and the key
+  case: yawing the listener 90° re-pans the same world source, proving pan follows
+  the camera's orientation rather than any fixed assumption.
+- **Verified (build)**: `bob.jar` builds cleanly with all four components,
+  `engine_loop.soundc` compiles with looping enabled (`looping: 1`, `loopcount: 0`),
+  `scan.soundc` references its `.wavc` correctly, and the served HTML5 bundle's
+  archive grew with the new audio. (Note: the growth is *not* exactly the raw WAV
+  byte count — bob re-packs the audio, so the archive delta is smaller than the
+  source `.wav` total. Compare `build/default/assets/audio/*.wavc` for the real
+  packaged sizes.)
+- **Not yet verified**: how the panning actually *sounds* in a live session — the
+  maths is checked, but the perceptual result (whether ±45° reads as convincingly
+  "over there" from the chase camera) is a listening test (§4).
+
+### 2.13 BSGO research — second pass (playbsgo.com, bsgo.fun, both wikis)
+
+Per direct instruction, went back through the two live BSGO revival sites and the
+wikis for **game data we don't yet have**. This section records what was found and
+what it maps to in this project. As everywhere else (§0), the *mechanics/structure*
+are usable; the **names, item text and lore are BSG's and are reference-only** —
+anything adopted gets renamed/labelled originally, exactly like Tylium→Hydrogen,
+Titanium→Iron, Cubits→Tope, Merits→Valour, Draden→Sensor Range already did.
+
+**Sources read this pass**
+- `playbsgo.com` ("BSGO Nova") guides: `game-features.html`, `combat-reference.html`,
+  `bonus-handbook.html`, `upgrade-costs.html`, `mining.html`.
+- `playbsgo.com/api/public/upgrade-costs` — the live catalogue the upgrade-cost page
+  reads from (246 upgradeable items, build 0.0.61; saved to `/tmp/bsgo_upgrade_costs.json`).
+- `bsgo.fandom.com` (main wiki): `Weapons`, `Mining`, `Currency`, `Missiles and
+  Torpedoes`, `Daily Assignments`, `Skills`, `In-game ranks`, `Platforms`, `Outposts`.
+- `bsgonline.fandom.com` (second wiki): `Inventory List`, `Cannon Ammo`, `Missile
+  Ammo`, `Viper Mark II` (a full ship stat block), and its page index.
+- `bsgo.fun` — the landing page only; it exposes no wiki/database/API (its nav is a
+  launcher download). Nothing usable beyond what's already noted.
+
+**A. Combat maths — the biggest gap closed.** `combat-reference.html` publishes the
+whole resolution formula, read from a live server, and this project has **no combat
+resolution at all** (§4). Everything below is *genre maths*, not creative expression,
+so it is directly usable as the starting point for the Nakama combat module:
+- Hit chance `= 67.5 + 0.15 × (Accuracy − Avoidance)`, clamped 0.05–0.95. Only the
+  difference matters; the 95% ceiling is +183, the 5% floor is −417.
+- Effective avoidance scales with throttle for Strike/Escort:
+  `Avoidance × max(throttle ÷ top_speed, 0.25)` — a parked fighter keeps 25% of it;
+  boosting always restores 100%. Line/capital hulls don't fade.
+- Range never changes damage, only hit chance: full chance up to optimal range, then
+  linear decay to ~0.01% at maximum range (the 5% floor does **not** apply past
+  optimal). Below minimum or beyond maximum the weapon simply won't fire.
+- Damage `= roll(DamageLow…DamageHigh) × crit × armour × situational` — a uniform
+  roll, no damage types, no resistances, no range falloff. Crit is a flat ×2, rolled
+  as `5 + 0.15 × (CritOffence − CritDefence)` (uncapped).
+- Armour is linear: `damage kept = (100 − (target_armour − piercing)) ÷ 100`, clamped
+  at 0 (surplus piercing is wasted), minimum 0.1% always gets through.
+- **Firing arcs are half-angles** on the card (a listed 45 = a 90° cone), and both
+  range and arc are measured **from each weapon mount, not the hull centre**. Line
+  hulls deliberately can't bring all guns to bear at once. This directly resolves
+  §2.8/§4's undecided `angle_deg`/`arc` semantics: our per-slot `angle_deg` should be
+  read as a half-angle per mount, and `weapons_autocannons.lua`'s uniform `arc = 75`
+  is therefore a 150°-wide cone — flagged in §4 to re-check.
+- Power: regen is flat and continues in combat; hull regen is blocked for 15 s after
+  taking damage; a refused shot (out of arc/range/power/cooldown) costs nothing.
+- Missiles/torpedoes never roll to hit — they are physical objects. Counters: ECM
+  (100% no-roll lock break), flares (10%→95% by proximity), point defence (must chew
+  through the missile's own hull points), cloak, or outlasting their lifetime. Missile
+  hull points: strike 5, strike torpedo 15, capital 25, line 30, heavy 45, carrier
+  150, **escort 900** (effectively immune to point defence).
+- Per-ship combat reference values worth keeping: avoidance (Viper Mk-II 510,
+  Rhino 490, Gungnir 50, Jotunn 30, Pegasus 15), armour (5/10/40/45/60), hull
+  (450/715/4,550/4,500/80,000), crit defence (80/120/80/120/200), power
+  (100/150/500/750/2,000, regen 5/5/25/25/60, boost 0.5/0.7/6.3/8.1/30 per tick),
+  and the minimum-range dead zones (carrier cannon 2,300, escort missile 1,350,
+  line torpedo 1,200, carrier flak 900, strike torpedo 600, line flak 500, KKC 100).
+
+**B. Ammunition — a whole system we have none of.** Both wikis and the combat
+reference agree on a four-family cannon-round ladder and an ordnance ladder:
+- Cannon rounds: **HE** (damage, both ends: +3/+6/−/+15%), **HESC** (minimum damage
+  only: +10/+25/+40/+60%), **AP** (armour piercing: +20/+25/−/+50%), **HERT**
+  (accuracy: +10/+15/−/+25%). Grade C exists only for Line ships. Because HESC raises
+  only the floor, a strong enough grade makes the low end pass the high end and the
+  weapon stops rolling entirely — a real, documented quirk.
+- Ordnance (missiles, flak, point defence): standard / high-quality (+15%) / master
+  (+30%). Support consumables: repair cells, power cells, flares (all +15/+30),
+  mines (+10/+20).
+- Specialist: radiation packs (+2%, elite +10% decay resistance), escort metal plates
+  (+25%/+50% duration), mini-nukes (+400%), torpedo tokens (+1,900%).
+- Ammo types are **identical percentages across ship classes** — only the underlying
+  weapon differs.
+- Torpedo splash is flat (every hostile in radius takes the full roll), no friendly
+  fire, and torpedoes also drain energy via EMP.
+- Our §2.8 has the `cannon_type` = ordinance/mining split and §4 already lists
+  "define the variety of ordinance types" — this is the real taxonomy to build from.
+
+**C. Upgrade economy — real per-level numbers.** `playbsgo.com`'s upgrade-costs page
+and its API give the exact per-level cost ladder for all 246 items, which is far
+finer than the single placeholder "100 Tope" this project currently charges (§4):
+- Two paths: **currency** (always succeeds) and **tuning kits** (a gamble).
+  `chance = kits ÷ (cubit_price ÷ 1000)`; a guaranteed upgrade costs
+  `ceil(cubit_price ÷ 1000)` kits, and kits are consumed win or lose.
+- Levels 1–10 are paid in resources (tylium, sometimes merits); **levels 11–15 can
+  only be bought with kits** — the resource path is refused past level 10. Every item
+  caps at level 15. This is a clean, directly mappable shape for §4's "real upgrade
+  cost/effect": our Tope/Iron/Hydrogen could be the resource path and a new
+  "tuning kit"-style item the premium path.
+- Cost scales by item tier: Strike weapons ~76,500 cubits / 90,000 tylium over the
+  ladder, Escort ~114,550 / 135,000, Line ~153,000 / 180,000, Capital ~105,000 flat.
+- `playbsgo.com/guides/upgrade-costs.html` itself is worth re-reading whenever the
+  upgrade economy is designed — it also has a working calculator.
+
+**D. Module catalogue breadth — 246 real items in 9 slot families.** The live
+catalogue's internal keys confirm whole *slot families* this project has no concept of
+(our §2.8 is only weapon/hull/engine/computer, Patrol-tier only, ~15 entries):
+- `launcher` (missile/torpedo/rocket launchers), `gun` (machine guns, flechette
+  cannons, KKC), `defensive_weapon` (flak, point defence), `special_weapon`
+  (anti-carrier nuclear launcher), `role` (bomber/stealth/recharge/outpost-mode
+  abilities), plus computer sub-families our schema doesn't name: **buff/debuff**
+  (weapon/engine/computer/avoidance), **firewall**, **penetration/emitter**,
+  **dradis enhancer**, **resource scanner** (normal + experimental/area), **energy
+  capacitor**, **power control unit**, **target designator**, **combat viruses**,
+  **repair/recharge**, **jump transponder**. Multi-role/stealth hulls get their own
+  distinct equipment sets. Worth folding into §2.8's taxonomy when the module list is
+  next expanded.
+
+**E. Real ship stat block — confirms §2.1.1 was a genuine BSGO hull.** The second
+wiki's full Viper Mk-II infobox (hull 450, hull recovery 2.5/s, durability 4,500,
+armour 5, crit defence 80, avoidance 510, turn 52°/s, turn accel 55°/s², inertia
+comp 175 m/s, accel 13.5 m/s², speed 55 m/s, boost 90 m/s, boost cost 0.5/s, FTL
+range 4.5 LY / charge 15 s / cost 20/LY, power 100 / recharge 5/s, emitter 100,
+firewall 100, sensor 2,000 m, visual 200 m, slots 3W/2H/2C/4E + 1 paint + 1
+avionics) is almost exactly this project's own §2.1.1 baseline — which is a useful
+sanity check that the baseline was transcribed correctly, and it surfaces two
+numbers we lack: **Visual Range** (we use 500 m; the real Viper is 200 m) and a
+**paint/avionics slot pair** beyond the four stat groups. Starter loadout is also
+recorded (2× light autocannon, 1× light missile launcher, 2× hull plating, combat
+module, ECM module, 2× gyro, 2× RCS ducting, 2× mining cannon, 1× scanner).
+
+**F. Economy & progression.** The bonus handbook gives the real multiplier maths
+this project will eventually need for its own economy:
+- Target-level loot dial `= 2.0 + (level ÷ 255) × 2.0` (2×→4×); cubits
+  `= 1.0 + (level ÷ 255) × 1.4` (1×→2.4×).
+- **Squad curve**: your share `= 0.5 + 0.1 × pilots`, break-even at 5, 1.50× at 10;
+  salvage/equipment/objective rewards are *never* divided.
+- Mission tiers stack (daily/weekly/monthly all advance on one kill), and both
+  objective and payout scale `1 + (level − 1) × 0.1`, capped at level 50.
+- Boosters: +100% each, same-type adds, different-type multiplies, hard 3× ceiling.
+- Merits capped 500/day, 7,000/week, overflow converts to a refining currency.
+- The level formula `√(XP ÷ 1000) + 1` matches our `ranks.lua` exactly; the wiki's
+  rank list (Nugget→Captain, Optio→Tribune) is BSG-flavoured and stays unused — our
+  original ranks (§2.2) are already in place.
+
+**G. Skills — 57 skills in 19 groups, each 0–10.** The wiki's full skill list (with
+per-level train times and XP costs, ~192,000 XP to max one) is a *genre* progression
+design. Note the live revival has since **maxed all skills for everyone** and made
+progression come purely from hull + equipment + upgrade level — a useful design
+signal, though this project's §2.2 skill-tree intent is still open.
+
+**H. Assignments — real objectives, targets and reward shapes.** The wiki's daily
+assignment list (Asteroid Recon, Disable Weapon Platforms, Disrupt Enemy Operations,
+Drone Clearance, Freighter Interception, Intercept Enemy Patrols, Mining Disruption,
+Regional Combat Patrol, Salvage Recovery, Supply Allocation, System Patrol, Resource
+Extraction) with their level-scaled target ranges (e.g. scan 20→100 asteroids) is a
+ready-made shape for expanding our 3-entry `assignments.lua`; our `Asteroid Recon`
+already mirrors it. The live revival adds weekly/monthly tiers and a dynamic wartime
+Regional Combat Patrol layer.
+
+**I. Platforms & outposts — real structure for §2.7's deferred outpost combat.**
+The wiki gives concrete platform tiers (Light/Medium/Heavy × Interdiction/Sentinel/
+Guardian/Suppression, levels 12–20, hull 1,250–8,750, power 500–1,000) and outpost
+control levels 0–10 tied to an outpost-progress counter (capture at 50%, outpost
+appears at 90%, fortification and 4 heavy sentry platforms by 300%), including the
+±36% dominant/underdog hull scaling. This is exactly the design material §4's
+"design outpost combat" TODO was waiting for.
+
+**J. Mining, planetoids and the event loop.** Planetoid mining (scan → call a mining
+ship for a fee → defend it from escalating waves → it breaks up when drained) is a
+whole PvE loop this project has no concept of; §2.11 is asteroid-only today. The
+four live events (Fleet in Distress, Drone Nexus, Guardian Basestar, Typhon
+asteroids) and DRADIS Interdiction are likewise new shapes. Scan colours (red none /
+yellow tylium / purple titanium / blue water) match our §2.11 resource colours and
+confirm the four-resource scheme.
+
+**K. Item shop pricing (second wiki).** The Inventory List gives real buy/sell
+prices (Tuning Kit 1,000 cubits, Comm Access 300, Technical Analysis Kit 500;
+salvage sell values 7.5→4,800 tylium across ten grades; the full booster price list),
+useful for the per-item pricing §4 still has as a flat placeholder.
+
+**Not usable / deliberately excluded**: all ship, faction, character, place and
+item *names*; the rank names; the lore text; the ship silhouettes. `bsgo.fun` gave
+nothing beyond a landing page. The revival sites are fan projects and their *numbers*
+are their own tuning (the pages say so explicitly), so treat every figure as a
+starting point, not gospel — same caveat as §0's research rule.
+
 ## 3. Technical Architecture
 
 - **Engine**: Defold (Lua scripting, component/GO-based).
@@ -2791,9 +3203,9 @@ in the new script are flagged placeholders, same footing as other TBC numbers,
 - **Project layout** (current):
   ```
   Galaxy/
-    game.project          # engine + Poki SDK + Nakama client SDK config
+    game.project          # engine + Poki SDK + Nakama client SDK config ([mesh] count too)
     main/
-      main.collection      # embeds start_screen + faction_select + outpost + patrol_1_preview
+      main.collection      # embeds start_screen + faction_select + outpost + the previews
       main.script          # unused so far
       start_screen.gui         # §3.2 boot screen
       start_screen.gui_script
@@ -2801,15 +3213,31 @@ in the new script are flagged placeholders, same footing as other TBC numbers,
       faction_select.gui_script
       outpost.gui                # §2.8/§2.9 fitting + Ships tabs
       outpost.gui_script
+      flight_hud.gui             # §2.10.1 in-flight HUD
+      flight_hud.gui_script
+      flight_map.gui             # §2.7 star map, opened with N
+      flight_map.gui_script
+      player_ship.script         # §2.10.1 movement + chase camera + §2.12 engine loop
+      asteroid_hub.script        # §2.11 spawns/despawns the field, owns the audio
+      asteroid.script            # §2.11 per-rock buffer resource + breakup timer
+      asteroid_geometry.lua      # §2.11 pure-Lua seeded rock generator
+      network.lua                # §3.3 Nakama client: ops, state, prediction
       session.lua           # §3.2's in-memory guest session state
-      data/                # §3.1's data tables (star_systems.lua, ships.lua, modules/)
-      models/patrol_1/     # §2.9's real 3D hull (patrol_1.gltf + .model)
-      images/               # patrol_1.atlas + the extracted top-down PNG
+      data/                # §3.1's data tables (star_systems.lua, ships.lua, asteroids.lua, modules/)
+      models/              # per-ship hulls (§2.1.2); patrol_1/ is the first
+      images/               # atlases + extracted top-down PNGs
+    assets/
+      audio/                # §2.12 .wav sources + their .sound components
+      models/asteroids/     # §2.11 rock.mesh/.material/.vp/.fp + the retained sphere
     input/
-      game.input_binding    # touch/mouse-click binding (see note below)
+      game.input_binding    # flight + UI bindings (§2.10)
     nakama-server/          # §3.3's self-hosted Nakama + Postgres setup
+    render/                 # custom render script (ship-preview overlay)
+    tests/                  # Lua harnesses + the §2.11 asteroid preview rig
     tools/
-      build_patrol1_model.py   # regenerates the hull model + top-down plan (§2.9)
+      sync_server_rules.py     # copies shared rules from main/ to nakama-server/
+      build_*_model.py         # per-model generators (§2.9/§2.11)
+    docs/ASTEROIDS.md       # §2.11 implementation/cost detail
     .internal/               # Defold build cache
   ```
 - Shared script state is enabled (`[script] shared_state = 1`).
@@ -2920,7 +3348,7 @@ accounts), while Nakama runs actual game state.
 - **Storage**: Nakama's storage engine covers saved game history/achievements
   (§1, registered-account requirement).
 - **Wallet**: Nakama's built-in wallet (balance + transaction ledger) is a natural
-  fit for the two-currency economy — **Tope** and **Valor** (§2.6) — as separate
+  fit for the two-currency economy — **Tope** and **Valour** (§2.6) — as separate
   wallet balances on the same account.
 - **Groups**: maps onto player-formed "wings"/"fleets" (§2.4).
 - **Leaderboards**: maps onto rank/PvP progression (§2.2).
@@ -3146,10 +3574,10 @@ project:
 - [x] ~~Clarify whether Tope is general-purpose or Water-scoped~~ — resolved:
       Tope is earned from combat/mining/dailies/selling Water/real money — a single
       general-purpose currency (Marque abandoned and folded into it); see §2.6.
-- [ ] Confirm **Valor** as the final name for the PvP-only currency (proposed,
-      pending confirmation like Tope was).
+- [x] ~~Confirm **Valor** as the final name for the PvP-only currency~~ — resolved:
+      **Valour** (British spelling, per direct instruction).
 - [ ] Confirm final yield/conversion rates across Hydrogen/Iron/Water →
-      Tope/Valor and crafting material, using the researched BSGO structure
+      Tope/Valour and crafting material, using the researched BSGO structure
       in §2.6 as a starting point only (not copied 1:1).
 - [ ] Define which specific purchases require Hydrogen alone vs. Hydrogen+Tope
       together, now that Hydrogen is a direct-spend resource rather than a
@@ -3164,8 +3592,8 @@ project:
       applies to all four classes equally; classes are differentiated by fitting
       capacity/slots (§2.8) and role, not by inherent hull/engine/FTL/computer stats.
 - [ ] Decide whether destroying an enemy Carrier or damaging/routing a siege
-      objective (§2.5) grants a Valor bonus exactly as researched, and tune the
-      PvP-kill Valor amount vs. the Valor-bonus-for-siege-objectives ratio.
+      objective (§2.5) grants a Valour bonus exactly as researched, and tune the
+      PvP-kill Valour amount vs. the Valour-bonus-for-siege-objectives ratio.
 - [x] ~~Decide whether Robots pay out Tope on defeat~~ — resolved for now: no.
       Tope has exactly two sources (selling mined Water, real-money purchase);
       Robot kills, combat rewards, and daily assignments are not currently Tope
@@ -3341,6 +3769,82 @@ project:
 - [ ] Decide the spawn concept for a faction entering a system where it has no
       outpost (the population-capped zone, §2.7) — `M.spawn_points` only covers the
       normal has-an-outpost case.
+- [ ] Balance asteroid hull and resource yield for real (§2.11):
+      `M.HULL_PER_METER`/`M.MIN_HULL` and `M.RESOURCES[].yield` are placeholders, and
+      the resource formula is meant to depend on size and the system's threat level
+      (§2.7) rather than a flat proportion of hull.
+- [ ] Verify live multiplayer mining and mobile-device frame time/memory for the
+      procedural asteroids (§2.11). Geometry and mocked lifecycle tests pass and the
+      standalone preview was inspected, but a 50-rock field with concurrent breakup
+      debris has not been measured in a real multiplayer session.
+- [ ] Review `[mesh] max_count = 256` (§2.11) against real field sizes once systems
+      can override the default 50-rock count (`M.OVERRIDES` in
+      `main/data/asteroids.lua`) — the capacity was sized for the default field plus
+      debris, not for a custom larger one.
+- [ ] Balance the four sounds' gain (§2.12) — all are at unity because there was
+      no existing mix to match. The engine loop in particular may need to sit under
+      the shot/breakup sounds.
+- [ ] Delete the now-unreferenced audio sources (§2.12): `16_scanning_background_only.wav`
+      (superseded by the 2.0 s `18_`) and `12_movement_loop_preview.wav` (superseded by
+      the 18 s `19_`). Both are untracked, so removal is just a file delete once no
+      longer wanted as reference takes.
+- [ ] Listen-test the §2.12 spatialisation in a live session — the pan/gain maths is
+      verified standalone, but whether ±45° pan and the 20 m→2,000 m falloff read as
+      convincingly positional from the chase camera is a perceptual check.
+- [ ] Move the engine loop's stern offset (§2.12, currently a placeholder constant
+      in `player_ship.script`) into `ships.lua` beside `flight_camera` and
+      `slot_positions`, so each chassis can define where its own engines actually
+      are — the current single value is roughly the Patrol hull's stern.
+- [ ] Decide whether elevation should ever be represented in the audio (§2.12) —
+      pan is a single left/right value, so a source directly above and one directly
+      below are indistinguishable. Only a real 3D audio extension (OpenAL/FMOD) can
+      fix this; noted as an accepted limit of the built-in approach, not a bug.
+- [ ] Design real lighting for the rock shader (§2.11) — `rock.fp` uses a fixed
+      camera-relative key/fill pair as a readable stand-in, same undecided
+      "real lighting design (sun direction, ambient)" territory §2.10.1 already flags
+      for the ship material.
+- [ ] Decide whether mined-out asteroid debris should be audible/visible to other
+      players in the system (§2.11) — the breakup is currently local-only, like the
+      scan pulse, and nothing broadcasts it.
+- [ ] Build a combat-resolution module from the §2.13 combat maths (hit chance,
+      throttle-scaled avoidance, range decay, damage roll, crit, linear armour) —
+      this is the single biggest system the game still lacks, and the formula is now
+      fully known. Must be server-authoritative (§3.3).
+- [ ] Add **ammunition** as a system (§2.13B): the HE/HESC/AP/HERT cannon-round
+      families and the standard/high/master ordnance ladder, plus support consumables
+      (repair/power cells, flares, mines) — nothing exists today beyond §2.8's
+      `cannon_type` split.
+- [ ] Add **launcher/ordnance modules** (§2.13B/D): missile launchers, torpedo
+      launchers, rockets, mines and the missile/torpedo object model (never-miss,
+      lifetime, missile hull points, ECM/flare/point-defence counters) — §4 already
+      flags the nuclear launcher as its own entry, this expands it to the whole family.
+- [ ] Add the missing **slot families** to §2.8's taxonomy (§2.13D): launcher, gun
+      (MG/flechette/KKC), defensive_weapon (flak/point defence), special_weapon,
+      role, and the computer sub-families (buff/debuff, firewall, emitter/penetration,
+      DRADIS enhancer, resource scanner, energy capacitor, power control, target
+      designator, combat virus, jump transponder).
+- [ ] Design the **upgrade economy** using §2.13C: resource path for levels 1–10,
+      a tuning-kit-style premium path for 11–15, per-item per-level costs, and the
+      kit-success formula — replaces the flat placeholder price in §2.8.2/§4.
+- [ ] Re-check `weapons_autocannons.lua`'s uniform `arc = 75` against §2.13A: in
+      BSGO the card number is a **half-angle**, so 75 would be a 150° cone — decide
+      whether our `arc` means half-angle or full width and make it consistent with
+      `ships.lua`'s `slot_positions[].angle_deg`.
+- [ ] Reconcile §2.1.1's **Visual Range** (500 m) against the real hull value in
+      §2.13E (200 m for the Viper-class hull) — the baseline may have transposed it.
+- [ ] Decide whether to add a **paint/avionics** slot pair (§2.13E) — §2.1.2 already
+      has `skin_collections.lua`/`skins.lua`, so this may just be wiring, but no ship
+      currently declares either slot.
+- [ ] Expand `assignments.lua` toward the real assignment list and level-scaled
+      targets (§2.13H), and consider the stacking daily/weekly/monthly tier model.
+- [ ] Design **outpost control / platform tiers** from §2.13I to close §4's
+      "design outpost combat" item, and decide whether to adopt the
+      outpost-progress counter and dominant/underdog scaling.
+- [ ] Decide whether to add **planetoid mining** as a second, riskier PvE resource
+      loop (§2.13J) — currently §2.11 is asteroid-only, and the project has no
+      planetoid, mining-ship, or event concept.
+- [ ] Tune the squad/reward multiplier maths from §2.13F into the economy once
+      loot/rewards are actually implemented.
 
 ---
 

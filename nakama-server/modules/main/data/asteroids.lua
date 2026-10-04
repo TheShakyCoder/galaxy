@@ -5,9 +5,11 @@
 -- system specifically overrides that"). Each asteroid has a position, a
 -- size and what it's made of (M.RESOURCES below: inert rock, hydrogen, iron
 -- or water), which the Asteroid Analyser reveals (main/asteroid_hub.script).
--- No mining or HP yet (represented as plain spheres, per direct
--- instruction - "for now"), same staged-scope footing as the rest of
--- flight mode (plan.md §4).
+-- These are real mining targets, not decoration: each rock has hull and a
+-- mineable resource amount (M.max_hull/M.resource_amount below), the server
+-- owns the damage and the reward (nakama-server/modules/system_match.lua),
+-- and main/asteroid_hub.script renders each one as its own seeded rock that
+-- visibly breaks apart when mined out (plan.md §2.11).
 --
 -- Deterministic sin-hash PRNG (seed derived from system_id, NOT
 -- math.random()/math.randomseed()) - technique ported (not code, per §0 -

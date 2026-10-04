@@ -77,7 +77,7 @@ M.loadout = nil
 -- question in plan.md §4 once more ships exist.
 
 -- `tope`: the player's balance of Tope (§2.6's general currency, as
--- opposed to PvP-only Valor). Per direct instruction, the outpost screen
+-- opposed to PvP-only Valour). Per direct instruction, the outpost screen
 -- always shows this and it updates as items/ships are bought and sold -
 -- which needs a REAL balance and REAL transaction amounts to do
 -- honestly, not just a static display. STARTING_TOPE and every price/
@@ -95,11 +95,12 @@ local SHIP_SELL_REFUND = 250
 local SHIP_ADVANCE_PRICE = 500
 
 -- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
--- (§2.6) - distinct from Tope/Valor, which are the two CURRENCIES. Per
+-- (§2.6) - distinct from Tope/Valour, which are the two CURRENCIES. Per
 -- direct instruction, the outpost screen always shows all four of these
--- balances together. Water/Iron are still honestly STATIC - no mining or
--- repair mechanic exists yet to earn or spend them. Hydrogen is now the
--- exception: main/player_ship.script's FTL jump (per direct instruction,
+-- balances together. Water/Iron/Hydrogen can all now change for real:
+-- mining an asteroid credits the depleting player its Water/Iron/Hydrogen
+-- (nakama-server/modules/resources.lua, plan.md §2.11), and
+-- main/player_ship.script's FTL jump (per direct instruction,
 -- "implement [the SuperShips jump mechanic] here") is the first real
 -- Hydrogen transaction - see M.start_jump/M.cancel_jump below,
 -- mirroring M.spend_tope's own shape. STARTING_WATER/IRON/HYDROGEN are
