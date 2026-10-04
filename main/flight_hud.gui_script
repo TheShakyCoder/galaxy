@@ -177,6 +177,9 @@ end
 -- every-frame "slot_states" message below.
 local session = require("main.session")
 local ships = require("main.data.ships")
+-- The release version (main/version.lua) shown in the corner readout below -
+-- same single source of truth the login screen and the Nakama server use.
+local version = require("main.version")
 
 -- slot_positions' {x, y} are screen-pixel offsets in the fitting page's
 -- own 440x640 ship_visual space (centre origin, +y = bow); DIAGRAM_SCALE
@@ -409,6 +412,8 @@ function init(self)
 	self.hydrogen_node = gui.get_node("hydrogen_value")
 	self.radar_range_node = gui.get_node("radar_range")
 	self.radar_range_m = nil
+	self.build_version_node = gui.get_node("build_version")
+	gui.set_text(self.build_version_node, "v" .. version.VERSION)
 
 	-- Pool created once, just repositioned/shown-or-hidden per "contacts"
 	-- message (same pooling reasoning as the reference project's own
