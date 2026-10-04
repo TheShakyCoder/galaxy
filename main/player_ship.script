@@ -1173,6 +1173,13 @@ local function installed_module(item_key)
 	return nil
 end
 
+-- Defined further down (it needs the ship_local_to_world helper above it),
+-- but called from activate_analyser below: forward-declared so that reference
+-- binds to this local. Without it the name resolved to a nil global and threw,
+-- silently aborting every scan before it ever posted to the hub - which is why
+-- the slot showed the scan running while no rock reacted and no text appeared.
+local weapon_mount_position
+
 -- P: the Asteroid Analyser (a Computer module) analyses every asteroid in
 -- its range - main/asteroid_hub.script runs the scan and shows the result.
 local function activate_analyser(self)
@@ -1244,7 +1251,7 @@ local MUZZLE_OFFSET = 6 -- m ahead of the ship's centre
 -- the mount that actually fired, not the ship's centre. Falls back to the
 -- ship's centre for any slot without a position (Escort/Frigate ships have
 -- empty slot_positions, plan.md §2.1.2).
-local function weapon_mount_position(ship_id, slot, pos, rot)
+function weapon_mount_position(ship_id, slot, pos, rot)
 	local ship = ships.SHIPS[ship_id]
 	local positions = ship and ship.slot_positions
 	local entry = positions and positions[slot]

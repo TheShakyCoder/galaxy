@@ -195,7 +195,7 @@ end
 
 -- Starts analysing every asteroid within `range` metres of `pos` (surface
 -- distance, so a big rock counts as soon as its edge is in range).
-local function analyse(pos, range, scan_time, origin)
+local function do_analyse(pos, range, scan_time, origin)
 	if scan then
 		return -- one scan at a time; the analyser is busy until it finishes
 	end
@@ -215,16 +215,6 @@ local function analyse(pos, range, scan_time, origin)
 		show_status(string.format("NO ASTEROIDS WITHIN %d m%s", range, detail), 3)
 		return
 	end
-	-- The scan is starting: play its sound ONCE, here, not per rock and not
-	-- looped - per direct instruction ("scanning audio should run one time
-	-- only when the asteroid analyser is activated"). The early returns above
-	-- (already scanning, or nothing in range) never reach this line, so a
-	-- refused activation stays silent. This is a one-shot, unlike the engine
-	-- loop (main/player_ship.script): the 4.8 s clip simply plays out over the
-	-- 2 s scan, and finish_scan()/cancel_scan() deliberately don't stop it.
-	-- Positioned at the analyser's own slot (`origin`, from
-	-- player_ship.script) rather than the ship's centre.
-	audio.play("#scan_sound", origin)
 	-- The pulse itself is driven from update() below (one tint write per
 	-- scanned rock per frame) rather than go.animate on the model's `tint`
 	-- material constant - that call aborted the whole scan at runtime, which
@@ -232,6 +222,27 @@ local function analyse(pos, range, scan_time, origin)
 	scan = { asteroids = found, elapsed = 0, timer = timer.delay(scan_time, false, finish_scan) }
 	local noun = #found == 1 and "ASTEROID" or "ASTEROIDS"
 	show_status(string.format("ANALYSING %d %s...", #found, noun))
+	-- Played ONCE, here, not per rock and not looped - per direct instruction
+	-- ("scanning audio should run one time only when the asteroid analyser is
+	-- activated"). Last and best-effort: a problem playing the sound must
+	-- never be able to cancel the scan itself, so it runs only after the scan
+	-- is fully set up. Positioned at the analyser's own slot (`origin`, from
+	-- player_ship.script) rather than the ship's centre.
+	pcall(audio.play, "#scan_sound", origin)
+end
+
+-- Runs the scan, but never lets an error abort it silently: a failure is
+-- shown on the HUD instead. (Silent aborts are exactly how this looked
+-- "broken" before - a throw inside the scan left the slot running with no
+-- result and no message anywhere.)
+local function analyse(pos, range, scan_time, origin)
+	if scan then
+		return
+	end
+	local ok, err = pcall(do_analyse, pos, range, scan_time, origin)
+	if not ok then
+		show_status("SCAN ERROR: " .. tostring(err), 10)
+	end
 end
 
 -- Keeps the standing field in step with the server's hull state (OP_ASTEROIDS,
