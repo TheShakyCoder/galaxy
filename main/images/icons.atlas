@@ -50,6 +50,9 @@ images {
   image: "/main/images/icons/slot_hull_empty.png"
 }
 images {
+  image: "/main/images/icons/key_shift.png"
+}
+images {
   image: "/main/images/icons/Octagon W.png"
 }
 images {

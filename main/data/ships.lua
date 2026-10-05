@@ -48,7 +48,7 @@ M.SHIPS = {
 			acceleration_m_per_sec2 = 10,
 			speed_m_per_sec = 52.5,
 			boost_speed_m_per_sec = 77.5,
-			boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+			boost_cost_hydrogen_per_sec = 0.5, -- Hydrogen fuel (§2.6)
 
 			-- FTL Systems
 			ftl_range_ly = 4.5, -- override vs. class baseline's 5.5 LY, per direct instruction

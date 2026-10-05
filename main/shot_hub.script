@@ -1,0 +1,97 @@
+-- Owns the visible projectile every weapon shot draws, plus the firing sound -
+-- split out of main/asteroid_hub.script, which is about the asteroid field
+-- alone (per direct instruction: "any cannon or projectile related code should
+-- exist in its own file... it should not be part of anything directly related
+-- to the asteroids"). "shot_hub" is to projectiles what "asteroid_hub" is to
+-- rocks: the one place that knows a shot was fired and renders it.
+--
+-- The hub draws a GENERIC tracer by default (DEFAULT_SHOT below): a bright
+-- pellet that flies from the gun to the target, purely visual (combat damage
+-- is decided by the server - see main/network.lua). A weapon that wants a
+-- different look sends its OWN projectile data in the "shot" message, and any
+-- field it supplies OVERRIDES the default here - per direct instruction:
+-- "data relating to that specific cannon or projectile should overwrite it
+-- when activated". The light autocannons, for instance, carry `tracers = 3`
+-- (main/data/modules/weapons_autocannons.lua), so one shot draws a three-
+-- streak burst instead of a single tracer.
+--
+-- The "shot" message (from main/player_ship.script, the only sender):
+--   from, to        world-space gun muzzle and target point   (required)
+--   origin          world-space point the firing sound plays from - the
+--                   weapon's own mount, plan.md §2.12          (required)
+--   tracers         how many tracer streaks one shot draws
+--   speed           tracer travel speed, m/s
+--   scale           tracer size (vmath.vector3)
+--   tint            tracer colour (vmath.vector4)
+--   burst_stagger   gap between streaks, as a fraction of flight time
+-- The last five are optional; anything omitted falls back to DEFAULT_SHOT.
+-- Every one of them is client-side cosmetic only - none reach the server and
+-- none change damage, rate of fire or any other statistic.
+
+local audio = require("main.audio")
+
+-- What a shot looks like when the firing weapon supplies nothing of its own.
+local DEFAULT_SHOT = {
+	-- Tracer streaks drawn per shot (light autocannons raise this to 3).
+	tracers = 1,
+	-- Tracer travel speed, m/s.
+	speed = 1200,
+	-- A streak: the unit sphere stretched along its flight path, long and
+	-- bright enough to see at weapon range.
+	scale = vmath.vector3(2, 2, 24),
+	tint = vmath.vector4(10.0, 7.5, 2.5, 1.0),
+	-- When tracers > 1, consecutive streaks launch this fraction of the shot's
+	-- own flight time apart, so the burst scales with range and the streaks
+	-- chase each other down the same gun-to-target path.
+	burst_stagger = 0.25,
+}
+
+-- A malformed/foreign count must never spawn an unbounded number of objects.
+local MAX_TRACERS = 5
+
+-- Spawns one tracer streak and animates it along the shot's path, deleting it
+-- on arrival. Same behaviour whether it's the only streak or one of a burst.
+local function spawn_tracer(from, to, rot, duration, scale, tint)
+	local id = factory.create("#shot_factory", from, rot, nil, scale)
+	local model = msg.url(nil, id, "model")
+	go.set(model, "tint", tint)
+	-- model.material's point light defaults to near the system's origin, which
+	-- would leave the side the player sees dark: light the tracer from high
+	-- above instead (the chase camera looks down on it).
+	go.set(model, "light", vmath.vector4(from.x, from.y + 5000, from.z, 1))
+	go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, to, go.EASING_LINEAR, duration, 0, function()
+		go.delete(id)
+	end)
+end
+
+function on_message(self, message_id, message)
+	if message_id ~= hash("shot") then
+		return
+	end
+	local from, to = message.from, message.to
+	local tracers = math.max(1, math.min(MAX_TRACERS, message.tracers or DEFAULT_SHOT.tracers))
+	local speed = message.speed or DEFAULT_SHOT.speed
+	local scale = message.scale or DEFAULT_SHOT.scale
+	local tint = message.tint or DEFAULT_SHOT.tint
+	local stagger_frac = message.burst_stagger or DEFAULT_SHOT.burst_stagger
+
+	local dir = to - from
+	local rot = vmath.length(dir) > 0.001 and vmath.quat_from_to(vmath.vector3(0, 0, 1), vmath.normalize(dir)) or vmath.quat()
+	local duration = math.max(0.05, vmath.length(dir) / speed)
+	local stagger = tracers > 1 and stagger_frac * duration or 0
+	-- One streak per tracer, launched `stagger` seconds apart; each is created
+	-- only when its own turn comes, so none sits idle at the muzzle. A fresh
+	-- local per iteration gives each timer.delay closure its own delay (the
+	-- loop variable itself would be shared, in Lua, across closures).
+	for i = 0, tracers - 1 do
+		local wait = i * stagger
+		timer.delay(wait, false, function()
+			spawn_tracer(from, to, rot, duration, scale, tint)
+		end)
+	end
+	-- The gun sound, played once per SHOT (not once per tracer, so a burst
+	-- doesn't multiply it). Positioned at the firing weapon's own mount
+	-- (`message.origin`, from player_ship.script) - so the port gun sounds
+	-- left and the starboard gun right (per direct instruction).
+	audio.play("#hit_sound", message.origin, { attenuate = false })
+end

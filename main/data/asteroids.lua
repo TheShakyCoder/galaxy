@@ -61,7 +61,7 @@ M.OVERRIDES = {}
 -- target readout can show "HULL <hp> / <max_hp>" and the server knows when
 -- one is depleted (nakama-server/modules/system_match.lua). Bigger rocks
 -- have more hull. Both numbers are PLACEHOLDERS (plan.md §4) pending a real
--- mining balance pass - at the basic Gnat autocannon's 11 damage/second a
+-- mining balance pass - at the basic Patrol autocannon's 11 damage/second a
 -- 10 m rock (100 hull) takes ~9 s and a 50 m one (500 hull) ~45 s.
 M.HULL_PER_METER = 10
 M.MIN_HULL = 100

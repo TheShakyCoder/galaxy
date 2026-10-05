@@ -1,44 +1,95 @@
--- Weapon (Auto Cannon) module entries (plan.md §2.8). Two concrete entries
--- now exist: the basic Ordinance-type cannon and the Mining Cannon every
--- new character is gifted one of each of, along with the Patrol 1 ship
--- (§2.1.2), per direct instruction. Combat stats come from the BSGO wiki
+-- Weapon (Auto Cannon) module entries (plan.md §2.8): the combat
+-- (Ordinance-type) cannons - three role variants plus a precision (-P)
+-- counterpart for each - across the Patrol/Escort/Frigate classes, plus the
+-- four Mining Cannons. The Patrol general cannon is the Ordinance-type one
+-- every new character is gifted, alongside one Mining Cannon and the Patrol 1
+-- ship (§2.1.2), per direct instruction. Combat stats come from the BSGO wiki
 -- (see "Combat stats" below); §2.8's wear_per_use isn't specified, so it's
--- omitted rather than guessed, per §0/§4's "don't invent unconfirmed
--- numbers" rule.
+-- omitted rather than guessed, per §0/§4's "don't invent unconfirmed numbers"
+-- rule.
 --
--- Naming convention (decided): combat (Ordinance-type) auto cannons are
--- named after INSECTS, sized to match the ship class they're built for —
--- same "real-world animal sized to the ship class" pattern as the ship
--- roster's fish (Accord)/bird (Swarm) names (§2.1.2), just a third animal
--- family reserved for this one weapon subtype. Scale, smallest ship class
--- to largest (only the Patrol-tier entry actually exists yet; the rest
--- are reserved for whenever an Escort/Frigate/Carrier-specific cannon is
--- added, §2.1):
---   Patrol  -> Gnat     (this file's "auto_cannon_basic")
---   Escort  -> Hornet
---   Frigate -> Locust
---   Carrier -> Beetle
+-- NAMING (decided, revised - "exact reference names", per direct
+-- instruction): combat cannons now carry the reference game's OWN published
+-- designations verbatim - Colonial name on the Accord side, Cylon name on the
+-- Swarm side (bsgo.fandom.com/wiki/Weapons, where each item is listed with
+-- both names sharing identical stats). This is an ACKNOWLEDGED §0 DEVIATION:
+-- plan.md §0 bans reusing BSG's specific creative expression, and these
+-- designation codes (`MEC-A6`, `Type A`, ...) are BSGO's own item names. Used
+-- here because the design brief is to match that page as closely as possible;
+-- recorded as a flagged exception in plan.md §0/§2.8, not treated as
+-- pre-cleared. Still ONE entry per item: the two names sit side by side in a
+-- `faction_names` table (`{ accord = ..., swarm = ... }`), with `name`
+-- holding the Accord name as the default/reference value, and
+-- `catalog.name_for(entry, faction)` resolving the right one at display time.
+-- Where the reference gives only ONE name (shared by both factions - the
+-- Escort cannon batteries below), the entry keeps a single `name` and NO
+-- `faction_names`, and `catalog.name_for` falls through to it for either
+-- faction.
 --
--- Mining-type cannons are NOT part of the insect scheme - they get their
--- own class-sized naming scale instead, using mining/prospecting
--- terminology (decided). Unlike the combat scale above, all four tiers
--- are now implemented (item keys below):
---   Patrol  -> Digger      ("mining_cannon_basic")
---   Escort  -> Miner       ("mining_cannon_escort")
---   Frigate -> Speculator  ("mining_cannon_frigate")
---   Carrier -> Prospector  ("mining_cannon_carrier" - the name the
---                           Patrol-tier entry used before being renamed
---                           to Digger, reused here rather than retired)
+--   Patrol   general       MEC-A6  "Fang"      / Type A   "Aggressor"
+--            rapid         MEC-A8  "Tornado"   / Type A1  "Lasher"
+--            long-range    MEC-A9  "Hawk"      / Type A2  "Disabler"
+--            precision     MEC-A6P "Fang-P"    / Type AP  "Aggressor-P"
+--            rapid prec.   MEC-A8P "Tornado-P" / Type A1P "Lasher-P"
+--            long prec.    MEC-A9P "Hawk"      / Type A2-P "Disabler"
+--   Escort   general       MEC-E12 "Claw"      (shared)
+--            rapid         MEC-E13 "Hurricane" (shared)
+--            long-range    MEC-E17 "Falcon"    (shared)
+--   Frigate  (the reference's Line Systems page is empty - "(tbc)" - so the
+--            three Frigate rows keep the earlier original scheme instead):
+--              AC-F  "Monsoon"  / Type F  "Colossus"
+--              AC-FR "Wildfire" / Type FR "Reaver"
+--              AC-FL "Zenith"   / Type FL "Overwatch"
+--
+-- The `-P` ("precision") models are the reference's crit-offense variants:
+-- same damage/range/reload as their base model, but their CriticalOffense
+-- rises with upgrade level (100 -> 150) instead of staying flat. They're
+-- recorded as separate entries here because the reference lists them as
+-- separate items; they get their own `critical_offense` curve in
+-- PRECISION_CRITICAL_OFFENSE below. (Our combat model doesn't apply
+-- accuracy/crit/armour yet - see the stat comment below - so for now the -P
+-- guns play identically to their base model.)
+--
+-- The reference lists its Escort cannons (Claw/Hurricane/Falcon) with only a
+-- single name each - no Cylon counterpart - so those three entries carry one
+-- shared `name` and no `faction_names`. Likewise its Frigate/Line page is
+-- empty, so the Frigate rows keep the original invented names.
+--
+-- Each class carries its variants per direct instruction ("create all the
+-- known auto cannons and missile launchers for the 3 classes") - a
+-- general-purpose model plus a rapid-fire one and a long-range one, mirroring
+-- the reference's own per-tier autocannon families, plus (Patrol only) the
+-- reference's -P precision counterpart for each.
+--
+-- Only the Patrol set has published combat stats - the reference wiki only
+-- tabulated its Strike-tier weapons (its Escort/Line pages are empty stubs).
+-- The Escort/Frigate entries are therefore created with their identity and
+-- fitting fields but NO dps/range block, per §0/§4's "don't invent
+-- unconfirmed numbers" rule - the same treatment the Carrier mining cannon
+-- gets below. Flagged in plan.md §4.
+--
+-- Mining-type cannons are NOT part of the combat scheme above - they get
+-- their own class-sized naming scale instead, now also following the
+-- reference's own names where it publishes them (decided, per the same direct
+-- instruction):
+--   Patrol  -> "Gopher" / "Gouger"  ("mining_cannon_basic" - the reference's
+--                                    Light Mining Cannon; two-faction names)
+--   Escort  -> "Mole"               ("mining_cannon_escort" - the reference's
+--                                    Medium Mining Battery; a single shared
+--                                    name, no Cylon counterpart)
+--   Frigate -> Speculator           ("mining_cannon_frigate" - no reference
+--                                    name; original retained)
+--   Carrier -> Prospector           ("mining_cannon_carrier" - no reference
+--                                    name; original retained)
 --
 -- `ship_class` (decided, singular - a plain string, not a list): each
 -- cannon belongs to exactly ONE ship class, not "fits anywhere" -
--- matching the naming scale above (a Gnat is a Patrol-sized weapon, not
--- a generic one that happens to be named after a small insect). NOTE:
+-- matching the naming scale above. NOTE:
 -- this field isn't actually enforced anywhere yet (no fitting-screen or
 -- install-time check reads it) - it's data awaiting that logic, not a
 -- currently-active restriction (plan.md §4). This now matters more than
--- it did with just Gnat/Digger (both Patrol, so the missing check was
--- moot in practice): Miner/Speculator/Prospector are Escort/Frigate/
+-- it did with just the two Patrol weapons (both Patrol, so the missing
+-- check was moot in practice): Miner/Speculator/Prospector are Escort/Frigate/
 -- Carrier-only, but with no ships in those classes yet AND no
 -- enforcement, they're currently draggable onto the Patrol ship anyway.
 --
@@ -57,8 +108,8 @@
 -- (mining or combat) now uses one of the hand-provided "Octagon Cannon
 -- *" icons instead of the old tools/build_module_icons.py-generated
 -- ones - "Octagon Cannon Asteroid" for any mining-type cannon, "Octagon
--- Cannon Spaceship" for the normal (ordinance) combat cannon. Miner/
--- Speculator/Prospector all placeholder-share Digger's icon for now -
+-- Cannon Spaceship" for the normal (ordinance) combat cannon. Mole/
+-- Speculator/Prospector all placeholder-share Gopher's icon for now -
 -- distinct per-tier mining-cannon art hasn't been designed (plan.md §4).
 
 local M = {}
@@ -73,13 +124,23 @@ local M = {}
 --                   rolls, accuracy, criticals or armour yet
 --   max_range_m     out of range = no damage
 --   optimal_range_m, damage_min/damage_max, reload_s, armor_piercing,
---   power_cost      recorded from the wiki, not used yet
+--   power_cost, accuracy, critical_offense, durability_min/max
+--                   recorded from the wiki, not used yet
+--   tracers         VISUAL ONLY (per direct instruction: light autocannons
+--                   should draw three projectile streaks per shot, not one,
+--                   to read as a rapid-fire burst without changing any
+--                   statistic). The client's shot renderer
+--                   (main/shot_hub.script) spawns this many streaks, one
+--                   shot's worth of travel each; damage/rate of fire are
+--                   unchanged - the server still applies a single shot.
 -- The firing arc is each entry's own `arc` (same 75 degrees as the wiki).
 --
--- Gnat = MEC-A6 "Fang" / Type A "Aggressor" Light Autocannon (the strike
--- craft default): DPS 11 at level 1 rising linearly to 22 at level 10.
+-- The Patrol general cannon (MEC-A6 "Fang" / Type A "Aggressor") = the
+-- reference's light autocannon (the strike craft default): DPS 11 at level 1
+-- rising to 22 at level 10.
 local LIGHT_AUTOCANNON = {
 	dps = { 11, 12.22, 13.44, 14.67, 15.89, 17.11, 18.33, 19.56, 20.78, 22 },
+	tracers = 3, -- three-round burst look, see the tracers comment above
 	max_range_m = 750,
 	optimal_range_m = 300,
 	damage_min = 1,
@@ -87,14 +148,56 @@ local LIGHT_AUTOCANNON = {
 	reload_s = 0.5,
 	armor_piercing = 5,
 	power_cost = 1,
+	accuracy = 400,
+	critical_offense = 100,
+	durability_min = 2500,
+	durability_max = 5000,
 }
--- Mining cannons: one per ship class, like the ships themselves - each is
--- the matching class of BSGO mining weapon (Weapons and Mining pages; "much
--- less effective in combat"). The wiki gives no per-level values for these,
--- so every level uses the one DPS figure.
--- Digger (Patrol) = "Gopher" / "Gouger" Light Mining Cannon.
+-- Rapid-fire Patrol variant. Reference MEC-A8 "Tornado"/Type A1 "Lasher"
+-- Light Autocannon: same damage per shot as the general model but a faster
+-- reload, bought with a shorter range - DPS 13.75 rising to 27.5.
+local RAPID_AUTOCANNON = {
+	dps = { 13.75, 15.27, 16.80, 18.33, 19.86, 21.38, 22.91, 24.44, 25.97, 27.5 },
+	tracers = 3, -- three-round burst look, see the tracers comment above
+	max_range_m = 600,
+	optimal_range_m = 250,
+	damage_min = 1,
+	damage_max = 10,
+	reload_s = 0.4,
+	armor_piercing = 5,
+	power_cost = 1,
+	accuracy = 400,
+	critical_offense = 100,
+	durability_min = 2500,
+	durability_max = 5000,
+}
+-- Long-range Patrol variant. Reference MEC-A9 "Hawk"/Type A2 "Disabler"
+-- Light Autocannon: a long-barrelled precision gun, longer range bought with
+-- a slower reload - DPS 9.16 rising to 18.33.
+local LONG_RANGE_AUTOCANNON = {
+	dps = { 9.16, 10.18, 11.20, 12.22, 13.24, 14.25, 15.27, 16.29, 17.31, 18.33 },
+	tracers = 3, -- three-round burst look, see the tracers comment above
+	max_range_m = 900,
+	optimal_range_m = 350,
+	damage_min = 1,
+	damage_max = 10,
+	reload_s = 0.6,
+	armor_piercing = 5,
+	power_cost = 1,
+	accuracy = 400,
+	critical_offense = 100,
+	durability_min = 2500,
+	durability_max = 5000,
+}
+-- CriticalOffense curve for the reference's three -P ("precision") models
+-- (Fang-P / Tornado-P / Hawk). Everything else about them matches their base
+-- model; only this value climbs with upgrade level instead of staying flat.
+local PRECISION_CRITICAL_OFFENSE = { 100, 105.56, 111.11, 116.67, 122.22, 127.78, 133.33, 138.89, 144.44, 150 }
+-- Mining cannons: one per ship class, like the ships themselves. The
+-- reference's own figures (Weapons page): Gopher/Gouger Light Mining Cannon -
+-- "much less effective in combat" - DPS 5 at level 1 rising to 16, Mining x5.
 local LIGHT_MINING_CANNON = {
-	dps = { 5 },
+	dps = { 5, 6.22, 7.44, 8.66, 9.88, 11.11, 12.33, 13.55, 14.77, 16 },
 	max_range_m = 600,
 	optimal_range_m = 250,
 	damage_min = 1,
@@ -102,15 +205,22 @@ local LIGHT_MINING_CANNON = {
 	reload_s = 0.5,
 	armor_piercing = 5,
 	power_cost = 2,
+	accuracy = 400,
+	critical_offense = 100,
+	durability_min = 2500,
+	durability_max = 5000,
+	mining_multiplier = 5, -- reference's "Mining x5"
 }
--- Miner (Escort) = "Mole" / "Dredger" Medium Mining Battery.
+-- Miner (Escort) = reference's "Mole" Medium Mining Battery. The reference
+-- gives no numbers for it, so only the original placeholder figures remain.
 local MEDIUM_MINING_BATTERY = {
 	dps = { 5 },
 	max_range_m = 900,
 	damage_min = 4,
 	damage_max = 10,
 }
--- Speculator (Frigate) = "Badger" / "Excavator" Heavy Mining Battery.
+-- Speculator (Frigate): the reference has no heavy mining battery, so no
+-- statistics exist for it - placeholder figures only.
 local HEAVY_MINING_BATTERY = {
 	dps = { 5.3 },
 	max_range_m = 1350,
@@ -121,8 +231,13 @@ local HEAVY_MINING_BATTERY = {
 -- no combat stats (deals no damage) until one is decided.
 
 M.AUTOCANNONS = {
+	-- Patrol-tier variants (see the naming/variant comment in the header).
+	-- Every Patrol combat cannon reuses the combat "Octagon Cannon
+	-- Spaceship" icon - distinct per-variant art hasn't been designed
+	-- (plan.md §4).
 	["auto_cannon_basic"] = {
-		name = "Gnat", -- Patrol-tier combat auto cannon, see the naming-scale comment above
+		name = "MEC-A6 \"Fang\"", -- Accord (default/reference) name - see the header's naming convention
+		faction_names = { accord = "MEC-A6 \"Fang\"", swarm = "Type A \"Aggressor\"" }, -- Swarm name is the Cylon counterpart
 		type = "weapon",
 		subtype = "auto_cannon",
 		cannon_type = "ordinance", -- consumes ordinance, combat-capable (§2.8)
@@ -131,8 +246,140 @@ M.AUTOCANNONS = {
 		icon = "Octagon Cannon Spaceship", -- normal (ordinance) combat cannon, see the icon comment above
 		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
+	["auto_cannon_rapid"] = {
+		name = "MEC-A8 \"Tornado\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "MEC-A8 \"Tornado\"", swarm = "Type A1 \"Lasher\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle", -- §2.8: weapons are always toggle-type
+		ship_class = "Patrol",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_long_range"] = {
+		name = "MEC-A9 \"Hawk\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "MEC-A9 \"Hawk\"", swarm = "Type A2 \"Disabler\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Patrol",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	-- Patrol -P ("precision") variants: same model as the three above but with
+	-- a rising CriticalOffense curve (see PRECISION_CRITICAL_OFFENSE). The
+	-- reference's long-range P model keeps the plain "Hawk" callsign
+	-- (`MEC-A9P "Hawk"`) rather than a "-P" suffix.
+	["auto_cannon_precision"] = {
+		name = "MEC-A6P \"Fang-P\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "MEC-A6P \"Fang-P\"", swarm = "Type AP \"Aggressor-P\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Patrol",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_rapid_precision"] = {
+		name = "MEC-A8P \"Tornado-P\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "MEC-A8P \"Tornado-P\"", swarm = "Type A1P \"Lasher-P\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Patrol",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_long_range_precision"] = {
+		name = "MEC-A9P \"Hawk\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "MEC-A9P \"Hawk\"", swarm = "Type A2-P \"Disabler\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Patrol",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	-- Escort-tier variants. The reference lists each with a single shared name
+	-- (no Cylon counterpart), so these carry one `name` and no
+	-- `faction_names`. No published combat stats exist for them (the
+	-- reference's Escort page is an empty stub) - identity/fitting fields
+	-- only.
+	["auto_cannon_escort"] = {
+		name = "MEC-E12 \"Claw\"", -- shared name - the reference gives no separate Cylon name
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Escort", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_escort_rapid"] = {
+		name = "MEC-E13 \"Hurricane\"", -- shared name, see the note above
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Escort",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_escort_long_range"] = {
+		name = "MEC-E17 \"Falcon\"", -- shared name, see the note above
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Escort",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	-- Frigate-tier variants. The reference's Line Systems page is empty
+	-- ("(tbc)"), so these keep the earlier original two-faction scheme. Same
+	-- stat caveat as the Escort set above.
+	["auto_cannon_frigate"] = {
+		name = "AC-F \"Monsoon\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "AC-F \"Monsoon\"", swarm = "Type F \"Colossus\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Frigate",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_frigate_rapid"] = {
+		name = "AC-FR \"Wildfire\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "AC-FR \"Wildfire\"", swarm = "Type FR \"Reaver\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Frigate",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	["auto_cannon_frigate_long_range"] = {
+		name = "AC-FL \"Zenith\"", -- Accord name, see the header's naming convention
+		faction_names = { accord = "AC-FL \"Zenith\"", swarm = "Type FL \"Overwatch\"" },
+		type = "weapon",
+		subtype = "auto_cannon",
+		cannon_type = "ordinance",
+		behavior = "toggle",
+		ship_class = "Frigate",
+		icon = "Octagon Cannon Spaceship",
+		arc = 75,
+	},
+	-- Mining cannons (see the mining naming-scale comment in the header).
 	["mining_cannon_basic"] = {
-		name = "Digger", -- Patrol-tier mining cannon, see the mining naming-scale comment above
+		name = "Gopher", -- Accord name - reference's "Gopher"/"Gouger" Light Mining Cannon
+		faction_names = { accord = "Gopher", swarm = "Gouger" },
 		type = "weapon",
 		subtype = "auto_cannon",
 		cannon_type = "mining", -- no ordinance needed, mining-focused, weak vs. ships (§2.8)
@@ -142,40 +389,47 @@ M.AUTOCANNONS = {
 		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_escort"] = {
-		name = "Miner", -- Escort-tier mining cannon, see the mining naming-scale comment above
+		name = "Mole", -- reference's "Mole" Medium Mining Battery - a single shared name
 		type = "weapon",
 		subtype = "auto_cannon",
 		cannon_type = "mining",
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Escort", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
-		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		icon = "Octagon Cannon Asteroid", -- placeholder - shares Gopher's icon, see the icon comment above
 		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_frigate"] = {
-		name = "Speculator", -- Frigate-tier mining cannon, see the mining naming-scale comment above
+		name = "Speculator", -- no reference name for a heavy mining battery; original retained
 		type = "weapon",
 		subtype = "auto_cannon",
 		cannon_type = "mining",
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Frigate", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
-		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		icon = "Octagon Cannon Asteroid", -- placeholder - shares Gopher's icon, see the icon comment above
 		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 	["mining_cannon_carrier"] = {
-		name = "Prospector", -- Carrier-tier mining cannon, see the mining naming-scale comment above
+		name = "Prospector", -- no reference name for a carrier mining cannon; original retained
 		type = "weapon",
 		subtype = "auto_cannon",
 		cannon_type = "mining",
 		behavior = "toggle", -- §2.8: weapons are always toggle-type
 		ship_class = "Carrier", -- see the ship_class comment above - NOT YET enforced (plan.md §4)
-		icon = "Octagon Cannon Asteroid", -- placeholder - shares Digger's icon, see the icon comment above
+		icon = "Octagon Cannon Asteroid", -- placeholder - shares Gopher's icon, see the icon comment above
 		arc = 75, -- firing-arc width in degrees, see the arc comment above
 	},
 }
 
--- Attach the combat stats above to each weapon (by class).
+-- Attach the combat stats above to each weapon (by class). The -P variants
+-- start from their base model's block, then get the precision critical curve
+-- applied below.
 local STATS = {
 	auto_cannon_basic = LIGHT_AUTOCANNON,
+	auto_cannon_rapid = RAPID_AUTOCANNON,
+	auto_cannon_long_range = LONG_RANGE_AUTOCANNON,
+	auto_cannon_precision = LIGHT_AUTOCANNON,
+	auto_cannon_rapid_precision = RAPID_AUTOCANNON,
+	auto_cannon_long_range_precision = LONG_RANGE_AUTOCANNON,
 	mining_cannon_basic = LIGHT_MINING_CANNON,
 	mining_cannon_escort = MEDIUM_MINING_BATTERY,
 	mining_cannon_frigate = HEAVY_MINING_BATTERY,
@@ -184,6 +438,11 @@ for key, stats in pairs(STATS) do
 	for field, value in pairs(stats) do
 		M.AUTOCANNONS[key][field] = value
 	end
+end
+-- The three Patrol -P models replace the flat CriticalOffense with the
+-- reference's rising curve (everything else is identical to their base).
+for _, key in ipairs({ "auto_cannon_precision", "auto_cannon_rapid_precision", "auto_cannon_long_range_precision" }) do
+	M.AUTOCANNONS[key].critical_offense = PRECISION_CRITICAL_OFFENSE
 end
 
 -- Damage per second of `weapon` (a catalog entry) at upgrade `level`

@@ -56,6 +56,21 @@ IP:
 **Rule of thumb before adding any noun to this game:** if it only makes sense because of
 BSG, rename it. If it would still make sense in a generic space-combat game, it's fine.
 
+### Acknowledged §0 exception — reference weapon designations (per direct instruction)
+
+Per direct instruction, the **combat weapons** (§2.8) now use *Battlestar Galactica
+Online's* own published weapon names **verbatim** — the Colonial/Cylon pairings from
+`bsgo.fandom.com/wiki/Weapons` (e.g. `MEC-A6 "Fang"` / `Type A "Aggressor"`, `MEC-A8
+"Tornado"` / `Type A1 "Lasher"`, `HD-70 "Lightning"` / `Type B "Bereaver"`). This
+**knowingly departs** from the boundary above: the designation codes (`MEC-A6`, `Type
+A`, `HD-70`, …) are BSGO's specific item names, not generic genre terms.
+
+It is recorded here as a **flagged, explicit exception** — the same "explicitly
+acknowledged, not silent" treatment the SuperShips-sourced ship models get (§2.1.2) —
+not a blanket waiver. Faction names remain **The Accord** / **The Swarm**, every other
+§0 rule still stands, and where the reference has no name (its Line/Frigate page is
+empty) the earlier original names are kept instead of invented BSGO ones.
+
 ### Research resources (reference for mechanics/history only — do not copy text, art, or audio)
 - Wikipedia: "Battlestar Galactica Online" — high-level history, feature summary, shutdown date.
 - Internet Archive Wayback Machine — archived snapshots of the official BSGO site/forums
@@ -1099,51 +1114,149 @@ correct weapon(s):
   Torpedo — enforced by data, not by separate tables per weapon.
 
 **Starting gift (decided, revised)**: one **Auto Cannon** (Ordinance-type,
-`auto_cannon_basic`, `cannon_type = "ordinance"`) and one **Mining Cannon**
-(`mining_cannon_basic`) — not two of the same cannon. The Mining Cannon needed an
-actual name; **decided: "Digger"** (renamed from the original "Prospector" — see the
-mining naming scale below, which reuses "Prospector" for the Carrier tier instead).
+`auto_cannon_basic`, `cannon_type = "ordinance"` — the reference's `MEC-A6 "Fang"` /
+`Type A "Aggressor"`) and one **Mining Cannon** (`mining_cannon_basic` — the
+reference's `Gopher` / `Gouger`) — not two of the same cannon. Earlier working names
+for these ("Tempest"/"Stalker" and "Digger") were superseded when the weapons moved
+to the reference's own naming (below).
 
-**Combat auto cannon naming convention (decided)**: named after **insects**, sized to
-roughly match the ship class they're built for — a third real-world-animal family
-alongside the ship roster's fish (Accord)/bird (Swarm) names (§2.1.2), reserved
-specifically for Ordinance-type (combat) auto cannons.
+**Combat weapon naming convention (decided, revised — "exact reference names")**:
+combat auto cannons and launchers now carry the **reference game's own published
+designations verbatim** — the Colonial name on the Accord side, the Cylon name on the
+Swarm side — per the direct instruction to match `bsgo.fandom.com/wiki/Weapons` as
+closely as possible (e.g. `MEC-A6 "Fang"` / `Type A "Aggressor"`). This is the
+**acknowledged §0 exception** recorded at the top of this file. Still one entry per
+item: the two names live side by side in a `faction_names` table (`{ accord = ...,
+swarm = ... }`) on the entry, with `name` holding the Accord name as the
+default/reference value. Where the reference lists only **one shared name** (its Escort
+cannon batteries, and `Nova`/`Thunderbolt`/`Mole`), the entry carries a single `name`
+and no `faction_names`. `catalog.name_for(entry, faction)` resolves the right name for
+the player's faction (mirroring how ships resolve `faction_skins[faction].name`,
+§2.1.2), and every module-name call site on the outpost screen and flight HUD reads
+through it instead of `entry.name` directly. Where the reference has **no name** at all
+(its Line/Frigate page is "(tbc)"), the earlier original names are retained rather than
+inventing BSGO ones.
 
-| Ship class | Combat auto cannon name | Notes |
+The full set (Accord / Swarm):
+
+| Category | Patrol | Escort | Frigate |
+|---|---|---|---|
+| General cannon | `MEC-A6 "Fang"` / `Type A "Aggressor"` | `MEC-E12 "Claw"` (shared) | `AC-F "Monsoon"` / `Type F "Colossus"` |
+| Rapid cannon | `MEC-A8 "Tornado"` / `Type A1 "Lasher"` | `MEC-E13 "Hurricane"` (shared) | `AC-FR "Wildfire"` / `Type FR "Reaver"` |
+| Long-range cannon | `MEC-A9 "Hawk"` / `Type A2 "Disabler"` | `MEC-E17 "Falcon"` (shared) | `AC-FL "Zenith"` / `Type FL "Overwatch"` |
+| Precision (−P) cannon | `MEC-A6P "Fang-P"` / `Type AP "Aggressor-P"`; `MEC-A8P "Tornado-P"` / `Type A1P "Lasher-P"`; `MEC-A9P "Hawk"` / `Type A2-P "Disabler"` | — | — |
+| General launcher | `HD-70 "Lightning"` / `Type B "Bereaver"` | `HD-M50 "Thunderbolt"` (shared) | `ML-F "Downpour"` / `Type MF "Volley"` |
+| Nuclear/anti-capital launcher | `HD-96 "Nova"` (shared) | `NL-E "Sunburst"` / `Type NE "Annihilator"` | `NL-F "Supernova"` / `Type NF "Obliterator"` |
+
+Aligned with the reference item keys: `auto_cannon_basic` = `Fang`, `auto_cannon_rapid`
+= `Tornado`, `auto_cannon_long_range` = `Hawk`, `auto_cannon_precision` = `Fang-P`,
+`auto_cannon_rapid_precision` = `Tornado-P`, `auto_cannon_long_range_precision` =
+`Hawk-P`, `auto_cannon_escort`/`_rapid`/`_long_range` = `Claw`/`Hurricane`/`Falcon`,
+`missile_launcher_basic` = `Lightning`, `nuclear_launcher_basic` = `Nova`,
+`missile_launcher_escort` = `Thunderbolt`.
+
+**Implemented** (`main/data/modules/weapons_autocannons.lua`): each class carries its
+role variants per direct instruction ("create all the known auto cannons and missile
+launchers for the 3 classes") — a **general-purpose** model plus **rapid-fire** and
+**long-range** ones, mirroring the reference's per-tier autocannon families — and the
+**Patrol** tier also gets the reference's three **−P precision** models
+(`Fang-P`/`Tornado-P`/`Hawk`), which share their base model's damage/range/reload but
+climb in `CriticalOffense` (100→150) with upgrade instead of staying flat. The Escort
+cannons (`Claw`, `Hurricane`, `Falcon`) carry a **single shared name** each (the
+reference gives no Cylon counterpart); the Frigate rows keep the earlier original names
+(the reference's Line page is empty — see the table above for the full set).
+
+Only the **Patrol** variants carry published combat stats — the reference wiki only
+tabulated its Strike-tier weapons; its Escort/Line pages are empty stubs, and no
+other source carries real numbers for them. The Escort/Frigate entries are therefore
+created with their identity/fitting fields but **no `dps`/range block**, per §0/§4's
+"don't invent unconfirmed numbers" rule — the same treatment the Carrier mining
+cannon already gets (flagged in §4). The Patrol variants' stats are real, including
+the reference's `Accuracy` (400), `CriticalOffense` (100, or the −P curve 100→150) and
+`Durability` (2500→5000): general cannon = the general light autocannon (DPS 11→22,
+750 m max, 300 m optimal, 0.5 s reload); the rapid variant (DPS 13.75→27.5, 600 m,
+250 m, 0.4 s); the long-range variant (DPS 9.16→18.33, 900 m, 350 m, 0.6 s). All
+default to `arc = 75` (§2.8).
+
+**Weapon projectiles live in their own hub (decided, per direct instruction)**: all
+cannon/projectile rendering — the visible tracer and the firing sound — was extracted
+out of `main/asteroid_hub.script` (which is about the asteroid field alone) into a
+dedicated `main/shot_hub.script` / `main/shot_hub.go` game object. The hub draws a
+**generic tracer** by default and lets the *firing cannon's own projectile data
+override it*: `player_ship.script` forwards a weapon's `tracers` / `shot_speed` /
+`shot_scale` / `shot_tint` / `shot_burst_stagger` fields in the `shot` message, and
+any value present wins over the hub's own default (per direct instruction: "data
+relating to that specific cannon or projectile should overwrite it when activated").
+
+**Light-autocannon burst visual (decided, per the same instruction)**: each shot from
+a light autocannon now draws a **three-streak burst** instead of one tracer, so it
+reads as rapid fire. It is **purely cosmetic** — the `tracers = 3` field on the
+general/rapid/long-range stat blocks (the −P models inherit it through the shared
+stat copy) only changes how many streaks one shot spawns; damage and rate of fire are
+unchanged, and the server still resolves a single shot. The streaks launch a quarter
+of the shot's own flight time apart, so the spacing scales with range and they chase
+each other down the same path. Mining cannons keep their single tracer, and the
+Escort/Frigate cannons aren't marked (they have no published stats yet, and neither
+class is flyable) — extending the burst to them later is a one-field change.
+
+**Implemented — Launchers and ordinance** (`main/data/modules/weapons_launchers.lua`,
+`main/data/modules/ordinance.lua`; both new, per direct instruction "create all the
+known ... missile launchers" + "create both files"). Launchers are the second weapon
+subtype (§2.8), defined as a **general + nuclear pair per class**. Names shown as
+Accord / Swarm (the reference gives a single shared name for `Nova` and `Thunderbolt`):
+
+| Ship class | General missile launcher | Nuclear / anti-capital launcher |
 |---|---|---|
-| Patrol | **Gnat** (decided) | `auto_cannon_basic` — the starting-gift cannon |
-| Escort | **Hornet** (reserved) | No Escort-tier cannon exists yet |
-| Frigate | **Locust** (reserved) | No Frigate-tier cannon exists yet |
-| Carrier | **Beetle** (reserved) | No Carrier-tier cannon exists yet |
+| Patrol | **HD-70 "Lightning"** / **Type B "Bereaver"** (`missile_launcher_basic`) | **HD-96 "Nova"** (shared) — the reference's specialized anti-capital light launcher, whose role our `nuclear_launcher_basic` fills (reference Nova fires missiles; ours fires nuclear torpedoes) |
+| Escort | **HD-M50 "Thunderbolt"** (shared, `missile_launcher_escort`) | **NL-E "Sunburst"** / **Type NE "Annihilator"** (`nuclear_launcher_escort` — no reference entry; original retained) |
+| Frigate | **ML-F "Downpour"** / **Type MF "Volley"** (`missile_launcher_frigate` — reference Line page empty; original retained) | **NL-F "Supernova"** / **Type NF "Obliterator"** (`nuclear_launcher_frigate` — original retained) |
 
-Only Gnat is implemented so far (`main/data/modules/weapons_autocannons.lua`) — the
-other three are reserved names for whenever an Escort/Frigate/Carrier-specific combat
-cannon is actually added, not separate items yet.
+A launcher carries **no damage of its own** — `launcher_type = "general"` or
+`"nuclear_launcher"` is all it holds; the payload lives in `ordinance.lua`, the single
+shared ammo table §2.8 specified. Every row there is classified by `weapon_type`
+(`cannon` / `missile` / `torpedo`) and `compatible_weapon`: cannon rounds and the four
+real round families (HE / HESC / AP / HERT, with their §2.13B per-grade bonus
+percentages) are `"ordinance_cannon"`; the missiles (interceptor, heavy, siege,
+dumbfire rocket pod) are `"general"`; the **Nuclear Torpedo** is `"nuclear_launcher"`
+only, so a general launcher cannot load it. The restriction is **enforced by data**,
+not by separate tables — `ordinance.fits(weapon, round)` and
+`launchers.accepts(launcher, round)` are the two helpers that express it (§2.8).
+Launchers default to `arc = 75`. Since the reference published no launcher or torpedo
+numbers at all (the launcher is just a mount; the missile figures sit on the
+ammunition, and the nuclear torpedo has none), neither the launchers nor the nuclear
+torpedo carry invented stats — flagged in §4. Ordinance carries the same two-faction
+`faction_names` treatment (resolved by `ordinance.name_for`), though nothing displays
+ordinance names yet (flagged in §4). Like the cannons, one entry per item — the
+faction difference is the name only, exactly as §2.1.2's ship `faction_skins` keep one
+entry per ship.
 
-**Mining cannon naming convention (decided)**: mining-type cannons get their own
-class-sized naming scale instead of the insect one — mining/prospecting terminology.
-Same "only Patrol-tier actually exists" caveat as the combat scale above:
+**Mining cannon naming convention (decided, revised)**: mining-type cannons now also
+follow the reference's own names where it publishes them (same direct instruction),
+and keep original mining/prospecting names where it doesn't:
 
 | Ship class | Mining cannon name | Notes |
 |---|---|---|
-| Patrol | **Digger** (decided) | `mining_cannon_basic` — the starting-gift cannon, renamed from "Prospector" |
-| Escort | **Miner** (reserved) | No Escort-tier cannon exists yet |
-| Frigate | **Speculator** (reserved) | No Frigate-tier cannon exists yet |
-| Carrier | **Prospector** (reserved) | No Carrier-tier cannon exists yet — reuses the original Patrol-tier name rather than retiring it |
+| Patrol | **Gopher** / **Gouger** | `mining_cannon_basic` — the reference's "Gopher"/"Gouger" Light Mining Cannon; two-faction names |
+| Escort | **Mole** | `mining_cannon_escort` — the reference's "Mole" Medium Mining Battery; a single shared name, no Cylon counterpart |
+| Frigate | **Speculator** (reserved) | No Frigate-tier cannon exists yet, and the reference names none |
+| Carrier | **Prospector** (reserved) | No Carrier-tier cannon exists yet, and the reference names none |
 
-Only Digger is implemented so far — same caveat as the combat scale: the other three
-are reserved names, not separate items yet.
+All four tiers are defined in `weapons_autocannons.lua`: **Gopher** carries the
+reference's published figures (DPS 5→16, Mining ×5, 600 m, 250 m optimal, 0.5 s
+reload); the reference names no numbers for the Escort-tier **Mole**, and none at all
+for the Frigate/Carrier tiers, so those keep their placeholder figures (flagged in §4).
 
 **Weapons belong to exactly one ship class each (decided)** — per direct
 clarification: a cannon isn't a generic item that happens to carry a class-flavored
-name, it's built *for* that class specifically. Gnat and Digger are both
-**Patrol-only** (`ship_class = "Patrol"` in `weapons_autocannons.lua` — a **singular**
+name, it's built *for* that class specifically. The starting cannon and Gopher are
+both **Patrol-only** (`ship_class = "Patrol"` in `weapons_autocannons.lua` — a **singular**
 field holding a plain string, not the plural `ship_classes = { "Patrol" }` list it
 briefly was, and no longer the earlier
 `ship_classes = { "Patrol", "Escort", "Frigate", "Carrier" }` "fits anywhere for now"
-placeholder before that). Hornet/Locust/Beetle and Miner/Speculator/Prospector will
-each get their own entry (`ship_class = "Escort"`/`"Frigate"`/`"Carrier"`) once those
-ships actually exist, rather than one shared cannon fitting every class. This
+placeholder before that). The Escort and Frigate combat cannons and
+Miner/Speculator/Prospector each carry their own entry
+(`ship_class = "Escort"`/`"Frigate"`/`"Carrier"`) rather than one shared cannon
+fitting every class. This
 singular-string shape is
 specific to auto cannons, where the "exactly one class" rule is decided — other
 module types (e.g. the Asteroid Analyser, `computer_modules.lua`) still use the
@@ -1453,8 +1566,8 @@ name, so it stays.
 - **Weapon icons specifically show the weapon firing**, not just a static cannon
   shape, per direct instruction — the Auto Cannon (cannon-silhouette family) gets a
   bright radial spark/muzzle-flash burst.
-- **Digger (mining cannon, named "Prospector" at the time this icon was designed —
-  see the mining naming-scale table above for the later rename) redesigned again**,
+- **The mining cannon (the Patrol-tier one — "Prospector", then "Digger", now
+  **Gopher**; see the mining naming-scale table above) redesigned again**,
   per a reference image the user
   liked (a hex-badge mining-cannon icon, style/composition only — recreated from
   scratch as flat vector shapes in this project's own palette, not traced from the
@@ -1465,7 +1578,7 @@ name, so it stays.
   matches the Auto Cannon's design language. Flagged, not yet resolved: whether the
   rest of the icon set (Auto Cannon, Asteroid Analyser, the four empty-slot outlines)
   should get the same hex-badge treatment for consistency, or whether this stays a
-  one-off style just for Digger.
+  one-off style just for this icon.
 - **Data**: each `main/data/modules/*.lua` entry gets an `icon` field (the atlas
   region name). Ship-agnostic — the icon is a property of the *module*, not the ship
   or slot.
@@ -1479,9 +1592,9 @@ name, so it stays.
     - Empty slot, by type: weapon → `"Octagon W"`, computer → `"Octagon C"`,
       engine → `"Octagon E"`, hull → `"Octagon H"` — `outpost.gui_script`'s new
       `SLOT_EMPTY_ICON` table, replacing the old `"slot_" .. type .. "_empty"` naming.
-    - A mining-type cannon (Digger and its Escort/Frigate/Carrier placeholders) →
+    - A mining-type cannon (Gopher and its Escort/Frigate/Carrier counterparts) →
       `"Octagon Cannon Asteroid"`.
-    - The normal ordinance combat cannon (Gnat, `auto_cannon_basic`) →
+    - The normal ordinance combat cannon (`auto_cannon_basic`) →
       `"Octagon Cannon Spaceship"`.
     - `"Octagon Empty.png"` was also supplied but nothing maps to it yet — listed in
       the atlas/`MANUAL_ICONS` for future use, not wired to any slot/module (§4 — don't
@@ -1573,8 +1686,8 @@ name, so it stays.
 
 Direct question that surfaced this: if a player upgrades a weapon and then unloads it
 at an outpost, does the upgrade survive for next time? **Decided: yes — upgrades are
-per physical INSTANCE, not shared across every copy of a type.** Two owned Gnats can
-be at different upgrade levels; uninstalling one never resets it.
+per physical INSTANCE, not shared across every copy of a type.** Two owned copies of
+the same cannon can be at different upgrade levels; uninstalling one never resets it.
 
 This was a real data-model gap, not just a naming/cosmetic choice: `main/session.lua`
 previously tracked `owned`/`loadout` as plain catalog item-TYPE keys (e.g.
@@ -1589,7 +1702,7 @@ Reworked to track unique **instances** instead:
   ever moves an instance's `loadout` membership; `owned` entries (and therefore
   `level`) are never touched by that, which is *why* the upgrade survives.
 - `M.purchase(item_key)` now grants a brand-new instance and returns its id, instead
-  of just adding a type key to a set — buying a second Gnat is now a real, separate,
+  of just adding a type key to a set — buying a second copy of a cannon is now a real, separate,
   independently-upgradeable copy rather than a no-op (owning one used to make the Shop
   hide that type entirely, which no longer happens — the Shop now always lists every
   catalog item, since a second/third copy is a legitimate purchase now).
@@ -1748,8 +1861,8 @@ flagged since `ship_class`/`ship_classes` were first added as pure, unenforced d
   roster yet to actually test whether a mismatched item could still be forced onto a
   slot some other way (flagged in §4).
 - **Verified**: a new `outpost_harness.lua` case confirms the Shop list for the
-  Patrol-class starting ship includes Gnat/Digger/Asteroid Analyser and excludes
-  Miner/Speculator/Prospector. This incidentally shrank the real Shop list back down
+  Patrol-class starting ship includes the starting cannon/Gopher/Asteroid Analyser and excludes
+  Mole/Speculator/Prospector. This incidentally shrank the real Shop list back down
   to 3 items (below §2.8.4's scroll threshold), so that scroll test now injects a
   handful of fake Patrol-class catalog entries first (same "inject test data
   directly into the loaded module" pattern `outpost_harness2.lua` already used for a
@@ -1785,8 +1898,8 @@ without the player explicitly confirming first.
   - Ships tab: buying a **For Sale** ship, or clicking a **different** owned ship
     to make it active (a "swap" of the active ship), both open the dialog. Clicking
     the *already*-active owned ship's own card is a no-op, not a swap - no dialog.
-  - The message names the specific item/slot/ship involved (e.g. "Buy Gnat and
-    install it in W2?" / "Swap Gnat into W2, replacing Digger?" / "Switch your
+  - The message names the specific item/slot/ship involved (e.g. "Buy MEC-A6 'Fang'
+    and install it in W2?" / "Swap MEC-A6 'Fang' into W2, replacing Gopher?" / "Switch your
     active ship to Barracuda?"), built from whichever combination of
     purchase/swap actually applies.
 - **Drag ends visually on release either way** (the ghost node disappears,
@@ -1833,7 +1946,7 @@ ships."**
   on top of `session.sell_ship`'s own real refusal, which is what actually matters;
   the UI check is not a substitute for it.
 - Selling goes through the same confirmation dialog as buying/swapping (§2.8.6) —
-  "Sell Gnat?" / "Sell Barracuda?" — Cancel does nothing, Confirm actually removes it.
+  "Sell MEC-A6 'Fang'?" / "Sell Barracuda?" — Cancel does nothing, Confirm actually removes it.
 - **Verified**: `outpost_harness.lua` gained a case selling a component spare (via
   its Sell button + dialog) and confirming it's actually gone, not just uninstalled.
   `outpost_harness2.lua` gained cases confirming the Sell button is absent on the
@@ -2504,7 +2617,7 @@ combat-cannon naming scale already has.
   expands what it stands for, so rather than carry an unexplained acronym into
   this project, those tiers are named "Reinforced <X>" instead (same real
   taxonomy/structure, an original label - §0, same treatment
-  weapons_autocannons.lua's Gnat/Digger and computer_modules.lua's Asteroid
+  weapons_autocannons.lua's original combat-cannon names and computer_modules.lua's Asteroid
   Analyser already gave their own real BSGO counterparts). "Engine Gyros" and
   "Slide Thrusters" are kept as-is (already plain, non-flavor-text names, real
   and confirmed). "Thruster Array" (the speed/boost booster) is this project's
@@ -2831,7 +2944,7 @@ stale and should be read against this section.
 - `main/data/asteroids.lua` gained `M.max_hull(diameter_m)` = `max(100, diameter × 10)`
   (`M.HULL_PER_METER`/`M.MIN_HULL`), shared by the game (the HUD readout) and the
   server (its damage resolution) so both agree on what "full hull" means. Both
-  numbers are PLACEHOLDERS (§4) — at the Gnat autocannon's ~11 dmg/sec a 10 m rock
+  numbers are PLACEHOLDERS (§4) — at the Patrol cannon's ~11 dmg/sec a 10 m rock
   (100 hull) takes ~9 s and a 50 m one (500 hull) ~45 s.
 - Each rock also holds a mineable amount, `M.resource_amount(resource_id, diameter_m)`
   — for now a fixed proportion of its own hull (`M.RESOURCES[].yield`: 2/3 for
@@ -2930,12 +3043,15 @@ file and no `[sound]`/`[audio]` section anywhere. Four `.sound` components in
 | `engine_loop.sound` | `19_engine_continuous_three_loops.wav` | The ship's engines are producing thrust (looping) |
 | `scan.sound` | `18_scanning_background_2s.wav` | The Asteroid Analyser's scan starts (one-shot) |
 
-- **Both asteroid sounds live on the hub**, not on the rock or the ship: it's the one
-  place that already knows a shot was fired and a rock was destroyed. `hit_sound`
-  plays on the existing `shot` message (`player_ship.script` posts exactly one per
-  weapon that actually fires, so it's once per shot, not once per frame);
+- **The asteroid sounds live on the asteroid hub** (`main/asteroid_hub.script`), not
+  on the rock: it's the place that knows a rock was destroyed or a scan started.
   `breakup_sound` plays at the despawn point, right before the rock is handed to its
-  disintegration.
+  disintegration; `scan_sound` plays when a scan begins. **The firing sound
+  (`hit_sound`) and the visible tracer now live in their own hub,
+  `main/shot_hub.script`** (on `main/shot_hub.go`), so cannon/projectile code no
+  longer sits alongside the asteroid field (per direct instruction). `hit_sound`
+  still plays on the existing `shot` message (`player_ship.script` posts exactly one
+  per weapon that actually fires, so it's once per shot, not once per frame).
 - **The engine loop follows THRUST, not speed** (per direct instruction: *"the engine
   is providing not the speed of the ship itself. So once the thrust has been set to 0
   the engine noise should stop even if the ship is still slowing down"*). It's keyed
@@ -3004,7 +3120,8 @@ Every sound is positioned in the world, each at the origin that actually makes i
   licensing terms. The built-in pan/gain route is the technique Defold's own engine
   team recommends for positional audio.
 - **`main/audio.lua`** is the one place that does the maths, shared by
-  `player_ship.script` (the listener) and `asteroid_hub.script` (the world sounds).
+  `player_ship.script` (the listener) and the world hubs `asteroid_hub.script` /
+  `shot_hub.script` (the world sounds).
   `M.mix(world_pos)` returns pan and gain for a world position; `M.play` plays a
   one-shot at a position; `M.play_loop`/`M.update_loop` drive a positioned loop.
 - **The listener is the chase camera, and its own axes drive everything**: pan is
@@ -3279,7 +3396,8 @@ starting point, not gospel — same caveat as §0's research rule.
       flight_map.gui             # §2.7 star map, opened with N
       flight_map.gui_script
       player_ship.script         # §2.10.1 movement + chase camera + §2.12 engine loop
-      asteroid_hub.script        # §2.11 spawns/despawns the field, owns the audio
+      asteroid_hub.script        # §2.11 spawns/despawns the field, owns the asteroid audio
+      shot_hub.script            # §2.8/§2.12 renders weapon tracers + the firing sound
       asteroid.script            # §2.11 per-rock buffer resource + breakup timer
       asteroid_geometry.lua      # §2.11 pure-Lua seeded rock generator
       network.lua                # §3.3 Nakama client: ops, state, prediction
@@ -3332,15 +3450,16 @@ starting point, not gospel — same caveat as §0's research rule.
     ranks.lua
     star_systems.lua       -- ✅ implemented, §2.7
     modules/
-      weapons_autocannons.lua
-      weapons_launchers.lua
-      hull_modules.lua
-      engine_modules.lua
-      computer_modules.lua
-      ordinance.lua
+      weapons_autocannons.lua   -- ✅ implemented
+      weapons_launchers.lua     -- ✅ implemented
+      hull_modules.lua          -- ✅ implemented
+      engine_modules.lua        -- ✅ implemented
+      computer_modules.lua      -- ✅ implemented
+      ordinance.lua             -- ✅ implemented (cannon rounds, missiles, torpedoes)
   ```
-  (Everything else in this layout is still just a plan — `star_systems.lua` and
-  `ships.lua` are the two actually written so far.)
+  (The rest of this layout is still just a plan — `ship_classes.lua`, `factions.lua`,
+  `resources.lua`, `currencies.lua` and `ranks.lua` aren't written yet; `ships.lua`,
+  `star_systems.lua` and every file under `modules/` are.)
 
 ### 3.2 Authentication & session (decided — flow and mechanism)
 
@@ -3668,13 +3787,24 @@ project:
       (§2.1.2) — Frigate/Carrier still fully open, no ships exist for those classes.
 - [ ] Define concrete power-pool mechanics: capacity per ship class, regen rate, and
       cooldown durations per module type/subtype.
-- [ ] Populate actual module entries (specific auto cannons, launchers, hull/engine/
-      computer modules) once stats are designed — no concrete items exist yet, only
-      the type taxonomy and behavior rules.
-- [ ] Define the variety of **ordinance** types and their specs (damage, blast
-      radius, special effects, etc.) across cannon ammo, missiles, and torpedoes —
-      mentioned as "to be stated later" by design, nothing concrete yet beyond the
-      shared-table classification scheme in §2.8.
+- [x] ~~Populate actual module entries~~ — **weapons done**: three combat auto cannon
+      variants each for Patrol/Escort/Frigate (§2.8) and a general + nuclear launcher
+      pair per class (`weapons_launchers.lua`); hull/engine/computer modules remain a
+      first pass (Patrol-tier hull entries, the Asteroid Analyser).
+- [ ] Design real combat stats for the **Escort/Frigate** auto cannons and every
+      launcher: the reference published none (§2.8), so those entries are
+      identity/fitting data only so far — same open question as the Carrier mining
+      cannon. Decide whether to extrapolate from the Patrol tier (as the mining
+      cannon ranges already do: 600 → 900 → 1350 m) or source real numbers.
+- [ ] Give the new weapon variants their own icons — every combat auto cannon and
+      every launcher currently placeholder-shares the one "Octagon Cannon Spaceship"
+      region.
+- [x] ~~Define the variety of **ordinance** types and their specs~~ — **weapons-side
+      done**: `ordinance.lua` now holds the four real cannon-round families (HE/HESC/
+      AP/HERT with §2.13B per-grade bonuses), four missiles (interceptor/heavy/siege/
+      dumbfire rocket), a baseline standard round and the Nuclear Torpedo. Still open:
+      mines, support consumables (repair/power cells, flares), the master/high-quality
+      ordnance ladder, and *how much* ammo a ship carries (inventory/ammo counts).
 - [ ] Balance the Mining Cannon vs. Ordinance Cannon tradeoff (mining yield rate vs.
       combat ineffectiveness) once resource yield numbers (§2.6) are defined.
 - [x] ~~Decide Nakama hosting~~ — resolved for now: self-hosted via Docker Compose
@@ -3708,7 +3838,7 @@ project:
       (§2.8): `main/outpost.gui` + `.gui_script`, a third embedded instance. On
       faction pick, a new character is gifted the **Patrol 1** ship (§2.1.2) fitted
       with one **Auto Cannon** (Ordinance-type) and one **Mining Cannon**
-      ("Digger") — hull/engine/computer slots stay empty. The screen shows the
+      ("Gopher") — hull/engine/computer slots stay empty. The screen shows the
       home system name (Sol/Polaris, §2.7), the faction + ship label, and a 3-tab
       fitting view (**Installed** / **Owned** / **Shop**, §2.8), with a **Launch**
       button. Launch doesn't do anything yet — flight mode isn't built.
@@ -3728,12 +3858,20 @@ project:
 - [ ] Design the specific server-authoritative Nakama match modules needed for combat
       resolution, module power/cooldown/wear enforcement, and siege/economy state
       (§3.3), rather than trusting client-reported outcomes.
+- [ ] Apply the reference weapon fields recorded but not used yet in combat —
+      `Accuracy` (400), `CriticalOffense` (100, or the −P curve 100→150), `Durability`
+      (2500→5000) and the mining `Mining` ×5 multiplier (§2.8). Until then the three
+      Patrol −P models play identically to their base model.
 - [ ] Clarify whether non-nuclear torpedoes exist alongside missiles, or if
       "torpedo" currently means "nuclear torpedo" only; and whether the
       general-purpose launcher can fire both missiles and any non-nuclear torpedoes.
-- [ ] Define the Nuclear Launcher / Nuclear Torpedo as their own concrete module +
-      ordinance entries (stats, fitting restrictions, whether they need their own
-      ship-class gating beyond the general launcher/missile fitting rules).
+- [x] ~~Define the Nuclear Launcher / Nuclear Torpedo as their own concrete module +
+      ordinance entries~~ — done: `nuclear_launcher_<class>` entries in
+      `weapons_launchers.lua` (`launcher_type = "nuclear_launcher"`, otherwise
+      identical fitting rules to the general launcher — no extra ship-class gating),
+      and a `torpedo_nuclear` entry in `ordinance.lua` restricted to them. Stats still
+      open: the reference published no torpedo numbers, and the Valour gate (§2.6) is
+      not wired up yet.
 - [x] ~~Pick Patrol 1's actual per-faction display names~~ — resolved (proposed):
       **Sardine** (Accord), **Hummingbird** (Swarm), per the new fish/bird naming
       convention (§2.1.2). Set in `main/data/ships.lua`; flag if you want different
@@ -3756,15 +3894,18 @@ project:
 - [ ] Populate the rest of the ship roster (§2.1.2) — Patrol 1 and Escort 1 exist;
       Frigate/Carrier classes still have no individual ships defined yet.
 - [x] ~~Decide the starting Auto Cannon's `cannon_type`~~ — resolved: one
-      Ordinance-type Auto Cannon + one Mining Cannon ("Digger"), not two of the
-      same (§2.8).
+      Ordinance-type Auto Cannon + one Mining Cannon (now the reference's
+      **"Gopher"** / "Gouger"), not two of the same (§2.8).
 - [x] ~~Confirm "Prospector" as the Mining Cannon's name~~ — resolved, then
-      superseded: the Patrol-tier mining cannon is now **"Digger"**; "Prospector" was
-      reused for the (not yet built) Carrier-tier mining cannon instead — see the
-      mining naming-scale table above (§2.8).
-- [x] ~~Name the basic combat Auto Cannon~~ — resolved: **Gnat** (Patrol-tier), part of
-      a new insect-naming convention for combat auto cannons sized by ship class
-      (Escort/Frigate/Carrier tiers reserved as Hornet/Locust/Beetle, §2.8).
+      superseded twice: the Patrol-tier mining cannon passed through "Prospector" →
+      "Digger" → and is now the reference's **"Gopher"** / "Gouger"; "Prospector"
+      remains the (not yet built) Carrier-tier mining cannon — see the mining
+      naming-scale table above (§2.8).
+- [x] ~~Name the basic combat Auto Cannon~~ — resolved, then superseded by the
+      "exact reference names" pass: the basic combat Auto Cannon is now **MEC-A6
+      "Fang"** (Accord) / **Type A "Aggressor"** (Swarm) (§2.8). Earlier names in
+      turn: the insect scheme (Gnat/Hornet/Locust), then the invented `AC-P "Tempest"`
+      / `Type P "Stalker"`.
 - [ ] Confirm the Asteroid Analyser's `behavior = "active"` (proposed to match the
       `activate_scanner` key binding, §2.8/§2.10) — flag if it should be passive.
 - [x] ~~Wire up actual install/purchase interaction on the outpost screen~~ —
@@ -3880,10 +4021,11 @@ project:
       families and the standard/high/master ordnance ladder, plus support consumables
       (repair/power cells, flares, mines) — nothing exists today beyond §2.8's
       `cannon_type` split.
-- [ ] Add **launcher/ordnance modules** (§2.13B/D): missile launchers, torpedo
-      launchers, rockets, mines and the missile/torpedo object model (never-miss,
-      lifetime, missile hull points, ECM/flare/point-defence counters) — §4 already
-      flags the nuclear launcher as its own entry, this expands it to the whole family.
+- [ ] **Launcher/ordnance modules** (§2.13B/D): launcher + nuclear-launcher module
+      entries and the shared `ordinance.lua` table now exist (§2.8) — the missile/
+      torpedo **object model** is still open: never-miss flight, lifetime, missile hull
+      points, and the ECM/flare/point-defence counters, plus rocket packs, mines and
+      the defensive-weapon (`flak`/point-defence) family from §2.13D.
 - [ ] Add the missing **slot families** to §2.8's taxonomy (§2.13D): launcher, gun
       (MG/flechette/KKC), defensive_weapon (flak/point defence), special_weapon,
       role, and the computer sub-families (buff/debuff, firewall, emitter/penetration,

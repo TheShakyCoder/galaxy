@@ -6,6 +6,50 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
 
 ## [Unreleased]
 
+### Weapons
+- Combat weapons now use the **reference game's own published names verbatim** —
+  the Colonial name on The Accord's side, the Cylon name on The Swarm's (e.g.
+  `MEC-A6 "Fang"` / `Type A "Aggressor"`). This is an acknowledged exception to
+  the §0 IP boundary (recorded at the top of `plan.md`), a deliberate move to match
+  `bsgo.fandom.com/wiki/Weapons`. Where the reference lists a single shared name
+  (`Claw`/`Hurricane`/`Falcon`, `Nova`, `Thunderbolt`, `Mole`) the entry keeps one
+  `name` and no `faction_names`. Names live in a `faction_names` table and are
+  resolved for the player's faction by `catalog.name_for`, which the outpost screen
+  and flight HUD now use for every module name. Where the reference has no name
+  (its Line/Frigate page is empty) the earlier original names are kept.
+- Every ship class now has a full auto cannon family: a general-purpose cannon
+  plus rapid-fire and long-range variants for Patrol, Escort and Frigate, and the
+  Patrol tier also gets the reference's three **−P precision** models
+  (`Fang-P`/`Tornado-P`/`Hawk`), which climb in CriticalOffense with upgrade instead
+  of staying flat. The Patrol variants carry real reference stats (including
+  Accuracy 400, CriticalOffense 100, Durability 2500→5000); the Escort/Frigate ones
+  are identity data only until real numbers exist.
+- Light autocannon shots now render as a **three-streak burst** instead of a single
+  tracer, so they read as rapid fire. Purely cosmetic: a new `tracers = 3` field on
+  the light-autocannon stat blocks only changes how many streaks the client's shot
+  renderer draws — damage and rate of fire are untouched, and the server still
+  resolves one shot.
+- Mining cannons are renamed to the reference's names too: **Gopher** / **Gouger**
+  (Patrol, now with the reference's full DPS 5→16 curve and Mining ×5) and **Mole**
+  (Escort). Frigate/Carrier keep their original placeholder names.
+- Missile launchers exist for the first time (`weapons_launchers.lua`): a general
+  missile launcher and a nuclear launcher for each of the three classes, now under
+  the reference names (`HD-70 "Lightning"` / `Type B "Bereaver"`, `HD-96 "Nova"`,
+  `HD-M50 "Thunderbolt"`).
+- A new shared ordinance table (`ordinance.lua`) holds the ammunition: the four
+  cannon-round families (HE/HESC/AP/HERT) with their per-grade bonuses, four
+  missiles (interceptor, heavy, siege, dumbfire rocket) and the Nuclear Torpedo,
+  which only a nuclear launcher can load. Each round also carries a two-faction
+  name, resolved by `ordinance.name_for` (not yet shown anywhere).
+
+### Code organisation
+- Split all cannon/projectile rendering out of `main/asteroid_hub.script` into a
+dedicated `main/shot_hub.script` / `main/shot_hub.go` hub. It owns the visible
+tracer and the firing sound, draws a generic tracer by default, and lets the firing
+weapon's own projectile data override it (a weapon may supply `tracers`,
+`shot_speed`, `shot_scale`, `shot_tint` and `shot_burst_stagger`). The asteroid hub
+is now asteroids only.
+
 ### Fixes
 - The Asteroid Analyser now scans every asteroid within 400 m of the ship,
   shortened from 500 m per direct instruction.
@@ -72,6 +116,11 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
   plating and so on) are always on and have no key.
 - The Fitting tab shows each slot's key under it, and the flight HUD lists your
   weapons (on/off) and module keys.
+- The flight HUD's ship diagram is interactive: clicking a slot's icon switches
+  that weapon on/off or runs that active module, exactly as its key does (empty
+  and still-locked slots do nothing). Hovering an icon shows the module's name
+  and its key, with the Shift modifier drawn as a small icon before the slot
+  number rather than spelled out as "Shift+".
 - After a reconnect, the game tells the server again what it's firing at.
 - Targeting, with BSGO's keys: Tab cycles through everything in sensor range
   (other players' ships, both outposts and asteroids), nearest first; X targets

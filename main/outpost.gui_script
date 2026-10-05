@@ -1338,7 +1338,7 @@ end
 -- Every catalog entry that fits the active ship's class - unlike the old
 -- model, the Shop no longer hides an item once you own one copy of it:
 -- purchasing always grants a brand-new INSTANCE (session.purchase, §4),
--- so buying a second (or third) Gnat to fit and upgrade independently
+-- so buying a second (or third) copy of a weapon to fit and upgrade independently
 -- needs to still be possible. It DOES now hide items that belong to a
 -- different ship class entirely (e.g. Miner/Speculator/Prospector while
 -- flying the Patrol-class Sardine/Hummingbird), per direct instruction.
@@ -1471,7 +1471,7 @@ local function shop_rows(type_filter)
 		local module = catalog.get(item_key)
 		table.insert(rows, {
 			item_key = item_key,
-			label = (module and module.name or item_key) .. "  (" .. session.get_module_price() .. " Tope)",
+			label = (catalog.name_for(module, session.get_faction()) or item_key) .. "  (" .. session.get_module_price() .. " Tope)",
 			source = "shop",
 			color = module and TYPE_CARD_COLOR[module.type],
 		})
@@ -1483,7 +1483,7 @@ local function owned_spare_rows(type_filter)
 	local rows = {}
 	for _, inst in ipairs(owned_spare_instances(type_filter)) do
 		local module = catalog.get(inst.item_key)
-		local name = module and module.name or inst.item_key
+		local name = catalog.name_for(module, session.get_faction()) or inst.item_key
 		if inst.level > 0 then
 			name = name .. "  +" .. inst.level
 		end
@@ -3040,7 +3040,7 @@ function on_input(self, action_id, action)
 			-- inside card.box's own full-width footprint).
 			if card.sell_box and hits(card.sell_box, action) and hits(panel_node, action) then
 				local module = catalog.get(card.item_key)
-				local name = module and module.name or card.item_key
+				local name = catalog.name_for(module, session.get_faction()) or card.item_key
 				local instance_id = card.instance_id
 				local refund = session.get_module_sell_refund()
 				show_confirm(self, "Sell " .. name .. " for " .. refund .. " Tope?", function()
@@ -3105,12 +3105,12 @@ function on_input(self, action_id, action)
 
 			if is_purchase or is_swap then
 				local module = catalog.get(drag.item_key)
-				local module_name = module and module.name or drag.item_key
+				local module_name = catalog.name_for(module, session.get_faction()) or drag.item_key
 				local existing_name
 				if is_swap then
 					local existing = session.get_instance(existing_instance_id)
 					local existing_module = existing and catalog.get(existing.item_key)
-					existing_name = existing_module and existing_module.name or "the installed item"
+					existing_name = catalog.name_for(existing_module, session.get_faction()) or "the installed item"
 				end
 				local price = session.get_module_price()
 

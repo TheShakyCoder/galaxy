@@ -1127,6 +1127,13 @@ local function update_firing(self, target)
 	self.firing = self.fire_order ~= nil
 end
 
+-- Faction-resolved display name of a fitted `module`, upper-cased for the
+-- flight HUD's terse status lines - combat weapons carry an Accord and a
+-- Swarm name, resolved by catalog.name_for.
+local function module_label(module)
+	return (catalog.name_for(module, session.get_faction()) or "?"):upper()
+end
+
 -- One line for the flight HUD: each weapon's key and whether it's on, then
 -- the keys of the fitted active modules.
 local function hotkeys_text(self)
@@ -1141,9 +1148,9 @@ local function hotkeys_text(self)
 		local key = session.slot_hotkey(ship_id, entry.slot)
 		local module = key and session.module_in_slot(entry.slot)
 		if module and entry.slot:sub(1, 1) == "W" then
-			table.insert(weapon_parts, "SHIFT+" .. key .. " " .. module.name:upper() .. (self.weapons_on[entry.slot] and " ON" or " OFF"))
+			table.insert(weapon_parts, "SHIFT+" .. key .. " " .. module_label(module) .. (self.weapons_on[entry.slot] and " ON" or " OFF"))
 		elseif module and module.behavior == "active" then
-			table.insert(module_parts, key .. " " .. module.name:upper())
+			table.insert(module_parts, key .. " " .. module_label(module))
 		end
 	end
 	local text = table.concat(weapon_parts, "   ")
@@ -1216,7 +1223,7 @@ local function toggle_weapon(self, n)
 		return
 	end
 	self.weapons_on[slot] = not self.weapons_on[slot]
-	flash_status(module.name:upper() .. " (" .. slot .. ") " .. (self.weapons_on[slot] and "ON" or "OFF"))
+	flash_status(module_label(module) .. " (" .. slot .. ") " .. (self.weapons_on[slot] and "ON" or "OFF"))
 	show_hotkeys(self)
 end
 
@@ -1278,9 +1285,23 @@ local function update_weapon_fire(self, dt, target, pos, rot)
 				local dir = dist > 0 and to_target / dist or forward
 				if reach <= module.max_range_m and vmath.dot(forward, dir) >= math.cos(math.rad((module.arc or 0) / 2)) then
 					local aim = target.kind == "asteroid" and (pos + dir * math.max(0, dist - target.radius)) or target.pos
-					msg.post("asteroid_hub#script", "shot", {
+					msg.post("shot_hub#script", "shot", {
 						from = pos + forward * MUZZLE_OFFSET,
 						to = aim,
+						-- The firing cannon's OWN projectile data, if any: the shot
+						-- hub (main/shot_hub.script) draws a generic tracer by default
+						-- and lets any field here OVERRIDE it (per direct
+						-- instruction). Light autocannons set `tracers = 3`
+						-- (main/data/modules/weapons_autocannons.lua) for a rapid-fire
+						-- burst; `shot_speed`/`shot_scale`/`shot_tint`/
+						-- `shot_burst_stagger` are the other per-cannon knobs a weapon
+						-- may define. All purely visual - still ONE shot for damage
+						-- and rate of fire (nil fields fall back to the hub's defaults).
+						tracers = module.tracers,
+						speed = module.shot_speed,
+						scale = module.shot_scale,
+						tint = module.shot_tint,
+						burst_stagger = module.shot_burst_stagger,
 						-- Where this shot's sound should come from - the firing
 						-- mount itself (plan.md §2.12).
 						origin = weapon_mount_position(self.ship_id, slot, pos, rot),
@@ -1297,21 +1318,53 @@ local function update_weapon_fire(self, dt, target, pos, rot)
 	end
 end
 
--- n (1-9): use the active Computer/Engine/Hull module in that key's slot.
-local function activate_module(self, n)
-	local slot = session.module_slot_for_hotkey(session.get_ship_id(), n)
+-- Use the module fitted in `slot` if it's an active one - shared by the
+-- number-key path (activate_module below, which resolves `slot` from the
+-- key) and the flight HUD's click-to-activate (toggle_slot).
+local function activate_module_slot(self, slot)
 	local module = slot and session.module_in_slot(slot)
 	if not module then
-		flash_status(n .. ": NOTHING FITTED" .. (slot and (" IN " .. slot) or ""))
+		flash_status((slot or "?") .. ": NOTHING FITTED")
 	elseif module.behavior ~= "active" then
-		flash_status(module.name:upper() .. " IS PASSIVE (ALWAYS ON)")
+		flash_status(module_label(module) .. " IS PASSIVE (ALWAYS ON)")
 	elseif module.range_m and module.scan_time_s then
 		-- The flight HUD's ship diagram shows this slot "live" while the
 		-- effect runs (slot_states below).
 		self.module_live_until[slot] = socket.gettime() + module.scan_time_s
 		activate_analyser(self)
 	else
-		flash_status(module.name:upper() .. ": NOT BUILT YET")
+		flash_status(module_label(module) .. ": NOT BUILT YET")
+	end
+end
+
+-- n (1-9): use the active Computer/Engine/Hull module in that key's slot.
+local function activate_module(self, n)
+	local slot = session.module_slot_for_hotkey(session.get_ship_id(), n)
+	if slot and not session.module_in_slot(slot) then
+		flash_status(n .. ": NOTHING FITTED IN " .. slot)
+		return
+	end
+	activate_module_slot(self, slot)
+end
+
+-- Clicking a slot's icon on the flight HUD (main/flight_hud.gui_script's
+-- "slot_click") toggles/uses it exactly as its own key would (per direct
+-- instruction: "a weapon or component can be activated or deactivated by
+-- clicking the component icon in the gui"): a weapon switches on/off, an
+-- active module runs its effect, and a passive/empty slot just reports why
+-- nothing happened.
+local function toggle_slot(self, slot)
+	local module = slot and session.module_in_slot(slot)
+	if not module then
+		flash_status((slot or "?") .. ": NOTHING FITTED")
+	elseif slot:sub(1, 1) == "W" then
+		self.weapons_on[slot] = not self.weapons_on[slot]
+		flash_status(module_label(module) .. " (" .. slot .. ") " .. (self.weapons_on[slot] and "ON" or "OFF"))
+		show_hotkeys(self)
+	elseif module.behavior == "active" then
+		activate_module_slot(self, slot)
+	else
+		flash_status(module_label(module) .. " IS PASSIVE (ALWAYS ON)")
 	end
 end
 
@@ -1378,6 +1431,12 @@ function on_message(self, message_id, message)
 	elseif message_id == hash("execute_jump_preset") then
 		-- main/flight_map.gui's [JUMP] button - same effect as pressing J
 		execute_jump(self)
+	elseif message_id == hash("slot_click") then
+		-- main/flight_hud.gui_script: the player clicked a slot's icon in
+		-- the flight HUD's ship diagram (per direct instruction: "a weapon
+		-- or component can be activated or deactivated by clicking the
+		-- component icon in the gui").
+		toggle_slot(self, message.slot)
 	end
 end
 

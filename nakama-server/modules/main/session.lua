@@ -62,7 +62,7 @@ M.visited = nil
 M.assignments = nil
 -- `owned`: list of OWNED INSTANCES, NOT catalog type-keys — decided (§4) that
 -- module upgrades are per PHYSICAL COPY, not a shared per-type "blueprint"
--- upgrade, so two owned Gnats need to be distinguishable and independently
+-- upgrade, so two owned copies of a weapon need to be distinguishable and independently
 -- upgradeable. Each entry: { id = <unique instance id>, item_key = <catalog
 -- key, main/data/modules/catalog.lua>, level = <int, starts at 0> }.
 M.owned = nil
@@ -129,7 +129,7 @@ end
 
 -- Starting gift for every new character, regardless of faction (direct
 -- instruction): the Patrol Interceptor ship (§2.1.2) fitted with one basic
--- Auto Cannon ("Gnat") and one Mining Cannon ("Digger", §2.8) — one in each
+-- Auto Cannon and one Mining Cannon ("Gopher", §2.8) — one in each
 -- weapon slot. The Asteroid Analyser (§2.8, a Computer-slot module) is NOT
 -- part of the starting gift — it's available to purchase instead (see the
 -- outpost screen's Shop tab), demonstrating the owned-vs-purchasable
@@ -698,7 +698,7 @@ end
 -- item's own origin slot, just the simplest data-consistent behavior; see
 -- plan.md §4. No-op if the instance isn't owned. Since `owned` entries are
 -- never mutated by install/uninstall (only `loadout` membership changes),
--- an instance's `level` is untouched by any of this — moving a Gnat
+-- an instance's `level` is untouched by any of this — moving a fitted weapon
 -- between slots, or back out to being a spare, always preserves its
 -- upgrade level, which is the whole point of tracking instances instead
 -- of just type keys.

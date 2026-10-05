@@ -15,7 +15,7 @@
 -- actually expands what "HT" stands for, so rather than carry an
 -- unexplained acronym into this project, the combo tiers are named
 -- "Reinforced <X>" instead (same real taxonomy/structure, an original
--- label - §0, same treatment weapons_autocannons.lua's Gnat/Digger and
+-- label - §0, same treatment weapons_autocannons.lua's weapon names and
 -- computer_modules.lua's Asteroid Analyser already gave their own real
 -- BSGO counterparts).
 --

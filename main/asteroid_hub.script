@@ -51,26 +51,18 @@ local RESULT_SHOWN_S = 6
 local spawned = {}
 local debris = {} -- visual-only objects, excluded from targeting immediately
 
--- Audio (this hub owns all three, since it's the one place that knows a shot
--- was fired, a rock was destroyed, and a scan started - see on_message's
--- "shot", update()'s despawn, and analyse() below). All are one-shot
--- components on this game object (main/asteroid_hub.go).
+-- Audio (this hub owns the two asteroid sounds - a rock breaking up and a
+-- scan starting - see update()'s despawn and analyse() below). Both are
+-- one-shot components on this game object (main/asteroid_hub.go). The weapon
+-- firing sound and the visible tracer are NOT here: they live in their own
+-- hub, main/shot_hub.script (on main/shot_hub.go), since cannon/projectile
+-- code shouldn't sit alongside the asteroid field (per direct instruction).
 --
--- All three are positioned in the world through main/audio.lua (plan.md
--- §2.12): the shot sound at the firing weapon's own mount (the sender passes
--- `origin`), the breakup sound at the rock, the scan sound at the analyser's
--- slot (also passed as `origin`). The hub itself has no camera, so it reads
+-- Both sounds are positioned in the world through main/audio.lua (plan.md
+-- §2.12): the breakup sound at the rock, the scan sound at the analyser's own
+-- slot (the sender passes `origin`). The hub itself has no camera, so it reads
 -- the listener main/player_ship.script publishes each frame - pan and gain
 -- come out relative to whatever the player is looking through.
---
--- Weapon fire (main/player_ship.script "shot"): a bright pellet flies from
--- the gun to the target at SHOT_SPEED, purely visual (only outposts take
--- damage, decided by the server).
-local SHOT_SPEED = 1200 -- m/s
--- A tracer streak (the unit sphere stretched along its flight path), long
--- and bright enough to see at weapon range.
-local SHOT_SCALE = vmath.vector3(2, 2, 24)
-local SHOT_TINT = vmath.vector4(10.0, 7.5, 2.5, 1.0)
 local current_system = nil
 
 -- system_id -> { [index] = true } for asteroids this player has analysed.
@@ -323,27 +315,6 @@ function on_message(self, message_id, message)
 		spawn_field(message.system_id)
 	elseif message_id == hash("analyse") then
 		analyse(message.position, message.range, message.scan_time, message.origin)
-	elseif message_id == hash("shot") then
-		local from, to = message.from, message.to
-		local dir = to - from
-		local rot = vmath.length(dir) > 0.001 and vmath.quat_from_to(vmath.vector3(0, 0, 1), vmath.normalize(dir)) or vmath.quat()
-		local id = factory.create("#shot_factory", from, rot, nil, SHOT_SCALE)
-		local model = msg.url(nil, id, "model")
-		go.set(model, "tint", SHOT_TINT)
-		-- model.material's point light defaults to near the system's origin,
-		-- which would leave the side the player sees dark: light the tracer
-		-- from high above instead (the chase camera looks down on it).
-		go.set(model, "light", vmath.vector4(from.x, from.y + 5000, from.z, 1))
-		local duration = math.max(0.05, vmath.length(to - from) / SHOT_SPEED)
-		go.animate(id, "position", go.PLAYBACK_ONCE_FORWARD, to, go.EASING_LINEAR, duration, 0, function()
-			go.delete(id)
-		end)
-		-- The mining cannon firing (main/player_ship.script posts one "shot"
-		-- per weapon that actually fires, so this plays once per shot, not
-		-- once per frame). Positioned at the firing weapon's own mount
-		-- (`message.origin`, from player_ship.script) - so the port gun sounds
-		-- left and the starboard gun right (per direct instruction).
-		audio.play("#hit_sound", message.origin, { attenuate = false })
 	elseif message_id == hash("analyser_status") then
 		-- player_ship.script's own messages (e.g. no analyser fitted)
 		show_status(message.text, 3)

@@ -1,0 +1,220 @@
+-- Ordinance entries (plan.md §2.8). ONE shared table for every kind of
+-- ammunition the game fires, per §2.8's decision - cannon rounds, missiles
+-- and torpedoes all live here rather than split across separate files.
+-- Each row is classified (`weapon_type`) so fitting/firing logic can
+-- restrict it to the correct weapon:
+--   weapon_type       - which weapon category this round belongs to:
+--                       "cannon", "missile" or "torpedo".
+--   compatible_weapon - the specific weapon/launcher-type this round can be
+--                       loaded into. For cannon rounds that's "ordinance_cannon"
+--                       (any auto cannon with `cannon_type = "ordinance"`); for
+--                       missiles it's "general" (interchangeable across every
+--                       general launcher); for a nuclear torpedo it's
+--                       "nuclear_launcher" (the Nuclear Launcher subtype only,
+--                       §2.8). This is what stops a Mining Cannon firing
+--                       missiles, or a general launcher firing a nuclear
+--                       torpedo - enforced by data, not by separate tables
+--                       per weapon (see weapons_launchers.lua's M.accepts).
+--
+-- Source: plan.md §2.13B (the two BSGO wikis' Ammunition/Equipment pages,
+-- read via their APIs). The four cannon-round families and their per-grade
+-- bonuses are real published reference values; the missile figures are the
+-- reference game's own entry-level numbers (update 47 for the heavy
+-- missile). Nothing here is invented - where a source published no number,
+-- the field is omitted and flagged in plan.md §4 rather than guessed
+-- (§0's research rule). Names are original descriptive labels, not the
+-- source's item names (§0: names/item text are reference-only).
+--
+-- Naming (revised): like the weapons that fire it
+-- (weapons_autocannons.lua/weapons_launchers.lua), every entry now carries
+-- an ORIGINAL two-faction name in `faction_names` alongside its Accord
+-- `name` - the Accord side a plain descriptive label (the reference game
+-- does the same for its Colonial ammunition), the Swarm side a Cylon-style
+-- `Type <code> "<Callsign>"` designation. Cannon rounds use a `C` code
+-- (`CH`/`CF`/`CA`/`CT` for the HE/HESC/AP/HERT families), missiles an `M`
+-- code (`MI`/`MH`/`MS`/`MR`), and the torpedo an `N` code (`NT`). None are
+-- shown in the UI yet - ordinance has no display surface - so this is data
+-- only, resolved by M.name_for below when that screen is built (plan.md §4).
+--
+-- Per §2.8, cannon ammo, missiles and torpedoes are all consumables -
+-- a fitted weapon loads and consumes them; this table defines WHAT can be
+-- fired, not how much of it a player carries (inventory/ammo-count is not
+-- modelled yet, plan.md §4).
+
+local M = {}
+
+M.ORDINANCE = {
+	-- Cannon rounds (fired by ordinance-type Auto Cannons, §2.8). The
+	-- reference gives a baseline plus four specialised families whose
+	-- bonuses are identical across ship classes (only the underlying
+	-- weapon differs). One entry per family rather than per class, since
+	-- the percentages don't vary by class.
+	["cannon_round_standard"] = {
+		name = "Standard Rounds", -- Accord (default/reference) name, see the header's naming note
+		faction_names = { accord = "Standard Rounds", swarm = "Type C \"Slug\"" },
+		weapon_type = "cannon",
+		compatible_weapon = "ordinance_cannon",
+		-- Baseline: no bonus, no penalty.
+	},
+	-- HE - raises BOTH ends of the damage roll. Reference values +3/+6/
+	-- (Line-only grade omitted here)/+15%. The middle published grade is
+	-- only available to Line ships, which this project doesn't model yet,
+	-- so it's dropped rather than guessed - `bonus_percent` therefore
+	-- holds the remaining three in ascending order.
+	["cannon_round_he"] = {
+		name = "High-Explosive Rounds", -- Accord name, see the header's naming note
+		faction_names = { accord = "High-Explosive Rounds", swarm = "Type CH \"Burst\"" },
+		weapon_type = "cannon",
+		compatible_weapon = "ordinance_cannon",
+		bonus = "damage_min_and_max",
+		bonus_percent = { 3, 6, 15 },
+	},
+	-- HESC - raises the MINIMUM damage only. Reference +10/+25/+40/+60%.
+	-- Because it lifts only the floor, a high enough grade can push the
+	-- minimum past the maximum and the weapon stops rolling (a real,
+	-- documented quirk of the source - see plan.md §2.13B).
+	["cannon_round_hesc"] = {
+		name = "Fragmenting Rounds", -- Accord name, see the header's naming note
+		faction_names = { accord = "Fragmenting Rounds", swarm = "Type CF \"Frag\"" },
+		weapon_type = "cannon",
+		compatible_weapon = "ordinance_cannon",
+		bonus = "damage_min",
+		bonus_percent = { 10, 25, 40, 60 },
+	},
+	-- AP - raises ARMOUR PIERCING. Reference +20/+25/(Line-only grade
+	-- omitted)/+50%.
+	["cannon_round_ap"] = {
+		name = "Piercing Rounds", -- Accord name, see the header's naming note
+		faction_names = { accord = "Piercing Rounds", swarm = "Type CA \"Puncture\"" },
+		weapon_type = "cannon",
+		compatible_weapon = "ordinance_cannon",
+		bonus = "armor_piercing",
+		bonus_percent = { 20, 25, 50 },
+	},
+	-- HERT - raises ACCURACY. Reference +10/+15/(Line-only grade omitted)/
+	-- +25%.
+	["cannon_round_hert"] = {
+		name = "Targeting Rounds", -- Accord name, see the header's naming note
+		faction_names = { accord = "Targeting Rounds", swarm = "Type CT \"Marker\"" },
+		weapon_type = "cannon",
+		compatible_weapon = "ordinance_cannon",
+		bonus = "accuracy",
+		bonus_percent = { 10, 15, 25 },
+	},
+
+	-- Missiles (fired by general launchers; interchangeable across them,
+	-- §2.8). Reference figures from the second wiki's Equipment List:
+	-- missiles never roll to hit - they are physical objects that fly and
+	-- can be countered (ECM/flares/point defence), so their stats are
+	-- flight/payload figures, not a dps/accuracy pair (plan.md §2.13A).
+	["missile_interceptor"] = {
+		name = "Interceptor Missile", -- Accord name, see the header's naming note
+		faction_names = { accord = "Interceptor Missile", swarm = "Type MI \"Dart\"" },
+		weapon_type = "missile",
+		compatible_weapon = "general",
+		-- Agile, anti-strike: out-turns and out-runs a fighter.
+		damage = 300,
+		speed_m_per_sec = 200,
+		turn_deg_per_sec = 170,
+		cooldown_s = { 30, 23.5 }, -- level 1 -> max
+		power_cost = 5,
+	},
+	["missile_heavy"] = {
+		name = "Heavy Missile", -- Accord name, see the header's naming note
+		faction_names = { accord = "Heavy Missile", swarm = "Type MH \"Hammer\"" },
+		weapon_type = "missile",
+		compatible_weapon = "general",
+		-- Anti-line work: big payload, slow and poor turning.
+		damage = 500,
+		max_range_m = 1200,
+		speed_m_per_sec = 130,
+		cooldown_s = { 75, 59 },
+	},
+	["missile_siege"] = {
+		name = "Siege Missile", -- Accord name, see the header's naming note
+		faction_names = { accord = "Siege Missile", swarm = "Type MS \"Breaker\"" },
+		weapon_type = "missile",
+		compatible_weapon = "general",
+		-- Short-range anti-capital: a heavy warhead squeezed into a light
+		-- casing, so it must be fired from close in to connect.
+		damage_min = 125,
+		damage_max = 250,
+		dps = 9.6,
+		min_range_m = 200,
+		max_range_m = 600,
+		reload_s = 12,
+	},
+	["missile_rocket_pod"] = {
+		name = "Rocket Pod", -- Accord name, see the header's naming note
+		faction_names = { accord = "Rocket Pod", swarm = "Type MR \"Scatter\"" },
+		weapon_type = "missile",
+		compatible_weapon = "general",
+		-- Dumbfire: no guidance, no target lock needed - flies straight out
+		-- of the launcher, so it must be led by hand. Fast and rapid.
+		guidance = "dumbfire",
+		damage = 200,
+		cooldown_s = 0.9,
+	},
+
+	-- Torpedoes (Nuclear Launchers only, §2.8). The reference published no
+	-- numeric torpedo stats and no nuclear-specific figures, so the damage/
+	-- range/cooldown fields are omitted rather than guessed (§0/§4) - only
+	-- the confirmed shared traits are recorded: flat splash (every hostile
+	-- in radius takes the full roll, no friendly fire) and an EMP drain on
+	-- the target (plan.md §2.13A). Valour-gated along with the launchers
+	-- (§2.6).
+	["torpedo_nuclear"] = {
+		name = "Nuclear Torpedo", -- Accord name, see the header's naming note
+		faction_names = { accord = "Nuclear Torpedo", swarm = "Type NT \"Cataclysm\"" },
+		weapon_type = "torpedo",
+		compatible_weapon = "nuclear_launcher", -- Nuclear Launcher subtype only
+		splash = "flat", -- full damage to every hostile in radius
+		friendly_fire = false,
+		emp_drain = true,
+	},
+}
+
+-- Can `weapon` (a catalog entry from weapons_autocannons.lua /
+-- weapons_launchers.lua) fire `ordinance` (an entry above)? The one place
+-- the §2.8 compatibility rule is expressed, mirroring
+-- weapons_launchers.lua's M.accepts for the launcher side:
+--   - a cannon (`cannon_type = "ordinance"`) fires `weapon_type = "cannon"`
+--     rounds whose `compatible_weapon` is "ordinance_cannon";
+--   - a launcher fires rounds whose `weapon_type` matches its own
+--     `launcher_type` and whose `compatible_weapon` equals it.
+-- A Mining Cannon (`cannon_type = "mining"`, needs no ordinance) and a
+-- launcher/nuclear mismatch both return false.
+function M.fits(weapon, ordinance)
+	if not (weapon and ordinance) then
+		return false
+	end
+	if weapon.cannon_type == "ordinance" then
+		return ordinance.weapon_type == "cannon"
+			and ordinance.compatible_weapon == "ordinance_cannon"
+	end
+	if weapon.subtype == "launcher" then
+		local kind = weapon.launcher_type == "nuclear_launcher" and "torpedo" or "missile"
+		return ordinance.weapon_type == kind
+			and ordinance.compatible_weapon == weapon.launcher_type
+	end
+	return false
+end
+
+-- The name to show for `entry` (an entry above) to a player in `faction`
+-- ("accord"/"swarm") - `entry.faction_names[faction]` when present, else
+-- the Accord `name`, else nil. Mirrors catalog.name_for; ordinance isn't in
+-- the catalog (§2.8), so it carries its own copy. No caller yet - ordinance
+-- has no display surface (plan.md §4) - it exists so the round/missile UI
+-- can resolve the right faction name the same way module names already do.
+function M.name_for(entry, faction)
+	if not entry then
+		return nil
+	end
+	local names = entry.faction_names
+	if names and faction and names[faction] then
+		return names[faction]
+	end
+	return entry.name
+end
+
+return M

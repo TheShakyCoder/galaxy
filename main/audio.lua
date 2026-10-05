@@ -15,8 +15,9 @@
 -- world.
 --
 -- This is a shared module (game.project sets [script] shared_state = 1), so
--- main/player_ship.script sets the listener and main/asteroid_hub.script
--- reads it - the hub plays sounds in the world but never owns a camera.
+-- main/player_ship.script sets the listener and the world hubs
+-- (main/asteroid_hub.script, main/shot_hub.script) read it - they play
+-- sounds in the world but never own a camera.
 --
 -- What this deliberately does NOT do: elevation. A rock directly above and
 -- one directly below pan identically, because pan is a single left/right
