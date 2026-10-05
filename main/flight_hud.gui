@@ -395,8 +395,8 @@ nodes {
 nodes {
   type: TYPE_BOX
   id: "diagram_panel"
-  position { x: 210.0 y: 335.0 z: 0.0 w: 1.0 }
-  size { x: 390.0 y: 640.0 z: 0.0 w: 1.0 }
+  position { x: 143.7 y: 226.2 z: 0.0 w: 1.0 }
+  size { x: 257.4 y: 422.4 z: 0.0 w: 1.0 }
   color { x: 0.05 y: 0.06 z: 0.1 w: 0.55 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE

@@ -11,9 +11,9 @@
 -- different look sends its OWN projectile data in the "shot" message, and any
 -- field it supplies OVERRIDES the default here - per direct instruction:
 -- "data relating to that specific cannon or projectile should overwrite it
--- when activated". The light autocannons, for instance, carry `tracers = 3`
--- (main/data/modules/weapons_autocannons.lua), so one shot draws a three-
--- streak burst instead of a single tracer.
+-- when activated". Every cannon carries `tracers = 3`
+-- (main/data/modules/weapons_autocannons.lua stamps it onto all of them), so
+-- one shot draws a three-streak burst instead of a single tracer.
 --
 -- The "shot" message (from main/player_ship.script, the only sender):
 --   from, to        world-space gun muzzle and target point   (required)
@@ -32,7 +32,8 @@ local audio = require("main.audio")
 
 -- What a shot looks like when the firing weapon supplies nothing of its own.
 local DEFAULT_SHOT = {
-	-- Tracer streaks drawn per shot (light autocannons raise this to 3).
+	-- Tracer streaks drawn per shot (every cannon overrides this with 3; it
+	-- stays 1 as the safe fallback for any projectile that supplies nothing).
 	tracers = 1,
 	-- Tracer travel speed, m/s.
 	speed = 1200,
@@ -48,6 +49,18 @@ local DEFAULT_SHOT = {
 
 -- A malformed/foreign count must never spawn an unbounded number of objects.
 local MAX_TRACERS = 5
+
+-- Converts a tracer size to a real vector3. The weapon data
+-- (main/data/modules/weapons_autocannons.lua) stores `shot_scale` as a plain
+-- numeric triple because that file is also loaded by the Nakama server, where
+-- vmath does not exist; anything already a vector3 (e.g. DEFAULT_SHOT below)
+-- passes through unchanged.
+local function to_scale(v)
+	if type(v) == "table" and v[1] then
+		return vmath.vector3(v[1], v[2], v[3])
+	end
+	return v
+end
 
 -- Spawns one tracer streak and animates it along the shot's path, deleting it
 -- on arrival. Same behaviour whether it's the only streak or one of a burst.
@@ -71,7 +84,7 @@ function on_message(self, message_id, message)
 	local from, to = message.from, message.to
 	local tracers = math.max(1, math.min(MAX_TRACERS, message.tracers or DEFAULT_SHOT.tracers))
 	local speed = message.speed or DEFAULT_SHOT.speed
-	local scale = message.scale or DEFAULT_SHOT.scale
+	local scale = to_scale(message.scale) or DEFAULT_SHOT.scale
 	local tint = message.tint or DEFAULT_SHOT.tint
 	local stagger_frac = message.burst_stagger or DEFAULT_SHOT.burst_stagger
 

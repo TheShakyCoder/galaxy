@@ -127,21 +127,44 @@ local M = {}
 --   optimal_range_m, damage_min/damage_max, reload_s, armor_piercing,
 --   power_cost, accuracy, critical_offense, durability_min/max
 --                   recorded from the wiki, not used yet
---   tracers         VISUAL ONLY (per direct instruction: light autocannons
---                   should draw three projectile streaks per shot, not one,
---                   to read as a rapid-fire burst without changing any
---                   statistic). The client's shot renderer
---                   (main/shot_hub.script) spawns this many streaks, one
---                   shot's worth of travel each; damage/rate of fire are
+--   tracers         VISUAL ONLY (per direct instruction: every cannon -
+--                   combat and mining alike - should draw three projectile
+--                   streaks per shot, not one, to read as a rapid-fire burst
+--                   without changing any statistic). The client's shot
+--                   renderer (main/shot_hub.script) spawns this many streaks,
+--                   one shot's worth of travel each; damage/rate of fire are
 --                   unchanged - the server still applies a single shot.
 -- The firing arc is each entry's own `arc` (same 75 degrees as the wiki).
 --
+-- Cannon tracer look, applied to EVERY cannon in this file - the combat
+-- (ordinance) sets and the Mining Cannons alike (per direct instruction: the
+-- reduced speed and three-streak burst should apply to all cannons, not just
+-- the Patrol combat ones). It's stamped onto every entry by the shared
+-- apply_tracer_look loop near the bottom of this file, so a new cannon can
+-- never silently miss it. The values are plain numbers, NOT vmath types: this
+-- file is also loaded (unchanged) by the Nakama server via economy.lua ->
+-- session.lua -> catalog.lua, where vmath does not exist. The client converts
+-- the size at the one place that needs a real scale (main/shot_hub.script's
+-- to_scale).
+--   tracers     projectile streaks drawn per shot - 3, so one trigger pull
+--               reads as a rapid-fire burst (see the tracers comment above).
+--   shot_scale  tracer size, over the hub's default (DEFAULT_SHOT.scale =
+--               2, 2, 24). First reduced to 33% of that, then halved again on
+--               direct instruction - now 0.33/0.33/3.96 = 16.5% of default.
+--   shot_speed  tracer travel speed, over the hub's default of 1200 m/s -
+--               halved to 600, then halved again to 300 m/s, on direct
+--               instruction. The gentler speed both spaces a burst's streaks
+--               further apart in time (so they read as separate) and makes the
+--               projectile visibly slower in flight.
+local TRACER_COUNT = 3
+local TRACER_SHOT_SCALE = { 0.33, 0.33, 3.96 }
+local TRACER_SHOT_SPEED = 300
+
 -- The Patrol general cannon (MEC-A6 "Fang" / Type A "Aggressor") = the
 -- reference's light autocannon (the strike craft default): DPS 11 at level 1
 -- rising to 22 at level 10.
 local LIGHT_AUTOCANNON = {
 	dps = { 11, 12.22, 13.44, 14.67, 15.89, 17.11, 18.33, 19.56, 20.78, 22 },
-	tracers = 3, -- three-round burst look, see the tracers comment above
 	max_range_m = 750,
 	optimal_range_m = 300,
 	damage_min = 1,
@@ -159,7 +182,6 @@ local LIGHT_AUTOCANNON = {
 -- reload, bought with a shorter range - DPS 13.75 rising to 27.5.
 local RAPID_AUTOCANNON = {
 	dps = { 13.75, 15.27, 16.80, 18.33, 19.86, 21.38, 22.91, 24.44, 25.97, 27.5 },
-	tracers = 3, -- three-round burst look, see the tracers comment above
 	max_range_m = 600,
 	optimal_range_m = 250,
 	damage_min = 1,
@@ -177,7 +199,6 @@ local RAPID_AUTOCANNON = {
 -- a slower reload - DPS 9.16 rising to 18.33.
 local LONG_RANGE_AUTOCANNON = {
 	dps = { 9.16, 10.18, 11.20, 12.22, 13.24, 14.25, 15.27, 16.29, 17.31, 18.33 },
-	tracers = 3, -- three-round burst look, see the tracers comment above
 	max_range_m = 900,
 	optimal_range_m = 350,
 	damage_min = 1,
@@ -444,6 +465,18 @@ end
 -- reference's rising curve (everything else is identical to their base).
 for _, key in ipairs({ "auto_cannon_precision", "auto_cannon_rapid_precision", "auto_cannon_long_range_precision" }) do
 	M.AUTOCANNONS[key].critical_offense = PRECISION_CRITICAL_OFFENSE
+end
+-- Stamp the shared tracer look (TRACER_COUNT / TRACER_SHOT_SCALE /
+-- TRACER_SHOT_SPEED, above) onto EVERY cannon - combat and mining alike -
+-- rather than repeating it per entry. Doing it here in one pass is what keeps
+-- the reduced size/speed + three-streak burst truly universal: the Mining
+-- Cannons (which carry no combat-stat block, so they never reach the STATS
+-- copy above) get the same look as the combat guns, and any cannon added
+-- later inherits it for free.
+for _, entry in pairs(M.AUTOCANNONS) do
+	entry.tracers = TRACER_COUNT
+	entry.shot_scale = TRACER_SHOT_SCALE
+	entry.shot_speed = TRACER_SHOT_SPEED
 end
 
 -- Damage per second of `weapon` (a catalog entry) at upgrade `level`

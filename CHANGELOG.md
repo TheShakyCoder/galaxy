@@ -6,6 +6,29 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
 
 ## [Unreleased]
 
+### Flight
+- A **space dust starfield** now streams past the ship while flying at speed: a pool
+  of small bright motes that rush astern at the ship's own speed, always along the
+  hull's own long axis rather than the camera's view, so speed reads as speed. The
+  motes live in world space and recycle ahead of the bow once they fall behind the
+  stern, so a turn only changes the direction they travel — it never drags them
+  sideways with the hull. While the ship is idle the dust simply stays where it is;
+  launches and jumps (teleports) are ignored; and the dust is hidden whenever you're
+  docked.
+- The in-flight HUD's bottom-left ship diagram is now **interactive**: hovering a
+  fitted slot shows the module's name and the key that toggles it (with the Shift
+  modifier drawn as an **icon**, not the text "Shift+"), and clicking a slot toggles
+  it exactly as its own key would — weapons switch on/off, active modules run, and
+  passive or empty slots report their state. The whole diagram is now drawn at
+  **66%** of its authored size (markers, labels, tooltip and panel background alike),
+  held into the bottom-left corner.
+
+### Asteroids
+- The two faction **home systems** — Sol (The Accord) and Polaris (The Swarm) — now
+  carry a much larger asteroid field: **100 rocks** (up from the default 50), spread
+  right across the whole system instead of clustered in a small ball around the
+  centre. Every other system keeps the default field.
+
 ### Weapons
 - Combat weapons now use the **reference game's own published names verbatim** —
   the Colonial name on The Accord's side, the Cylon name on The Swarm's (e.g.
@@ -24,11 +47,15 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
   of staying flat. The Patrol variants carry real reference stats (including
   Accuracy 400, CriticalOffense 100, Durability 2500→5000); the Escort/Frigate ones
   are identity data only until real numbers exist.
-- Light autocannon shots now render as a **three-streak burst** instead of a single
-  tracer, so they read as rapid fire. Purely cosmetic: a new `tracers = 3` field on
-  the light-autocannon stat blocks only changes how many streaks the client's shot
-  renderer draws — damage and rate of fire are untouched, and the server still
-  resolves one shot.
+- **Every cannon** — combat and mining alike — now renders its shots as a
+  **three-streak burst** that flies **much smaller and slower**: `tracers = 3`, a
+  `shot_scale` of `0.33, 0.33, 3.96` (first cut to 33%, then halved again) and a
+  `shot_speed` of **300 m/s** (the hub's 1200 default halved twice). Purely visual —
+  damage and rate of fire are untouched, and the server still resolves one shot; the
+  gentler speed is what lets the three streaks read as separate rather than merging
+  into one long tracer. The look is stamped onto every cannon entry by one shared loop,
+  so the Mining Cannons (which have no combat-stat block) and the Escort/Frigate
+  cannons get it too — previously they kept the full-size, full-speed single tracer.
 - Mining cannons are renamed to the reference's names too: **Gopher** / **Gouger**
   (Patrol, now with the reference's full DPS 5→16 curve and Mining ×5) and **Mole**
   (Escort). Frigate/Carrier keep their original placeholder names.

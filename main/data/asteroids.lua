@@ -53,9 +53,27 @@ M.DEFAULT = {
 -- Per-system overrides, keyed by system_id (main/data/star_systems.lua's
 -- own SYSTEMS keys) - only the fields actually being overridden need to
 -- be present, everything else still falls back to M.DEFAULT (see
--- params_for()'s merge below). Empty for now - no system has been asked
--- to deviate from the default yet.
-M.OVERRIDES = {}
+-- params_for()'s merge below).
+--
+-- Home systems only (per direct instruction): each faction's own home system
+-- gets a much bigger field - 100 rocks, up from the default 50 - spread
+-- **right across the whole system** rather than the default's small 600 m ball
+-- around the centre. `radius_m` is half the system's own horizontal extent
+-- (main/data/star_systems.lua's M.DEFAULT_SYSTEM_SIZE_M = 10000, so 5000): a
+-- ball of that radius fills the system's inscribed sphere exactly, so every
+-- rock lands inside the play space, and it reaches the outposts out at the
+-- corner inset. Both home systems use the default system size today - if
+-- either is ever given its own width_m/height_m/depth_m, update its radius
+-- here too.
+--   accord home -> "sol"
+--   swarm home  -> "polaris"
+-- (ids hardcoded rather than read from star_systems.M.HOME_SYSTEM, keeping
+-- this a plain data module with no cross-table require - same choice
+-- star_systems.lua's own HOME_BUFFER list already makes.)
+M.OVERRIDES = {
+	sol = { count = 100, radius_m = 5000 },
+	polaris = { count = 100, radius_m = 5000 },
+}
 
 -- Hull: how much damage an asteroid can take before it's mined out, so the
 -- target readout can show "HULL <hp> / <max_hp>" and the server knows when

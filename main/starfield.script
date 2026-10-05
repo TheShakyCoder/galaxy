@@ -1,0 +1,230 @@
+-- The moving starfield: speckles of space dust that streak past the ship so
+-- that flying at speed actually reads as flying. Owned by a small hub object
+-- (main/starfield.go) exactly the way main/shot_hub.script owns the weapon
+-- tracers and main/asteroid_hub.script owns the rock field - one place that
+-- knows the effect exists and renders it.
+--
+-- Driven by the player ship's own motion. main/player_ship.script posts
+-- "start" when a launch puts the ship in space and "stop" when a dock (or a
+-- destruction) ends the flight - the same "disable self, tell the next thing
+-- to show" hand-off every screen transition in this project already uses.
+-- The pool is built once, on the first launch, and shown for the whole flight.
+-- While the ship is idle the motes are simply LEFT IN PLACE (per direct
+-- instruction) - not hidden and not recycled - so the field only moves when the
+-- ship does.
+--
+-- WORLD-SPACE MOTES, NOT A SHIP-LOCAL OFFSET (this replaced the original
+-- implementation, which was a bug - per direct instruction: "when I turn the
+-- ship left the particles also appear to move to the left"). The first version
+-- stored each mote as a ship-local offset and rebuilt its world position as
+-- ship_pos + ship_rot * offset every frame. That made the whole field a rigid
+-- body welded to the hull: yawing the ship yawed every mote with it, so dust
+-- that had been dead ahead swung off to the left exactly as the ship turned
+-- left - reading as the dust being blown sideways instead of streaming
+-- straight down the hull.
+--
+-- Now each mote keeps a real WORLD position. Every frame it is translated
+-- along the ship's CURRENT front-to-back axis (front = +Z, the same convention
+-- main/data/ships.lua's slot_positions and player_ship.script's SHIP_FORWARD
+-- use) but its position is never rotated by the ship's rotation. So a turn
+-- changes only the DIRECTION the dust travels (it always tracks the hull's
+-- current axis), never yanks the dust sideways. The ship's own translation
+-- supplies the rest of the relative motion, which is what leaves the
+-- perceived speed at exactly DUST_SPEED_FACTOR x the ship's speed.
+--
+-- Because the systems are far larger than any static field could cover
+-- (main/data/star_systems.lua), motes do not live forever: one that drifts out
+-- of a slab around the ship - behind it, too far ahead, or too far off to the
+-- side - is recycled to a fresh random spot ahead of the bow, so the field
+-- follows the ship without ever running out or visibly repeating.
+--
+-- SPEED comes from the ship's frame-to-frame movement
+-- (length(pos - prev_pos) / dt) rather than from a message or a shared
+-- module: that measure IS the ship's actual speed (the same value
+-- player_ship's own self.speed converges to), read straight off the sibling
+-- instance with go.get_position/go.get_rotation, so this hub stays completely
+-- decoupled from player_ship's internals. A launch or a jump teleports the
+-- ship, which would otherwise read as one enormous speed; any frame movement
+-- above TELEPORT_SPEED is treated as a teleport (the ship has moved on, and
+-- the out-of-range motes simply recycle to the new place) rather than as a
+-- real velocity.
+
+local DUST_COUNT = 60 -- motes in the pool; halved from 120 on direct instruction. Each is one model draw call (see the [model] max_count note in plan.md).
+
+-- Perceived speed as a multiple of the ship's own, per direct instruction.
+-- Started at 2.0, then halved to 1.0 on direct instruction: the dust now
+-- rushes aft at exactly the ship's own forward speed, rather than double it.
+local DUST_SPEED_FACTOR = 1.0
+
+-- Below this speed (m/sec) the ship counts as idle and the field is left
+-- frozen in place (per direct instruction - the original behaviour of HIDING
+-- the motes was replaced with leaving them exactly where they are). Well under
+-- any real flight speed (ships.lua tops out around 50-100 m/sec), so it only
+-- ever trips when the ship is genuinely sitting still or barely creeping.
+local IDLE_SPEED = 0.5
+
+-- The slab of world space a mote is allowed to occupy, measured in the ship's
+-- own frame. FIELD_FRONT/FIELD_BACK are how far ahead of the bow and astern of
+-- the stern a mote may sit before recycling; the chase camera sits a per-ship
+-- distance behind the ship (ships.lua's flight_camera, ~12-16 for the patrol
+-- hulls), so FIELD_BACK deliberately reaches past the camera - dust should
+-- stream past the viewer, not stop at the hull. FIELD_RADIUS is the lateral
+-- spread (starboard/up) that fills the view around the ship.
+local FIELD_RADIUS = 30
+local FIELD_FRONT = 80
+local FIELD_BACK = -120
+
+-- Mote size range (metres) - small enough to read as dust rather than debris,
+-- varied so the field has depth rather than looking like a grid of clones.
+-- Halved three times from the original 0.25..0.7 on direct instruction (now
+-- 0.03125..0.0875).
+local DUST_SCALE_MIN = 0.03125
+local DUST_SCALE_MAX = 0.0875
+
+-- Bright and slightly cool, so a mote reads as a speck of starlit dust rather
+-- than a rock (the tracer in main/shot_hub.script uses the same over-bright
+-- `tint` trick for the same reason - see main/player_ship.script's AMBIENT_TINT
+-- comment on what model.material does with `tint`). `light` is a world-space
+-- point light (see that same comment): a fixed point high above keeps every
+-- mote lit fairly evenly, since per-mote lighting would be pointless for
+-- specks this small.
+local DUST_TINT = vmath.vector4(6.0, 6.0, 7.0, 1.0)
+local DUST_LIGHT = vmath.vector4(0, 8000, 0, 1)
+
+-- A frame-to-frame movement above this (m/sec) is a launch/jump teleport, not
+-- flight: the ship's own top speed is two orders of magnitude below it, so
+-- there is no risk of clipping a legitimate boost.
+local TELEPORT_SPEED = 500
+
+local SHIP_FORWARD = vmath.vector3(0, 0, 1)
+local RIGHT = vmath.vector3(1, 0, 0)
+local UP = vmath.vector3(0, 1, 0)
+
+-- A fresh lateral offset inside FIELD_RADIUS's disc. sqrt() of the uniform
+-- random radius is the standard trick for a uniformly-filled disc - without
+-- it, motes bunch up around the axis.
+local function lateral_offset()
+	local angle = math.random() * 2 * math.pi
+	local r = FIELD_RADIUS * math.sqrt(math.random())
+	return r * math.cos(angle), r * math.sin(angle)
+end
+
+-- Builds the whole pool in one go, spread evenly through the slab so the field
+-- is already there the moment the flight starts, not a wall of motes arriving
+-- at once. Called from the "start" message, so the motes are created ENABLED
+-- and stay visible (frozen in place) while the ship is idle.
+local function spawn_motes(self)
+	self.motes = {}
+	local pos = go.get_position("player_ship")
+	local rot = go.get_rotation("player_ship")
+	for _ = 1, DUST_COUNT do
+		local x, y = lateral_offset()
+		local z = FIELD_BACK + (FIELD_FRONT - FIELD_BACK) * math.random()
+		local scale = DUST_SCALE_MIN + (DUST_SCALE_MAX - DUST_SCALE_MIN) * math.random()
+		local world = pos + vmath.rotate(rot, vmath.vector3(x, y, z))
+		local id = factory.create("#dust_factory", world, vmath.quat(), nil, vmath.vector3(scale, scale, scale))
+		local model = msg.url(nil, id, "model")
+		go.set(model, "tint", DUST_TINT)
+		go.set(model, "light", DUST_LIGHT)
+		table.insert(self.motes, { id = id, pos = world })
+	end
+	-- They are enabled as created; record that so set_visible(true) (called
+	-- right after) is a no-op rather than re-posting 60 enables.
+	self.visible = true
+end
+
+-- Enabled/disabled as a group. Used for two things: the flight life-cycle
+-- (while docked the flight camera is off and the world is drawn with the
+-- default render camera, so visible motes would float over the outpost menu)
+-- and the idle case (per direct instruction, no particles while the ship isn't
+-- moving). Guarded on the current state so it only crosses a frame boundary
+-- when the state actually changes.
+local function set_visible(self, visible)
+	if visible == self.visible then
+		return
+	end
+	self.visible = visible
+	for _, mote in ipairs(self.motes) do
+		msg.post(mote.id, visible and "enable" or "disable")
+	end
+end
+
+function init(self)
+	self.active = false
+	self.motes = {}
+	self.prev_pos = nil
+	self.visible = false
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("start") then
+		if #self.motes == 0 then
+			spawn_motes(self)
+		end
+		self.active = true
+		-- Seed the movement tracker from where the ship actually is now, so
+		-- the launch teleport (start_flight repositions the ship before
+		-- posting) doesn't register as one frame of impossible speed.
+		self.prev_pos = go.get_position("player_ship")
+		set_visible(self, true)
+	elseif message_id == hash("stop") then
+		self.active = false
+		set_visible(self, false)
+	end
+end
+
+function update(self, dt)
+	if not self.active or dt <= 0 then
+		return
+	end
+
+	local pos = go.get_position("player_ship")
+	local rot = go.get_rotation("player_ship")
+
+	-- The ship's actual speed, measured from how far it moved since the last
+	-- frame (see the header comment on why this is read rather than messaged).
+	local speed = 0
+	if self.prev_pos then
+		local measured = vmath.length(pos - self.prev_pos) / dt
+		if measured < TELEPORT_SPEED then
+			speed = measured
+		end
+	end
+	self.prev_pos = pos
+
+	-- Idle: leave the motes exactly where they are (per direct instruction - the
+	-- field used to be hidden here instead). At speed 0 the drift below is zero
+	-- anyway; the early return also stops anything that is out of the slab from
+	-- being recycled mid-stop, which would visibly jump it.
+	if speed < IDLE_SPEED then
+		return
+	end
+
+	local forward = vmath.rotate(rot, SHIP_FORWARD)
+	local right = vmath.rotate(rot, RIGHT)
+	local up = vmath.rotate(rot, UP)
+
+	-- World-space drift along the ship's CURRENT front-to-back axis (see the
+	-- header comment for why positions are never rotated by the ship). The
+	-- `1 - DUST_SPEED_FACTOR` term is what leaves the PERCEIVED speed - the
+	-- dust's motion relative to the ship, which the ship's own translation
+	-- also contributes to - at exactly DUST_SPEED_FACTOR x the ship's speed.
+	local drift = forward * (speed * (1 - DUST_SPEED_FACTOR) * dt)
+
+	for _, mote in ipairs(self.motes) do
+		mote.pos = mote.pos + drift
+		-- Recycle anything that has left the slab around the ship. `lz` is the
+		-- mote's position along the ship's forward axis; `lat` its distance
+		-- off that axis. Both are measured in the ship's CURRENT frame, so a
+		-- turn reshapes where the slab is without ever moving a mote that is
+		-- still inside it.
+		local rel = mote.pos - pos
+		local lz = rel.x * forward.x + rel.y * forward.y + rel.z * forward.z
+		local lat = vmath.length(rel - forward * lz)
+		if lz < FIELD_BACK or lz > FIELD_FRONT or lat > FIELD_RADIUS then
+			local x, y = lateral_offset()
+			mote.pos = pos + forward * FIELD_FRONT + right * x + up * y
+		end
+		go.set_position(mote.pos, mote.id)
+	end
+end
