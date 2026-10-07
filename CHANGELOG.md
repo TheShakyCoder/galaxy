@@ -4,6 +4,16 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.4.0-alpha.2] - 2026-10-07
+
+### Flight
+- The flight HUD's radar now spans the ship's **sensor range** (`sensor_range_m`,
+  2,000-4,000 m in `main/data/ships.lua`) instead of its much shorter visual range
+  (a few hundred metres) — the same range the targeting code already uses, so
+  anything TAB / X / F1 / click can lock is something the scope already shows. The
+  blip scaling and the range readout adjust to match; nothing else about the scope
+  changed.
+
 ## [0.4.0-alpha.1] - 2026-10-07
 
 ### Flight

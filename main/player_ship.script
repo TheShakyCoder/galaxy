@@ -331,7 +331,7 @@ local DEFAULT_TURN_ACCELERATION_DEG = 60 -- deg/sec^2, how fast pitch/yaw ramp u
 local DEFAULT_MAX_SPEED = 20 -- m/sec, unboosted
 local DEFAULT_BOOST_SPEED = 40 -- m/sec, boosted
 local DEFAULT_ACCELERATION = 12 -- m/sec^2, how fast throttle ramps the actual speed
-local DEFAULT_VISUAL_RANGE = 500 -- m, radar range - see update()'s "contacts" block below
+local DEFAULT_VISUAL_RANGE = 500 -- m, how far a hull can see - still what flight_stats() reports for a ship with no own visual_range_m, but no longer what the radar uses (per direct instruction, the radar now spans the longer sensor_range() - see update()'s "contacts" block below)
 local DEFAULT_FTL_RANGE = 4.5 -- ly, matches patrol_interceptor's own ftl_range_ly - converted to star_systems.lua's own map-unit scale via M.ly_to_map_units() at each use site below (toggle_map()/on_message's "set_jump_preset" handler), not compared directly
 
 local DEFAULT_JUMP_TIMER_SEC = 15 -- sec, fallback for a ship with no ftl_charge_sec of its own - matches the reference project's own DEFAULT_JUMP_TIMER_SEC (§0)
@@ -1649,7 +1649,7 @@ function update(self, dt)
 		return
 	end
 
-	local turn_speed_deg, max_speed, boost_speed, acceleration, visual_range, _, _, turn_accel_deg = flight_stats(self.ship_id)
+	local turn_speed_deg, max_speed, boost_speed, acceleration, _, _, _, turn_accel_deg = flight_stats(self.ship_id)
 	local turn_speed_rad = math.rad(turn_speed_deg)
 	local turn_accel_rad = math.rad(turn_accel_deg)
 	local pos = go.get_position()
@@ -1995,20 +1995,28 @@ function update(self, dt)
 
 	-- Radar (per direct instruction: "each ship has its own visible
 	-- range" / "a gooey that shows a radar indicating all ships within
-	-- visible range") - visual_range above, NOT the longer
-	-- sensor_range_m/"Dradis Range" main/data/ships.lua's own comment
-	-- already distinguishes it from. `contacts` was always empty until now
-	-- (no NPCs, no multiplayer) - main/remote_registry.lua (populated every
-	-- frame by main/remote_ships.script from the current system's Nakama
-	-- room) is the first real source: every remote ship there is already
-	-- guaranteed to be in this same system (main/network.lua's per-system
-	-- room join), so this only needs its own visual_range distance filter,
-	-- same "build the real system even though nothing populates it yet"
-	-- footing main/data/asteroids.lua's own M.OVERRIDES already had before
-	-- this landed.
+	-- visible range"). The range it spans was later widened (per direct
+	-- instruction: "the radar should extend to the ships sensor range"): it
+	-- now uses sensor_range() above - the longer sensor_range_m/"Dradis
+	-- Range" main/data/ships.lua's own comment already distinguishes from
+	-- the shorter visual_range_m - because the hull's own visual range (a few
+	-- hundred metres) only ever covered a small pocket of a system that is
+	-- 10,000 m across (main/data/star_systems.lua's M.DEFAULT_SYSTEM_SIZE_M)
+	-- with its outposts out at the corners. Same range the targeting code
+	-- above already uses, so "what the scope shows" and "what TAB can lock"
+	-- now agree. `contacts` was always empty until now (no NPCs, no
+	-- multiplayer) - main/remote_registry.lua (populated every frame by
+	-- main/remote_ships.script from the current system's Nakama room) is the
+	-- first real source: every remote ship there is already guaranteed to be
+	-- in this same system (main/network.lua's per-system room join), so this
+	-- only needs its own sensor-range distance filter, same "build the real
+	-- system even though nothing populates it yet" footing
+	-- main/data/asteroids.lua's own M.OVERRIDES already had before this
+	-- landed.
+	local radar_range = sensor_range(self.ship_id)
 	local contacts = {}
 	for _, remote in pairs(remote_registry.ships) do
-		if vmath.length(remote.pos - pos) <= visual_range then
+		if vmath.length(remote.pos - pos) <= radar_range then
 			table.insert(contacts, remote)
 		end
 	end
@@ -2018,7 +2026,7 @@ function update(self, dt)
 	-- field, written by main/asteroid_hub.script every time it changes and
 	-- already read here for targeting (Tab/click) - so this is the same
 	-- "already in this system" list, distance-filtered by the ship's own
-	-- visual range exactly like the ship contacts above.
+	-- sensor range exactly like the ship contacts above.
 	-- The radar's own "up": the hull's heading, i.e. where the bow is pointing
 	-- (the ship rotation applied to SHIP_FORWARD, the same bow vector
 	-- ship_local_to_world uses), flattened onto the world X/Z plane and
@@ -2041,7 +2049,7 @@ function update(self, dt)
 
 	local radar_asteroids = {}
 	for _, rock in ipairs(asteroid_registry.asteroids) do
-		if vmath.length(rock.pos - pos) <= visual_range then
+		if vmath.length(rock.pos - pos) <= radar_range then
 			table.insert(radar_asteroids, rock)
 		end
 	end
@@ -2049,14 +2057,14 @@ function update(self, dt)
 	-- Outposts plot on the scope too (per direct instruction: "add outposts") -
 	-- every faction's outpost in this system that is actually standing
 	-- (outpost_position is nil for one that has been destroyed, the same helper
-	-- docking and place_outposts use) and within the same visual range, each
+	-- docking and place_outposts use) and within the same sensor range, each
 	-- tagged with whether it is ours so the HUD can colour it like a
 	-- friendly/enemy ship contact. Y is ignored here exactly as it is for the
 	-- other blips (the scope is a flat X/Z plot).
 	local radar_outposts = {}
 	for _, faction in ipairs(OUTPOST_FACTIONS) do
 		local outpost_pos = outpost_position(self.current_system_id, faction)
-		if outpost_pos and vmath.length(outpost_pos - pos) <= visual_range then
+		if outpost_pos and vmath.length(outpost_pos - pos) <= radar_range then
 			table.insert(radar_outposts, {
 				pos = outpost_pos,
 				relation = (faction == session.get_faction()) and "friendly" or "enemy",
@@ -2064,7 +2072,7 @@ function update(self, dt)
 		end
 	end
 	msg.post("flight_hud#gui", "contacts", {
-		own_pos = pos, range = visual_range, heading = self.radar_heading,
+		own_pos = pos, range = radar_range, heading = self.radar_heading,
 		contacts = contacts, asteroids = radar_asteroids, outposts = radar_outposts,
 	})
 

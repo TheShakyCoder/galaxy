@@ -33,8 +33,10 @@
 --    radar below (per direct instruction: "each ship has its own visible
 --    range... a radar indicating all ships within visible range", and "on the
 --    radar show asteroids as semi transparent points") - `range` is that
---    ship's own visual_range_m (NOT the longer sensor_range_m/"Dradis
---    Range"), `contacts` a list of { pos = vmath.vector3 } for every other ship
+--    ship's own sensor_range_m (the longer of the two range stats in
+--    main/data/ships.lua; per direct instruction "the radar should extend to
+--    the ships sensor range", it used to be the shorter visual_range_m),
+--    `contacts` a list of { pos = vmath.vector3 } for every other ship
 --    within it (always empty right now - no other ships exist anywhere in this
 --    project yet, see that script's own comment on this same block) and
 --    `asteroids` the same for every spawned rock of the system that is in
@@ -103,12 +105,13 @@ local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
 -- dim semi-transparent slate, so a rock reads as scenery rather than as a
 -- contact. Same pooling as the ship contacts above, and deliberately created
 -- BEFORE that pool so contacts always draw on top of rocks. Sized for what can
--- actually be in range at once: the active ship's own visual_range_m
--- (main/data/ships.lua) is a couple of hundred metres, and a system's field is
--- a few hundred metres across
--- (main/data/asteroids.lua), so only a handful of rocks are ever in range - if
--- more are, the extras simply don't plot (a node-budget choice, not a rule).
-local ASTEROID_POOL_SIZE = 24
+-- actually be in range at once: the radar now spans the active ship's own
+-- sensor_range_m (main/data/ships.lua) - 2,000-4,000 m - which reaches right
+-- across a whole system's field (main/data/asteroids.lua: 50 rocks in a
+-- default 600 m ball, 100 across a home system's own 5,000 m one), so the pool
+-- is sized for the largest field a system can spawn - if more are somehow in
+-- range, the extras simply don't plot (a node-budget choice, not a rule).
+local ASTEROID_POOL_SIZE = 100
 local ASTEROID_DOT_SIZE = vmath.vector3(5, 5, 0)
 local ASTEROID_DOT_COLOR = vmath.vector4(0.62, 0.66, 0.72, 0.4)
 

@@ -3871,18 +3871,33 @@ rotating line."*
 - The player's own centre blip (the authored `radar_center` node) is promoted above the
   new scope nodes so the translucent face cannot dim it, and the contact dot pool is
   created after them, so contacts always draw on top of the scope.
+- **The scope spans the ship's own SENSOR RANGE (decided — per direct instruction:
+  *"the radar should extend to the ships sensor range"*).** Radar range used to be the
+  hull's own `visual_range_m`; it is now `sensor_range_m` (`main/data/ships.lua`,
+  2,000-4,000 m) — the same stat and the same `sensor_range()` helper the targeting code
+  (TAB / X / F1 / click) already used, so what the scope shows and what can be locked now
+  agree. `main/player_ship.script` filters ship contacts, asteroid blips and outpost
+  markers by it alike and sends it as `range` on the `contacts` message, so the readout
+  under the scope prints it too. The HUD's own projection and edge clamp are unchanged
+  (a longer range just spaces the blips closer together); `visual_range_m` stays in the
+  hull data and `flight_stats()` is still what reports it, it is simply no longer what
+  the radar plots.
 - **Asteroids plot on the scope too** (per direct instruction: *"on the radar show
   asteroids as semi transparent points"*): `main/player_ship.script` now sends the
   system's spawned rocks with the same `contacts` message (`asteroids`, its own list,
-  filtered by the same visual range as the ship contacts) — taken from
+  filtered by the same sensor range as the ship contacts) — taken from
   `main/asteroid_registry.lua`, the field `main/asteroid_hub.script` already publishes
   for targeting, so a rock that has been mined out is already absent from it. The HUD
   draws them from a second, smaller pool in a dim **semi-transparent** slate
-  (`ASTEROID_POOL_SIZE` 24 dots, 5×5 px, alpha 0.4), created *before* the ship-contact
+  (`ASTEROID_POOL_SIZE` 100 dots, 5×5 px, alpha 0.4), created *before* the ship-contact
   pool so a contact always draws over a rock, with the same projection and edge clamp.
+  The pool is sized for the largest field a system can spawn — 100 rocks across a home
+  system's own 5,000 m ball (`main/data/asteroids.lua`), which the scope's 2,000-4,000 m
+  sensor range can now reach right across, unlike the old few-hundred-metre visual range
+  that only ever caught a handful.
   Still one message per frame — nothing new to keep in sync.
 - **Outposts plot on the scope too** (per direct instruction: *"add outposts"*): one
-  entry per *standing* outpost of the system within the same visual range —
+  entry per *standing* outpost of the system within the same sensor range —
   `outpost_position()` already returns nil for a destroyed one, the same helper docking
   and `place_outposts` use — tagged friendly/enemy and drawn from a third pool that is
   slightly larger than a ship contact, in the very palette the target brackets use
