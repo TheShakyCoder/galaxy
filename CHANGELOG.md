@@ -4,7 +4,7 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
-## [Unreleased]
+## [0.4.0-alpha.1] - 2026-10-07
 
 ### Flight
 - A **space dust starfield** now streams past the ship while flying at speed: a pool
