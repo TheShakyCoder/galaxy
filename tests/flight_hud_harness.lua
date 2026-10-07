@@ -361,6 +361,58 @@ on_message(self, "ship_status", {
 check("coordinates are shown as whole metres with grouping",
 	gui_nodes.position_value.text == "X 1,234   Y -57   Z 789")
 
+-- ---- The selected target is highlighted on the scope (per direct instruction:
+-- "if the selected target is shown in the radar, highlight it in the radar") ----
+local function is_highlighted(node)
+	-- RADAR_TARGET_COLOR (1.0, 0.92, 0.35, 1.0): no pool's own colour is that
+	-- bright on both x and y, so this cleanly picks out the highlighted blip.
+	return node.color.x > 0.9 and node.color.y > 0.9 and node.color.z < 0.6 and node.color.w > 0.9
+end
+on_message(self, "contacts", {
+	own_pos = { x = 0, y = 0, z = 0 },
+	heading = { x = 0, y = 0, z = 1 },
+	range = 1000,
+	target_id = "ship:7",
+	contacts = {
+		{ pos = { x = 500, y = 0, z = 0 }, id = "ship:7" },
+		{ pos = { x = 0, y = 0, z = 300 }, id = "ship:8" },
+	},
+	asteroids = { { pos = { x = 0, y = 0, z = 500 }, id = "asteroid:3" } },
+	outposts = { { pos = { x = -400, y = 0, z = 0 }, relation = "enemy", id = "outpost:swarm" } },
+})
+check("the selected contact is highlighted", is_highlighted(dots[1]))
+check("the highlighted contact is drawn bigger", dots[1].size.x > 6)
+check("an untargeted contact keeps its own colour", not is_highlighted(dots[2]) and dots[2].size.x == 6)
+check("an untargeted asteroid keeps its dim colour",
+	not is_highlighted(rocks[1]) and rocks[1].color.w < 0.5)
+check("an untargeted outpost keeps its relation colour",
+	not is_highlighted(outposts[1]) and outposts[1].color.x > 0.9)
+
+-- Selecting the asteroid instead moves the highlight, and the contact it left
+-- goes back to its normal look (a node is never left with a stale highlight).
+on_message(self, "contacts", {
+	own_pos = { x = 0, y = 0, z = 0 },
+	heading = { x = 0, y = 0, z = 1 },
+	range = 1000,
+	target_id = "asteroid:3",
+	contacts = { { pos = { x = 500, y = 0, z = 0 }, id = "ship:7" } },
+	asteroids = { { pos = { x = 0, y = 0, z = 500 }, id = "asteroid:3" } },
+	outposts = {},
+})
+check("the highlight follows the selection to the asteroids", is_highlighted(rocks[1]))
+check("the contact it left goes back to its normal look",
+	not is_highlighted(dots[1]) and dots[1].size.x == 6)
+
+-- A message with no target_id at all (an older sender) highlights nothing.
+on_message(self, "contacts", {
+	own_pos = { x = 0, y = 0, z = 0 },
+	heading = { x = 0, y = 0, z = 1 },
+	range = 1000,
+	asteroids = { { pos = { x = 0, y = 0, z = 500 }, id = "asteroid:3" } },
+})
+check("no target_id highlights nothing",
+	not is_highlighted(rocks[1]) and rocks[1].color.w < 0.5)
+
 if failures > 0 then
 	print(failures .. " FAILURE(S)")
 	os.exit(1)

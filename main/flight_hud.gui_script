@@ -29,21 +29,26 @@
 --    same source-project hud.gui_script "system_changed" indicator, just
 --    always left showing (no hide case - there's always a current system
 --    while flying)
---  - "contacts" - { own_pos, heading, range, contacts, asteroids } for the
---    radar below (per direct instruction: "each ship has its own visible
---    range... a radar indicating all ships within visible range", and "on the
---    radar show asteroids as semi transparent points") - `range` is that
---    ship's own sensor_range_m (the longer of the two range stats in
+--  - "contacts" - { own_pos, heading, range, target_id, contacts, asteroids,
+--    outposts } for the radar below (per direct instruction: "each ship has its
+--    own visible range... a radar indicating all ships within visible range",
+--    and "on the radar show asteroids as semi transparent points") - `range` is
+--    that ship's own sensor_range_m (the longer of the two range stats in
 --    main/data/ships.lua; per direct instruction "the radar should extend to
 --    the ships sensor range", it used to be the shorter visual_range_m),
---    `contacts` a list of { pos = vmath.vector3 } for every other ship
---    within it (always empty right now - no other ships exist anywhere in this
---    project yet, see that script's own comment on this same block) and
---    `asteroids` the same for every spawned rock of the system that is in
---    range (main/asteroid_registry.lua), plotted as the dim semi-transparent
---    pool rather than as contacts, and `outposts` one entry per standing outpost
---    of the system in range ({ pos, relation }) for the outpost pool (per direct
---    instruction: "add outposts"). `heading` is the hull's own bow direction
+--    `contacts` a list of { pos, id } for every other ship within it (always
+--    empty right now - no other ships exist anywhere in this project yet, see
+--    that script's own comment on this same block) and `asteroids` the same
+--    for every spawned rock of the system that is in range
+--    (main/asteroid_registry.lua), plotted as the dim semi-transparent pool
+--    rather than as contacts, and `outposts` one entry per standing outpost of
+--    the system in range ({ pos, relation, id }) for the outpost pool (per
+--    direct instruction: "add outposts"). Each blip's `id` is the same one the
+--    targeting code knows it by (a ship's user_id, "asteroid:<index>" or
+--    "outpost:<faction>"), and `target_id` is the currently selected target's
+--    own id (or nil), so whichever blip matches draws highlighted (per direct
+--    instruction: "if the selected target is shown in the radar, highlight it
+--    in the radar"). `heading` is the hull's own bow direction
 --    flattened onto the world X/Z plane (unit length), which is what the scope
 --    is aimed by - see refresh_radar
 --  - "currency" - { tope, water, iron, hydrogen } (per direct instruction:
@@ -122,6 +127,16 @@ local ASTEROID_DOT_COLOR = vmath.vector4(0.62, 0.66, 0.72, 0.4)
 -- system, so the pool only needs headroom, not a crowd.
 local OUTPOST_POOL_SIZE = 4
 local OUTPOST_DOT_SIZE = vmath.vector3(7, 7, 0)
+
+-- The selected target's own blip (per direct instruction: "if the selected
+-- target is shown in the radar, highlight it in the radar"): the "contacts"
+-- message carries every blip's own id and the target's, so whichever one
+-- matches is drawn larger and in a bright amber instead of its pool's own
+-- colour (see refresh_radar). Deliberately not relation-coloured like the
+-- target brackets - the brackets already say friend or foe, and on the scope
+-- the point is simply "this is the one you have selected".
+local RADAR_TARGET_COLOR = vmath.vector4(1.0, 0.92, 0.35, 1.0)
+local RADAR_TARGET_SCALE = 1.8
 
 -- The player's own position readout under the scope (per direct instruction:
 -- "show x/y/z coordinates below radar") - smaller than the other readouts so a
@@ -784,6 +799,15 @@ local function refresh_radar(self, message)
 		end
 		return px, py
 	end
+	-- The selected target's id, if one is set - every blip below carries its
+	-- own id (the same one player_ship.script's targeting uses), so whichever
+	-- one matches draws in the highlight look instead of its pool's own (see
+	-- RADAR_TARGET_* above). A message with no target_id - an older sender -
+	-- simply leaves every blip in its normal colour.
+	local target_id = message.target_id
+	local function is_target(blip)
+		return target_id ~= nil and blip.id == target_id
+	end
 	-- Asteroids first, so a ship contact always ends up on top of a rock blip
 	-- it happens to share a spot with.
 	local asteroids = message.asteroids or {}
@@ -794,6 +818,16 @@ local function refresh_radar(self, message)
 		else
 			local px, py = scope_position(a.pos)
 			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
+			-- Every blip's colour and size is reset here, not just the target's,
+			-- so a node reused by a later message can never keep a stale
+			-- highlight (only the selected target breaks out of its pool's look).
+			if is_target(a) then
+				gui.set_color(node, RADAR_TARGET_COLOR)
+				gui.set_size(node, ASTEROID_DOT_SIZE * RADAR_TARGET_SCALE)
+			else
+				gui.set_color(node, ASTEROID_DOT_COLOR)
+				gui.set_size(node, ASTEROID_DOT_SIZE)
+			end
 			gui.set_enabled(node, true)
 		end
 	end
@@ -807,7 +841,13 @@ local function refresh_radar(self, message)
 		else
 			local px, py = scope_position(o.pos)
 			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
-			gui.set_color(node, RELATION_COLORS[o.relation] or RELATION_COLORS.neutral)
+			if is_target(o) then
+				gui.set_color(node, RADAR_TARGET_COLOR)
+				gui.set_size(node, OUTPOST_DOT_SIZE * RADAR_TARGET_SCALE)
+			else
+				gui.set_color(node, RELATION_COLORS[o.relation] or RELATION_COLORS.neutral)
+				gui.set_size(node, OUTPOST_DOT_SIZE)
+			end
 			gui.set_enabled(node, true)
 		end
 	end
@@ -819,6 +859,13 @@ local function refresh_radar(self, message)
 		else
 			local px, py = scope_position(c.pos)
 			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
+			if is_target(c) then
+				gui.set_color(node, RADAR_TARGET_COLOR)
+				gui.set_size(node, DOT_SIZE * RADAR_TARGET_SCALE)
+			else
+				gui.set_color(node, DOT_COLOR)
+				gui.set_size(node, DOT_SIZE)
+			end
 			gui.set_enabled(node, true)
 		end
 	end

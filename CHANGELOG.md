@@ -4,6 +4,16 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.4.0-alpha.4] - 2026-10-07
+
+### Flight
+- The flight HUD's radar now **highlights the selected target** on the scope: whichever
+  contact, asteroid or outpost blip matches the ship's current target is drawn larger
+  and in a bright amber, and it follows the selection as you cycle targets. A target
+  beyond the ship's own sensor range simply isn't on the scope to highlight. Every
+  blip's look is reset each frame, so a blip that stops being the target never keeps
+  the highlight.
+
 ## [0.4.0-alpha.3] - 2026-10-07
 
 ### Flight

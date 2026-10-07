@@ -2013,11 +2013,16 @@ function update(self, dt)
 	-- system even though nothing populates it yet" footing
 	-- main/data/asteroids.lua's own M.OVERRIDES already had before this
 	-- landed.
+	-- Each blip carries the same id the targeting code above knows it by (a
+	-- ship's user_id, "asteroid:<index>", "outpost:<faction>"), so the HUD can
+	-- pick out whichever one is the selected target and highlight it - see the
+	-- target_id field on the message below (per direct instruction: "if the
+	-- selected target is shown in the radar, highlight it in the radar").
 	local radar_range = sensor_range(self.ship_id)
 	local contacts = {}
-	for _, remote in pairs(remote_registry.ships) do
+	for user_id, remote in pairs(remote_registry.ships) do
 		if vmath.length(remote.pos - pos) <= radar_range then
-			table.insert(contacts, remote)
+			table.insert(contacts, { pos = remote.pos, id = user_id })
 		end
 	end
 	-- Asteroids plot on that same scope as dim, semi-transparent points (per
@@ -2050,7 +2055,7 @@ function update(self, dt)
 	local radar_asteroids = {}
 	for _, rock in ipairs(asteroid_registry.asteroids) do
 		if vmath.length(rock.pos - pos) <= radar_range then
-			table.insert(radar_asteroids, rock)
+			table.insert(radar_asteroids, { pos = rock.pos, id = ASTEROID_TARGET_PREFIX .. rock.index })
 		end
 	end
 
@@ -2067,12 +2072,14 @@ function update(self, dt)
 		if outpost_pos and vmath.length(outpost_pos - pos) <= radar_range then
 			table.insert(radar_outposts, {
 				pos = outpost_pos,
+				id = OUTPOST_TARGET_PREFIX .. faction,
 				relation = (faction == session.get_faction()) and "friendly" or "enemy",
 			})
 		end
 	end
 	msg.post("flight_hud#gui", "contacts", {
 		own_pos = pos, range = radar_range, heading = self.radar_heading,
+		target_id = self.target_id,
 		contacts = contacts, asteroids = radar_asteroids, outposts = radar_outposts,
 	})
 

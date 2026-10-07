@@ -3872,6 +3872,19 @@ rotating line."*
   swaps the camera's X axis) — verified against `player_ship.script`'s own `project()`,
   which builds the real view-projection and so is the ground truth for what the pilot
   actually sees. `ahead` (`d·bow`, drawn up) was already right and is unchanged.
+- **The selected target's blip is highlighted (decided — per direct instruction:
+  *"if the selected target is shown in the radar, highlight it in the radar"*).**
+  Every blip the `contacts` message carries now has an `id` (the same one the targeting
+  code already knows it by: a ship's `user_id`, `"asteroid:<index>"`,
+  `"outpost:<faction>"`), and the message adds `target_id`, the currently selected
+  target's own id, so `refresh_radar` draws the blip that matches in a bright amber at
+  1.8x its pool's own size. Deliberately **not** relation-coloured like the target
+  brackets — the brackets already say friend or foe, while this only has to say "this is
+  the one you selected". A target outside the ship's own sensor range simply isn't in
+  the message (and so isn't on the scope), which is exactly the instruction's own "if
+  ... shown in the radar" case. Each blip's colour and size is reset on every message,
+  not just the target's, so a pooled node can never keep a stale highlight once the
+  selection moves or the target leaves the scope.
 - **The rotating line**: a 60-degree translucent wedge (the fading trail) plus a bright
   radial leading-edge line, turning **one revolution every 3 seconds** while flying.
   Both are re-aimed each frame from a single `sweep_deg` (a pie's fill starts at its own

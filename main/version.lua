@@ -11,6 +11,6 @@
 
 local M = {}
 
-M.VERSION = "0.4.0-alpha.3"
+M.VERSION = "0.4.0-alpha.4"
 
 return M
