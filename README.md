@@ -155,13 +155,18 @@ and the server gets a copy through `tools/sync_server_rules.py`. If a player's g
 server report different versions (mid-deploy, or a cached old copy of the game), the login
 screen asks them to reload.
 
+The website (**galaxy-site**) is released alongside the game, so it carries the same
+number in a `VERSION` file at its own repository root, which it shows on the dashboard.
+`python tools/check_site_version.py` fails while the two disagree.
+
 To release:
 
 1. Set `M.VERSION` in `main/version.lua`.
 2. Add a `CHANGELOG.md` entry for it.
 3. Run `python tools/sync_server_rules.py`.
-4. Commit, tag the commit `v<version>` (e.g. `git tag v0.1.0-alpha.2`), and push the
-   commit and the tag (`git push origin master --tags`).
+4. Set `VERSION` in the galaxy-site repository to the same number.
+5. Commit and push both repositories, tagging the game's commit `v<version>`
+   (e.g. `git tag v0.1.0-alpha.2`; `git push origin master --tags`).
 
 ## Project layout
 
@@ -178,6 +183,8 @@ render/               custom render script
 nakama-server/        Nakama + Postgres (local and Coolify compose files)
 deploy/, Dockerfile   web build and nginx config
 docs/                 deployment guide
+tools/                build/check scripts for models, icons and themes, plus the
+                      release helpers (rules sync, website version check)
 plan.md               full design document and open questions
 ```
 
