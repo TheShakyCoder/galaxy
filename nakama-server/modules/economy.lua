@@ -14,7 +14,7 @@ The profile is storage object profile/state, readable by its owner but
 writable only by the server (permission_write = 0); modules/auth.lua also
 refuses any client write to that collection.
 
-Reply: { ok = true, result, profile } or { ok = false, error, profile }.
+Reply: { ok = true, result, profile, now } or { ok = false, error, profile, now }.
 ]]
 
 local nk = require("nakama")
@@ -27,6 +27,14 @@ session.set_outpost_availability(function(system_id, faction)
 	return outposts.get(system_id, faction).available
 end)
 
+-- The dock/launch cooldown (main/session.lua, plan.md §2.16) stores
+-- server-clock timestamps in the profile, so the rules have to RUN on the
+-- server's own clock here - nk.time() is the authority the game lines its copy
+-- up against (session.sync_clock, fed by the `now` below).
+session.set_clock(function()
+	return nk.time() / 1000
+end)
+
 local COLLECTION = "profile"
 local KEY = "state"
 local FACTIONS = { accord = true, swarm = true }
@@ -37,7 +45,11 @@ for _, name in ipairs(session.OPS) do
 	ALLOWED[name] = true
 end
 
+-- Every reply carries the server's clock (`now`, milliseconds): the game uses
+-- it to line its own copy of the rules up with the clock the profile's
+-- timestamps are stored in (session.sync_clock - the cooldown above all).
 local function reply(tbl)
+	tbl.now = nk.time()
 	return nk.json_encode(tbl)
 end
 

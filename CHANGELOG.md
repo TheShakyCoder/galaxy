@@ -22,6 +22,36 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
   passive or empty slots report their state. The whole diagram is now drawn at
   **66%** of its authored size (markers, labels, tooltip and panel background alike),
   held into the bottom-left corner.
+- Docking at an outpost — or being destroyed and respawning at one — now starts a
+  **10-second launch cooldown** before you can leave again, and *ending the session
+  in space* instead (reloading the browser, closing the tab, quitting mid-flight)
+  starts a **60-second** one. The rule lives in `main/session.lua` as `dock` /
+  `resume` / `launch`, is saved with the profile and replayed by the server, so
+  reloading can't skip it; on the outpost screen the Launch button does nothing
+  while it runs and the countdown label above it shows the seconds remaining.
+- The flight HUD now shows the ship's **Power** and **Hull points** as `current / max`,
+  in a new panel under the speed readout. The numbers are the active ship's own stats
+  (`power`, `hull_points`), so an upgraded hull shows its advanced tier's values;
+  nothing drains or damages either one yet — there is no combat — so both read full
+  today, and each line is only rewritten when the value actually changes.
+- The radar is now a **circular warship-style scope** instead of a square panel: a
+  filled disc with a bright outer ring, two inner range rings and cross-hairs, plus a
+  **rotating sweep line** (with a fading 60° trail) that turns once every 3 seconds
+  while flying. The scope is drawn **relative to the ship** — the hull's own heading is
+  always up and whatever is off its starboard side draws to the right — so it turns with
+  you instead of staying fixed to the world grid, and blips read the same way round no
+  matter which way you are pointing. Range scaling and the edge clamp are unchanged.
+- **Asteroids show up on that radar too**, as small semi-transparent blips in a dim
+  slate (direct instruction), taken from the same field the targeting code reads, so a
+  rock that has been mined out stops being plotted. They use the same projection and
+  range filter as ship contacts, which always draw over them. **Outposts** plot as
+  larger blips coloured like the ship they belong to — blue for yours, red for the
+  enemy's — and a destroyed outpost simply stops appearing.
+- The radar's centre now carries a **heading marker**: a small bright triangle whose
+  apex points up, i.e. the way the ship is pointing (the scope is ship-relative),
+  replacing the plain centre dot.
+- The ship's own **X/Y/Z coordinates** are shown in whole metres under the radar,
+  updating as you fly.
 
 ### Asteroids
 - The two faction **home systems** — Sol (The Accord) and Polaris (The Swarm) — now
@@ -68,6 +98,58 @@ alpha milestones carry an `-alpha.N` label. The current version lives in
   missiles (interceptor, heavy, siege, dumbfire rocket) and the Nuclear Torpedo,
   which only a nuclear launcher can load. Each round also carries a two-faction
   name, resolved by `ordinance.name_for` (not yet shown anywhere).
+
+### Modules
+- Hull repair is now **two purchasable components** in the outpost Shop, not one:
+  a new passive **Hull Repair Booster** (`hull_repair_booster_patrol`) that raises the
+  hull's own repair rate, and the existing active **Emergency Hull Repair**
+  (`emergency_hull_repair_patrol`) that restores a burst of hull points when used and
+  then goes on cooldown. Both fit the Patrol class and appear in the Shop with the
+  other Hull modules. The active one's repair amount (200) and cooldown (60 s) are
+  placeholders pending a real balance pass. The Fitting tab's Ship Statistics panel
+  gained a **Hull Recovery** (`x /s`) line - the stat the passive booster affects.
+- On the Fitting tab an **empty slot is now just its own octagon** — the slot type's
+  colour and border, with no letter drawn inside it (direct instruction). The four
+  letterless variants are *derived* from the hand-provided `Octagon W`/`C`/`E`/`H` art
+  by `tools/build_module_icons.py --empty-icons`, which paints the glyph out with the
+  surrounding fill colour, so each octagon's border and fill are untouched. The slot's
+  small id tag ("W3") and the lettered icons the Shop/Owned rows still use as a
+  fallback for a module with no icon of its own are unchanged.
+
+### Ships
+- The ship roster (`main/data/ships.lua`) now splits every ship's own properties into
+  **`basic`** and **`advanced`** sections. `class`, `role`, the shared `slot_positions`
+  list and `flight_camera`/`faction_skins` stay at the top level; `price`, the stat
+  block and the slot counts move under `basic` (the ship as bought) and — for a ship
+  that can be upgraded — under `advanced`, which lists only the fields that change
+  (anything left out falls back to `basic`; a ship with no upgrade simply omits
+  `advanced`). Each slot in the shared list is now flagged `tier = "advanced"` when it
+  only unlocks after the upgrade, and that flag is what keeps it locked on the basic
+  hull. The **upgrade price is now per ship** (`advanced.price`, charged on top of the
+  basic price with no refund) instead of one flat figure.
+- A ship's **price is now a list of `{ amount, currency }` entries**, so one hull can
+  require **more than one currency** to buy (or to advance). Payment is all-or-nothing —
+  `session.can_afford`/`session.spend_price` pay every entry or none — and the outpost
+  shows them joined (`36,000 Tope + 500 Hydrogen`). Every ship still costs one currency
+  today; a second is a `main/data/ships.lua` change only.
+- The four **Patrol-class ships** (`patrol_interceptor`, `patrol_support`,
+  `patrol_assault`, `patrol_tactical`) now take every stat, slot count and price from
+  `revised-patrol-ships.csv` (plan.md §2.1.4), and **all four gained an `advanced`**
+  tier. The Tactical Patrol's upgrade is priced in **Valour** (30,000) — the first ship
+  price in the PvP currency — so `main/session.lua` now tracks a real `valour` balance
+  (starting 0, since nothing awards Valour yet). `tests/revised_patrol_ships_harness.lua`
+  checks `ships.lua` against the CSV field by field. The three non-interceptor hulls
+  also gain placeholder `slot_positions` layouts, so the fitting screen has markers.
+  The CSV's `patrol_scout` (Viper III, a new "Scout" role) is not added yet — its
+  Accord/Swarm names are proposed (Barreleye / Kestrel) but it has no model asset.
+- Two ships' **hull points, power and power recharge** now use the real reference
+  figures for their own counterparts instead of the shared placeholder block:
+  **Patrol Interceptor** is 450 hull / 2.5 recovery a second / 100 power / 5 a second
+  (Viper Mk II), and **Patrol Assault** is 715 hull / 150 power / 5 a second (the
+  Rhino). Every other ship either already had real per-ship numbers (the Frigates'
+  Vanir / Fenrir / Gungnir / Jotunn blocks, and `escort_tactical`'s Liche figures) or
+  keeps the shared baseline, since no real figures exist for their counterparts yet.
+  The values live on the chassis, so a ship's Accord and Swarm skins share them.
 
 ### Code organisation
 - Split all cannon/projectile rendering out of `main/asteroid_hub.script` into a
@@ -141,8 +223,12 @@ is now asteroids only.
   numbered C1, C2, then E1..., then H1... (on a Patrol ship C1 is 1 and H2 is
   8). The Asteroid Analyser still also works with P. Passive modules (armour
   plating and so on) are always on and have no key.
-- The Fitting tab shows each slot's key under it, and the flight HUD lists your
-  weapons (on/off) and module keys.
+- The Fitting tab shows each slot's id and its flight key together on the marker
+  tag (`W2: Shift+2`, or `C1: Key 2` for an active module). Hovering a slot marker
+  shows its key inside the marker's own octagon, sized to fill the space, with the
+  `Shift` modifier on a small line above the number (`Shift` over `1`; an active
+  module just shows its number). The flight HUD lists your weapons (on/off) and
+  module keys.
 - The flight HUD's ship diagram is interactive: clicking a slot's icon switches
   that weapon on/off or runs that active module, exactly as its key does (empty
   and still-locked slots do nothing). Hovering an icon shows the module's name
@@ -178,6 +264,8 @@ is now asteroids only.
   (Titanium becomes iron). Every player's game agrees what each asteroid is.
 - Only you see what you've analysed; it's remembered per system until you
   reload the page. The analyser can't be used again until its scan finishes.
+- Its icon now sits on a black octagon background, matching the hand-drawn
+  Octagon icons instead of showing the slot marker's colour through it.
 
 ## [0.2.0-alpha.1] - 2026-09-29
 

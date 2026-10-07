@@ -1,6 +1,7 @@
 -- Minimal flight HUD (plan.md §4's "Build flight mode" TODO) - the
--- current-speed readout, the docking prompt/countdown, a radar, and a
--- TARGET: text readout (no shields/on-screen reticle/nameplates yet). Same
+-- current-speed readout, the ship's own Power/Hull readouts, the docking
+-- prompt/countdown, a circular radar scope, and a TARGET: text readout (no
+-- shields/on-screen reticle/nameplates yet). Same
 -- "starts
 -- disabled, hidden until told to show" pattern as main/faction_select.gui_script
 -- and main/outpost.gui_script, except the thing enabling/hiding it is a
@@ -28,14 +29,21 @@
 --    same source-project hud.gui_script "system_changed" indicator, just
 --    always left showing (no hide case - there's always a current system
 --    while flying)
---  - "contacts" - { own_pos, range, contacts } for the radar below (per
---    direct instruction: "each ship has its own visible range... a radar
---    indicating all ships within visible range") - `range` is that
+--  - "contacts" - { own_pos, heading, range, contacts, asteroids } for the
+--    radar below (per direct instruction: "each ship has its own visible
+--    range... a radar indicating all ships within visible range", and "on the
+--    radar show asteroids as semi transparent points") - `range` is that
 --    ship's own visual_range_m (NOT the longer sensor_range_m/"Dradis
---    Range"), `contacts` a list of { pos = vmath.vector3 } for every
---    other ship within it (always empty right now - no other ships exist
---    anywhere in this project yet, see that script's own comment on this
---    same block)
+--    Range"), `contacts` a list of { pos = vmath.vector3 } for every other ship
+--    within it (always empty right now - no other ships exist anywhere in this
+--    project yet, see that script's own comment on this same block) and
+--    `asteroids` the same for every spawned rock of the system that is in
+--    range (main/asteroid_registry.lua), plotted as the dim semi-transparent
+--    pool rather than as contacts, and `outposts` one entry per standing outpost
+--    of the system in range ({ pos, relation }) for the outpost pool (per direct
+--    instruction: "add outposts"). `heading` is the hull's own bow direction
+--    flattened onto the world X/Z plane (unit length), which is what the scope
+--    is aimed by - see refresh_radar
 --  - "currency" - { tope, water, iron, hydrogen } (per direct instruction:
 --    "show the amount of currency for each resource that the player has")
 --    - same main/session.lua getters and "Name: N" text format
@@ -45,6 +53,13 @@
 --    real mechanic wired up" status that script's own comment on Water/
 --    Iron/Hydrogen already flags), so today these values just sit static
 --    for the whole flight.
+--  - "ship_status" - { power, power_max, hull, hull_max, x, y, z } for the
+--    Power and Hull readouts (per direct instruction: "while in flight show the
+--    ship power and hull points") and the X/Y/Z coordinate line under the scope
+--    ("show x/y/z coordinates below radar") - the active ship's own stats
+--    (session.ship_stat, so an advanced tier's overrides count) and its own
+--    world position. Nothing drains or damages either stat yet (no combat), so
+--    both simply read full today.
 --  - "slot_states" - { states = { [slot_id] = { state = "live"/"cooldown"/"off", frac = 0..1 } } }
 --    for every fitted slot, every frame - drives the bottom-left ship
 --    diagram's per-slot live/cooldown markers (build_ship_diagram/
@@ -66,17 +81,77 @@
 -- marker are consumed, leaving every other click for player_ship.script's
 -- own click-to-target.
 --
--- radar projection technique (flat world-fixed X/Z, doesn't rotate with
--- the ship's own heading) ported from the other local reference
--- project's own main/dradis.gui_script (§0 - mechanics, not creative
--- expression), simplified down to a flat 2-D dot (no height cue/pseudo-3D
--- dimming - there's nothing populating it yet to verify that against).
+-- radar maths (flat X/Z dots, no height cue or pseudo-3D dimming) is ported
+-- from the other local reference project's own main/dradis.gui_script (§0 -
+-- mechanics, not creative expression), simplified down to a flat 2-D dot.
+-- Unlike that one, the scope is drawn SHIP-RELATIVE rather than world-fixed
+-- (per direct instruction: "items on the radar need to be shown relative to
+-- the direction of the ship and not relative to the grid coordinates"): the
+-- ship's own heading is always UP on the scope and whatever is off its
+-- starboard side draws to the right, so the display turns with the hull
+-- instead of with the world grid. What it is drawn onto is a circular
+-- warship-style scope with a rotating sweep (see the RADAR_* constants).
 
 local RADAR_CENTER = vmath.vector3(1760, 150, 0)
 local RADAR_RADIUS = 110 -- px, half of radar_panel's own 220x220 size in main/flight_hud.gui
 local DOT_POOL_SIZE = 16
 local DOT_SIZE = vmath.vector3(6, 6, 0)
 local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
+
+-- Asteroid blips on the same scope (per direct instruction: "on the radar show
+-- asteroids as semi transparent points") - a second, smaller pool drawn in a
+-- dim semi-transparent slate, so a rock reads as scenery rather than as a
+-- contact. Same pooling as the ship contacts above, and deliberately created
+-- BEFORE that pool so contacts always draw on top of rocks. Sized for what can
+-- actually be in range at once: the active ship's own visual_range_m
+-- (main/data/ships.lua) is a couple of hundred metres, and a system's field is
+-- a few hundred metres across
+-- (main/data/asteroids.lua), so only a handful of rocks are ever in range - if
+-- more are, the extras simply don't plot (a node-budget choice, not a rule).
+local ASTEROID_POOL_SIZE = 24
+local ASTEROID_DOT_SIZE = vmath.vector3(5, 5, 0)
+local ASTEROID_DOT_COLOR = vmath.vector4(0.62, 0.66, 0.72, 0.4)
+
+-- Outposts (per direct instruction: "add outposts"): a third pool, drawn ON TOP
+-- of the rocks but under ship contacts, in the same friendly/enemy colours the
+-- target brackets already use (RELATION_COLORS below) so a friendly outpost
+-- reads like a friendly ship. Two factions can have one outpost each in a
+-- system, so the pool only needs headroom, not a crowd.
+local OUTPOST_POOL_SIZE = 4
+local OUTPOST_DOT_SIZE = vmath.vector3(7, 7, 0)
+
+-- The player's own position readout under the scope (per direct instruction:
+-- "show x/y/z coordinates below radar") - smaller than the other readouts so a
+-- six-figure coordinate still fits the width.
+local POSITION_TEXT_SCALE = vmath.vector3(0.6, 0.6, 1)
+
+-- Heading marker (per direct instruction): the ship itself, at the centre of
+-- the scope. A 3-vertex pie is an equilateral triangle with one vertex at 0
+-- degrees (3 o'clock - see new_octagon_node's own note in
+-- main/outpost.gui_script), so rotating it a quarter turn stands that vertex up
+-- - which is the hull's heading, the scope being ship-relative (refresh_radar).
+local RADAR_HEADING_RADIUS = 11
+local RADAR_HEADING_COLOR = vmath.vector4(0.85, 1.0, 0.9, 0.95)
+local RADAR_HEADING_ROTATION = 90
+
+-- Circular scope (per direct instruction: the radar should read as a warship's
+-- circular radar screen rather than a square panel with dots on it): a filled
+-- disc, a bright outer ring, two range rings and cross-hairs - all built once
+-- in init() as native TYPE_PIE/BOX nodes (no image asset, same technique
+-- main/outpost.gui_script's octagon markers use) - plus a sweep wedge and a
+-- bright leading-edge line that rotate together every frame in update(). A pie
+-- node's `size` is its bounding box, so radius R means size 2R (RADAR_RADIUS
+-- above is already that half-size).
+local RADAR_SCOPE_RADIUS = 104 -- px: just inside the outer ring, which sits on RADAR_RADIUS
+local RADAR_RING_WIDTH = 6
+local RADAR_SCOPE_VERTS = 64 -- smooth circle, not a faceted polygon
+local RADAR_SCOPE_COLOR = vmath.vector4(0.03, 0.15, 0.08, 0.8) -- the scope face
+local RADAR_RING_COLOR = vmath.vector4(0.3, 0.95, 0.5, 0.9) -- outer ring + sweep line
+local RADAR_GRID_COLOR = vmath.vector4(0.25, 0.65, 0.4, 0.5) -- range rings + cross-hairs
+local RADAR_SWEEP_COLOR = vmath.vector4(0.35, 1.0, 0.55, 0.18) -- the fading trail behind the line
+local RADAR_SWEEP_ARC_DEG = 60
+local RADAR_SWEEP_PERIOD_S = 3 -- one full revolution
+local RADAR_SWEEP_DEG_PER_SEC = 360 / RADAR_SWEEP_PERIOD_S
 
 local PROGRESS_SHOWN_S = 5
 
@@ -391,14 +466,12 @@ local function build_ship_diagram(self)
 		return
 	end
 	show_ship_silhouette(self, ship)
-	-- Locked = past the ship's effective component count for that slot's
-	-- type (advanced hulls unlock ship.advanced's extra slots), same rule
-	-- as outpost.gui_script's build_markers.
-	local counts = (session.is_ship_advanced(ship_id) and ship.advanced) or ship.components or {}
+	-- Locked = an advanced-only slot (slot_positions' own `tier` field,
+	-- main/data/ships.lua §2.1.3) while the ship hasn't been advanced yet,
+	-- same rule as outpost.gui_script's build_markers.
 	for slot_id, offset in pairs(ship.slot_positions or {}) do
-		local prefix, number = slot_id:match("^(%a)(%d+)$")
-		local slot_total = prefix and counts[prefix]
-		local locked = slot_total ~= nil and tonumber(number) > slot_total
+		local prefix = slot_id:match("^(%a)(%d+)$")
+		local locked = offset.tier == "advanced" and not session.is_ship_advanced(ship_id)
 		local slot_type = prefix and SLOT_TYPE_BY_PREFIX[prefix]
 		local module = session.module_in_slot(slot_id)
 		local pos = vmath.vector3(
@@ -475,6 +548,31 @@ local function build_ship_diagram(self)
 	apply_slot_states(self) -- everything starts grey; player_ship refreshes it every frame
 end
 
+-- One circular pie node for the scope: a full disc when `inner` is 0, a ring
+-- when it isn't (Defold measures both radii in px). Same creation order as
+-- main/outpost.gui_script's new_octagon_node - perimeter vertices and ellipse
+-- bounds first, then the fill angle. Declared above init(), which is what
+-- calls it.
+local function new_scope_pie(radius, inner, fill_angle, color)
+	local node = gui.new_pie_node(RADAR_CENTER, vmath.vector3(radius * 2, radius * 2, 0))
+	gui.set_perimeter_vertices(node, RADAR_SCOPE_VERTS)
+	gui.set_outer_bounds(node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(node, fill_angle)
+	gui.set_inner_radius(node, inner)
+	gui.set_color(node, color)
+	return node
+end
+
+-- Aims the sweep wedge and its leading-edge line at the current sweep angle.
+-- Called once from init() (so the very first drawn frame is already oriented)
+-- and every frame from update(). A pie's fill starts at its own local 0
+-- degrees, so rotating the wedge one arc length behind the line keeps the line
+-- exactly on the wedge's leading edge.
+local function apply_sweep(self)
+	gui.set_rotation(self.radar_sweep_node, vmath.vector3(0, 0, self.sweep_deg - RADAR_SWEEP_ARC_DEG))
+	gui.set_rotation(self.radar_sweep_line, vmath.vector3(0, 0, self.sweep_deg))
+end
+
 function init(self)
 	self.speed_node = gui.get_node("speed_value")
 	self.dock_prompt_node = gui.get_node("dock_prompt")
@@ -495,12 +593,66 @@ function init(self)
 	self.hydrogen_node = gui.get_node("hydrogen_value")
 	self.radar_range_node = gui.get_node("radar_range")
 	self.radar_range_m = nil
+	-- Power / Hull / position readouts (see the "ship_status" handler in
+	-- on_message).
+	self.power_value_node = gui.get_node("power_value")
+	self.hull_value_node = gui.get_node("hull_value")
+	self.position_node = gui.get_node("position_value")
+	gui.set_scale(self.position_node, POSITION_TEXT_SCALE)
+	self.power_text = nil -- last text written, so an unchanged value costs nothing
+	self.hull_text = nil
+	self.position_text = nil
 	self.build_version_node = gui.get_node("build_version")
 	gui.set_text(self.build_version_node, "v" .. version.VERSION)
+
+	-- Static scope furniture - see the RADAR_* constants above. Created before
+	-- the blip pools below, so every blip draws on top of the scope.
+	new_scope_pie(RADAR_SCOPE_RADIUS, 0, 360, RADAR_SCOPE_COLOR)
+	new_scope_pie(RADAR_RADIUS, RADAR_RADIUS - RADAR_RING_WIDTH, 360, RADAR_RING_COLOR)
+	new_scope_pie(RADAR_SCOPE_RADIUS / 3, RADAR_SCOPE_RADIUS / 3 - 2, 360, RADAR_GRID_COLOR)
+	new_scope_pie(RADAR_SCOPE_RADIUS * 2 / 3, RADAR_SCOPE_RADIUS * 2 / 3 - 2, 360, RADAR_GRID_COLOR)
+	local cross_h = gui.new_box_node(RADAR_CENTER, vmath.vector3(RADAR_SCOPE_RADIUS * 2 - 12, 2, 0))
+	gui.set_pivot(cross_h, gui.PIVOT_CENTER)
+	gui.set_color(cross_h, RADAR_GRID_COLOR)
+	local cross_v = gui.new_box_node(RADAR_CENTER, vmath.vector3(2, RADAR_SCOPE_RADIUS * 2 - 12, 0))
+	gui.set_pivot(cross_v, gui.PIVOT_CENTER)
+	gui.set_color(cross_v, RADAR_GRID_COLOR)
+	-- The sweep: a translucent wedge trailing a bright leading-edge line. Both
+	-- rotate in update(); the wedge sits one arc length behind the line, so the
+	-- line is always its leading edge.
+	self.radar_sweep_node = new_scope_pie(RADAR_SCOPE_RADIUS, 0, RADAR_SWEEP_ARC_DEG, RADAR_SWEEP_COLOR)
+	self.radar_sweep_line = gui.new_box_node(RADAR_CENTER, vmath.vector3(RADAR_SCOPE_RADIUS - 6, 2, 0))
+	gui.set_pivot(self.radar_sweep_line, gui.PIVOT_W)
+	gui.set_color(self.radar_sweep_line, RADAR_RING_COLOR)
+	self.sweep_deg = 0
+	apply_sweep(self)
 
 	-- Pool created once, just repositioned/shown-or-hidden per "contacts"
 	-- message (same pooling reasoning as the reference project's own
 	-- dot_pool - avoids create/destroy churn every frame).
+	-- Asteroid blips: same pooling, created first so ship contacts draw over
+	-- them (see the ASTEROID_* constants).
+	self.asteroid_pool = {}
+	for _ = 1, ASTEROID_POOL_SIZE do
+		local node = gui.new_box_node(RADAR_CENTER, ASTEROID_DOT_SIZE)
+		gui.set_pivot(node, gui.PIVOT_CENTER)
+		gui.set_color(node, ASTEROID_DOT_COLOR)
+		gui.set_enabled(node, false)
+		table.insert(self.asteroid_pool, node)
+	end
+
+	-- Outposts between the two: over the rocks, under ship contacts (see the
+	-- OUTPOST_* constants). Their colour is set per message from the same
+	-- friendly/enemy palette the target brackets use.
+	self.outpost_pool = {}
+	for _ = 1, OUTPOST_POOL_SIZE do
+		local node = gui.new_box_node(RADAR_CENTER, OUTPOST_DOT_SIZE)
+		gui.set_pivot(node, gui.PIVOT_CENTER)
+		gui.set_color(node, RELATION_COLORS.neutral)
+		gui.set_enabled(node, false)
+		table.insert(self.outpost_pool, node)
+	end
+
 	self.dot_pool = {}
 	for _ = 1, DOT_POOL_SIZE do
 		local node = gui.new_box_node(RADAR_CENTER, DOT_SIZE)
@@ -509,6 +661,16 @@ function init(self)
 		gui.set_enabled(node, false)
 		table.insert(self.dot_pool, node)
 	end
+
+	-- Heading marker (see the RADAR_HEADING_* constants) - created last of the
+	-- scope's own nodes, so the ship always sits on top of every blip.
+	self.heading_node = gui.new_pie_node(RADAR_CENTER, vmath.vector3(RADAR_HEADING_RADIUS * 2, RADAR_HEADING_RADIUS * 2, 0))
+	gui.set_perimeter_vertices(self.heading_node, 3)
+	gui.set_outer_bounds(self.heading_node, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(self.heading_node, 360)
+	gui.set_inner_radius(self.heading_node, 0)
+	gui.set_rotation(self.heading_node, vmath.vector3(0, 0, RADAR_HEADING_ROTATION))
+	gui.set_color(self.heading_node, RADAR_HEADING_COLOR)
 
 	-- Hover tooltip nodes (see TOOLTIP_* above) - created once, then
 	-- shown/hidden and re-filled per hover by update_tooltip.
@@ -565,22 +727,13 @@ function update(self, dt)
 		self.focus_retry = self.focus_retry - 1
 		msg.post(".", "acquire_input_focus")
 	end
-end
-
--- Projects a contact's world-space X/Z offset from the player onto the
--- flat radar - world-fixed (not rotating with the ship's own heading,
--- same convention the reference project's own project() uses). Contacts
--- are only ever sent within `range` in the first place (player_ship.script
--- filters that), so the edge-clamp below is just a safety margin against
--- float error, not a real "friendly past range" case like the reference
--- has (no faction-based always-shown exception here).
-local function project(dx, dz, range)
-	local px, py = dx * (RADAR_RADIUS / range), -dz * (RADAR_RADIUS / range)
-	local len = math.sqrt(px * px + py * py)
-	if len > RADAR_RADIUS then
-		px, py = px / len * RADAR_RADIUS, py / len * RADAR_RADIUS
-	end
-	return px, py
+	-- Radar sweep: one revolution every RADAR_SWEEP_PERIOD_S seconds. The
+	-- wedge's fill starts at its own local 0 degrees, so rotating it one arc
+	-- length behind the leading line keeps the line on the wedge's leading
+	-- edge. Only runs while flying - the whole component is disabled between
+	-- flights (init posts "disable").
+	self.sweep_deg = (self.sweep_deg + RADAR_SWEEP_DEG_PER_SEC * dt) % 360
+	apply_sweep(self)
 end
 
 local function refresh_radar(self, message)
@@ -590,13 +743,68 @@ local function refresh_radar(self, message)
 		gui.set_text(self.radar_range_node, string.format("%.0f m", range))
 	end
 	local own_pos = message.own_pos
+	-- The hull's own heading, flattened onto the world X/Z plane and normalized
+	-- by player_ship.script: this is what "up" means on the scope, since the
+	-- radar is drawn ship-relative (per direct instruction: "items on the radar
+	-- need to be shown relative to the direction of the ship and not relative
+	-- to the grid coordinates"). A message without one - an older sender, or a
+	-- hull pointing straight up, where the X/Z part collapses - falls back to
+	-- world +Z.
+	local hx = message.heading and message.heading.x or 0
+	local hz = message.heading and message.heading.z or 1
+	local scale = RADAR_RADIUS / range
+
+	-- A world position -> where it sits on the scope: first rotated into the
+	-- ship's own frame (across = + to starboard, ahead = + toward the bow;
+	-- starboard is up x forward, i.e. (hz, -hx)), then scaled onto the radius.
+	-- Contacts are only ever sent within `range` in the first place
+	-- (player_ship.script filters that), so the edge clamp is just a safety
+	-- margin against float error, not a real "friendly past range" case like
+	-- the reference project has (no faction-based always-shown exception here).
+	local function scope_position(world)
+		local dx, dz = world.x - own_pos.x, world.z - own_pos.z
+		local px = (dx * hz - dz * hx) * scale -- across: starboard right of centre
+		local py = (dx * hx + dz * hz) * scale -- ahead: the bow is up
+		local len = math.sqrt(px * px + py * py)
+		if len > RADAR_RADIUS then
+			px, py = px / len * RADAR_RADIUS, py / len * RADAR_RADIUS
+		end
+		return px, py
+	end
+	-- Asteroids first, so a ship contact always ends up on top of a rock blip
+	-- it happens to share a spot with.
+	local asteroids = message.asteroids or {}
+	for i, node in ipairs(self.asteroid_pool) do
+		local a = asteroids[i]
+		if not a then
+			gui.set_enabled(node, false)
+		else
+			local px, py = scope_position(a.pos)
+			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
+			gui.set_enabled(node, true)
+		end
+	end
+	-- Outposts, in the friendly/enemy colours the target brackets use (a nil or
+	-- unknown relation falls back to neutral).
+	local outposts = message.outposts or {}
+	for i, node in ipairs(self.outpost_pool) do
+		local o = outposts[i]
+		if not o then
+			gui.set_enabled(node, false)
+		else
+			local px, py = scope_position(o.pos)
+			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
+			gui.set_color(node, RELATION_COLORS[o.relation] or RELATION_COLORS.neutral)
+			gui.set_enabled(node, true)
+		end
+	end
 	local contacts = message.contacts or {}
 	for i, node in ipairs(self.dot_pool) do
 		local c = contacts[i]
 		if not c then
 			gui.set_enabled(node, false)
 		else
-			local px, py = project(c.pos.x - own_pos.x, c.pos.z - own_pos.z, range)
+			local px, py = scope_position(c.pos)
 			gui.set_position(node, vmath.vector3(RADAR_CENTER.x + px, RADAR_CENTER.y + py, 0))
 			gui.set_enabled(node, true)
 		end
@@ -747,6 +955,34 @@ function on_message(self, message_id, message)
 		gui.set_text(self.water_node, "Water: " .. message.water)
 		gui.set_text(self.iron_node, "Iron: " .. message.iron)
 		gui.set_text(self.hydrogen_node, "Hydrogen: " .. message.hydrogen)
+	elseif message_id == hash("ship_status") then
+		-- The active ship's own Power and Hull points (main/player_ship.script;
+		-- per direct instruction: "while in flight show the ship power and hull
+		-- points"), as current / maximum. Nothing drains or damages either one
+		-- yet - no combat, plan.md §4 - so today both read full; the values are
+		-- the ship's real stats (main/data/ships.lua), not invented numbers.
+		-- Cached like radar_range: the text is only rewritten when it changes.
+		local power = string.format("%d / %d", message.power or 0, message.power_max or 0)
+		local hull = string.format("%d / %d", message.hull or 0, message.hull_max or 0)
+		-- Own world position under the scope (per direct instruction: "show x/y/z
+		-- coordinates below radar"), in whole metres - the same with_commas
+		-- grouping the reward readouts use, which handles the minus sign. Y is
+		-- the ship's own altitude, so a coordinate at the system centre is
+		-- roughly 0 / 0 / 0.
+		local position = string.format("X %s   Y %s   Z %s",
+			with_commas(message.x or 0), with_commas(message.y or 0), with_commas(message.z or 0))
+		if power ~= self.power_text then
+			self.power_text = power
+			gui.set_text(self.power_value_node, power)
+		end
+		if hull ~= self.hull_text then
+			self.hull_text = hull
+			gui.set_text(self.hull_value_node, hull)
+		end
+		if position ~= self.position_text then
+			self.position_text = position
+			gui.set_text(self.position_node, position)
+		end
 	elseif message_id == hash("contacts") then
 		refresh_radar(self, message)
 	elseif message_id == hash("slot_states") then

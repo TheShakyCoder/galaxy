@@ -336,18 +336,20 @@ local DEFAULT_FTL_RANGE = 4.5 -- ly, matches patrol_interceptor's own ftl_range_
 
 local DEFAULT_JUMP_TIMER_SEC = 15 -- sec, fallback for a ship with no ftl_charge_sec of its own - matches the reference project's own DEFAULT_JUMP_TIMER_SEC (§0)
 
+-- Read every frame, so each stat goes straight through session.ship_stat
+-- (the basic tier's `data`, overlaid with the advanced tier's own overrides
+-- once upgraded - main/data/ships.lua §2.1.3) rather than building a merged
+-- table on every call.
 local function flight_stats(ship_id)
-	local ship = ships.SHIPS[ship_id]
-	local d = ship and ship.data
 	return
-		(d and d.turning_speed_deg_per_sec) or DEFAULT_TURN_SPEED_DEG,
-		(d and d.speed_m_per_sec) or DEFAULT_MAX_SPEED,
-		(d and d.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED,
-		(d and d.acceleration_m_per_sec2) or DEFAULT_ACCELERATION,
-		(d and d.visual_range_m) or DEFAULT_VISUAL_RANGE,
-		(d and d.ftl_range_ly) or DEFAULT_FTL_RANGE,
-		(d and d.ftl_charge_sec) or DEFAULT_JUMP_TIMER_SEC,
-		(d and d.turning_acceleration_deg_per_sec2) or DEFAULT_TURN_ACCELERATION_DEG
+		session.ship_stat(ship_id, "turning_speed_deg_per_sec") or DEFAULT_TURN_SPEED_DEG,
+		session.ship_stat(ship_id, "speed_m_per_sec") or DEFAULT_MAX_SPEED,
+		session.ship_stat(ship_id, "boost_speed_m_per_sec") or DEFAULT_BOOST_SPEED,
+		session.ship_stat(ship_id, "acceleration_m_per_sec2") or DEFAULT_ACCELERATION,
+		session.ship_stat(ship_id, "visual_range_m") or DEFAULT_VISUAL_RANGE,
+		session.ship_stat(ship_id, "ftl_range_ly") or DEFAULT_FTL_RANGE,
+		session.ship_stat(ship_id, "ftl_charge_sec") or DEFAULT_JUMP_TIMER_SEC,
+		session.ship_stat(ship_id, "turning_acceleration_deg_per_sec2") or DEFAULT_TURN_ACCELERATION_DEG
 end
 
 -- Chase camera - ported subset (chase mode only; the reference project's
@@ -454,6 +456,18 @@ end
 local show_hotkeys
 
 local function start_flight(self)
+	-- The dock/launch cooldown (§2.16) is a RULE in main/session.lua that the
+	-- server re-applies to the saved profile - not just a UI gate. The outpost's
+	-- own Launch button already refuses to arm while it runs (see
+	-- session.launch_cooldown_left() there), so reaching this point mid-cooldown
+	-- should be impossible; this is the backstop for a path that slipped
+	-- through, and for a tampered client. Refused: stay docked, and put the
+	-- outpost screen back up (it disabled itself on the way here - see
+	-- main/outpost.gui_script's do_launch).
+	if not session.launch() then
+		msg.post("outpost#gui", "show_outpost")
+		return
+	end
 	self.flying = true
 	self.input = default_input()
 	self.throttle = 0.0
@@ -496,7 +510,9 @@ local function start_flight(self)
 	-- see model_component_id()'s own comment above for why toggling
 	-- enabled state on 24 pre-built components, not a runtime mesh swap.
 	local faction = session.get_faction()
-	session.launch() -- flights start in the home system (see self.current_system_id below)
+	-- session.launch() already ran at the top of this function (where its
+	-- result can send us back to the outpost screen instead of launching):
+	-- flights start in the home system. See self.current_system_id below.
 	self.ship_id = session.get_ship_id() or DEFAULT_SHIP_ID
 	self.model_component_id = model_component_id(self.ship_id, faction)
 	-- Drop the previous flight's skin first, so its model component's
@@ -671,6 +687,7 @@ end
 
 local function complete_dock(self)
 	set_engine_sound(self, 0) -- engines off before the ship leaves flight
+	session.dock() -- docked again (or destroyed and back at an outpost): start the launch cooldown (§2.16)
 	network.leave_system() -- docked ships leave the system's match (which stops any fire)
 	self.firing = false
 	self.fire_order = nil
@@ -839,8 +856,7 @@ local function asteroid_target_index(target_id)
 end
 
 local function sensor_range(ship_id)
-	local ship = ships.SHIPS[ship_id]
-	return (ship and ship.data and ship.data.sensor_range_m) or DEFAULT_SENSOR_RANGE
+	return session.ship_stat(ship_id, "sensor_range_m") or DEFAULT_SENSOR_RANGE
 end
 
 local function asteroid_target(a)
@@ -1264,8 +1280,8 @@ local MUZZLE_OFFSET = 6 -- m ahead of the ship's centre
 -- slot_positions table (the same {x, y} the outpost screen draws the fitting
 -- markers from, where +y is toward the bow) - so the firing sound comes from
 -- the mount that actually fired, not the ship's centre. Falls back to the
--- ship's centre for any slot without a position (Escort/Frigate ships have
--- empty slot_positions, plan.md §2.1.2).
+-- ship's centre for any slot without a position (the Escort/Frigate ships, and
+-- the non-interceptor Patrol hulls, have empty slot_positions - plan.md §2.1.4).
 function weapon_mount_position(ship_id, slot, pos, rot)
 	local ship = ships.SHIPS[ship_id]
 	local positions = ship and ship.slot_positions
@@ -1853,6 +1869,28 @@ function update(self, dt)
 		hydrogen = session.get_hydrogen(),
 	})
 
+	-- The active ship's Power and Hull points (per direct instruction: "while
+	-- in flight show the ship power and hull points") - its own stats, read
+	-- through session.ship_stat so an advanced tier's overrides are what an
+	-- upgraded hull shows. Current == maximum for both today: nothing drains
+	-- power or damages the player's ship yet (combat does not exist, plan.md
+	-- §4), so there is no damaged value to report - this is the readout those
+	-- will feed once there is one. Hull RECOVERY (hull_recovery_per_sec) is a
+	-- rate, not a pool, so it stays a Ship-Statistics-tab-only stat.
+	local hull_max = session.ship_stat(self.ship_id, "hull_points") or 0
+	local power_max = session.ship_stat(self.ship_id, "power") or 0
+	msg.post("flight_hud#gui", "ship_status", {
+		hull = hull_max,
+		hull_max = hull_max,
+		power = power_max,
+		power_max = power_max,
+		-- Own world position, for the HUD's X/Y/Z line under the scope (per
+		-- direct instruction: "show x/y/z coordinates below radar").
+		x = pos.x,
+		y = pos.y,
+		z = pos.z,
+	})
+
 	-- FTL jump countdown - started by execute_jump() above (J key, or
 	-- main/flight_map.gui's [JUMP] button), cancelable with K (see
 	-- on_input's "dock" handler, which checks self.jumping first and
@@ -1974,7 +2012,61 @@ function update(self, dt)
 			table.insert(contacts, remote)
 		end
 	end
-	msg.post("flight_hud#gui", "contacts", { own_pos = pos, range = visual_range, contacts = contacts })
+	-- Asteroids plot on that same scope as dim, semi-transparent points (per
+	-- direct instruction: "on the radar show asteroids as semi transparent
+	-- points"). main/asteroid_registry.lua is the current system's spawned
+	-- field, written by main/asteroid_hub.script every time it changes and
+	-- already read here for targeting (Tab/click) - so this is the same
+	-- "already in this system" list, distance-filtered by the ship's own
+	-- visual range exactly like the ship contacts above.
+	-- The radar's own "up": the hull's heading, i.e. where the bow is pointing
+	-- (the ship rotation applied to SHIP_FORWARD, the same bow vector
+	-- ship_local_to_world uses), flattened onto the world X/Z plane and
+	-- normalized - so the scope is drawn ship-relative rather than against the
+	-- world grid (per direct instruction: "items on the radar need to be shown
+	-- relative to the direction of the ship and not relative to the grid
+	-- coordinates"). Flattening it keeps the radar steady while the ship pitches
+	-- or rolls (an X/Z projection of a nose-up bow would shrink to nothing and
+	-- flip the scope), and normalizing keeps the blip spacing in metres.
+	local bow = vmath.rotate(rot, SHIP_FORWARD)
+	local heading = vmath.vector3(bow.x, 0, bow.z)
+	if vmath.length(heading) > 0.001 then
+		self.radar_heading = vmath.normalize(heading)
+	else
+		-- Nose straight up or down: hold the last heading rather than spin the
+		-- scope. (Before the first frame there is none - the HUD falls back to
+		-- world +Z for that one message.)
+		self.radar_heading = self.radar_heading or vmath.vector3(0, 0, 1)
+	end
+
+	local radar_asteroids = {}
+	for _, rock in ipairs(asteroid_registry.asteroids) do
+		if vmath.length(rock.pos - pos) <= visual_range then
+			table.insert(radar_asteroids, rock)
+		end
+	end
+
+	-- Outposts plot on the scope too (per direct instruction: "add outposts") -
+	-- every faction's outpost in this system that is actually standing
+	-- (outpost_position is nil for one that has been destroyed, the same helper
+	-- docking and place_outposts use) and within the same visual range, each
+	-- tagged with whether it is ours so the HUD can colour it like a
+	-- friendly/enemy ship contact. Y is ignored here exactly as it is for the
+	-- other blips (the scope is a flat X/Z plot).
+	local radar_outposts = {}
+	for _, faction in ipairs(OUTPOST_FACTIONS) do
+		local outpost_pos = outpost_position(self.current_system_id, faction)
+		if outpost_pos and vmath.length(outpost_pos - pos) <= visual_range then
+			table.insert(radar_outposts, {
+				pos = outpost_pos,
+				relation = (faction == session.get_faction()) and "friendly" or "enemy",
+			})
+		end
+	end
+	msg.post("flight_hud#gui", "contacts", {
+		own_pos = pos, range = visual_range, heading = self.radar_heading,
+		contacts = contacts, asteroids = radar_asteroids, outposts = radar_outposts,
+	})
 
 	-- Chase camera - see this file's header comment for why position is
 	-- derived from camera_rot rather than lerped independently, and for why

@@ -21,10 +21,16 @@ under main/images/icons/ and (re)writes main/images/icons.atlas to
 match. Re-run this after adding a new module to
 main/data/modules/*.lua and giving it an `icon` field, or after
 changing a design below, rather than hand-editing the PNGs.
+
+The four letterless "Octagon <type> Empty" icons an empty fitting slot
+uses are derived from the hand-provided per-type octagons instead:
+`python3 tools/build_module_icons.py --empty-icons` (see
+build_letterless_empty_icons below).
 """
 import math
 import os
 import random
+import sys
 
 from PIL import Image, ImageChops, ImageDraw
 
@@ -43,6 +49,27 @@ TYPE_OUTLINE_COLOR = {
     "hull": (140, 150, 160, 255),
 }
 OUTLINE_WIDTH = 5
+
+# ---- Octagon silhouette (the slot markers' own shape, S2.8.1) ----
+# The slot markers in main/outpost.gui_script are regular-looking octagons
+# (a square with its corners cut at 45 degrees), and every hand-provided
+# "Octagon *" icon fills the whole 128px tile with that same silhouette and
+# a near-black interior. These vertices match the hand icons exactly
+# (measured off Octagon C.png: the top/bottom flat edges span x 29..98, the
+# left/right flat edges span y 32..96), so a generated icon given this
+# background reads as the same shape as the hand-drawn ones.
+OCTAGON_POINTS = [
+    (29, 0), (98, 0), (127, 32), (127, 96),
+    (98, 127), (29, 127), (0, 96), (0, 32),
+]
+# Generated icons that should sit on a plain black octagon rather than the
+# fully transparent canvas the rest of the set uses - i.e. the ones whose
+# module is shown on the octagon slot markers but which (unlike the
+# hand-provided "Octagon *" art) had no dark backing of their own, so the
+# marker's own colour showed straight through them. Per direct instruction
+# the Asteroid Analyser is the one that needed this.
+OCTAGON_BACKGROUND_ICONS = {"asteroid_analyser"}
+OCTAGON_BACKGROUND_COLOR = (0, 0, 0, 255)
 
 
 def new_canvas():
@@ -272,8 +299,35 @@ def draw_shift_key():
 MANUAL_ICONS = [
     "Octagon W", "Octagon C", "Octagon E", "Octagon H",
     "Octagon Cannon Asteroid", "Octagon Cannon Spaceship",
-    "Octagon Empty", # currently unwired - no slot/module maps to this one yet
+    "Octagon Empty", # the neutral, letterless octagon (currently unwired: every empty
+                      # slot uses its own type's letterless "Octagon <T> Empty" below)
 ]
+
+# ---- Derived letterless empty-slot octagons (per direct instruction) ----
+# Each hand-provided "Octagon W"/"C"/"E"/"H" icon draws its slot TYPE's own
+# letter in the middle of the octagon. Per direct instruction an EMPTY fitting
+# slot shows just the octagon - the type's own colours, but no letter - so
+# these four are DERIVED from those icons rather than being another batch of
+# hand-drawn art: every pixel belonging to the glyph (the bright ones near the
+# middle, plus a small margin for the anti-aliased fringe) is repainted with
+# its nearest non-glyph neighbour's own colour, leaving the octagon's border,
+# fill and gradient completely untouched.
+#
+# Measured on the four sources: glyph pixels live within 36px of the centre and
+# the border ring starts around 56px, so GLYPH_MAX_RADIUS sits safely between
+# the two.
+#
+# Built with: python3 tools/build_module_icons.py --empty-icons
+# (main() only LISTS them, so a later rewrite of icons.atlas keeps them.)
+LETTERLESS_EMPTY_ICONS = [
+    ("Octagon W", "Octagon W Empty"),
+    ("Octagon C", "Octagon C Empty"),
+    ("Octagon E", "Octagon E Empty"),
+    ("Octagon H", "Octagon H Empty"),
+]
+GLYPH_MAX_RADIUS = 48       # px from the centre: past every glyph pixel, short of the border ring
+GLYPH_EDGE_MARGIN = 2       # px of anti-aliased fringe around each glyph pixel, repainted too
+GLYPH_MIN_BRIGHTNESS = 110  # r+g+b: the near-black fill sits near 60, the glyph above 330
 
 # ---- Concrete module icons (plan.md S2.8's current catalog) ----
 # (module_key, slot_type, draw_fn, fill_color) - mining_cannon_basic is
@@ -307,6 +361,10 @@ MODULE_ICONS = [
     ("reinforced_hull_plating_patrol", "hull", draw_hull_silhouette, (100, 190, 150, 255)),  # teal - hull_points + critical_defense
     ("reinforced_armor_plating_patrol", "hull", draw_hull_silhouette, (180, 130, 150, 255)), # mauve - armor + critical_defense
     ("reinforced_composite_plating_patrol", "hull", draw_hull_silhouette, (220, 200, 100, 255)), # gold - all three stats
+    # Hull - repair pair (per direct instruction: one passive boost to the
+    # hull's own repair rate, one active burst of hull points): the passive
+    # booster gets a bright repair-green, the active burst the emergency red.
+    ("hull_repair_booster_patrol", "hull", draw_hull_silhouette, (120, 235, 150, 255)),     # bright green - repair/regeneration
     # Hull - active ability
     ("emergency_hull_repair_patrol", "hull", draw_hull_silhouette, (230, 80, 80, 255)),      # red - emergency/medical association
 
@@ -325,12 +383,74 @@ def save(name, img):
     print("wrote", os.path.relpath(path, ROOT))
 
 
+def strip_letter(img):
+    """The same octagon icon with its type letter painted out (see
+    LETTERLESS_EMPTY_ICONS above). Returns a new image; `img` is not used
+    again."""
+    px = img.load()
+    w, h = img.size
+    cx, cy = (w - 1) / 2.0, (h - 1) / 2.0
+
+    glyph = set()
+    for y in range(h):
+        for x in range(w):
+            if math.hypot(x - cx, y - cy) > GLYPH_MAX_RADIUS:
+                continue
+            r, g, b, a = px[x, y]
+            if a > 40 and (r + g + b) > GLYPH_MIN_BRIGHTNESS:
+                glyph.add((x, y))
+
+    # Grow the mask so the glyph's anti-aliased edge goes with it.
+    for _ in range(GLYPH_EDGE_MARGIN):
+        edge = set()
+        for x, y in glyph:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in glyph:
+                    edge.add((nx, ny))
+        glyph |= edge
+
+    # Repaint every masked pixel with the nearest unmasked (i.e. body/border)
+    # pixel's own colour, so the fill's own gradient is preserved.
+    for x, y in glyph:
+        for radius in range(1, max(w, h)):
+            replacement = None
+            for dx in range(-radius, radius + 1):
+                for dy in range(-radius, radius + 1):
+                    if max(abs(dx), abs(dy)) != radius:
+                        continue
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in glyph:
+                        replacement = px[nx, ny]
+                        break
+                if replacement:
+                    break
+            if replacement:
+                px[x, y] = replacement
+                break
+
+    print("    painted out %d glyph pixels" % len(glyph))
+    return img
+
+
+def build_letterless_empty_icons():
+    """(Re)derives the four letterless empty-slot octagons from the
+    hand-provided per-type icons (see LETTERLESS_EMPTY_ICONS above)."""
+    for source, name in LETTERLESS_EMPTY_ICONS:
+        path = os.path.join(ICONS_DIR, source + ".png")
+        print("reading", os.path.relpath(path, ROOT))
+        save(name, strip_letter(Image.open(path).convert("RGBA")))
+
+
 def main():
     written = []
 
     for key, slot_type, draw_fn, color in MODULE_ICONS:
         img = new_canvas()
-        draw_fn(ImageDraw.Draw(img), color)
+        draw = ImageDraw.Draw(img)
+        if key in OCTAGON_BACKGROUND_ICONS:
+            draw.polygon(OCTAGON_POINTS, fill=OCTAGON_BACKGROUND_COLOR)
+        draw_fn(draw, color)
         save(key, img)
         written.append(key)
 
@@ -348,6 +468,10 @@ def main():
     written.append("key_shift")
 
     written.extend(MANUAL_ICONS)
+    # Derived, not drawn here - built with --empty-icons (see
+    # build_letterless_empty_icons) but listed so rewriting icons.atlas keeps
+    # them in it.
+    written.extend(name for _, name in LETTERLESS_EMPTY_ICONS)
 
     with open(ATLAS_PATH, "w") as f:
         for name in written:
@@ -356,4 +480,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--empty-icons" in sys.argv[1:]:
+        build_letterless_empty_icons()
+    else:
+        main()

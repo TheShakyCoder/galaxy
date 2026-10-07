@@ -88,17 +88,39 @@ M.HULL_MODULES = {
 		ship_class = "Patrol",
 		icon = "reinforced_composite_plating_patrol",
 	},
+	-- Passive counterpart to the active Emergency Hull Repair below (per
+	-- direct instruction: the repair pair should be one PASSIVE module that
+	-- raises the hull's own repair rate and one ACTIVE module that restores
+	-- hull in a burst). Always on, like the plating tiers above; `stats`
+	-- names the ships.lua `data` field it boosts (hull_recovery_per_sec -
+	-- 5/s on every Patrol hull). Same as every other Hull/Engine module, the
+	-- bonus AMOUNT is still undecided (plan.md §2.8.11), so none is given.
+	["hull_repair_booster_patrol"] = {
+		name = "Hull Repair Booster",
+		type = "hull",
+		behavior = "passive",
+		stats = { "hull_recovery_per_sec" },
+		ship_class = "Patrol",
+		icon = "hull_repair_booster_patrol",
+	},
 	-- Real confirmed capability (source wiki: "...grant in-flight hull
 	-- repair ability"), distinct from the passive plating items above -
 	-- an ACTIVE one-shot ability, same footing as computer_modules.lua's
-	-- own Asteroid Analyser. No power_draw/cooldown/wear_per_use or repair
-	-- amount given anywhere real - omitted rather than guessed (plan.md §4).
+	-- own Asteroid Analyser. No power_draw/wear_per_use given anywhere real -
+	-- omitted rather than guessed (plan.md §4) - but per direct instruction
+	-- the SHAPE of the ability is fixed: activating it restores hull points,
+	-- then it goes on cooldown before it can be used again. `repair_amount`
+	-- and `cooldown_s` are PLACEHOLDERS (per direct instruction: "we will
+	-- add accurate details later"), marked as such like asteroids.lua's own
+	-- HULL_PER_METER - not real BSGO figures.
 	["emergency_hull_repair_patrol"] = {
 		name = "Emergency Hull Repair",
 		type = "hull",
-		behavior = "active",
+		behavior = "active", -- no `stats`: a one-shot burst, not a passive stat change
 		ship_class = "Patrol",
 		icon = "emergency_hull_repair_patrol",
+		repair_amount = 200, -- PLACEHOLDER: hull points restored per activation
+		cooldown_s = 60, -- PLACEHOLDER: seconds before it can be used again
 	},
 }
 

@@ -208,6 +208,28 @@ capacity/slots (§2.8) and role, not these inherent stats.
 - FTL Systems formalizes Hydrogen's fuel role (§2.6) — FTL jumps cost Hydrogen per
   light-year, boosting costs Hydrogen per second. This resolves the open TODO on
   whether Hydrogen keeps the fuel mechanic: **yes**, confirmed by this data.
+- **Updated — Hull Points / Hull Recovery / Power / Power Recharge now use real
+  per-ship reference values where one exists (decided, per direct instruction).**
+  These four fields come from §2.13's combat-research pass (`hull`, `power`, `power
+  regen`) and are applied per CHASSIS — each ship's own BSGO counterpart — **not** per
+  size tier:
+  - **`patrol_interceptor`** (= Viper Mk II, §2.13E): **450 hull / 2.5 a second /
+    100 power / 5 a second** — was 650 / 5 / 175 / 6.
+  - **`patrol_assault`** (= **Rhino**; confirmed per direct instruction, and already
+    the source of this ship's purchase price): **715 hull / 150 power / 5 a second**
+    — was 650 / 175 / 6. `hull_recovery_per_sec` stays at the baseline 5 (no real
+    figure published for it). The Rhino is *not* a size-tier reference — it is this
+    one Patrol assault chassis' counterpart.
+  - **Frigate tier** (= the reference's Line ships): **already** carried their own
+    real per-ship numbers (Vanir / Fenrir / Gungnir / Jotunn stat blocks, §2.8.11), so
+    those were left untouched — as was `escort_tactical`, already sourced from the real
+    Liche stat block.
+  - **Every other ship** (`patrol_support`, `patrol_tactical`, `escort_interceptor`,
+    `escort_support`, `escort_assault`) keeps the §2.1.1 baseline above — §2.13
+    records no real hull/power for their own counterparts yet, and inventing one is
+    against §0/§4.
+  Every chassis keeps its own explicit copy in `main/data/ships.lua` (shared by its
+  Accord/Swarm skins, per §2.1.2's one-entry-per-chassis model).
 
 #### 2.1.2 Ship roster (decided — two entries implemented)
 
@@ -228,11 +250,12 @@ class, per direct instruction.
   project deliberately unified onto one shared roster too.
 - **Patrol 1**'s full stat block (§2.1.1's Hull/Engine/FTL/Computer Systems) is now
   populated directly on its own entry (`data`), rather than left as pure inheritance
-  from `ship_classes.lua` — with three deliberate overrides: **Hull Points 600** (vs.
-  the class baseline's 650), **FTL Range 4.5 LY** (vs. 5.5 LY), and **FTL Cost 20
-  Hydrogen/LY** (vs. 30). Every other field currently matches the baseline as-is,
-  pending real per-ship tuning. This is the intended pattern going forward: a ship
-  carries its own full stat data, and only fields that need to differ from its
+  from `ship_classes.lua` — with two deliberate overrides: **FTL Range 4.5 LY** (vs.
+  5.5 LY) and **FTL Cost 20 Hydrogen/LY** (vs. 30). Its Hull/Computer Systems now
+  carry the real Viper Mk II reference figures (§2.1.1's updated note), replacing the
+  old Hull Points 600 override. Every other field currently matches the baseline
+  as-is, pending real per-ship tuning. This is the intended pattern going forward: a
+  ship carries its own full stat data, and only fields that need to differ from its
   class's baseline are actually changed.
 - Robots (§1, computer-managed only) don't need a `faction_skins` entry on
   player-facing ships like this one, since they're never player-selectable.
@@ -244,9 +267,10 @@ class, per direct instruction.
   (that license covers only the modeler's own copyright in the file, not the
   underlying BSG-owned design). `weapon_gui` is still a `<TBD>` placeholder — see §4.
 - **Escort 1** (`escort_1`), added per direct instruction: `class = "Escort"`, stat
-  block is the **unmodified universal baseline** (§2.1.1) with no overrides — unlike
-  Patrol 1's Hull Points override, no specific tuning has been given for this ship
-  yet, so it uses the shared starting point as-is rather than an invented number.
+  block is the **unmodified universal baseline** (§2.1.1) with no overrides — no
+  specific tuning has been given for this ship (nor a real counterpart figure for its
+  Hull/Computer Systems), so it uses the shared starting point as-is rather than an
+  invented number.
   `components`/`slot_positions` are deliberately left **empty** (not guessed) —
   no source slot-count number has been given for Escort the way Patrol 1 had the
   Viper Mk II standard tier, and plan.md's own rule is "don't invent unconfirmed
@@ -307,6 +331,12 @@ column intentionally not yet addressed:
   the Accord names — no ship data entries exist yet for those combinations.
 - The Carrier column for both factions is still open — *Whale Shark*/*Albatross*
   remain illustrative ideas, not addressed in this pass.
+- **Scout** (`patrol_scout` / BSGO Viper III, §2.1.4) is a fifth role the two tables
+  above don't cover yet. **Proposed names** (same fish/bird split): Accord =
+  **Barreleye** (a deep-sea fish whose huge upward-pointing eyes are literally built
+  for spotting things first), Swarm = **Kestrel** (a raptor famous for hovering and
+  scanning the ground) — flag if you want different species. Still needs a model asset
+  before the ship can be added to `ships.lua`.
 - **First ship data entry for this matrix**: `frigate_support` (Support row,
   Frigate size) added to `ships.lua` — Accord = Manta Ray, Swarm = Pelican, both
   `model` still `<TBD>` (see correction note below — a model was briefly wired to
@@ -451,9 +481,8 @@ column intentionally not yet addressed:
     `"cls": "Strike"` — an 11m small strike-fighter, unlike the capital/escort-
     scale sources used so far — "reference-guided interpretation" of a canon
     Colonial strike craft (armored cockpit wedge, stub wings, raised rear engine
-    cluster). Uses the unmodified universal baseline stat block, not Patrol
-    Interceptor's own hull_points=600 override (that override was ship-specific,
-    not Patrol-tier-wide).
+    cluster). Its Hull/Computer Systems use the real **Rhino** reference figures
+    (this ship's own BSGO counterpart, §2.1.1's updated note).
   - **Seventh ship entry, seventh §0 exception**: new `escort_tactical` chassis
     (Tactical row, Escort size) — Swarm = Osprey, wired to `liche.glb`; Accord =
     Lionfish (`model` still `<TBD>`). Same "Cylon" pattern as Pelican's `hel.glb`
@@ -659,6 +688,107 @@ stat block already adopted this way (§2.1.1).
   outpost-screen test harnesses re-run and passing (one harness's hardcoded
   "3 markers" assumption had to be updated to 9 to match).
 
+#### 2.1.3 Ship data schema: `basic` / `advanced` tiers (decided, per direct instruction)
+
+`main/data/ships.lua` now splits each ship's own properties into two sections,
+**`basic`** and **`advanced`**, because most ships can be upgraded to an advanced
+tier. Everything a ship has lives in one of those two sections, **except** the
+fields shared by both tiers, which stay at the top level of the entry:
+
+- **`class`** — the size tier (Patrol/Escort/Frigate/Carrier).
+- **`role`** — the Interceptor/Support/Assault/Tactical role (§2.1.2's naming matrix).
+- **`slot_positions`** — **one** list of every slot on the hull, shared by both tiers
+  (per direct instruction). Each entry carries its own **`tier`** field: `"advanced"`
+  marks a slot only unlocked once the ship has been upgraded; an entry with no `tier`
+  is available from the start. Advanced-only slots are still *shown* on the basic hull
+  — locked/greyed and non-interactive — rather than hidden, and the fitting screen and
+  `flight_hud` marker "locked" state is now driven purely by this flag
+  (`offset.tier == "advanced" and not session.is_ship_advanced(...)`), replacing the
+  old "slot ordinal exceeds the current tier's count" test.
+- **`flight_camera`** and **`faction_skins`** (§2.1.2's per-faction overrides).
+
+Each tier section holds **`price`**, **`data`** and **`components`**:
+
+- **`price`** is an **ordered list of `{ amount, currency }` entries**, one per currency
+  the purchase demands, so a ship can require **more than one currency** at once (direct
+  instruction: a ship that "requires multiple currencies to purchase it"). One currency
+  is the common case and is written as a one-entry list
+  (`{ { amount = 36000, currency = "tope" } }`); a two-currency price is simply two
+  entries. Payment is **all-or-nothing** — `session.can_afford` checks every entry and
+  `session.spend_price` deducts them all or nothing, never part-paid — and the outpost
+  joins the entries for display (`36,000 Tope + 500 Hydrogen`) via its `price_text`
+  helper. Every ship still costs exactly one currency today; adding a second is a change
+  to `main/data/ships.lua` only.
+- **`basic`** — the ship as bought, owned and fitted before any upgrade. Its `price`
+  is the purchase price (`nil` = not for sale, the starter); `data` is the full stat
+  block (§2.1.1); `components` the W/C/E/H slot counts (§2.8). Every `ship.components`
+  / `ship.data` / `ship.price` reference in the codebase is now `ship.basic.components`
+  / `ship.basic.data` / `ship.basic.price`.
+- **`advanced`** — present **only** for a ship that has an advanced tier. A ship
+  without one simply **omits the whole key** (nil), which every existing
+  `if ship.advanced` truthiness test already reads as "no upgrade offered" (direct
+  instruction: "either nil or empty table, whichever works best" — nil is cleaner here).
+  All four Patrol-class ships have one today (see §2.1.4); the Escort and Frigate
+  ships do not (yet).
+- An `advanced` section lists **only the fields that actually change**; anything it
+  leaves unset **falls back to `basic`**. `session.get_ship_data` / `session.ship_stat`
+  merge the advanced block over the basic one (advanced fields win), and
+  `session.get_components` / `outpost.gui_script`'s `effective_components` apply the same
+  rule to slot counts. Each Patrol advanced section lists only the fields that change
+  (§2.1.4) — anything unlisted (e.g. `patrol_interceptor`'s `power_recharge_per_sec`)
+  falls back to the basic block, so a stat the upgrade doesn't touch is never restated.
+- **`advanced.price`** is the **upgrade price**, charged **on top of** whatever the
+  basic ship already cost (direct instruction: **no refund** of that basic price). It
+  replaces the old flat `SHIP_ADVANCE_PRICE` constant, which is now only the fallback
+  for an advanced tier with no price of its own (the fallback is wrapped in the same
+  one-entry list shape); `session.advance_ship` pays every currency it names at once, and
+  the outpost's Advance button/dialog read it per ship. Each Patrol ship now carries a
+  real per-ship upgrade price from `revised-patrol-ships.csv` (§2.1.4) — including one
+  denominated in **Valour**, the PvP currency (§2.6), which `session` now tracks.
+
+A future ship that needs to deviate from its class baseline adds override fields on its
+own `basic.data` / `advanced.data` rather than duplicating a whole stat block. The
+Accord/Swarm skins still share every value except name/model/weapon_gui (§2.1.2).
+
+#### 2.1.4 Revised Patrol-class specs (decided, per direct instruction)
+
+`revised-patrol-ships.csv` (project root) is now the **source of truth for the four
+Patrol-class ships** — every stat, slot count and price — together with their
+**advanced** variants. `main/data/ships.lua` was updated to match it exactly, and
+`tests/revised_patrol_ships_harness.lua` checks the two agree field by field (base and
+advanced rows). It supersedes §2.13's hull/power-only figures for those ships.
+
+- **Stats and slot counts** for `patrol_interceptor` (Viper II), `patrol_support`
+  (Raptor), `patrol_assault` (Rhino) and `patrol_tactical` (Viper VII) are taken as-is
+  from the CSV. `patrol_interceptor` also gains the `role` field it previously lacked.
+- **All four now have an `advanced` section** (previously only the interceptor did),
+  listing only the fields that change — hull/recovery/repair, power, speed and the extra
+  component slots — with everything else falling back to `basic` (§2.1.3).
+- **The Tactical Patrol's advanced price is in Valour** (30,000), the first ship price
+  denominated in the PvP currency (§2.6) rather than Tope. `session` gained a real
+  `valour` balance (starting 0 — nothing awards Valour yet) so the price is checked and
+  paid correctly instead of silently falling through to Tope.
+- **`patrol_scout` (Viper III, Role "Scout") is in the CSV but NOT yet in `ships.lua`**:
+  the CSV leaves its Accord/Swarm skin names blank and there is no model asset for it,
+  while the remote-ship prototype generator (`tools/generate_remote_ship_prototypes.py`)
+  needs a real model path per faction. Its spec is recorded below pending names + asset.
+
+| Ship (BSGO) | Role | Base price | Adv. price | Base W/H/E/C | Adv. W/H/E/C |
+|---|---|---|---|---|---|
+| `patrol_interceptor` (Viper II) | Interceptor | starter (not for sale) | 30,000 Tope | 3/2/4/2 | 4/2/5/2 |
+| `patrol_support` (Raptor) | Support | 75,000 Hydrogen | 30,000 Tope | 3/2/2/4 | 4/2/2/5 |
+| `patrol_assault` (Rhino) | Assault | 36,000 Tope | 40,000 Tope | 4/5/2/2 | 5/5/2/2 |
+| `patrol_tactical` (Viper VII) | Tactical | 45,000 Tope | 30,000 **Valour** | 4/3/3/3 | 5/3/3/3 |
+| `patrol_scout` (Viper III) | Scout | 23,000 Tope | 30,000 Tope | 3/3/3/2 | 4/3/4/2 |
+
+- **Placeholder slot layouts**: the three non-interceptor Patrol hulls now carry the
+  same rows-of-up-to-4 `slot_positions` convention the Frigate hulls use (Weapons /
+  Hull / Computers / Engines bands, odd counts on the centreline, weapon arcs angling
+  outward, advanced-only slots flagged `tier = "advanced"`), so the fitting screen has
+  markers for them. The coordinates are placeholders (§4), not real hull geometry.
+- Still **open**: `patrol_scout`'s model asset (its skin names are now proposed in
+  §2.1.2), and real per-hull slot coordinates.
+
 ### 2.2 Progression
 - Account rank gates ship-tier access (mirrors BSGO's ensign→admiral-style curve, but
   with original rank names).
@@ -713,6 +843,12 @@ three-currency draft):
 
 - Name **Valour** is confirmed (British spelling, per direct instruction) — no
   longer a placeholder.
+- **Valour is now also a ship price**: the Tactical Patrol's advanced tier costs
+  30,000 Valour (`revised-patrol-ships.csv`, §2.1.4), so it is no longer spent only on
+  nuclear ordinance/Carriers. `main/session.lua` tracks a real `valour` balance
+  (starting 0, since nothing awards Valour until the PvP rewards exist); the outpost
+  checks and pays it like Tope/Hydrogen. Its balance is not yet shown in the outpost's
+  always-visible currency row (that needs a new GUI node) — flagged §4.
 - Marque (the premium-tier currency) is **abandoned** — its spend role (ships,
   upgrades, boosters) has folded into Tope, which is now the single non-PvP
   currency. Only two of Marque's former earn sources (selling Water, real-money
@@ -1588,7 +1724,29 @@ module instead of its name as text — an installed module shows its own icon; a
 slot shows a dim outline icon for that slot's type (weapon/computer/engine/hull), so
 it's still clear what kind of module belongs there. The slot-id tag (e.g. "W1") is
 still shown, small, at the top of the marker — that's a slot identifier, not an item
-name, so it stays.
+name, so it stays. Per direct instruction the tag also carries the **flight key**
+that uses the slot, after the id (`W2: Shift+2` for a fitted weapon, `C1: Key 2` for
+an active module; a plain id when nothing usable is fitted). This replaced the
+separate gold key line that used to sit *below* each marker (`hotkey_label`, removed)
+— the slot's identity and its key now read as one label at the top of the marker.
+
+**Hover reveal (decided, per direct instruction).** Hovering a slot marker on the
+Fitting tab shows that slot's **key to press** drawn *inside the marker's own
+octagon* — not in a tooltip above it, which sat in the same area the weapon
+firing-arc wedge is drawn through. A small modifier line (`Shift`) sits over the
+**key itself** (`1`), sized as large as the 74px octagon allows; an active module
+shows its number alone (no modifier), and a slot with no key shows a short state word
+(`Empty`, `Locked` for an advanced-only slot, `No key`). The marker's own module
+**icon is hidden while its key is shown** and restored when the cursor leaves, since
+the icon art covers the marker's whole face — otherwise the key would be drawn over
+it. Same `session.slot_hotkey` resolution as the always-visible tag and the
+in-flight diagram's own tooltip (§2.14). Driven by `update_marker_key` /
+`hide_marker_key` in `main/outpost.gui_script`: two shared text nodes repositioned
+per hover and lifted above the markers with `gui.move_above` after each
+`build_markers` so they always read on top. The key line is auto-fitted with
+`gui.get_text_metrics` (clamped to `[KEY_MIN_SCALE, KEY_MAX_SCALE]`), so the text is
+exactly as big as the octagon permits. Hidden while dragging (the drag has its own
+border/X feedback) and on leaving the Fitting tab.
 
 - **Assets**: `main/images/icons/*.png` + `main/images/icons.atlas`, generated by
   `tools/build_module_icons.py` — flat geometric shapes drawn with basic primitives
@@ -1630,9 +1788,33 @@ name, so it stays.
       `"Octagon Cannon Spaceship"`.
     - `"Octagon Empty.png"` was also supplied but nothing maps to it yet — listed in
       the atlas/`MANUAL_ICONS` for future use, not wired to any slot/module (§4 — don't
-      guess its purpose).
+      guess its purpose). (Still unwired after the empty slots became letterless below:
+      each empty slot uses its own type's letterless octagon, not this neutral one.)
   - Asteroid Analyser (the one computer module) keeps its old procedurally-generated
-    `"asteroid_analyser"` icon — no Octagon-prefixed replacement was provided for it.
+    `"asteroid_analyser"` icon — no Octagon-prefixed replacement was provided for it —
+    but it now gets a **plain black octagon background** (per direct instruction) so
+    it reads like the hand-drawn Octagon icons instead of showing the marker's own
+    colour straight through its transparent corners. The background reuses the hand
+    icons' exact silhouette (`OCTAGON_POINTS` in `tools/build_module_icons.py`,
+    measured off `Octagon C.png`), applied only to the icons listed in
+    `OCTAGON_BACKGROUND_ICONS`.
+- **Empty slots lost their type letter (decided — per direct instruction)**: on the
+  Fitting tab an empty slot now shows just its own octagon — the slot type's own
+  colours, border and fill, but **no letter inside it** — instead of the lettered
+  `"Octagon W"`/`"C"`/`"E"`/`"H"` art the empty-slot mapping above originally used. The
+  four replacements (`"Octagon W Empty"`, `"Octagon C Empty"`, `"Octagon E Empty"`,
+  `"Octagon H Empty"`) are **derived, not redrawn**: `tools/build_module_icons.py
+  --empty-icons` (`build_letterless_empty_icons`) repaints every glyph pixel of the
+  hand-provided original — the bright pixels near the middle, plus a two-pixel
+  anti-aliased fringe — with its nearest non-glyph neighbour's own colour, so the
+  octagon's border ring, its fill and the subtle gradient in it are left untouched
+  (verified pixel by pixel: not one changed pixel lies outside a 52px radius of the
+  centre, and no bright pixel is left inside 48px, on any of the four). The lettered
+  set is still what a TYPE is shown with where the type itself is the point — a module
+  with no icon of its own in the Shop/Owned rows and on the drag ghost
+  (`SLOT_TYPE_ICON`) — and the marker's own small slot-id tag (`"W3"`) is untouched:
+  that tag is how a slot is identified while dragging. The in-flight HUD diagram,
+  which the instruction did not cover, keeps the lettered art.
 - **Component icon display size pinned to the old placeholder size (decided)**: the
   hand-provided Octagon icons are much higher-resolution than the old
   procedurally-generated placeholders (1400×1400 for the four empty-slot icons,
@@ -2639,7 +2821,7 @@ numbers):
   matches SuperShips' own prior note; only search-snippet indexing surfaced the
   real taxonomy/name findings above.
 
-**Implemented**: `main/data/modules/hull_modules.lua` (7 entries) and
+**Implemented**: `main/data/modules/hull_modules.lua` (8 entries) and
 `main/data/modules/engine_modules.lua` (3 entries), Patrol-tier only per direct
 instruction - other classes deferred until they're extrapolated later, same
 "Patrol implemented, other tiers reserved" shape `weapons_autocannons.lua`'s own
@@ -2661,7 +2843,22 @@ combat-cannon naming scale already has.
   got before a real value was supplied, per §0/§4's "don't invent unconfirmed
   numbers" rule. The two real ACTIVE abilities (Emergency Hull Repair, Slide
   Thrusters) carry no power_draw/cooldown/wear_per_use for the same reason.
-- **Icons**: each of the 10 entries now has its own dedicated icon (per direct
+- **Repair pair (decided, per direct instruction)**: hull repair is now TWO
+  purchasable modules, not one - a **passive** `hull_repair_booster_patrol`
+  ("Hull Repair Booster", `stats = {"hull_recovery_per_sec"}`) that raises the
+  hull's own passive repair rate, and the existing **active**
+  `emergency_hull_repair_patrol` that restores hull points in a burst when used.
+  Both fit Patrol and are listed in the outpost Shop like any other module.
+  The active one's `repair_amount` (200) and `cooldown_s` (60) are explicitly
+  labelled PLACEHOLDERS - the ability's SHAPE is fixed (use it to restore hull,
+  then it goes on cooldown) but the real numbers are deliberately deferred
+  (per direct instruction: "we will add accurate details later"), same treatment
+  `asteroids.lua`'s own `HULL_PER_METER` / `M.MIN_HULL` placeholders got.
+  The passive booster also added a **Hull Recovery** line to the Fitting tab's
+  Ship Statistics panel (`main/outpost.gui_script`'s `ship_stats_text`), so the
+  stat it boosts has a real line to flag during a drag-hover - previously the
+  panel only listed stats that existing modules already touched.
+- **Icons**: each of the 11 entries now has its own dedicated icon (per direct
   instruction: "create an icon for all the recently added modules"), generated
   by `tools/build_module_icons.py` - extended with a new `MODULE_ICONS` block
   reusing that script's own existing per-type silhouettes (`draw_hull_silhouette`'s
@@ -3553,6 +3750,182 @@ exactly where they are).
   at the field edges, that moving again re-enables the field, and that `"stop"`
   disables it. The actual on-screen look (mote density/size against the real camera)
   has not been seen in the engine yet.
+
+### 2.16 Dock / launch cooldown (decided — per direct instruction)
+
+Per direct instruction: *"player docks in an outpost or is destroyed and returned
+to an outpost, there needs to be a cool down of 10 seconds before they can launch
+again. If a player reloads the browser or in some other way ends their game then
+the cool down needs to be 60 seconds."*
+
+- **Two lengths**: **10 s** after docking — or after being destroyed and returned to
+  an outpost, deliberately the same rule either way, since both go through
+  `main/player_ship.script`'s `complete_dock()` — and **60 s** when the previous
+  session *ended in space* instead (the browser reloaded, the tab closed, the game
+  quit mid-flight). **Only that case** (decided when the rule was built): a page load
+  while already docked keeps whatever is left of the ordinary 10 s, because the
+  cooldown is persisted in the profile and so cannot be dodged by reloading in the
+  first place — and charging every page load the long one would cost a returning
+  player a minute before their first launch for nothing.
+- **The rules live in `main/session.lua`** (the server-authority rule of §3.2/§3.3),
+  as new operations: `M.dock()` clears the new `flying` flag ("is the ship in
+  space") and stamps `launch_blocked_until` = now + 10; `M.resume()` — called once
+  per page load by `main/profile.lua`, right after the saved profile is restored —
+  clears `flying` and, if that profile said the ship was still in space, stamps
+  now + 60; `M.launch()` refuses (changing nothing) while a cooldown is still
+  running. Both fields are part of the saved profile, so the server replays the
+  whole rule against its own copy: `dock` and `resume` are new entries in `M.OPS`
+  (the `economy` RPC's whitelist, §3.3).
+- **Why `launch` also refuses while `flying`**: docking is the only thing that
+  clears that flag, and docking is exactly what arms the 10 s — so the cooldown
+  cannot be skipped by a client that simply never reports its docking, which is
+  what a purely time-based check would allow. Docking is still a client-reported
+  event (as `arrive_jump` already is), but a launch now always has to be preceded by
+  a docked state the server itself recorded.
+- **Clock**: those timestamps belong to the server, so the rules run on the
+  server's clock — `nakama-server/modules/economy.lua` sets
+  `session.set_clock(nk.time() / 1000)`, and every reply it sends now carries `now`,
+  which the game hands to `session.sync_clock()` to line its own clock up with the
+  server's (the same offset-from-a-reply technique `main/network.lua` already used
+  for a destroyed outpost's `returns_at`). Without it a player could shift the
+  remaining cooldown by changing their machine's clock — the *display* would be
+  wrong, though the server would still refuse the launch.
+- **On screen**: while the cooldown runs, the outpost's **Launch button does
+  nothing** (per direct instruction) and the launch-countdown label that already
+  sits above it counts the remaining seconds down as *"Launch cooldown: N..."*.
+  Only once it elapses does a click start the usual 5 s `LAUNCH_COUNTDOWN_SEC`
+  countdown, so the two never share the label.
+- **Verified standalone, not in-engine**: `tests/launch_cooldown_harness.lua`
+  drives the real `main/session.lua` on a clock the test moves by hand, asserting the
+  fresh-character case (no cooldown, first launch allowed), the 10 s dock window
+  (refused at 9 s, allowed at 10 s, a refusal changing nothing), that a second launch
+  *while flying* is refused, the 60 s in-flight-exit window (refused at 59 s, allowed
+  at 60 s), that a session which ended *docked* only carries the dock cooldown over,
+  that docking can never shorten a cooldown already running, that stored timestamps
+  read correctly once `sync_clock()` has lined the host clock up with the server's,
+  the serialize/restore/reset round trip, and a full server-side replay (`restore` →
+  operation → `serialize`, the shape `economy.lua` uses) proving the cooldown holds
+  when the server applies it. The countdown label's own look while it ticks has not
+  been seen in the engine yet.
+
+### 2.17 Flight HUD: Power / Hull readouts and a circular radar scope (decided — per direct instruction)
+
+Per direct instruction: *"while in flight show the ship power and h Hull points. also
+change the radar display to resemble a circular radar screen found on warships with a
+rotating line."*
+
+**Power / Hull readouts**
+
+- Two new lines on the flight HUD, in a `systems_panel` under the speed panel in the
+  same right-hand column (`main/flight_hud.gui`): caption **POWER** over `current / max`,
+  then caption **HULL** over `current / max`. They are filled by a new `ship_status`
+  message posted by `main/player_ship.script` every frame, next to the `currency` post
+  it already sends (per direct instruction: *"show the amount of currency for each
+  resource"*) — the same "script posts, HUD only formats" split every other readout
+  here uses.
+- **The numbers are the ship's own stats**, read through `session.ship_stat` so an
+  advanced tier's overrides are what an upgraded hull shows: `power` and
+  `hull_points` (`main/data/ships.lua`). **Current == maximum** for both today, because
+  nothing drains power or damages the player's ship yet — combat does not exist (§4) —
+  rather than the readout inventing a number (§0/§4's rule); it is also exactly where a
+  damaged/regenerated value will come from once combat lands. `Hull Recovery`
+  (`hull_recovery_per_sec`) is a *rate*, not a pool, so it stays a Ship-Statistics-only
+  stat (outpost screen).
+- Each line is only rewritten when its text actually changes (the same caching the
+  radar range readout already used), so posting it every frame costs nothing.
+
+**Circular radar scope**
+
+- The radar's own flat projection is unchanged (world-fixed X/Z, ported technique): what
+  that projection is drawn *onto* is now a warship-style circular screen — a filled disc
+  (radius 104px), a bright outer ring on the panel's own 220px edge, two inner range
+  rings (at 1/3 and 2/3 of the radius) and thin cross-hairs. All of it is built once in
+  `init()` as native `TYPE_PIE`/`BOX` nodes — the same technique the outpost screen's
+  octagon slot markers use (`new_octagon_node`) — so there is still no image asset
+  behind the radar.
+- **The scope is drawn SHIP-RELATIVE, not against the world grid (decided — per
+  direct instruction: *"items on the radar need to be shown relative to the direction
+  of the ship and not relative to the grid coordinates"*).** This supersedes the first
+  fix for the same complaint, which rotated the world-fixed projection 180° — the real
+  problem was that a world-fixed scope has no consistent "ahead", so blips read as back
+  to front half the time whatever way it is turned. Now **the hull's own heading is what
+  "up" means**: `main/player_ship.script` flattens the bow direction (`SHIP_FORWARD`
+  under the ship's rotation) onto the world X/Z plane, normalizes it and sends it as
+  `heading` with the `contacts` message; `refresh_radar` rotates each offset into the
+  ship's own frame before scaling it — `across` (starboard positive) draws to the right
+  of centre and `ahead` (bow positive) draws up — for ship contacts and asteroid blips
+  alike. Flattening keeps the scope steady while the hull pitches or rolls (a true X/Z
+  projection of a nose-up bow would collapse and flip the whole display) and
+  normalizing keeps blip spacing in real metres; a nose pointing straight up holds the
+  previous heading, and a message carrying no `heading` at all falls back to world +Z.
+  The radar is therefore **no longer world-fixed** — which is what the reference
+  project's own `project()` does, so that part of the ported technique is deliberately
+  dropped.
+- **The rotating line**: a 60-degree translucent wedge (the fading trail) plus a bright
+  radial leading-edge line, turning **one revolution every 3 seconds** while flying.
+  Both are re-aimed each frame from a single `sweep_deg` (a pie's fill starts at its own
+  local 0 degrees, so the wedge is rotated exactly one arc length behind the line and
+  the line always sits on its leading edge). `apply_sweep` aims them once from `init()`
+  too, so the very first drawn frame is already oriented rather than showing the wedge
+  and line stacked on the +x axis.
+- The player's own centre blip (the authored `radar_center` node) is promoted above the
+  new scope nodes so the translucent face cannot dim it, and the contact dot pool is
+  created after them, so contacts always draw on top of the scope.
+- **Asteroids plot on the scope too** (per direct instruction: *"on the radar show
+  asteroids as semi transparent points"*): `main/player_ship.script` now sends the
+  system's spawned rocks with the same `contacts` message (`asteroids`, its own list,
+  filtered by the same visual range as the ship contacts) — taken from
+  `main/asteroid_registry.lua`, the field `main/asteroid_hub.script` already publishes
+  for targeting, so a rock that has been mined out is already absent from it. The HUD
+  draws them from a second, smaller pool in a dim **semi-transparent** slate
+  (`ASTEROID_POOL_SIZE` 24 dots, 5×5 px, alpha 0.4), created *before* the ship-contact
+  pool so a contact always draws over a rock, with the same projection and edge clamp.
+  Still one message per frame — nothing new to keep in sync.
+- **Outposts plot on the scope too** (per direct instruction: *"add outposts"*): one
+  entry per *standing* outpost of the system within the same visual range —
+  `outpost_position()` already returns nil for a destroyed one, the same helper docking
+  and `place_outposts` use — tagged friendly/enemy and drawn from a third pool that is
+  slightly larger than a ship contact, in the very palette the target brackets use
+  (`RELATION_COLORS`), so a friendly outpost reads like a friendly ship. Draw order is
+  rocks, then outposts, then ship contacts, then the ship's own marker.
+- **A heading marker sits at the centre** (per direct instruction): a filled triangle
+  whose apex points up. It is a 3-vertex pie rotated a quarter turn — a 3-vertex pie
+  puts a vertex at 0° (3 o'clock), same vertex-placement rule the octagon markers
+  document — created last of the scope's own nodes, so the ship always draws over every
+  blip. It replaces the plain 8×8 centre blip that used to be an authored node in
+  `main/flight_hud.gui` (that node is gone). Up is the hull's own heading, which is what
+  makes it a readable reference on the ship-relative scope.
+- **Own X/Y/Z under the scope** (per direct instruction: *"show x/y/z coordinates below
+  radar"*): a `position_value` line added to `main/flight_hud.gui` at the bottom of the
+  right column (under the range readout), fed by `x`/`y`/`z` on the `ship_status`
+  message — the ship's own world position in whole metres, comma-grouped by the same
+  `with_commas` helper the reward toasts use. Its text scale is set to 0.6 in `init` so
+  a six-figure coordinate still fits the column.
+- The sweep only runs while the HUD is up: the whole component is disabled between
+  flights (`init` posts `"disable"`, `complete_dock` hides the HUD), so `update()`
+  simply doesn't run while docked — no extra guard needed.
+- **Verified standalone, not in-engine**: `tests/flight_hud_harness.lua` stubs
+  `gui`/`vmath`/`msg`/`timer` and drives the real script, asserting that the scope is a
+  full disc plus an outer ring on the panel edge plus exactly two inner range rings plus
+  cross-hairs (all centred on the radar), that there is exactly one translucent sweep
+  wedge, that the line stays exactly one arc width ahead of the wedge and turns 120° a
+  second (a full revolution wrapping back to 0), that the Power/Hull lines show
+  `current / max` and are **not** rewritten while the values are unchanged but do update
+  when they change, and that radar contacts still plot inside the circular scope (a
+  contact at half range lands half way out; one beyond range is clamped to the outer
+  ring), that the asteroid blips are a separate, smaller, **semi-transparent** pool
+  which plots in range, clamps at the ring, hides unused blips and hides the whole
+  pool when a message carries no asteroids, that outpost markers are a separate,
+  larger pool coloured friendly-blue/enemy-red, plot correctly (an outpost directly
+  astern sits below centre and a far one clamps to the rim) and hide when a message
+  carries none, that the heading marker is a small bright triangle at the centre with
+  its apex up and is created **after** all three blip pools (i.e. draws on top of
+  them), that the X/Y/Z line formats as `X 1,234   Y -57   Z 789`, and that no plotted
+  blip ever lands outside the scope. Writing it caught a real bug before it ever reached
+  the engine: `new_scope_pie`
+  was initially declared *after* `init()`, which Lua resolves as a nil global at call
+  time — a guaranteed runtime error on the first flight — so the helper now sits above
+  `init()` alongside `apply_sweep`.
 
 ## 3. Technical Architecture
 

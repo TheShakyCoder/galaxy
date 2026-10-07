@@ -23,6 +23,9 @@ images {
   image: "/main/images/icons/reinforced_composite_plating_patrol.png"
 }
 images {
+  image: "/main/images/icons/hull_repair_booster_patrol.png"
+}
+images {
   image: "/main/images/icons/emergency_hull_repair_patrol.png"
 }
 images {
@@ -72,4 +75,16 @@ images {
 }
 images {
   image: "/main/images/icons/Octagon Empty.png"
+}
+images {
+  image: "/main/images/icons/Octagon W Empty.png"
+}
+images {
+  image: "/main/images/icons/Octagon C Empty.png"
+}
+images {
+  image: "/main/images/icons/Octagon E Empty.png"
+}
+images {
+  image: "/main/images/icons/Octagon H Empty.png"
 }

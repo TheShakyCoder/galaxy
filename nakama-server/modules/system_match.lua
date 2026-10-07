@@ -493,9 +493,14 @@ local function asteroids_message(state)
 	return nk.json_encode({ now = nk.time(), rocks = rocks })
 end
 
+-- Validates against the ship's BASIC-tier boost speed (main/data/ships.lua's
+-- `basic.data`, §2.1.3). An advanced tier's overrides live under
+-- `advanced.data`, but this validator has no access to a player's per-ship
+-- advanced state and no advanced tier changes boost speed today - revisit if
+-- one ever does.
 local function max_speed(ship_id)
 	local ship = ships.SHIPS[ship_id]
-	return (ship and ship.data and ship.data.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED
+	return (ship and ship.basic and ship.basic.data and ship.basic.data.boost_speed_m_per_sec) or DEFAULT_BOOST_SPEED
 end
 
 local function number_fields_ok(t)

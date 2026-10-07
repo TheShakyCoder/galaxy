@@ -50,6 +50,15 @@ M.equipped_skins = nil
 -- server needs these to price FTL jumps itself - see M.start_jump().
 M.current_system = nil
 M.pending_jump = nil -- { to = system_id, cost = hydrogen } or nil
+-- Dock / launch cooldown state (§2.16, per direct instruction): `flying` is
+-- true between M.launch() and the next M.dock() - the "is the ship in space"
+-- flag - and `launch_blocked_until` is the earliest time a launch may leave
+-- the outpost, on the SERVER's clock (see the clock hooks below). Both are
+-- persisted with the profile, so the cooldown is part of the save rather than
+-- of one browser session: that is the whole point of it, a reload must not
+-- hand the player an instant relaunch.
+M.flying = nil
+M.launch_blocked_until = nil
 -- Progression (main/data/ranks.lua): total XP, the systems arrived in so far
 -- ({ [system_id] = true }, for first-arrival XP) and today's assignments
 -- ({ date = "YYYY-MM-DD", list = { { id, progress, done } } }). Only the
@@ -92,6 +101,16 @@ local MODULE_SELL_REFUND = 50
 -- (M.get_ship_price below). The sell refund is still a flat placeholder.
 local SHIP_SELL_REFUND = 250
 local SHIP_ADVANCE_PRICE = 500
+
+-- `valour`: the PvP-only currency (§2.6), spent on nuclear ordinance and
+-- Carrier-class ships - and, per revised-patrol-ships.csv, the upgraded
+-- Tactical Patrol's price (the first ship price denominated in Valour,
+-- plan.md §2.1.4). Nothing awards Valour yet (PvP rewards are unimplemented),
+-- so STARTING_VALOUR is 0: the balance is tracked and checked for real, it
+-- just cannot be earned or meaningfully spent until that lands. Flagged in
+-- plan.md §2.6/§4.
+M.valour = nil
+local STARTING_VALOUR = 0
 
 -- `water`/`iron`/`hydrogen`: the player's balances of the three RESOURCES
 -- (§2.6) - distinct from Tope/Valour, which are the two CURRENCIES. Per
@@ -148,6 +167,8 @@ local STARTING_GIFT_SLOTS = {
 local function start_character(faction)
 	M.faction = faction
 	M.owned_ships = { STARTING_SHIP_ID }
+	M.flying = nil -- a brand-new character has nothing to cool down (§2.16)
+	M.launch_blocked_until = nil
 	M.active_ship_id = STARTING_SHIP_ID
 	M.advanced_ships = {}
 	M.owned_skins = {}
@@ -161,6 +182,7 @@ local function start_character(faction)
 	M.owned = {}
 	M.loadout = {}
 	M.tope = STARTING_TOPE
+	M.valour = STARTING_VALOUR
 	M.water = STARTING_WATER
 	M.iron = STARTING_IRON
 	M.hydrogen = STARTING_HYDROGEN
@@ -194,17 +216,60 @@ function M.get_assignments()
 	return M.assignments
 end
 
+-- The stat block in effect for `ship_id`: the basic tier's `data`, overlaid
+-- with the advanced tier's own `data` once the ship has been upgraded
+-- (main/data/ships.lua's `basic`/`advanced` sections). The advanced section
+-- only lists the fields that actually change, so anything it leaves unset
+-- falls back to basic - the whole point of splitting the two tiers this way.
+function M.get_ship_data(ship_id)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return nil
+	end
+	local basic_data = (ship.basic and ship.basic.data) or {}
+	if not (M.is_ship_advanced(ship_id) and ship.advanced and ship.advanced.data) then
+		return basic_data
+	end
+	local merged = {}
+	for field, value in pairs(basic_data) do
+		merged[field] = value
+	end
+	for field, value in pairs(ship.advanced.data) do
+		merged[field] = value
+	end
+	return merged
+end
+
+-- A single stat of `ship_id`, by the same basic/advanced fallback rule as
+-- get_ship_data above - but without building a merged table, because this is
+-- the one the flight-time callers use (sensor range, FTL range/cost, flight
+-- stats), several of them every frame.
+function M.ship_stat(ship_id, field)
+	local ship = ships.SHIPS[ship_id]
+	if not ship then
+		return nil
+	end
+	if M.is_ship_advanced(ship_id) and ship.advanced and ship.advanced.data then
+		local value = ship.advanced.data[field]
+		if value ~= nil then
+			return value
+		end
+	end
+	return ship.basic and ship.basic.data and ship.basic.data[field]
+end
+
 -- Slot counts in effect for `ship_id`: its advanced tier's once upgraded,
--- otherwise its normal `components` (main/data/ships.lua).
+-- otherwise its normal `components` (main/data/ships.lua's `basic`/
+-- `advanced` sections).
 function M.get_components(ship_id)
 	local ship = ships.SHIPS[ship_id]
 	if not ship then
 		return {}
 	end
 	if M.is_ship_advanced(ship_id) and ship.advanced then
-		return ship.advanced
+		return ship.advanced.components or (ship.basic and ship.basic.components) or {}
 	end
-	return ship.components or {}
+	return (ship.basic and ship.basic.components) or {}
 end
 
 -- Hotkeys (per direct instruction, fixed per slot): weapon slot Wn is
@@ -277,6 +342,10 @@ function M.get_tope()
 	return M.tope
 end
 
+function M.get_valour()
+	return M.valour
+end
+
 function M.get_water()
 	return M.water
 end
@@ -297,8 +366,7 @@ local DEFAULT_FTL_COST_PER_LY = 30 -- the class baseline in main/data/ships.lua
 
 -- Hydrogen per light-year jumped by `ship_id` (its FTL Cost stat).
 function M.ftl_cost_per_ly(ship_id)
-	local ship = ships.SHIPS[ship_id]
-	return (ship and ship.data and ship.data.ftl_cost_hydrogen_per_ly) or DEFAULT_FTL_COST_PER_LY
+	return M.ship_stat(ship_id, "ftl_cost_hydrogen_per_ly") or DEFAULT_FTL_COST_PER_LY
 end
 
 -- The system whose outpost the player is at whenever they're not flying:
@@ -335,15 +403,118 @@ function M.outpost_available(system_id, faction)
 	return true
 end
 
+-- ---------------------------------------------------------------------------
+-- Dock / launch cooldown (§2.16, per direct instruction)
+-- ---------------------------------------------------------------------------
+
+-- Seconds before a launch may leave the outpost, counted from the moment the
+-- ship docked - or, being destroyed, was returned to one. Both go through
+-- main/player_ship.script's complete_dock(), which calls M.dock() below, so
+-- the two cases are deliberately the same length.
+local DOCK_LAUNCH_COOLDOWN = 10
+
+-- Seconds before a launch may leave the outpost when the previous session
+-- ended IN SPACE instead of docking: the player reloaded the browser, closed
+-- the tab, or quit mid-flight. M.resume() applies it. Deliberately only that
+-- case (decided): a page load while already docked keeps whatever is left of
+-- the ordinary dock cooldown, which the profile already carries - the longer
+-- one is for ending the game rather than docking it.
+local SESSION_END_LAUNCH_COOLDOWN = 60
+
+-- The host's own clock, in seconds since the Unix epoch. A hook rather than a
+-- direct os.time() call for the same reason M.set_outpost_availability exists
+-- above: the tests drive both cooldowns with a clock they control instead of
+-- waiting. os.time is standard Lua (not an engine API), so both hosts still
+-- work unconfigured, and nakama-server/modules/economy.lua sets it to the
+-- server's own nk.time() so the server's timestamps are the authoritative
+-- ones.
+local clock = os.time
+function M.set_clock(fn)
+	clock = fn or os.time
+end
+
+-- The host clock's offset from the SERVER's clock, in seconds. The cooldown
+-- timestamps live in the saved profile, which only the server writes, so the
+-- game has to read and write them on the server's clock - never the local one,
+-- which a player can simply change. M.sync_clock() sets this from any reply
+-- carrying the server's own time (nakama-server/modules/economy.lua's `now`,
+-- in milliseconds); until one arrives the offset is 0, which is close enough
+-- because both clocks are Unix times.
+local clock_offset = 0
+function M.sync_clock(server_ms)
+	if server_ms then
+		clock_offset = server_ms / 1000 - clock()
+	end
+end
+
+-- The SERVER's clock in seconds - what every cooldown timestamp is stored in.
+local function server_now()
+	return clock() + clock_offset
+end
+
+-- Seconds until the player may launch again; 0 while no cooldown is running.
+-- The outpost screen (main/outpost.gui_script) gates its Launch button on
+-- this, and the server re-checks it through M.launch() below.
+function M.launch_cooldown_left()
+	if not M.launch_blocked_until then
+		return 0
+	end
+	return math.max(0, M.launch_blocked_until - server_now())
+end
+
+-- Is the ship out in space right now (as opposed to docked at an outpost)?
+function M.is_flying()
+	return M.flying and true or false
+end
+
 -- Takes off from the outpost the player is at (M.docked_system()). A jump
 -- that was paid for but never arrived (the game was closed mid-countdown)
--- is refunded.
+-- is refunded. Refused - and nothing at all changes - while the dock cooldown
+-- is still running (§2.16), or while the ship is already in space: docking is
+-- the only thing that clears M.flying, and docking is exactly what arms the
+-- cooldown, so this is what makes the cooldown impossible to skip by simply
+-- never reporting the dock. Callers stay docked (main/player_ship.script's
+-- start_flight() puts the outpost screen back up).
 function M.launch()
+	if M.flying or M.launch_cooldown_left() > 0 then
+		return false
+	end
 	if M.pending_jump then
 		M.hydrogen = M.hydrogen + M.pending_jump.cost
 		M.pending_jump = nil
 	end
 	M.current_system = M.docked_system()
+	M.flying = true
+	return true
+end
+
+-- The ship is docked at an outpost again: either a completed docking
+-- (main/player_ship.script's docking countdown) or being destroyed and
+-- respawning at one (its ship_destroyed()) - both route through complete_dock(),
+-- which is where this is called from. Clears M.flying (so a launch is allowed
+-- again) and starts the ordinary dock cooldown. Never SHORTENS a cooldown
+-- already running, so a dock during the long session-end one cannot cut it
+-- back down to ten seconds.
+function M.dock()
+	M.flying = false
+	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + DOCK_LAUNCH_COOLDOWN)
+	return true
+end
+
+-- A returning player's session begins at an outpost: main/profile.lua calls
+-- this once the saved profile has been loaded (and only for a profile that
+-- already has a faction). If that profile still says the ship was IN SPACE when
+-- the last session ended - the game was reloaded, closed or quit mid-flight -
+-- ending the game must not be a free relaunch, so the much longer session-end
+-- cooldown replaces the dock one (per direct instruction: 60 seconds). A
+-- session that ended docked arms nothing new: whatever is left of the dock
+-- cooldown is already in the profile.
+function M.resume()
+	local was_flying = M.flying and true or false
+	M.flying = false -- at the outpost from here on, whoever ends the session next
+	if was_flying then
+		M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + SESSION_END_LAUNCH_COOLDOWN)
+	end
 	return true
 end
 
@@ -362,8 +533,7 @@ function M.jump_cost(system_id)
 	if not star_systems.can_enter(system_id, M.faction) then
 		return nil
 	end
-	local ship = ships.SHIPS[M.active_ship_id]
-	local range_ly = (ship and ship.data and ship.data.ftl_range_ly) or DEFAULT_FTL_RANGE_LY
+	local range_ly = M.ship_stat(M.active_ship_id, "ftl_range_ly") or DEFAULT_FTL_RANGE_LY
 	local distance = star_systems.distance(M.current_system, system_id)
 	if not star_systems.in_ftl_range(distance, star_systems.ly_to_map_units(range_ly)) then
 		return nil
@@ -415,21 +585,23 @@ function M.get_module_sell_refund()
 	return MODULE_SELL_REFUND
 end
 
--- Purchase price of `ship_id`: amount, currency ("tope" or "hydrogen"), or
--- nil for a ship that isn't for sale (the starter ship).
+-- Purchase price of `ship_id`: an ordered list of { amount, currency }
+-- entries - one per currency the purchase demands, so a ship can require
+-- more than one currency at once (main/data/ships.lua's own header) - or
+-- nil for a ship that isn't for sale (the starter ship). Callers test
+-- affordability with M.can_afford and pay with M.spend_price rather than
+-- reading a single amount/currency.
 function M.get_ship_price(ship_id)
 	local ship = ships.SHIPS[ship_id]
-	local price = ship and ship.price
-	if not price then
-		return nil
-	end
-	return price.amount, price.currency
+	return (ship and ship.basic and ship.basic.price) or nil
 end
 
 -- The balance a price in `currency` is paid from.
 function M.get_balance(currency)
 	if currency == "hydrogen" then
 		return M.hydrogen
+	elseif currency == "valour" then
+		return M.valour
 	end
 	return M.tope
 end
@@ -438,8 +610,19 @@ function M.get_ship_sell_refund()
 	return SHIP_SELL_REFUND
 end
 
-function M.get_ship_advance_price()
-	return SHIP_ADVANCE_PRICE
+-- The upgrade price of `ship_id` (main/data/ships.lua's `advanced.price`):
+-- an ordered list of { amount, currency } entries, same shape as
+-- M.get_ship_price above. Charged ON TOP of whatever the basic ship already
+-- cost - no refund of that basic price (direct instruction). Falls back to
+-- the flat SHIP_ADVANCE_PRICE placeholder (as a one-entry list) for a ship
+-- whose advanced tier has no price of its own yet.
+function M.get_ship_advance_price(ship_id)
+	local ship = ship_id and ships.SHIPS[ship_id]
+	local price = ship and ship.advanced and ship.advanced.price
+	if not price then
+		return { { amount = SHIP_ADVANCE_PRICE, currency = "tope" } }
+	end
+	return price
 end
 
 -- Spends `amount` Tope if (and only if) the player can afford it —
@@ -453,8 +636,56 @@ local function spend_tope(amount)
 	return true
 end
 
+-- Spends `amount` of `currency` ("tope", "hydrogen" or "valour") if (and
+-- only if) the player can afford it - returns false and changes nothing
+-- otherwise. Anything that isn't one of those three falls through to Tope,
+-- same as before this gained a Valour branch (every price in
+-- main/data/ships.lua names a real currency, so that path is unreachable in
+-- practice).
+local function spend(amount, currency)
+	if currency == "hydrogen" then
+		if M.hydrogen < amount then
+			return false
+		end
+		M.hydrogen = M.hydrogen - amount
+		return true
+	elseif currency == "valour" then
+		if (M.valour or 0) < amount then
+			return false
+		end
+		M.valour = (M.valour or 0) - amount
+		return true
+	end
+	return spend_tope(amount)
+end
+
 local function add_tope(amount)
 	M.tope = M.tope + amount
+end
+
+-- Can the player pay EVERY entry in `price` (an ordered { amount, currency }
+-- list, main/data/ships.lua)? False as soon as any one currency is short -
+-- a multi-currency price is all-or-nothing, never partially paid.
+function M.can_afford(price)
+	for _, part in ipairs(price or {}) do
+		if (M.get_balance(part.currency) or 0) < part.amount then
+			return false
+		end
+	end
+	return true
+end
+
+-- Pays every entry in `price` at once (all-or-nothing): spends nothing and
+-- returns false if any entry is unaffordable, otherwise deducts every entry
+-- and returns true. `spend` above is the single-currency primitive.
+function M.spend_price(price)
+	if not M.can_afford(price) then
+		return false
+	end
+	for _, part in ipairs(price) do
+		spend(part.amount, part.currency)
+	end
+	return true
 end
 
 -- Kept as the existing accessor name (used throughout the outpost
@@ -486,16 +717,16 @@ end
 
 -- Upgrades an OWNED ship to its advanced tier in place - one-way (direct
 -- instruction: "once a ship has been advanced it cannot be returned back
--- to the basic model"), so there's no M.revert_ship counterpart. Spends
--- get_ship_advance_price() Tope (a flat placeholder, see STARTING_TOPE's
--- comment). Refuses (returns false, spending nothing) if the ship isn't
--- owned, is already advanced, or the player can't afford it. Deliberately
--- does NOT check whether main/data/ships.lua even has an `advanced` table
--- for this ship_id - same division of responsibility as every other
--- session function here (M.purchase_ship doesn't check ships.SHIPS either):
--- session.lua tracks state by id only, the outpost screen (which already
--- `require`s ships.lua) is what decides whether the Advance option is
--- even offered for a given ship.
+-- to the basic model"), so there's no M.revert_ship counterpart. Refuses
+-- (returns false, spending nothing) if the ship isn't owned, is already
+-- advanced, or the player can't afford it. Spends that ship's own
+-- advanced-tier price (get_ship_advance_price, main/data/
+-- ships.lua), in whatever currency it names. Deliberately does NOT check
+-- whether main/data/ships.lua even has an `advanced` table for this ship_id
+-- - same division of responsibility as every other session function here
+-- (M.purchase_ship doesn't check ships.SHIPS either): session.lua tracks
+-- state by id only, the outpost screen (which already `require`s ships.lua)
+-- is what decides whether the Advance option is even offered for a ship.
 function M.advance_ship(ship_id)
 	if not M.is_ship_owned(ship_id) then
 		return false
@@ -506,7 +737,8 @@ function M.advance_ship(ship_id)
 	if M.is_ship_advanced(ship_id) then
 		return false
 	end
-	if not spend_tope(SHIP_ADVANCE_PRICE) then
+	local price = M.get_ship_advance_price(ship_id)
+	if not M.spend_price(price) then
 		return false
 	end
 	M.advanced_ships[ship_id] = true
@@ -523,23 +755,20 @@ function M.select_ship(ship_id)
 end
 
 -- Adds `ship_id` to owned ships if not already owned, paying its
--- get_ship_price() in Tope or Hydrogen. Returns false, spending nothing, if
--- the ship isn't for sale, is already owned, or the player can't afford it.
+-- get_ship_price() - every currency the price names, all at once (a
+-- multi-currency price is all-or-nothing). Returns false, spending nothing,
+-- if the ship isn't for sale, is already owned, or the player can't afford
+-- the whole price.
 function M.purchase_ship(ship_id)
-	local amount, currency = M.get_ship_price(ship_id)
-	if not amount or M.is_ship_owned(ship_id) then
+	local price = M.get_ship_price(ship_id)
+	if not price or M.is_ship_owned(ship_id) then
 		return false
 	end
 	if M.get_level() < M.ship_level_required(ship_id) then
 		return false
 	end
-	if M.get_balance(currency) < amount then
+	if not M.spend_price(price) then
 		return false
-	end
-	if currency == "hydrogen" then
-		M.hydrogen = M.hydrogen - amount
-	else
-		M.tope = M.tope - amount
 	end
 	table.insert(M.owned_ships, ship_id)
 	return true
@@ -723,18 +952,11 @@ function M.install(slot, instance_id)
 	return true
 end
 
--- Slot counts in effect for the active ship: its `advanced` tier once
--- advanced, otherwise `components` (same rule as main/outpost.gui_script's
--- effective_components()).
+-- Slot counts in effect for the active ship - just get_components above
+-- (its advanced tier's once advanced, otherwise its basic `components`),
+-- so this can never drift from what the outpost screen shows.
 local function active_slot_counts()
-	local ship = ships.SHIPS[M.active_ship_id]
-	if not ship then
-		return {}
-	end
-	if M.is_ship_advanced(M.active_ship_id) and ship.advanced then
-		return ship.advanced
-	end
-	return ship.components or {}
+	return M.get_components(M.active_ship_id)
 end
 
 -- Is `slot` (e.g. "W2") a real, usable slot on the active ship?
@@ -829,6 +1051,7 @@ function M.serialize()
 		loadout = M.loadout,
 		next_instance_id = next_instance_id,
 		tope = M.tope,
+		valour = M.valour,
 		water = M.water,
 		iron = M.iron,
 		hydrogen = M.hydrogen,
@@ -836,6 +1059,8 @@ function M.serialize()
 		equipped_skins = M.equipped_skins,
 		current_system = M.current_system,
 		pending_jump = M.pending_jump,
+		flying = M.flying,
+		launch_blocked_until = M.launch_blocked_until,
 		xp = M.xp,
 		visited = M.visited,
 		assignments = M.assignments,
@@ -854,6 +1079,7 @@ function M.restore(data)
 	M.loadout = data.loadout or M.loadout
 	next_instance_id = data.next_instance_id or next_instance_id
 	M.tope = data.tope or M.tope
+	M.valour = data.valour or M.valour
 	M.water = data.water or M.water
 	M.iron = data.iron or M.iron
 	M.hydrogen = data.hydrogen or M.hydrogen
@@ -861,6 +1087,8 @@ function M.restore(data)
 	M.equipped_skins = data.equipped_skins or {}
 	M.current_system = data.current_system or M.current_system
 	M.pending_jump = data.pending_jump
+	M.flying = data.flying or nil
+	M.launch_blocked_until = data.launch_blocked_until or nil
 	M.xp = data.xp or 0
 	M.visited = data.visited or M.visited
 	M.assignments = data.assignments
@@ -870,8 +1098,9 @@ end
 function M.reset()
 	M.faction, M.owned_ships, M.active_ship_id, M.advanced_ships = nil, nil, nil, nil
 	M.owned, M.loadout, M.owned_skins, M.equipped_skins = nil, nil, nil, nil
-	M.tope, M.water, M.iron, M.hydrogen = nil, nil, nil, nil
+	M.tope, M.valour, M.water, M.iron, M.hydrogen = nil, nil, nil, nil, nil
 	M.current_system, M.pending_jump = nil, nil
+	M.flying, M.launch_blocked_until = nil, nil
 	M.xp, M.visited, M.assignments = 0, nil, nil
 	next_instance_id = 1
 end
@@ -889,7 +1118,7 @@ end
 -- nothing). Wrapped here in one place rather than in each function, so a
 -- new rule only needs adding to this list.
 M.OPS = {
-	"choose_faction", "launch", "start_jump", "cancel_jump", "arrive_jump",
+	"choose_faction", "launch", "dock", "resume", "start_jump", "cancel_jump", "arrive_jump",
 	"advance_ship", "select_ship", "purchase_ship", "sell_ship",
 	"purchase_skin", "equip_skin",
 	"purchase", "upgrade", "install", "uninstall", "sell",

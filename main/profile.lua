@@ -59,6 +59,12 @@ local function send_next()
 			retry_wait = RETRY_DELAY
 			return
 		end
+		-- Every timestamp in the profile - the dock/launch cooldown above all
+		-- (§2.16) - is stored on the SERVER's clock, so line session.lua's own
+		-- clock up with it before any of it is read or compared. economy.lua
+		-- sends its clock (`now`, milliseconds) with every reply, refused ones
+		-- included.
+		session.sync_clock(response.now)
 		if response.ok then
 			table.remove(queue, 1)
 			-- e.g. first arrival in a system: XP, assignment progress
@@ -109,6 +115,13 @@ function M.load(callback)
 		session.set_on_change(nil)
 		if data and data.faction then
 			session.restore(data)
+			-- A returning player's session starts at an outpost: if the
+			-- profile says they were still in space when the last one ended,
+			-- this arms the long session-end launch cooldown (§2.16). Queued
+			-- as an operation like any other change, so the server re-applies
+			-- it authoritatively (its reply also adopts the profile and its
+			-- own clock - the `now` in M.record's reply).
+			session.resume()
 		else
 			session.reset()
 		end
