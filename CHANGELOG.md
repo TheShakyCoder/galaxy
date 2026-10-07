@@ -4,6 +4,18 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.4.0-alpha.3] - 2026-10-07
+
+### Flight
+- **Fixed the flight HUD's radar being mirrored left-to-right.** The scope turned a
+  ship's own frame onto the screen with `cross(up, forward)` for its across axis, which
+  is the pilot's *left* rather than starboard — a reflection, and a reflection reverses
+  the sense of any rotation, so yawing the ship swept the blips the wrong way round.
+  Across is now `cross(forward, up)`, the same handedness the chase camera itself looks
+  through (it faces down the hull's own bow, so the ship's starboard is world -X when
+  the bow points along +Z). The bow is still up and asteroid, contact and outpost blips
+  all use the corrected projection.
+
 ## [0.4.0-alpha.2] - 2026-10-07
 
 ### Flight

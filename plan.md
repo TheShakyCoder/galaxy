@@ -3861,6 +3861,17 @@ rotating line."*
   The radar is therefore **no longer world-fixed** — which is what the reference
   project's own `project()` does, so that part of the ported technique is deliberately
   dropped.
+- **The `across` axis was mirrored at first (fixed — per direct instruction: *"when
+  rotating the ship L/R the radar rotates the opposite way to what it should"*).**
+  `refresh_radar`'s first cut projected across as `cross(up, forward)` = `(hz, -hx)`,
+  which is the pilot's **left**, not starboard: it reflected the whole scope
+  left-to-right, and a reflection reverses the sense of any rotation, so yawing the hull
+  swept the blips the wrong way round. Starboard is `cross(forward, up)` = `(-hz, hx)`,
+  because the chase camera looks straight down the hull's own bow (a Defold camera looks
+  down its own local -Z, so `camera_target_rot` carries the extra `YAW_180` that also
+  swaps the camera's X axis) — verified against `player_ship.script`'s own `project()`,
+  which builds the real view-projection and so is the ground truth for what the pilot
+  actually sees. `ahead` (`d·bow`, drawn up) was already right and is unchanged.
 - **The rotating line**: a 60-degree translucent wedge (the fading trail) plus a bright
   radial leading-edge line, turning **one revolution every 3 seconds** while flying.
   Both are re-aimed each frame from a single `sweep_deg` (a pie's fill starts at its own

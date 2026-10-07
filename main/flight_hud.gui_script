@@ -758,15 +758,25 @@ local function refresh_radar(self, message)
 	local scale = RADAR_RADIUS / range
 
 	-- A world position -> where it sits on the scope: first rotated into the
-	-- ship's own frame (across = + to starboard, ahead = + toward the bow;
-	-- starboard is up x forward, i.e. (hz, -hx)), then scaled onto the radius.
+	-- ship's own frame (across = + to starboard, ahead = + toward the bow),
+	-- then scaled onto the radius. Starboard is forward x up, i.e. (-hz, hx)
+	-- for a heading of (hx, hz) - NOT up x forward: the chase camera looks
+	-- straight down the hull's own bow (player_ship.script's camera_target_rot,
+	-- where the +Z nose needs the extra YAW_180 flip because a Defold camera
+	-- looks down its own local -Z), and that 180 degree yaw puts the camera's
+	-- right - so the pilot's own starboard - on the hull's -X. An object at
+	-- world +X is therefore off the PORT side when the bow points along +Z.
+	-- (hz, -hx) used to sit here, which is the pilot's LEFT: it mirrored the
+	-- whole scope left-to-right, so yawing the hull swept the blips the wrong
+	-- way round (per direct instruction: "when rotating the ship L/R the radar
+	-- rotates the opposite way to what it should").
 	-- Contacts are only ever sent within `range` in the first place
 	-- (player_ship.script filters that), so the edge clamp is just a safety
 	-- margin against float error, not a real "friendly past range" case like
 	-- the reference project has (no faction-based always-shown exception here).
 	local function scope_position(world)
 		local dx, dz = world.x - own_pos.x, world.z - own_pos.z
-		local px = (dx * hz - dz * hx) * scale -- across: starboard right of centre
+		local px = (dz * hx - dx * hz) * scale -- across: + starboard, drawn right of centre
 		local py = (dx * hx + dz * hz) * scale -- ahead: the bow is up
 		local len = math.sqrt(px * px + py * py)
 		if len > RADAR_RADIUS then

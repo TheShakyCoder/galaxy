@@ -243,7 +243,9 @@ check("asteroid blips are semi-transparent", (function()
 	return true
 end)())
 check("asteroid blips are smaller than contacts", rocks[1].size.x < dots[1].size.x)
--- Bow pointing along world +Z, so "up" on the scope is +Z and starboard is +X.
+-- Bow pointing along world +Z, so "up" on the scope is +Z. The chase camera
+-- looks straight down that bow (camera_target_rot in player_ship.script), so
+-- the pilot's starboard is world -X and world +X is off the PORT side.
 on_message(self, "contacts", {
 	own_pos = { x = 0, y = 0, z = 0 },
 	heading = { x = 0, y = 0, z = 1 },
@@ -256,13 +258,16 @@ on_message(self, "contacts", {
 	},
 })
 local first, second = dots[1], dots[2]
-check("near contact plots at half range", math.abs(first.pos.x - (RADAR_CENTER.x + RADAR_RADIUS * 0.5)) < 1e-6)
+check("near contact plots at half range to port", math.abs(first.pos.x - (RADAR_CENTER.x - RADAR_RADIUS * 0.5)) < 1e-6)
 -- Ship-relative orientation (per direct instruction: blips are shown relative to
 -- the direction of the ship, not to the world grid): with the bow along +Z,
--- +X is off the starboard side, so it draws to the RIGHT.
-check("world +X plots to starboard", first.pos.x > RADAR_CENTER.x)
-check("far contact is clamped to the outer ring",
-	math.abs(math.abs(second.pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6)
+-- +X is off the port side, so it draws to the LEFT. (The mirror of this is the
+-- bug the shell reported: "when rotating the ship L/R the radar rotates the
+-- opposite way to what it should".)
+check("world +X plots to port", first.pos.x < RADAR_CENTER.x)
+check("far contact is clamped to the rim, on the side it is actually on",
+	math.abs(math.abs(second.pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6
+	and second.pos.x < RADAR_CENTER.x)
 check("every dot stays inside the scope", (function()
 	for _, d in ipairs(dots) do
 		if d.enabled then
@@ -277,8 +282,9 @@ end)())
 local rock1, rock2 = rocks[1], rocks[2]
 check("an asteroid at half range plots half way out", math.abs(rock1.pos.y - (RADAR_CENTER.y + RADAR_RADIUS * 0.5)) < 1e-6)
 check("world +Z plots above centre", rock1.pos.y > RADAR_CENTER.y)
-check("an out-of-range asteroid is clamped to the outer ring",
-	math.abs(math.abs(rock2.pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6)
+check("an out-of-range asteroid is clamped to the rim",
+	math.abs(math.abs(rock2.pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6
+	and rock2.pos.x > RADAR_CENTER.x)
 check("asteroids stay inside the scope", (function()
 	for _, r in ipairs(rocks) do
 		if r.enabled then
@@ -300,8 +306,8 @@ check("no asteroids in range hides every blip", (function()
 end)())
 
 -- The same two positions with the ship now pointing along world +X: the scope
--- turns with the hull, so what was off the starboard side is now dead AHEAD
--- (top of the scope) and what was ahead is now off the PORT side (left).
+-- turns with the hull, so what was off the port side is now dead AHEAD (top of
+-- the scope) and what was ahead is now off the starboard side (right).
 on_message(self, "contacts", {
 	own_pos = { x = 0, y = 0, z = 0 },
 	heading = { x = 1, y = 0, z = 0 },
@@ -312,8 +318,8 @@ on_message(self, "contacts", {
 check("turning the ship turns the scope: +X is now dead ahead",
 	math.abs(dots[1].pos.x - RADAR_CENTER.x) < 1e-6
 	and math.abs(dots[1].pos.y - (RADAR_CENTER.y + RADAR_RADIUS * 0.5)) < 1e-6)
-check("and what was ahead is now to port",
-	math.abs(rocks[1].pos.x - (RADAR_CENTER.x - RADAR_RADIUS * 0.5)) < 1e-6
+check("and what was ahead is now to starboard",
+	math.abs(rocks[1].pos.x - (RADAR_CENTER.x + RADAR_RADIUS * 0.5)) < 1e-6
 	and math.abs(rocks[1].pos.y - RADAR_CENTER.y) < 1e-6)
 
 -- A message with no heading at all (an older sender, or a hull pointing straight
@@ -327,12 +333,13 @@ check("no heading falls back to world +Z", dots[1].pos.x == RADAR_CENTER.x
 
 -- ---- Outposts on the scope (per direct instruction: "add outposts") ----
 -- (Plotted by the first contacts message above, with the bow along +Z: an
--- outpost directly astern is below centre, one far off to port clamps to the
--- rim.)
+-- outpost directly astern is below centre, one far off to starboard clamps to
+-- the rim.)
 check("an outpost astern plots below centre", math.abs(outposts[1].pos.x - RADAR_CENTER.x) < 1e-6
 	and math.abs(outposts[1].pos.y - (RADAR_CENTER.y - RADAR_RADIUS * 0.5)) < 1e-6)
-check("a far outpost is clamped to the outer ring",
-	math.abs(math.abs(outposts[2].pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6)
+check("a far outpost is clamped to the rim, on the side it is actually on",
+	math.abs(math.abs(outposts[2].pos.x - RADAR_CENTER.x) - RADAR_RADIUS) < 1e-6
+	and outposts[2].pos.x > RADAR_CENTER.x)
 check("a friendly outpost is coloured friendly (blue)", outposts[1].color.z > 0.9)
 check("an enemy outpost is coloured enemy (red)", outposts[2].color.x > 0.9)
 check("unused outpost markers are hidden", outposts[3] ~= nil and outposts[3].enabled == false)
