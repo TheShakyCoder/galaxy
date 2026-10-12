@@ -66,6 +66,7 @@ vmath = {
 		return setmetatable({ x = axis.x * s, y = axis.y * s, z = axis.z * s, w = math.cos(half) }, quat)
 	end,
 	quat_from_to = function() return quat.identity() end,
+	conj = function(q) return setmetatable({ x = -q.x, y = -q.y, z = -q.z, w = q.w }, quat) end,
 	slerp = function(_, a) return a end,
 	length = vlen,
 	dot = function(a, b) return a.x * b.x + a.y * b.y + a.z * b.z end,

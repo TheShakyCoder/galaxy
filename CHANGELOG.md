@@ -1,8 +1,24 @@
 # Changelog
 
 All notable changes to Galaxy. Versions follow [Semantic Versioning](https://semver.org);
-alpha milestones carry an `-alpha.N` label. The current version lives in
-`main/version.lua` (see "Versioning" in the README).
+pre-release milestones carry a label (`-alpha.N`, then `-beta`). The current version lives
+in `main/version.lua` (see "Versioning" in the README).
+
+## [0.5.0-beta] - 2026-10-12
+
+### Flight
+- **The flight camera can be rotated around your ship**. Hold the **left mouse
+  button** and move the mouse to swing the chase camera around the hull — drag right
+  to turn the view right, drag down to look down, and keep going to go all the way
+  round. A click still targets whatever is under the cursor (the pick now happens on
+  release, and only if you never dragged more than a few pixels), so the two share
+  the button.
+- **Two seconds after you stop moving the camera, it returns by itself.** With a
+  target selected, the camera sweeps around until your ship is between it and the
+  target, so the target sits directly beyond your ship; with no target it eases back
+  to the usual view behind your tail. The camera never snaps — it eases round at the
+  same rate it follows a turn — and normal chase behaviour is untouched until you
+  actually drag the camera. Picking a target on its own never moves the camera.
 
 ## [0.4.0-alpha.5] - 2026-10-12
 

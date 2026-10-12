@@ -374,6 +374,41 @@ local CAMERA_DEFAULT_DISTANCE = 12
 local CAMERA_DEFAULT_HEIGHT = 4
 local CAMERA_FOLLOW_SPEED = 3.0
 
+-- Manual camera orbit (per direct instruction: "using the left mouse button
+-- when in flight mode, the camera can be rotated around the ship"): holding
+-- LMB and moving the mouse swings the camera around the ship, and once the
+-- player has stopped moving it for CAMERA_ORBIT_RETURN_DELAY the camera
+-- makes its own way back - to the plain rear chase view if nothing is
+-- targeted, or to a rotation that puts the ship BETWEEN the camera and the
+-- target if something is (see camera_aim_at() below and update()'s camera
+-- block). The whole feature is dormant until the player actually orbits by
+-- hand: normal chase behaviour is untouched until the first drag.
+--
+-- Radians of camera rotation per pixel of cursor movement. Both axes share
+-- one rate so a circular drag swings the camera at a constant speed.
+local CAMERA_ORBIT_YAW_PER_PIXEL = 0.008
+local CAMERA_ORBIT_PITCH_PER_PIXEL = 0.008
+-- How far the manual orbit may pitch up/down, in radians - stopped short of
+-- straight up/down (pi/2) so the camera's view direction is never exactly
+-- parallel to its own up vector, where the horizon it renders becomes
+-- undefined.
+local CAMERA_ORBIT_MAX_PITCH = 1.4 -- ~80 degrees
+-- How long the camera sits still after the player's last manual movement
+-- before it starts easing back on its own (per direct instruction:
+-- "countdown two seconds").
+local CAMERA_ORBIT_RETURN_DELAY = 2.0
+-- A press only counts as a camera drag (rather than a click-to-target) once
+-- the cursor has moved this far from where the button went down - the same
+-- click-versus-drag split, and the same threshold, as the outpost screen's
+-- own Ships-grid drag-to-scroll (main/outpost.gui_script's
+-- DRAG_CLICK_THRESHOLD), so a plain click still targets exactly as before.
+local CAMERA_ORBIT_DRAG_THRESHOLD = 6
+-- Steepest ship->target slope the returned camera will aim along, as a
+-- ratio of vertical to horizontal offset: past this (a target almost
+-- straight overhead or underfoot) the aim direction is flattened to it so
+-- the camera keeps a sane horizon instead of rolling over. tan(60 degrees).
+local CAMERA_AIM_MAX_SLOPE = 1.732
+
 -- How fast Y's Follow Friend eases heading toward pure pursuit of its
 -- target each frame (update()'s follow_friend rotation block) - same
 -- shape/purpose as CAMERA_FOLLOW_SPEED above, just for the ship's own
@@ -385,6 +420,63 @@ local function camera_distance_height(ship_id)
 	local ship = ships.SHIPS[ship_id]
 	local fc = ship and ship.flight_camera
 	return (fc and fc.distance) or CAMERA_DEFAULT_DISTANCE, (fc and fc.height) or CAMERA_DEFAULT_HEIGHT
+end
+
+-- The camera rotation that puts the ship BETWEEN the camera and
+-- `target_pos` (per direct instruction: "if a target is selected reverse the
+-- camera back to the ship being in between the camera and the target"): the
+-- camera's own forward is aimed along the ship->target direction, so the
+-- camera position derived from it further down (back along -forward, i.e.
+-- on the opposite side of the ship from the target) ends up with the target
+-- directly beyond the ship in frame.
+--
+-- Built as the shortest-arc rotation from the plain chase view's own forward
+-- onto that direction (vmath.quat_from_to). That keeps the horizon upright
+-- for the ordinary case - a target roughly at the ship's own altitude or off
+-- to one side - because the arc's axis stays horizontal or vertical there.
+-- Returns `chase_rot` unchanged if the target is where the ship already is
+-- (nothing to aim at).
+local function camera_aim_at(pos, chase_rot, target_pos)
+	local dir = target_pos - pos
+	-- Flatten an over-steep aim first (see CAMERA_AIM_MAX_SLOPE) - a target
+	-- almost directly overhead would otherwise leave the shortest arc with
+	-- an arbitrary roll, exactly the degenerate case vmath.quat_from_to's
+	-- own single-vector axis can't resolve.
+	local horizontal = math.sqrt(dir.x * dir.x + dir.z * dir.z)
+	local max_y = horizontal * CAMERA_AIM_MAX_SLOPE
+	if dir.y > max_y then
+		dir.y = max_y
+	elseif dir.y < -max_y then
+		dir.y = -max_y
+	end
+	if vmath.length(dir) < 0.001 then
+		return chase_rot
+	end
+	local look = vmath.normalize(dir)
+	local chase_forward = vmath.rotate(chase_rot, CAMERA_FORWARD)
+	-- vmath.quat_from_to is also degenerate for two (near-)opposite vectors:
+	-- a target almost exactly BEHIND the ship, where every 180-degree axis is
+	-- as good as any other. Every answer is a legitimately "ship between
+	-- camera and target" view there, so take the plain 180-degree yaw.
+	if vmath.dot(chase_forward, look) < -0.9999 then
+		return vmath.quat_axis_angle(UP, math.pi) * chase_rot
+	end
+	return vmath.quat_from_to(chase_forward, look) * chase_rot
+end
+
+-- The yaw/pitch pair (radians, about the camera's own UP/RIGHT - the same
+-- parametrisation update()'s camera block applies as an offset) that turns
+-- `base` into `camera_rot` right now. Used to seed a fresh manual orbit from
+-- wherever the camera already is - most importantly the target-facing view
+-- the automatic return can leave it in - so grabbing the mouse continues
+-- from the view the player is looking at instead of first swinging the
+-- camera back around behind the ship. Read off the offset's own forward
+-- vector: for Ry(yaw) * Rx(pitch) that vector is
+-- (-cos(pitch) * sin(yaw), sin(pitch), -cos(pitch) * cos(yaw)).
+local function camera_orbit_angles(base, camera_rot)
+	local forward = vmath.rotate(vmath.conj(base), vmath.rotate(camera_rot, CAMERA_FORWARD))
+	local pitch = math.asin(math.max(-1, math.min(1, forward.y)))
+	return math.atan2(-forward.x, -forward.z), pitch
 end
 
 -- Throttle: the desired speed is one of main/flight_throttle.lua's ten
@@ -426,6 +518,11 @@ function init(self)
 	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
 	self.time_since_rotation_input = 0 -- seconds since the last pitch/yaw input - see AUTO_LEVEL_DELAY
 	self.camera_rot = nil -- nil = "snap on next update", same convention the reference uses
+	self.camera_orbit_active = false -- whether the player has orbited the camera by hand this flight - the automatic return (see CAMERA_ORBIT_RETURN_DELAY) only ever engages once they have, so the plain chase view stays exactly as it was until then
+	self.camera_orbit_yaw = 0 -- current manual orbit offset from the chase rotation, radians about the camera's own up - see update()'s camera block
+	self.camera_orbit_pitch = 0 -- ...and about its own right
+	self.camera_orbit_idle = 0 -- seconds since the last manual camera movement - counts up toward CAMERA_ORBIT_RETURN_DELAY
+	self.camera_press = nil -- the in-flight LMB press ({ x, y, last_x, last_y, dragged }), or nil - see on_input's "touch" handler
 	self.near_outpost = false
 	self.docking = false
 	self.dock_time_left = 0
@@ -494,6 +591,11 @@ local function start_flight(self)
 	self.angular_velocity = vmath.vector3()
 	self.time_since_rotation_input = 0
 	self.camera_rot = nil
+	self.camera_orbit_active = false -- a fresh launch starts on the plain rear chase view - see init
+	self.camera_orbit_yaw = 0
+	self.camera_orbit_pitch = 0
+	self.camera_orbit_idle = 0
+	self.camera_press = nil
 	self.near_outpost = false
 	self.docking = false
 	self.dock_time_left = 0
@@ -605,6 +707,11 @@ local function arrive_at_system(self, system_id)
 	go.set_position(pos)
 	go.set_rotation(rot)
 	self.camera_rot = nil -- snap the chase camera to the new position/rotation instead of slerping from wherever it was before the jump (same convention start_flight() already uses for the exact same "ship just teleported" case)
+	self.camera_orbit_active = false -- ...and drop any manual camera orbit with it: the offset is expressed relative to the ship's own rotation, so carrying it across a jump would leave the camera at an angle off the new arrival heading
+	self.camera_orbit_yaw = 0
+	self.camera_orbit_pitch = 0
+	self.camera_orbit_idle = 0
+	self.camera_press = nil
 
 	msg.post("asteroid_hub#script", "spawn_field", { system_id = system_id })
 	msg.post("flight_hud#gui", "system_changed", { text = "SYSTEM: " .. star_systems.SYSTEMS[system_id].name })
@@ -1506,7 +1613,53 @@ function on_input(self, action_id, action)
 		-- swallow everything else (flight keys, dock, throttle, camera,
 		-- ...) while the map's open, rather than letting any of it fall
 		-- through to the normal handling below.
+		-- No camera drag can span the map: its own release would be
+		-- swallowed here too, leaving the button "held" forever - so drop
+		-- any press already in flight instead.
+		self.camera_press = nil
 		return true
+	end
+	if action_id == nil then
+		-- Unbound mouse movement arrives with action_id == nil but still
+		-- carries live x/y - the same event main/outpost.gui_script's own
+		-- drag-to-scroll is built on. With LMB held that movement orbits the
+		-- camera around the ship (per direct instruction: "using the left
+		-- mouse button when in flight mode, the camera can be rotated around
+		-- the ship"); see update()'s camera block for the offsets' effect.
+		local press = self.camera_press
+		if press then
+			if not press.dragged
+				and math.sqrt((action.x - press.x) ^ 2 + (action.y - press.y) ^ 2) > CAMERA_ORBIT_DRAG_THRESHOLD then
+				-- Far enough from the press to be a drag, not a click. Seed the
+				-- offsets from wherever the camera currently is (camera_rot is
+				-- the live, already-eased one) so the view continues from what
+				-- the player is looking at rather than jumping to an angle
+				-- measured from the plain chase view.
+				press.dragged = true
+				if self.camera_rot then
+					-- The chase rotation the offsets are measured against, rebuilt
+					-- exactly as update()'s camera block derives it (the ship's
+					-- live rotation plus the -Z-camera 180 flip).
+					local chase_rot = go.get_rotation() * YAW_180
+					self.camera_orbit_yaw, self.camera_orbit_pitch = camera_orbit_angles(chase_rot, self.camera_rot)
+				end
+				self.camera_orbit_active = true
+			end
+			if press.dragged then
+				-- One accumulated delta per movement event: dragging the mouse
+				-- right turns the view right, dragging it down looks down (the
+				-- usual third-person mouse-look sense of "rotating the camera
+				-- around the ship"). Pitch is clamped - see
+				-- CAMERA_ORBIT_MAX_PITCH.
+				self.camera_orbit_yaw = self.camera_orbit_yaw - (action.x - press.last_x) * CAMERA_ORBIT_YAW_PER_PIXEL
+				self.camera_orbit_pitch = math.max(-CAMERA_ORBIT_MAX_PITCH, math.min(
+					CAMERA_ORBIT_MAX_PITCH,
+					self.camera_orbit_pitch - (action.y - press.last_y) * CAMERA_ORBIT_PITCH_PER_PIXEL))
+				self.camera_orbit_idle = 0 -- restart the two-second countdown
+			end
+			press.last_x, press.last_y = action.x, action.y
+		end
+		return false
 	end
 	if action_id == hash("pitch_up") then
 		self.input.pitch_up = not action.released
@@ -1571,9 +1724,21 @@ function on_input(self, action_id, action)
 			target_nearest(self, "friendly")
 		end
 	elseif action_id == hash("touch") then
-		-- left-click: target whatever is under the cursor
+		-- LMB: a plain click targets whatever is under the cursor; holding it
+		-- and moving the mouse orbits the camera instead (see the
+		-- action_id == nil branch above). Both start on the same press, so
+		-- the target is only picked on RELEASE and only if the cursor never
+		-- left CAMERA_ORBIT_DRAG_THRESHOLD of where the button went down -
+		-- the same click-versus-drag split main/outpost.gui_script's own
+		-- Ships grid uses. The release position is used for the pick (not the
+		-- press position): they only differ by at most that threshold.
 		if action.pressed then
-			pick_target(self, action.x, action.y)
+			self.camera_press = { x = action.x, y = action.y, last_x = action.x, last_y = action.y, dragged = false }
+		elseif action.released and self.camera_press then
+			if not self.camera_press.dragged then
+				pick_target(self, action.x, action.y)
+			end
+			self.camera_press = nil
 		end
 	elseif action_id == hash("toggle_guns") then
 		-- G (BSGO): all weapons on, or all off if any are on
@@ -2122,7 +2287,36 @@ function update(self, dt)
 	-- camera_target_rot needs the extra YAW_180 (this hull's nose is at
 	-- local +Z, but a Defold camera looks down its own local -Z - without
 	-- the flip the camera would face away from the ship it's chasing).
-	local camera_target_rot = rot * YAW_180
+	-- ...plus the manual orbit (on_input's LMB drag, see CAMERA_ORBIT_*):
+	-- while the player is driving it, an extra yaw/pitch offset is composed
+	-- on top of that chase rotation in the camera's OWN frame, so the camera
+	-- swings around the ship from wherever the chase view had it. Once the
+	-- last manual movement is CAMERA_ORBIT_RETURN_DELAY old the offset stops
+	-- being applied at all and camera_target_rot goes back to being purely
+	-- derived - the ordinary rear chase with nothing targeted, or, with a
+	-- target locked, a rotation aimed along the ship->target direction so the
+	-- ship sits BETWEEN the camera and the target (camera_aim_at above).
+	-- Both are reached through the same slerp as everything else here: the
+	-- camera eases back around the ship rather than snapping.
+	local chase_rot = rot * YAW_180
+	local camera_target_rot = chase_rot
+	if self.camera_orbit_active then
+		self.camera_orbit_idle = self.camera_orbit_idle + dt
+		if self.camera_orbit_idle < CAMERA_ORBIT_RETURN_DELAY then
+			camera_target_rot = chase_rot
+				* vmath.quat_axis_angle(UP, self.camera_orbit_yaw)
+				* vmath.quat_axis_angle(RIGHT, self.camera_orbit_pitch)
+		else
+			if target then
+				camera_target_rot = camera_aim_at(pos, chase_rot, target.pos)
+			end
+			-- The offsets have served their purpose - cleared so the next drag
+			-- re-seeds them from the view it finds rather than inheriting a
+			-- stale angle (see on_input's own seeding).
+			self.camera_orbit_yaw = 0
+			self.camera_orbit_pitch = 0
+		end
+	end
 	if self.camera_rot == nil then
 		self.camera_rot = camera_target_rot
 	else

@@ -5,13 +5,12 @@
 -- it's out of date).
 --
 -- Semantic Versioning (https://semver.org) with a pre-release label while
--- the game is in alpha: MAJOR.MINOR.PATCH-alpha.N. To release, bump this,
--- add a CHANGELOG.md entry, run tools/sync_server_rules.py, commit, and tag
--- the commit vX.Y.Z (or vX.Y.Z-alpha.N while pre-release). See README.md
--- "Versioning".
+-- the game is pre-release: MAJOR.MINOR.PATCH-alpha.N, then -beta. To release,
+-- bump this, add a CHANGELOG.md entry, run tools/sync_server_rules.py, commit,
+-- and tag the commit v<version> (e.g. v0.5.0-beta). See README.md "Versioning".
 
 local M = {}
 
-M.VERSION = "0.4.0-alpha.5"
+M.VERSION = "0.5.0-beta"
 
 return M

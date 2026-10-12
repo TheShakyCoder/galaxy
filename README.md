@@ -29,9 +29,9 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   are planned.
 - **Outposts**: buy and sell ships, weapons and modules, and fit them into your
   ship's weapon, computer, engine and hull slots by drag and drop.
-- **Flight**: third-person chase camera, a ten-segment throttle (0 = no speed,
-  9 = top speed) with boost, self-levelling, and speeds in real metres per
-  second.
+- **Flight**: third-person chase camera you can grab and orbit around your ship
+  with the left mouse button, a ten-segment throttle (0 = no speed, 9 = top speed)
+  with boost, self-levelling, and speeds in real metres per second.
 - **Star map**: 58 systems named after real stars, with Sol as the Accord home and
   Polaris as the Swarm home. You FTL-jump between them within your ship's jump
   range, which costs Hydrogen.
@@ -41,7 +41,8 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 - **Progression**: earn XP by exploring new systems, analysing asteroids and
   attacking enemy outposts, and from three daily assignments. XP gives a level
   and a faction rank (naval for the Accord, avian for the Swarm); Escorts need
-  level 5 and Frigates level 10. The game server awards all XP.
+  level 5 and Frigates level 10 (temporarily all classes are level 1 — see
+  [`TEMPORARY-DEV-STATE.md`](TEMPORARY-DEV-STATE.md)). The game server awards all XP.
 - **Asteroid Analyser**: a Computer module. Press P to analyse every asteroid
   within 400 m: they pulse for two seconds, then turn the colour of what
   they're made of (red inert rock, yellow hydrogen, purple iron, blue
@@ -76,6 +77,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | Tab | Cycle through targets in sensor range (ships, outposts, asteroids), nearest first |
 | X / F1 | Target the nearest enemy / nearest friendly |
 | Left-click | Target whatever is under the cursor |
+| Left-click + drag (hold and move) | Orbit the camera around your ship. Two seconds after you stop, it returns by itself: to your target with your ship in the way, or to the rear of your ship if you have no target |
 | C | Clear the target |
 | G | All weapons on, or all off |
 | T | Match target's speed |
@@ -87,6 +89,10 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | 1–9 | Use the active module in that Computer/Engine/Hull slot (numbered C1…, then E1…, then H1…; the Fitting tab shows each slot's key) |
 | P | Asteroid Analyser (if fitted): reveal what every asteroid within 400 m is made of |
 | Mouse wheel | In flight: throttle up / down one segment. In the outpost screens: scroll the lists |
+
+The camera orbit is a drag, not a click: the left mouse button only starts orbiting
+once you move the cursor more than a few pixels from where you pressed, and the click
+itself still targets whatever is under it (on release, so a drag never targets).
 
 Desired speed is ten segments, 0 (no speed) to 9 (the ship's own top speed): the
 mouse wheel, =/− and Q/E all set the segment, and the ship then accelerates or
@@ -107,6 +113,12 @@ for features that aren't built yet.
 2. **Run the game.** Open `game.project` in the Defold editor (1.13.1) and choose
    **Project → Build**. The editor fetches the dependencies (Nakama and
    WebSocket) on first build.
+
+If you develop against the website's DDEV setup (the `laravel` project next door) you don't
+need the editor for that step: `ddev start` / `ddev restart` there builds the game for you,
+using the editor's own build tool, and refreshes both the HTML5 bundle `play.ddev.site`
+serves and the desktop engine `tools/run_windowed.sh` launches. `tools/build_game.sh` is the
+script that does it — run it directly for a build without a restart.
 
 Players sign in with a play token from the website. For local builds, run the
 website locally (DDEV, see its README), register the local server there once
@@ -150,11 +162,11 @@ repo). For the full setup, required secrets and troubleshooting, see
 
 ## Versioning
 
-Galaxy uses [Semantic Versioning](https://semver.org). Alpha milestones carry an
-`-alpha.N` label while the game is in alpha (`0.3.0-alpha.1`, `0.3.0-alpha.2`, ...); a
-small fix bumps the patch version (`0.3.1`), and a bigger step bumps the minor version
-(`0.4.0`). Beta and `1.0.0` come later. Changes are listed in
-[`CHANGELOG.md`](CHANGELOG.md).
+Galaxy uses [Semantic Versioning](https://semver.org). Pre-release milestones carry a
+label: `-alpha.N` while the game was in alpha (`0.3.0-alpha.1`, `0.3.0-alpha.2`, ...) and
+`-beta` for the beta (`0.5.0-beta`). A small fix bumps the patch version (`0.3.1`) and a
+bigger step bumps the minor version (`0.4.0`) — the beta move was a minor step, `0.4.0` to
+`0.5.0`. `1.0.0` comes later. Changes are listed in [`CHANGELOG.md`](CHANGELOG.md).
 
 The version lives in one place, `main/version.lua`. The game shows it on the login screen,
 and the server gets a copy through `tools/sync_server_rules.py`. If a player's game and the
@@ -190,7 +202,8 @@ nakama-server/        Nakama + Postgres (local and Coolify compose files)
 deploy/, Dockerfile   web build and nginx config
 docs/                 deployment guide
 tools/                build/check scripts for models, icons and themes, plus the
-                      release helpers (rules sync, website version check)
+                      release helpers (rules sync, website version check) and the
+                      local dev build (build_game.sh, run by laravel's ddev hook)
 plan.md               full design document and open questions
 ```
 
