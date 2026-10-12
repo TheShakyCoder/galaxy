@@ -1090,3 +1090,7 @@ embedded_instances {
     z: 1.0
   }
 }
+
+instances { id: "space_sky" prototype: "/main/space.go" }
+
+instances { id: "space_wisps" prototype: "/main/space_wisps.go" }

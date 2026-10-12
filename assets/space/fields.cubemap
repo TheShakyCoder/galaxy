@@ -1,0 +1,6 @@
+right: "/assets/space/right.png"
+left: "/assets/space/left.png"
+top: "/assets/space/top.png"
+bottom: "/assets/space/bottom.png"
+front: "/assets/space/front.png"
+back: "/assets/space/back.png"

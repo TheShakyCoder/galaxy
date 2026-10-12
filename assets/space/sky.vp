@@ -1,0 +1,13 @@
+#version 140
+in highp vec3 position;
+out highp vec3 direction;
+uniform vs_uniforms {
+    highp mat4 sky_view;
+    highp mat4 sky_projection;
+};
+void main() {
+    direction = position;
+    // Translation is deliberately discarded. Depth is at infinity.
+    vec4 clip = sky_projection * vec4(mat3(sky_view) * position, 1.0);
+    gl_Position = clip.xyww;
+}

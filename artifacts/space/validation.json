@@ -1,0 +1,13 @@
+{
+  "cube_edge_pairs": 12,
+  "systems": 58,
+  "png_bytes": 4053955,
+  "rgba8_mip_bytes": 33554424,
+  "sky_draw_calls": 1,
+  "wisp_draw_calls": 1,
+  "sky_triangles": 12,
+  "wisp_triangles": 16,
+  "wisp_vertex_bytes": 1152,
+  "deterministic_rebuild": true,
+  "passed": true
+}

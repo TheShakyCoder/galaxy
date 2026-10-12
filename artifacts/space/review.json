@@ -1,0 +1,126 @@
+{
+  "base": "6d1f0a546d484ebf2a67862e4c2d52c51a953190",
+  "engine": "Defold 1.13.1",
+  "sky_texture_compiled_bytes": 25166199,
+  "sky_texture_gzip_estimate_bytes": 11888184,
+  "new_resource_archive_bytes": 14008501,
+  "new_resources": [
+    {
+      "path": "/assets/space/fields.texturec",
+      "bytes": 25166199,
+      "archive_bytes": 14000468
+    },
+    {
+      "path": "/assets/space/sky.bufferc",
+      "bytes": 568,
+      "archive_bytes": 98
+    },
+    {
+      "path": "/assets/space/sky.materialc",
+      "bytes": 300,
+      "archive_bytes": 264
+    },
+    {
+      "path": "/assets/space/sky.meshc",
+      "bytes": 99,
+      "archive_bytes": 76
+    },
+    {
+      "path": "/assets/space/wisp.bufferc",
+      "bytes": 142,
+      "archive_bytes": 63
+    },
+    {
+      "path": "/assets/space/wisp.materialc",
+      "bytes": 134,
+      "archive_bytes": 125
+    },
+    {
+      "path": "/assets/space/wisp.meshc",
+      "bytes": 78,
+      "archive_bytes": 66
+    },
+    {
+      "path": "/main/space.goc",
+      "bytes": 68,
+      "archive_bytes": 68
+    },
+    {
+      "path": "/main/space.scriptc",
+      "bytes": 559,
+      "archive_bytes": 340
+    },
+    {
+      "path": "/main/space_profiles.luac",
+      "bytes": 1727,
+      "archive_bytes": 1036
+    },
+    {
+      "path": "/main/space_wisps.goc",
+      "bytes": 75,
+      "archive_bytes": 75
+    },
+    {
+      "path": "/main/space_wisps.scriptc",
+      "bytes": 2801,
+      "archive_bytes": 1392
+    },
+    {
+      "path": "/render/space.luac",
+      "bytes": 1790,
+      "archive_bytes": 929
+    },
+    {
+      "path": "/shader_-6708268518907514762.spc",
+      "bytes": 6045,
+      "archive_bytes": 2102
+    },
+    {
+      "path": "/shader_1352188638983363210.spc",
+      "bytes": 3456,
+      "archive_bytes": 1399
+    }
+  ],
+  "texture_memory_rgb8_mips_bytes": 25165818,
+  "texture_memory_rgba8_mips_upper_bytes": 33554424,
+  "native_review": {
+    "viewport": [
+      1920,
+      1080
+    ],
+    "system_picker_acknowledgements": 58,
+    "screenshots": [
+      "before",
+      "sol",
+      "polaris",
+      "wolf_359",
+      "antares",
+      "deneb"
+    ],
+    "checked": [
+      "six view directions",
+      "old/new",
+      "travel/stop",
+      "automatic rotation",
+      "ship overlay open/close"
+    ],
+    "console_errors_or_warnings": 0
+  },
+  "builds": {
+    "offline_html5": "passed",
+    "full_game_html5": "passed",
+    "bob_note": "Temporary directory cleanup warnings after successful bundling"
+  },
+  "regressions": [
+    "starfield_harness",
+    "flight_hud_harness",
+    "flight_throttle_harness",
+    "flight_speed_harness"
+  ],
+  "not_tested": [
+    "live multiplayer",
+    "mobile/low-end GPU performance",
+    "live account persistence"
+  ],
+  "download_note": "Archive bytes are actual added resource payloads before HTTP compression, excluding small integration/index deltas. Gzip is a separate estimate, not a verified hosting configuration."
+}

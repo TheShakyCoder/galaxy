@@ -1,0 +1,5 @@
+material: "/assets/space/sky.material"
+vertices: "/assets/space/sky.buffer"
+primitive_type: PRIMITIVE_TRIANGLES
+position_stream: "position"
+textures: "/assets/space/fields.cubemap"

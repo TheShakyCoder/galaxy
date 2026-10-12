@@ -1,0 +1,13 @@
+name: "space_sky"
+tags: "space_sky"
+vertex_program: "/assets/space/sky.vp"
+fragment_program: "/assets/space/sky.fp"
+vertex_space: VERTEX_SPACE_LOCAL
+vertex_constants { name: "sky_view" type: CONSTANT_TYPE_VIEW }
+vertex_constants { name: "sky_projection" type: CONSTANT_TYPE_PROJECTION }
+fragment_constants { name: "cloud_color" type: CONSTANT_TYPE_USER value { x: .22 y: .11 z: .07 w: 1 } }
+fragment_constants { name: "edge_color" type: CONSTANT_TYPE_USER value { x: .3 y: .27 z: .22 w: 1 } }
+fragment_constants { name: "rotation" type: CONSTANT_TYPE_USER value { w: 1 } }
+fragment_constants { name: "structure" type: CONSTANT_TYPE_USER value { x: .25 y: .2 z: 1 w: 1 } }
+fragment_constants { name: "sun_direction" type: CONSTANT_TYPE_USER value { x: -.4 y: .3 z: .86 w: 1 } }
+samplers { name: "fields" wrap_u: WRAP_MODE_CLAMP_TO_EDGE wrap_v: WRAP_MODE_CLAMP_TO_EDGE filter_min: FILTER_MODE_MIN_LINEAR_MIPMAP_LINEAR filter_mag: FILTER_MODE_MAG_LINEAR }

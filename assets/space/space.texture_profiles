@@ -1,0 +1,20 @@
+path_settings { path: "/assets/space/fields.cubemap" profile: "Space" }
+path_settings { path: "**" profile: "Default" }
+profiles {
+  name: "Space"
+  platforms {
+    os: OS_ID_GENERIC
+    formats { format: TEXTURE_FORMAT_RGB compression_level: BEST }
+    mipmaps: true
+    premultiply_alpha: false
+  }
+}
+# Exact existing built-in fallback, so all other game art keeps its settings.
+profiles {
+  name: "Default"
+  platforms {
+    os: OS_ID_GENERIC
+    formats { format: TEXTURE_FORMAT_RGBA compression_level: BEST }
+    mipmaps: false
+  }
+}
