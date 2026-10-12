@@ -1,0 +1,30 @@
+-- Only loaded by preview.ini; no login, server writes or persistent state.
+local session=require "main.session"
+local network=require "main.network"
+local profile=require "main.profile"
+local function choose(faction)
+ session.set_on_change(nil)
+ session.restore({faction=faction,tope=250000,water=4200,iron=3100,hydrogen=1200,xp=12000})
+ msg.post("outpost#gui","show_outpost")
+end
+function init(self)
+ -- Disable every external endpoint reachable from the station screen.
+ network.assignments=function(callback) callback({list={
+  {name="Prospector",description="Mine resources in your current system.",progress=4,target=10,xp=600,tope=1200},
+  {name="Pathfinder",description="Visit neighboring star systems.",progress=1,target=3,xp=450,tope=800}
+ }}) end
+ network.fetch_outposts=function(_,callback) callback(false) end
+ network.open_account=function() print("STATION_REVIEW_ACCOUNT_DISABLED") end
+ network.logout=function() end
+ profile.flush=function(callback) if callback then callback() end end
+ session.set_on_change(nil)
+ timer.delay(.1,false,function() choose("accord"); print("STATION_UI_REVIEW_READY: offline fixtures") end)
+end
+function update(self,dt)
+ if not html5 then return end
+ local command=html5.run("window.galaxyStationCommand || ''")
+ if command~="" then
+  html5.run("window.galaxyStationCommand = ''")
+  if command=="accord" or command=="swarm" then choose(command) end
+ end
+end
