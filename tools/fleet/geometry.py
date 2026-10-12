@@ -13,8 +13,8 @@ TAU=math.tau
 
 
 class Mesh(SardineMesh):
-    def __init__(self, ship):
-        super().__init__(); self.ship=ship; self.features=[]
+    def __init__(self, ship, detail_scale=1):
+        super().__init__(); self.ship=ship; self.features=[]; self.detail_scale=detail_scale
 
     def plate(self, outline, thickness=.12, color='fin', axis='y', ribs=False):
         """Beveled convex plate. Outlines use (span, fore/aft) in the given plane."""
@@ -24,6 +24,7 @@ class Mesh(SardineMesh):
         return before
 
     def ellipsoid(self, center, radii, color, rings=12, sides=24):
+        rings*=self.detail_scale; sides*=self.detail_scale
         start=len(self.p)
         # Avoid zero-area pole triangles by using small closed end rings.
         for i in range(rings+1):
@@ -75,6 +76,9 @@ class Hull:
         return unit(cross(dz,da))
 
     def build(self,m,steps=56,sides=40,color=None):
+        factor=getattr(m,"detail_scale",1)
+        steps*=factor; sides*=factor
+        if factor>1 and not hasattr(m,"hull"): m.hull=self
         start=len(m.p)
         for i in range(steps+1):
             z=self.z1-(self.z1-self.z0)*i/steps

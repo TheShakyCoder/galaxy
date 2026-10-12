@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_assault/piranha.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/piranha/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/piranha/aurora/albedo.png"
 name: "piranha_aurora"

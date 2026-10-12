@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_interceptor/frigatebird.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/frigatebird/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/frigatebird/solar_regatta/albedo.png"
 name: "frigatebird_solar_regatta"

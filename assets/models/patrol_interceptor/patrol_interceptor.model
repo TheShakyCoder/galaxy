@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_interceptor/sardine.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/patrol_interceptor/sardine_palette.png"
+mesh: "/assets/models/hd/sardine/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/sardine/albedo.png"
 name: "patrol_interceptor"

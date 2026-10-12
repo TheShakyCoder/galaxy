@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_assault/tiger_shark.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/frigate_assault/tiger_shark_palette.png"
+mesh: "/assets/models/hd/tiger_shark/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/tiger_shark/albedo.png"
 name: "tiger_shark"

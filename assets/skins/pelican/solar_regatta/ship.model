@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_support/pelican.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/pelican/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/pelican/solar_regatta/albedo.png"
 name: "pelican_solar_regatta"

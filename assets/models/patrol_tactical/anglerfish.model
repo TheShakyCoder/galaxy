@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_tactical/anglerfish.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/patrol_tactical/anglerfish_palette.png"
+mesh: "/assets/models/hd/anglerfish/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/anglerfish/albedo.png"
 name: "anglerfish"

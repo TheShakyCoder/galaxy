@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_interceptor/falcon.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/falcon/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/falcon/aurora/albedo.png"
 name: "falcon_aurora"
