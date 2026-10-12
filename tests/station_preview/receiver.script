@@ -1,0 +1,6 @@
+function on_message(self,id)
+ if id==hash("start_flight") then
+  print("STATION_REVIEW_LAUNCH_COMPLETE")
+  timer.delay(.25,false,function() require("main.session").dock(); msg.post("outpost#gui","show_outpost") end)
+ end
+end

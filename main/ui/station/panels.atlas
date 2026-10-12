@@ -1,0 +1,3 @@
+images { image: "/main/ui/station/panel.png" }
+images { image: "/main/ui/station/button.png" }
+extrude_borders: 2

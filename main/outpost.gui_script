@@ -220,10 +220,10 @@ local CARD_COLOR = vmath.vector4(0.16, 0.2, 0.26, 1.0)
 -- back to the plain CARD_COLOR above for a module whose type isn't one of
 -- the four (shouldn't happen, but don't guess a color for it either).
 local TYPE_CARD_COLOR = {
-	weapon = vmath.vector4(0.42, 0.34, 0.12, 1.0),
-	engine = vmath.vector4(0.42, 0.16, 0.16, 1.0),
-	computer = vmath.vector4(0.16, 0.22, 0.42, 1.0),
-	hull = vmath.vector4(0.16, 0.36, 0.22, 1.0),
+	weapon = vmath.vector4(0.20, 0.17, 0.09, 1.0),
+	engine = vmath.vector4(0.20, 0.085, 0.09, 1.0),
+	computer = vmath.vector4(0.065, 0.13, 0.22, 1.0),
+	hull = vmath.vector4(0.065, 0.18, 0.14, 1.0),
 }
 -- Brighter version of each TYPE_CARD_COLOR hue, used for the Fitting tab's
 -- four type-filter buttons (§2.8.8) when that type is the active filter -
@@ -294,8 +294,8 @@ local BORDER_VALID_COLOR = vmath.vector4(0.3, 1.0, 0.9, 1.0)
 local BORDER_INVALID_COLOR = vmath.vector4(1.0, 0.15, 0.2, 1.0)
 local INVALID_MARK_COLOR = vmath.vector4(1.0, 0.1, 0.1, 1.0)
 
-local TAB_COLOR_ACTIVE = vmath.vector4(0.22, 0.38, 0.5, 1.0)
-local TAB_COLOR_INACTIVE = vmath.vector4(0.15, 0.17, 0.22, 1.0)
+local TAB_COLOR_ACTIVE = vmath.vector4(0.07,0.32,0.39,1)
+local TAB_COLOR_INACTIVE = vmath.vector4(0.035,0.075,0.11,1)
 local SHIP_CARD_CURRENT_COLOR = vmath.vector4(0.2, 0.45, 0.3, 1.0) -- the ship you're currently flying/fitting
 -- Owned but not currently active (direct instruction: the merged Ships grid
 -- highlights any owned hull, not just the active one, since it's now the
@@ -377,7 +377,7 @@ local SKIN_THUMB_BG = vmath.vector4(0.2, 0.245, 0.29, 1.0) -- matches the render
 local SKIN_BADGE_SIZE = vmath.vector3(150, 28, 0)
 local SKIN_EQUIPPED_COLOR = vmath.vector4(0.35, 0.85, 0.45, 1.0)
 local SKIN_OWNED_COLOR = vmath.vector4(0.3, 0.55, 0.9, 1.0)
-local SKIN_PRICE_BADGE_COLOR = vmath.vector4(0.42, 0.34, 0.12, 0.95)
+local SKIN_PRICE_BADGE_COLOR = vmath.vector4(0.20, 0.17, 0.09, 0.95)
 local SKIN_BADGE_SHADE = vmath.vector4(0.6, 0.6, 0.6, 1.0) -- badges use a darker frame color so white text reads on them
 -- Thumbnails of skins you don't own yet are dimmed so owned ones stand out.
 local SKIN_LOCKED_TINT = vmath.vector4(0.6, 0.6, 0.65, 1.0)
@@ -387,6 +387,7 @@ local SKIN_KIND_LABEL = { recolor = "Recolor", surface = "Surface theme", model 
 -- further down, next to show_ship_detail) but is called from
 -- refresh_ship_cards (defined well before those tables) - see its actual
 -- definition below (next to compute_forsale_preview_items) for what it does.
+local refresh_overview_preview
 local refresh_forsale_preview
 
 function init(self)
@@ -476,7 +477,10 @@ function init(self)
 	self.overview_static_nodes = {
 		gui.get_node("overview_heading"), gui.get_node("overview_panel"),
 		self.overview_content_node,
-	}
+        gui.get_node("overview_ship_panel"), gui.get_node("overview_readiness_panel"), gui.get_node("overview_assignments_panel"),
+        gui.get_node("overview_ship_heading"), gui.get_node("overview_manifest_heading"), gui.get_node("overview_assignments_heading"),
+        gui.get_node("overview_vessel"), gui.get_node("overview_readiness"), gui.get_node("overview_assignments"),
+    }
 
 	-- Fitting tab's static nodes (enabled/disabled together on tab switch)
 	self.ship_visual_node = gui.get_node("ship_visual")
@@ -886,98 +890,47 @@ end
 -- on every show_outpost), for the Overview; nil until the first reply.
 local assignments_cache = nil
 
-local function overview_text()
-	local faction = session.get_faction()
-	local faction_label = FACTION_DISPLAY[faction] or faction
-	local home_id = star_systems.HOME_SYSTEM[faction]
-	local home_name = (home_id and star_systems.SYSTEMS[home_id].name) or "?"
-
-	local active_ship_id = session.get_ship_id()
-	local active_ship = ships.SHIPS[active_ship_id]
-	local active_ship_name = ship_display_name(active_ship_id, faction)
-	local active_ship_class = active_ship and active_ship.class or "?"
-
-	local owned_ship_ids = session.get_owned_ships() or {}
-	local owned_ship_names = {}
-	for _, ship_id in ipairs(owned_ship_ids) do
-		table.insert(owned_ship_names, ship_display_name(ship_id, faction))
-	end
-
-	-- Fitting completeness for the ACTIVE ship: filled vs. total slots,
-	-- broken down by type - straight from ships.lua's `components` (or
-	-- `advanced`, once upgraded - effective_components picks whichever
-	-- applies) and session.get_loadout() (what's actually filled).
-	local components = effective_components(active_ship_id)
-	local filled_by_type = {}
-	for _, entry in ipairs(session.get_loadout() or {}) do
-		local prefix = entry.slot:sub(1, 1)
-		filled_by_type[prefix] = (filled_by_type[prefix] or 0) + 1
-	end
-	local total_slots, filled_slots = 0, 0
-	local fit_lines = {}
-	for _, slot_type in ipairs(SLOT_TYPE_ORDER) do
-		local total = components[slot_type] or 0
-		if total > 0 then
-			local filled = filled_by_type[slot_type] or 0
-			total_slots = total_slots + total
-			filled_slots = filled_slots + filled
-			table.insert(fit_lines, "    " .. SLOT_TYPE_LABEL[slot_type] .. ": " .. filled .. "/" .. total)
-		end
-	end
-
-	-- Inventory: every owned module instance, spare vs. installed, plus
-	-- how many upgrade levels have been applied in total (§2.8.2) - a
-	-- real, honest tally, not a fabricated score.
-	local owned_instances = session.get_owned() or {}
-	local installed_count, spare_count, total_levels = 0, 0, 0
-	for _, inst in ipairs(owned_instances) do
-		if session.is_installed(inst.id) then
-			installed_count = installed_count + 1
-		else
-			spare_count = spare_count + 1
-		end
-		total_levels = total_levels + (inst.level or 0)
-	end
-
-	local level = session.get_level()
-	local lines = {
-		"Faction: " .. faction_label,
-		"Rank: " .. (session.get_rank() or "?") .. "  (level " .. level .. ")",
-		"XP: " .. with_commas(session.get_xp()) .. "  (level " .. (level + 1) .. " at " .. with_commas(ranks.xp_for_level(level + 1)) .. ")",
-		"Home system: " .. home_name,
-		"Docked at: " .. system_name(docked_system_id()) .. " outpost",
-		"",
-		"Active ship: " .. active_ship_name .. " (" .. active_ship_class .. ")"
-			.. (session.is_ship_advanced(active_ship_id) and "  [Advanced]" or ""),
-		"Skin: " .. skin_display_name(session.get_equipped_skin(active_ship_id)),
-		"Fleet: " .. #owned_ship_ids .. (#owned_ship_ids == 1 and " ship" or " ships")
-			.. (#owned_ship_names > 0 and ("  --  " .. table.concat(owned_ship_names, ", ")) or ""),
-		"",
-		"Active ship fitting: " .. filled_slots .. "/" .. total_slots .. " slots filled",
-	}
-	for _, line in ipairs(fit_lines) do
-		table.insert(lines, line)
-	end
-	table.insert(lines, "")
-	table.insert(lines, "Components owned: " .. #owned_instances
-		.. "  (" .. installed_count .. " installed, " .. spare_count .. " spare)")
-	table.insert(lines, "Total upgrades applied: " .. total_levels)
-
-	if assignments_cache and assignments_cache.list then
-		table.insert(lines, "")
-		table.insert(lines, "Today's assignments:")
-		for _, a in ipairs(assignments_cache.list) do
-			local state = a.done and "done" or (with_commas(a.progress) .. "/" .. with_commas(a.target))
-			table.insert(lines, "    " .. a.name .. ": " .. state .. "  --  " .. a.description
-				.. (a.done and "" or ("  (+" .. with_commas(a.xp) .. " XP, +" .. with_commas(a.tope) .. " Tope)")))
-		end
-	end
-
-	return table.concat(lines, "\n")
-end
-
 local function refresh_overview(self)
-	gui.set_text(self.overview_content_node, overview_text())
+    local faction=session.get_faction()
+    local id=session.get_ship_id()
+    local ship=ships.SHIPS[id]
+    local level=session.get_level()
+    local home=star_systems.HOME_SYSTEM[faction]
+    local dossier=table.concat({FACTION_DISPLAY[faction] or faction,"",session.get_rank() or "Pilot",
+        "LEVEL "..level,"",with_commas(session.get_xp()).." XP",
+        "Next: "..with_commas(ranks.xp_for_level(level+1)),"","HOME PORT",system_name(home),"","DOCKED AT",system_name(docked_system_id())},"\n")
+    gui.set_text(self.overview_content_node,dossier)
+    gui.set_text(gui.get_node("overview_vessel"),ship_display_name(id,faction).."\n"..(ship and ship.class or "").." / "..(ship and ship.role or "")
+        .."\n"..(session.is_ship_advanced(id) and "Advanced hull" or "Standard hull").."\nLivery: "..skin_display_name(session.get_equipped_skin(id)))
+    local components=effective_components(id)
+    local filled={}
+    for _,entry in ipairs(session.get_loadout() or {}) do
+        local prefix=entry.slot:sub(1,1);filled[prefix]=(filled[prefix] or 0)+1
+    end
+    local lines={"INSTALLED / AVAILABLE",""}
+    for _,prefix in ipairs(SLOT_TYPE_ORDER) do
+        lines[#lines+1]=string.format("%-12s %d / %d",SLOT_TYPE_LABEL[prefix],filled[prefix] or 0,components[prefix] or 0)
+    end
+    local owned=session.get_owned() or {};local spare,upgrades=0,0
+    for _,item in ipairs(owned) do
+        if not session.is_installed(item.id) then spare=spare+1 end
+        upgrades=upgrades+(item.level or 0)
+    end
+    lines[#lines+1]=""
+    lines[#lines+1]=#(session.get_owned_ships() or {}).." hull(s) in fleet / "..spare.." spare module(s)"
+    lines[#lines+1]=upgrades.." component upgrade(s) applied"
+    gui.set_text(gui.get_node("overview_readiness"),table.concat(lines,"\n"))
+    local assignments={}
+    for _,a in ipairs(assignments_cache and assignments_cache.list or {}) do
+        assignments[#assignments+1]=a.name.." / "..(a.done and "COMPLETE" or (with_commas(a.progress).." / "..with_commas(a.target)))
+        assignments[#assignments+1]=a.description..(a.done and "" or ("  +"..with_commas(a.xp).." XP / +"..with_commas(a.tope).." Tope"))
+    end
+    if #assignments==0 then assignments={assignments_cache and "No assignments available." or "Awaiting station assignment data."} end
+    local node=gui.get_node("overview_assignments")
+    gui.set_text(node,table.concat(assignments,"\n"))
+    local metrics=resource.get_text_metrics(gui.get_font_resource(gui.get_font(node)), gui.get_text(node), {width=830,line_break=true})
+    local scale=math.min(.86,210/math.max(1,metrics.height))
+    gui.set_scale(node,vmath.vector3(scale,scale,1))
 end
 
 -- Octagon-shaped node (per direct instruction: slot markers should be
@@ -1090,7 +1043,7 @@ local function build_markers(self)
 		-- in slot_positions (main/data/ships.lua, §2.1.3) is what marks it
 		-- advanced-only; a slot without one is available from the start.
 		local locked = offset.tier == "advanced" and not session.is_ship_advanced(ship_id)
-		local pos = vmath.vector3(visual_pos.x + offset.x, visual_pos.y + offset.y, 0)
+		local pos = vmath.vector3(visual_pos.x + offset.x * .90, visual_pos.y + offset.y * .90, 0)
 
 		local border = new_octagon_node(pos, BORDER_SIZE)
 		gui.set_pivot(border, gui.PIVOT_CENTER)
@@ -1627,6 +1580,7 @@ local function build_card_list(out_list, panel_node, rows, list_source, scroll_o
 		local label = gui.new_text_node(vmath.vector3(label_x, pos.y, 0), row.label)
 		gui.set_pivot(label, gui.PIVOT_W)
 		gui.set_font(label, "default_font")
+		gui.set_scale(label, vmath.vector3(.84,.84,1))
 		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
 		gui.set_parent(label, panel_node, true)
 
@@ -1849,6 +1803,7 @@ local function build_ship_forsale_grid(out_list, panel_node, rows)
 		local label = gui.new_text_node(vmath.vector3(cx, base_strip_cy + SHIP_NAME_OFFSET_Y, 0), row.label)
 		gui.set_pivot(label, gui.PIVOT_CENTER)
 		gui.set_font(label, "default_font")
+		gui.set_scale(label, vmath.vector3(.84,.84,1))
 		gui.set_color(label, vmath.vector4(0.9, 0.95, 1.0, 1.0))
 		gui.set_scale(label, SHIP_NAME_SCALE)
 		gui.set_parent(label, panel_node, true)
@@ -2141,6 +2096,7 @@ end
 -- visit" pattern already used elsewhere on this screen - Overview has no
 -- per-visit dynamic nodes of its own, just its text refreshed on entry.
 local function set_page(self, page)
+	msg.post("@render:","set_ship_preview",{visible=false})
 	self.active_page = page
 	hide_weapon_arc(self) -- don't leave the weapon firing-arc hover wedge stuck on-screen after leaving Fitting
 	hide_marker_key(self) -- ...nor the marker hover key label
@@ -2217,6 +2173,7 @@ local function set_page(self, page)
 	-- harmless/idempotent to call again for the "ships" branch above, which
 	-- already sent this via refresh_ship_cards.
 	refresh_forsale_preview(self)
+	if page == "overview" then refresh_overview_preview(self) end
 end
 
 local function hits(node, action)
@@ -2290,10 +2247,15 @@ end
 -- to make. When false, Yes is re-centered on the panel (rather than left
 -- of a hidden Cancel, leaving an empty gap) and Cancel/No stays disabled.
 local function show_confirm(self, message, on_confirm, show_cancel)
+	if self.active_page == "overview" then msg.post("@render:","set_ship_preview",{visible=false}) end
 	if show_cancel == nil then
 		show_cancel = true
 	end
 	self.confirm = { on_confirm = on_confirm }
+	-- Dynamic fitting slots must remain below the modal scrim.
+	for _, key in ipairs({"scrim","panel","message","yes","no","yes_label","no_label"}) do
+		gui.move_above(self.confirm_nodes[key],nil)
+	end
 	gui.set_text(self.confirm_nodes.message, message)
 	for _, node in pairs(self.confirm_nodes) do
 		gui.set_enabled(node, true)
@@ -2312,6 +2274,7 @@ local function hide_confirm(self)
 		gui.set_enabled(node, false)
 	end
 	refresh_forsale_preview(self) -- bring the Ships grid's previews back
+	refresh_overview_preview(self)
 end
 
 -- Ship detail modal preview, keyed by model path (§2.8.9) - PREVIEW_WORLD_POS
@@ -2417,6 +2380,17 @@ local PREVIEW_CAMERA = {
 	["/assets/models/frigate_assault/golden_eagle.model"] = { eye_offset = vmath.vector3(0.000, 158.987, 425.516), far = 649.840 },
 	["/assets/models/frigate_tactical/harpy_eagle.model"] = { eye_offset = vmath.vector3(0.000, 169.816, 454.501), far = 690.699 },
 }
+
+refresh_overview_preview = function(self)
+    if self.active_page ~= "overview" or not self.active or self.confirm then return end
+    local ship=ships.SHIPS[session.get_ship_id()]
+    local faction=ship and ship.faction_skins[session.get_faction()]
+    local path=faction and faction.model
+    local position=path and PREVIEW_WORLD_POS[path]
+    local camera=path and PREVIEW_CAMERA[path]
+    msg.post("@render:","set_ship_preview",{visible=position~=nil,target_pos=position,
+        eye_offset=camera and camera.eye_offset * .9,far=camera and camera.far})
+end
 
 -- Lays out the detail modal's visible buttons (`slots`: list of
 -- { box, label } pairs, in order) evenly spaced and centered - shared by the
