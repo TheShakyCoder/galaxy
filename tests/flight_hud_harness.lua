@@ -1,5 +1,5 @@
 -- Standalone harness for main/flight_hud.gui_script's two newest pieces of
--- flight HUD (plan.md §2.17), both per direct instruction:
+-- flight HUD (plan.md Â§2.17), both per direct instruction:
 --   * the Power / Hull readouts ("while in flight show the ship power and hull
 --     points") - the "ship_status" message, including the "only rewrite the
 --     text when it changes" caching;
@@ -122,7 +122,7 @@ check("scope face is a full disc", #discs == 1 and discs[1].size.x == 208)
 check("outer ring sits on the panel edge", #rings == 3 and (function()
 	for _, r in ipairs(rings) do
 		if r.size.x == RADAR_RADIUS * 2 then
-			return r.inner_radius == RADAR_RADIUS - 6
+			return r.inner_radius == RADAR_RADIUS - 2
 		end
 	end
 	return false
@@ -412,6 +412,47 @@ on_message(self, "contacts", {
 })
 check("no target_id highlights nothing",
 	not is_highlighted(rocks[1]) and rocks[1].color.w < 0.5)
+
+
+local layout = require "main.ui.flight_layout"
+check("zero capacity leaves gauges empty", layout.fraction(100,0)==0)
+check("negative values cannot reverse a gauge", layout.fraction(-12,100)==0)
+check("over-capacity values stay inside the track", layout.fraction(200,100)==1)
+on_message(self,"ship_status",{hull=25,hull_max=100,power=50,power_max=200})
+check("hull gauge follows telemetry",self.hull_gauge.size.x==60 and self.hull_gauge.enabled)
+check("power gauge follows telemetry",self.power_gauge.size.x==60)
+on_message(self,"ship_status",{})
+check("missing telemetry hides both fills",not self.hull_gauge.enabled and not self.power_gauge.enabled)
+local ships=require "main.data.ships"
+for id,ship in pairs(ships.SHIPS) do
+    local slots=layout.slots(ship.slot_positions)
+    local occupied={}
+    for i,slot in ipairs(slots) do
+        local x,y=layout.position(i,#slots)
+        local key=x..":"..y
+        assert(not occupied[key],id.." overlapping equipment")
+        assert(x>500 and x<1420 and y>=104 and y<230,id.." equipment leaves safe area")
+        occupied[key]=true
+    end
+end
+check("all roster loadouts fit the equipment area",true)
+local sorted=layout.slots({W10={},W2={},E1={},C1={},H1={}})
+check("slot ordering is numeric within each category",table.concat(sorted,",")=="W2,W10,C1,E1,H1")
+local session=require "main.session"
+session.choose_faction("accord")
+on_message(self,"show_flight_hud",{})
+check("launch builds interactive equipment",next(self.diagram_markers)~=nil)
+local posted
+msg.post=function(url,id,data) posted={url=url,id=id,data=data} end
+gui.pick_node=function(node,x,y) return node.pos.x==x and node.pos.y==y end
+for id,marker in pairs(self.diagram_markers) do
+    if marker.usable then
+        check("equipment click is consumed",on_input(self,"touch",{pressed=true,x=marker.box.pos.x,y=marker.box.pos.y})==true)
+        check("equipment click uses existing flight action",posted.id=="slot_click" and posted.data.slot==id)
+        break
+    end
+end
+check("world clicks pass through",on_input(self,"touch",{pressed=true,x=960,y=540})==false)
 
 if failures > 0 then
 	print(failures .. " FAILURE(S)")

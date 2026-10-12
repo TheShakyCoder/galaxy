@@ -1,0 +1,3 @@
+name: "flight_review"
+embedded_instances { id: "review" data: "components { id: \"script\" component: \"/tests/flight_preview/preview.script\" }\ncomponents { id: \"gui\" component: \"/main/flight_hud.gui\" }\n" }
+embedded_instances { id: "player_ship" data: "components { id: \"model\" component: \"/assets/models/patrol_interceptor/patrol_interceptor.model\" }\ncomponents { id: \"script\" component: \"/tests/flight_preview/receiver.script\" }" }
