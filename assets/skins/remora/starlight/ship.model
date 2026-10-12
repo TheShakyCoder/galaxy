@@ -1,4 +1,4 @@
-mesh: "/assets/skins/remora/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/remora/starlight/albedo.png"
+mesh: "/assets/skins/hd/remora/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/remora/starlight/albedo.png"
 name: "remora_starlight"

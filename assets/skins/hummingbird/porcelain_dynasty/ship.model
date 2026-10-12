@@ -1,4 +1,4 @@
-mesh: "/assets/skins/hummingbird/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/hummingbird/porcelain_dynasty/albedo.png"
+mesh: "/assets/skins/hd/hummingbird/porcelain_dynasty/model.glb"
+material: "/assets/materials/theme_finish/porcelain_dynasty.material"
+textures: "/assets/skins/hd/hummingbird/porcelain_dynasty/albedo.png"
 name: "hummingbird_porcelain_dynasty"

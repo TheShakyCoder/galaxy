@@ -1,4 +1,4 @@
-mesh: "/assets/skins/egret/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/egret/porcelain_dynasty/albedo.png"
+mesh: "/assets/skins/hd/egret/porcelain_dynasty/model.glb"
+material: "/assets/materials/theme_finish/porcelain_dynasty.material"
+textures: "/assets/skins/hd/egret/porcelain_dynasty/albedo.png"
 name: "egret_porcelain_dynasty"

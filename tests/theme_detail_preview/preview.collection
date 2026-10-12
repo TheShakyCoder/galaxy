@@ -1,0 +1,3 @@
+name: "theme_detail_review"
+embedded_instances { id: "controller" data: "components { id: \"script\" component: \"/tests/theme_detail_preview/preview.script\" }" }
+instances { id: "hub" prototype: "/tests/theme_detail_preview/hub.go" }
