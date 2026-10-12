@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_support/egret.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/egret/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/egret/royal_amethyst/albedo.png"
 name: "egret_royal_amethyst"

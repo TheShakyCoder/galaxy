@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_tactical/hammerhead.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/hammerhead/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/hammerhead/solar_regatta/albedo.png"
 name: "hammerhead_solar_regatta"

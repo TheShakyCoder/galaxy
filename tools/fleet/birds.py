@@ -96,8 +96,8 @@ def tail(m):
             for z in (-4.5,-5.1,-5.7): m.tube([(-.95,.08,z),(0,.08,z),(.95,.08,z)],.065,'navy',8)
 
 
-def build(ship):
-    m=Mesh(ship); s=ship.slug
+def build(ship, detail_scale=1):
+    m=Mesh(ship, detail_scale); s=ship.slug
     w=1.35 if s in ('pelican','golden_eagle','harpy_eagle','goshawk') else 1.05
     height=1.05 if s not in ('hummingbird','frigatebird') else .78
     if s=='egret':

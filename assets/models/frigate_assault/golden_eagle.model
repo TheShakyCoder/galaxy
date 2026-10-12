@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_assault/golden_eagle.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/frigate_assault/golden_eagle_palette.png"
+mesh: "/assets/models/hd/golden_eagle/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/golden_eagle/albedo.png"
 name: "golden_eagle"

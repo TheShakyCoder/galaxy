@@ -70,6 +70,8 @@ for _, id in ipairs({
 	"scan_status", "hotkeys", "progress_toast", "tope_value", "water_value",
 	"iron_value", "hydrogen_value", "radar_range",
 	"power_value", "hull_value", "position_value", "build_version",
+	-- the desired-speed readout (main/flight_throttle.lua's ten segments)
+	"throttle_value",
 }) do
 	gui_nodes[id] = new_node("authored", v3(), v3())
 end
@@ -412,6 +414,21 @@ on_message(self, "contacts", {
 })
 check("no target_id highlights nothing",
 	not is_highlighted(rocks[1]) and rocks[1].color.w < 0.5)
+
+-- ---- The desired-speed (throttle segment) readout ----
+-- player_ship.script posts "set_throttle" every frame: the segment the mouse
+-- wheel / throttle keys have selected (0 = no speed, 9 = top speed) plus the
+-- m/sec it commands.
+local throttle_node = gui_nodes.throttle_value
+on_message(self, "set_throttle", { segment = 4, max_segment = 9, speed = 23 })
+check("the throttle readout shows the selected segment and its speed",
+	throttle_node.text == "THROTTLE 4 / 9  (23 m/s)")
+local writes = throttle_node.text_writes
+on_message(self, "set_throttle", { segment = 4, max_segment = 9, speed = 23 })
+check("an unchanged throttle segment is not rewritten", throttle_node.text_writes == writes)
+on_message(self, "set_throttle", { segment = 9, max_segment = 9, speed = 52.4 })
+check("a new segment updates the readout",
+	throttle_node.text == "THROTTLE 9 / 9  (52 m/s)" and throttle_node.text_writes > writes)
 
 if failures > 0 then
 	print(failures .. " FAILURE(S)")

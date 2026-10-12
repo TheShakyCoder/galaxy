@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_interceptor/sardine.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/sardine/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/sardine/solar_regatta/albedo.png"
 name: "sardine_solar_regatta"

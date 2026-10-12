@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_support/remora.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/escort_support/remora_palette.png"
+mesh: "/assets/models/hd/remora/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/remora/albedo.png"
 name: "remora"

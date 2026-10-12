@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_interceptor/barracuda.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/escort_interceptor/barracuda_palette.png"
+mesh: "/assets/models/hd/barracuda/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/barracuda/albedo.png"
 name: "barracuda"

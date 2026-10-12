@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_assault/piranha.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/patrol_assault/piranha_palette.png"
+mesh: "/assets/models/hd/piranha/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/piranha/albedo.png"
 name: "piranha"
