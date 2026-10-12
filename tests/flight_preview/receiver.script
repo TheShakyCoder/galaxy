@@ -1,0 +1,3 @@
+function on_message(self,id,message)
+ if id==hash("slot_click") then print("REVIEW_SLOT_CLICK: "..message.slot) end
+end

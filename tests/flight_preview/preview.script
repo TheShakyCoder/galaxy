@@ -1,0 +1,41 @@
+-- Offline fixtures only. This collection is never the production bootstrap.
+local session=require "main.session"
+local ships=require "main.data.ships"
+local function send(id,data) msg.post("#gui",id,data or {}) end
+local function load_ship(id)
+ session.restore({faction="accord",active_ship_id=id,owned_ships={id}})
+ send("show_flight_hud")
+end
+function init(self)
+ session.set_on_change(nil)
+ self.t=0; self.damage=false
+ load_ship("patrol_interceptor")
+ timer.delay(.1,false,function()
+  send("show_flight_hud")
+  send("system_changed",{text="SYSTEM: PELAGIC REACH"})
+  send("currency",{tope=42860,water=2400,iron=1860,hydrogen=720})
+  send("jump_preset",{text="PRESET: VEIL [J]"})
+  send("target",{text="TARGET: SWARM  /  1,240 m",relation="enemy"})
+  send("hotkeys",{text="W / S  THROTTLE     TAB  TARGET     K  DOCK     M  SECTOR MAP"})
+  print("FLIGHT_UI_REVIEW_READY: offline sample telemetry")
+ end)
+end
+function update(self,dt)
+ self.t=self.t+dt
+ local command=html5 and html5.run("window.galaxyReviewCommand || ''") or ""
+ if command~="" then
+  html5.run("window.galaxyReviewCommand = ''")
+  if command=="damage" then self.damage=not self.damage
+  elseif command=="dock" then send("dock_prompt",{text="[K] DOCK / ACCORD OUTPOST"})
+  elseif command=="clear" then send("target");send("dock_prompt");send("jump_preset")
+  elseif ships.SHIPS[command] then load_ship(command) end
+ end
+ send("set_speed",{speed=52.5})
+ send("set_throttle",{segment=9,max_segment=9,speed=52.5})
+ send("ship_status",{hull=self.damage and 130 or 600,hull_max=600,power=self.damage and 40 or 175,power_max=175,x=1840,y=120,z=-350})
+ send("contacts",{own_pos=vmath.vector3(),heading=vmath.vector3(0,0,1),range=3000,target_id="enemy",
+  contacts={{pos=vmath.vector3(-500,0,1240),id="enemy"},{pos=vmath.vector3(1700,0,300),id="friend"}},
+  asteroids={{pos=vmath.vector3(600,0,-800)},{pos=vmath.vector3(1400,0,1900)},{pos=vmath.vector3(-400,0,-1400)}},
+  outposts={{pos=vmath.vector3(1500,0,1200),relation="friendly",id="outpost"}}})
+ send("slot_states",{states={W1={state="live"},W2={state="cooldown",frac=1-(self.t%4)/4},E1={state="live"},C1={state="live"}}})
+end

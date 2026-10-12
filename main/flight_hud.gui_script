@@ -1,3 +1,4 @@
+-- Peripheral flight instruments; all values and actions come from player_ship.
 -- Minimal flight HUD (plan.md §4's "Build flight mode" TODO) - the
 -- current-speed readout, the ship's own Power/Hull readouts, the docking
 -- prompt/countdown, a circular radar scope, and a TARGET: text readout (no
@@ -107,6 +108,7 @@
 -- instead of with the world grid. What it is drawn onto is a circular
 -- warship-style scope with a rotating sweep (see the RADAR_* constants).
 
+local layout = require "main.ui.flight_layout"
 local RADAR_CENTER = vmath.vector3(1760, 150, 0)
 local RADAR_RADIUS = 110 -- px, half of radar_panel's own 220x220 size in main/flight_hud.gui
 local DOT_POOL_SIZE = 16
@@ -149,7 +151,7 @@ local RADAR_TARGET_SCALE = 1.8
 -- The player's own position readout under the scope (per direct instruction:
 -- "show x/y/z coordinates below radar") - smaller than the other readouts so a
 -- six-figure coordinate still fits the width.
-local POSITION_TEXT_SCALE = vmath.vector3(0.6, 0.6, 1)
+local POSITION_TEXT_SCALE = vmath.vector3(0.37, 0.37, 1)
 
 -- Heading marker (per direct instruction): the ship itself, at the centre of
 -- the scope. A 3-vertex pie is an equilateral triangle with one vertex at 0
@@ -169,12 +171,12 @@ local RADAR_HEADING_ROTATION = 90
 -- node's `size` is its bounding box, so radius R means size 2R (RADAR_RADIUS
 -- above is already that half-size).
 local RADAR_SCOPE_RADIUS = 104 -- px: just inside the outer ring, which sits on RADAR_RADIUS
-local RADAR_RING_WIDTH = 6
+local RADAR_RING_WIDTH = 3
 local RADAR_SCOPE_VERTS = 64 -- smooth circle, not a faceted polygon
-local RADAR_SCOPE_COLOR = vmath.vector4(0.03, 0.15, 0.08, 0.8) -- the scope face
-local RADAR_RING_COLOR = vmath.vector4(0.3, 0.95, 0.5, 0.9) -- outer ring + sweep line
-local RADAR_GRID_COLOR = vmath.vector4(0.25, 0.65, 0.4, 0.5) -- range rings + cross-hairs
-local RADAR_SWEEP_COLOR = vmath.vector4(0.35, 1.0, 0.55, 0.18) -- the fading trail behind the line
+local RADAR_SCOPE_COLOR = vmath.vector4(0.02, 0.06, 0.09, 0.70) -- the scope face
+local RADAR_RING_COLOR = vmath.vector4(0.25, 0.76, 0.85, 0.75) -- outer ring + sweep line
+local RADAR_GRID_COLOR = vmath.vector4(0.20, 0.48, 0.58, 0.28) -- range rings + cross-hairs
+local RADAR_SWEEP_COLOR = vmath.vector4(0.3, 0.85, 1.0, 0.10) -- the fading trail behind the line
 local RADAR_SWEEP_ARC_DEG = 60
 local RADAR_SWEEP_PERIOD_S = 3 -- one full revolution
 local RADAR_SWEEP_DEG_PER_SEC = 360 / RADAR_SWEEP_PERIOD_S
@@ -238,7 +240,7 @@ local function create_marker(self)
 	self.marker_arrow = gui.new_text_node(vmath.vector3(), "")
 	gui.set_font(self.marker_arrow, "default_font")
 	gui.set_pivot(self.marker_arrow, gui.PIVOT_CENTER)
-	gui.set_scale(self.marker_arrow, vmath.vector3(2.2, 2.2, 1))
+	gui.set_scale(self.marker_arrow, vmath.vector3(1.466667, 1.466667, 1))
 	gui.set_enabled(self.marker_arrow, false)
 end
 
@@ -299,40 +301,12 @@ local catalog = require("main.data.modules.catalog")
 -- same single source of truth the login screen and the Nakama server use.
 local version = require("main.version")
 
--- slot_positions' {x, y} are screen-pixel offsets in the fitting page's
--- own 440x640 ship_visual space (centre origin, +y = bow); DIAGRAM_SCALE
--- shrinks that whole space onto the diagram, so the marker/label layout
--- stays proportional to the fitting page. The diagram sits in the
--- bottom-left corner of the screen (moved there from the bottom-centre spot
--- it started on), close to the bottom edge but clear of it.
---
--- Per direct instruction, the ENTIRE diagram - the panel background in
--- main/flight_hud.gui, the silhouette, the marker boxes, the key labels and
--- the hover tooltip - is drawn at DIAGRAM_UI_SCALE (66%) of its authored
--- size. The base numbers below are the full-size (100%) geometry and every
--- one of them is passed through ui(), so the widget scales as a single unit.
--- Scaling the markers by the same factor is what keeps them from colliding:
--- shrinking only the diagram would pull the 60px markers closer together
--- while they stayed full size.
---
--- The panel's BOTTOM-LEFT corner is held fixed (rather than its centre), so
--- the smaller diagram stays tucked into the screen corner instead of
--- floating inward toward the middle. The authored diagram_panel node in
--- main/flight_hud.gui carries the same scaled position/size.
-local DIAGRAM_UI_SCALE = 0.66
--- Full-size (100%) panel geometry, matching the authored diagram_panel
--- (390x640 centred at 210,335). Kept as plain numbers so DIAGRAM_CENTER
--- below can be DERIVED from them, rather than hard-coded to scaled values.
-local DIAGRAM_BASE_SIZE = vmath.vector3(390, 640, 0)
-local DIAGRAM_BASE_BOTTOM_LEFT = vmath.vector3(210 - 390 * 0.5, 335 - 640 * 0.5, 0)
--- Scales one full-size pixel value to the diagram's drawn size.
-local function ui(v)
-	return v * DIAGRAM_UI_SCALE
-end
--- The drawn panel's centre: its bottom-left corner held at the base corner,
--- plus half the SCALED size.
-local DIAGRAM_CENTER = DIAGRAM_BASE_BOTTOM_LEFT + vmath.vector3(DIAGRAM_BASE_SIZE.x, DIAGRAM_BASE_SIZE.y, 0) * (0.5 * DIAGRAM_UI_SCALE)
-local DIAGRAM_SCALE = 0.8 * DIAGRAM_UI_SCALE
+-- Weapon positions and the silhouette share the fitting view's coordinate
+-- system. Computers, engines and hull modules have their own compact rows.
+local DIAGRAM_UI_SCALE = 0.9
+local function ui(v) return v * DIAGRAM_UI_SCALE end
+local DIAGRAM_CENTER = vmath.vector3(layout.diagram_x,layout.diagram_y,0)
+local DIAGRAM_SCALE = layout.diagram_scale
 local SLOT_TYPE_BY_PREFIX = { W = "weapon", C = "computer", E = "engine", H = "hull" }
 local SLOT_EMPTY_ICON = { weapon = "Octagon W", computer = "Octagon C", engine = "Octagon E", hull = "Octagon H" }
 local ICON_TEXTURE = "icons"
@@ -350,7 +324,7 @@ local ICON_SIZE = vmath.vector3(MARKER_SIZE.x * 0.82, MARKER_SIZE.y * 0.82, 0)
 -- The key label sits snug under the marker - the slot row below is only
 -- 12px away at the tightest spots.
 local KEY_LABEL_OFFSET_Y = ui(-34)
-local KEY_LABEL_SCALE = vmath.vector3(ui(0.65), ui(0.65), 1)
+local KEY_LABEL_SCALE = vmath.vector3(ui(0.433333), ui(0.433333), 1)
 local HOTKEY_LABEL_COLOR = vmath.vector4(1.0, 0.85, 0.35, 1.0)
 -- The Shift modifier is drawn as this icon before the key number (per direct
 -- instruction: "modify keys should be indicated with an icon before the
@@ -367,7 +341,7 @@ local TOOLTIP_BG_SIZE = vmath.vector3(ui(260), ui(56), 0)
 local TOOLTIP_BG_COLOR = vmath.vector4(0.05, 0.06, 0.1, 0.92)
 local TOOLTIP_OFFSET_Y = ui(60)
 local TOOLTIP_NAME_COLOR = vmath.vector4(1.0, 1.0, 1.0, 1.0)
-local TOOLTIP_NAME_SCALE = vmath.vector3(ui(0.6), ui(0.6), 1)
+local TOOLTIP_NAME_SCALE = vmath.vector3(ui(0.4), ui(0.4), 1)
 local TOOLTIP_SHIFT_SIZE = vmath.vector3(ui(24), ui(24), 0)
 -- The reload/scan progress bar is drawn INSIDE the marker, across the
 -- bottom of the icon (there's no spare room below the marker now that the
@@ -416,9 +390,15 @@ end
 local function show_ship_silhouette(self, ship)
 	local skin = ship and ship.faction_skins and ship.faction_skins[session.get_faction()]
 	local name = skin and skin.model and skin.model:match("([^/]+)%.model$")
-	if not name or name == self.silhouette_name then
+	if name == self.silhouette_name then
 		return
 	end
+	if self.diagram_silhouette then
+        gui.delete_node(self.diagram_silhouette)
+        gui.delete_texture("diagram_silhouette_" .. self.silhouette_name)
+        self.diagram_silhouette=nil; self.silhouette_name=nil
+    end
+    if not name then return end
 	local png = sys.load_resource("/main/images/topdown/" .. name .. ".png")
 	local img = png and image.load(png, { premultiply_alpha = true })
 	if not img then
@@ -439,6 +419,7 @@ local function show_ship_silhouette(self, ship)
 	-- own 440x640 pixels) so it stays at the scaled size above.
 	gui.set_size_mode(self.diagram_silhouette, gui.SIZE_MODE_MANUAL)
 	gui.set_texture(self.diagram_silhouette, texture_id)
+    gui.set_color(self.diagram_silhouette, vmath.vector4(0.6,0.82,0.9,0.58))
 	if self.silhouette_name then
 		gui.delete_texture("diagram_silhouette_" .. self.silhouette_name)
 	end
@@ -492,17 +473,19 @@ local function build_ship_diagram(self)
 		return
 	end
 	show_ship_silhouette(self, ship)
+	local slot_ids = layout.slots(ship.slot_positions)
+    local placements=layout.placements(ship.slot_positions)
 	-- Locked = an advanced-only slot (slot_positions' own `tier` field,
 	-- main/data/ships.lua §2.1.3) while the ship hasn't been advanced yet,
 	-- same rule as outpost.gui_script's build_markers.
-	for slot_id, offset in pairs(ship.slot_positions or {}) do
+	for index, slot_id in ipairs(slot_ids) do
+		local offset = ship.slot_positions[slot_id]
 		local prefix = slot_id:match("^(%a)(%d+)$")
 		local locked = offset.tier == "advanced" and not session.is_ship_advanced(ship_id)
 		local slot_type = prefix and SLOT_TYPE_BY_PREFIX[prefix]
 		local module = session.module_in_slot(slot_id)
-		local pos = vmath.vector3(
-			DIAGRAM_CENTER.x + offset.x * DIAGRAM_SCALE,
-			DIAGRAM_CENTER.y + offset.y * DIAGRAM_SCALE, 0)
+		local anchor = placements[slot_id]
+		local pos = vmath.vector3(anchor.x,anchor.y,0)
 
 		local box = new_octagon_node(pos, MARKER_SIZE)
 		gui.set_pivot(box, gui.PIVOT_CENTER)
@@ -599,7 +582,27 @@ local function apply_sweep(self)
 	gui.set_rotation(self.radar_sweep_line, vmath.vector3(0, 0, self.sweep_deg))
 end
 
+local function new_gauge(y, color)
+    local pos = vmath.vector3(42,y,0)
+    local size = vmath.vector3(layout.gauge_width,layout.gauge_height,0)
+    local track = gui.new_box_node(pos,size)
+    gui.set_pivot(track,gui.PIVOT_W)
+    gui.set_color(track,vmath.vector4(0.2,0.35,0.42,0.5))
+    local fill = gui.new_box_node(pos,size)
+    gui.set_pivot(fill,gui.PIVOT_W)
+    gui.set_color(fill,color)
+    gui.set_enabled(fill,false)
+    return fill
+end
+local function set_gauge(node, value, maximum)
+    local fraction = layout.fraction(value,maximum)
+    gui.set_enabled(node,fraction > 0)
+    gui.set_size(node,vmath.vector3(layout.gauge_width*fraction,layout.gauge_height,0))
+end
+
 function init(self)
+	self.hull_gauge = new_gauge(190,vmath.vector4(0.40,0.86,0.76,1))
+	self.power_gauge = new_gauge(116,vmath.vector4(0.73,0.48,1,1))
 	self.speed_node = gui.get_node("speed_value")
 	self.throttle_node = gui.get_node("throttle_value")
 	self.throttle_text = nil -- last text written, so an unchanged segment costs nothing (see the "set_throttle" handler)
@@ -1037,6 +1040,8 @@ function on_message(self, message_id, message)
 		gui.set_text(self.iron_node, "Iron: " .. message.iron)
 		gui.set_text(self.hydrogen_node, "Hydrogen: " .. message.hydrogen)
 	elseif message_id == hash("ship_status") then
+		set_gauge(self.hull_gauge,message.hull,message.hull_max)
+		set_gauge(self.power_gauge,message.power,message.power_max)
 		-- The active ship's own Power and Hull points (main/player_ship.script;
 		-- per direct instruction: "while in flight show the ship power and hull
 		-- points"), as current / maximum. Nothing drains or damages either one

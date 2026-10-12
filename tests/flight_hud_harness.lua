@@ -1,5 +1,5 @@
 -- Standalone harness for main/flight_hud.gui_script's two newest pieces of
--- flight HUD (plan.md §2.17), both per direct instruction:
+-- flight HUD (plan.md Â§2.17), both per direct instruction:
 --   * the Power / Hull readouts ("while in flight show the ship power and hull
 --     points") - the "ship_status" message, including the "only rewrite the
 --     text when it changes" caching;
@@ -124,7 +124,7 @@ check("scope face is a full disc", #discs == 1 and discs[1].size.x == 208)
 check("outer ring sits on the panel edge", #rings == 3 and (function()
 	for _, r in ipairs(rings) do
 		if r.size.x == RADAR_RADIUS * 2 then
-			return r.inner_radius == RADAR_RADIUS - 6
+			return r.inner_radius == RADAR_RADIUS - 3
 		end
 	end
 	return false
@@ -415,6 +415,68 @@ on_message(self, "contacts", {
 check("no target_id highlights nothing",
 	not is_highlighted(rocks[1]) and rocks[1].color.w < 0.5)
 
+
+local layout = require "main.ui.flight_layout"
+check("zero capacity leaves gauges empty", layout.fraction(100,0)==0)
+check("negative values cannot reverse a gauge", layout.fraction(-12,100)==0)
+check("over-capacity values stay inside the track", layout.fraction(200,100)==1)
+on_message(self,"ship_status",{hull=25,hull_max=100,power=50,power_max=200})
+check("hull gauge follows telemetry",self.hull_gauge.size.x==60 and self.hull_gauge.enabled)
+check("power gauge follows telemetry",self.power_gauge.size.x==60)
+on_message(self,"ship_status",{})
+check("missing telemetry hides both fills",not self.hull_gauge.enabled and not self.power_gauge.enabled)
+local ships=require "main.data.ships"
+for id,ship in pairs(ships.SHIPS) do
+    local slots=layout.slots(ship.slot_positions)
+    local anchors=layout.placements(ship.slot_positions)
+    for i,slot in ipairs(slots) do
+        local p=anchors[slot]
+        if slot:match("^W") then
+            local o=ship.slot_positions[slot]
+            assert(p.x==530+o.x*.72 and p.y==260+o.y*.72,id.." weapon left fitting anchor")
+        else assert(p.x>760 and p.x<1480 and p.y>=110 and p.y<240,id.." service outside safe area") end
+        for j=i+1,#slots do
+            local q=anchors[slots[j]]
+            assert(math.abs(p.x-q.x)>=60 or math.abs(p.y-q.y)>=68,id.." overlapping markers or labels")
+        end
+    end
+end
+check("all roster loadouts fit the equipment area",true)
+local sorted=layout.slots({W10={},W2={},E1={},C1={},H1={}})
+check("slot ordering is numeric within each category",table.concat(sorted,",")=="W2,W10,C1,E1,H1")
+local texture_creates,texture_deletes=0,0
+sys=sys or {}
+sys.load_resource=function() return "png" end
+image={load=function() return {width=440,height=640,type="rgba",buffer="pixels"} end}
+gui.new_texture=function() texture_creates=texture_creates+1;return true end
+gui.delete_texture=function() texture_deletes=texture_deletes+1 end
+local session=require "main.session"
+session.choose_faction("accord")
+on_message(self,"show_flight_hud",{})
+check("launch builds interactive equipment",next(self.diagram_markers)~=nil)
+check("weapon map loads the current hull",self.silhouette_name=="patrol_interceptor" and texture_creates==1)
+on_message(self,"show_flight_hud",{})
+check("same hull reuses its texture",texture_creates==1)
+check("power has a distinct violet color",self.power_gauge.color.x==.73 and self.power_gauge.color.z==1 and self.hull_gauge.color.z~=1)
+on_message(self,"slot_states",{states={W1={state="cooldown",frac=.5}}})
+check("spatial weapon cooldown remains visible",self.diagram_markers.W1.cooldown_bar.enabled)
+check("spatial weapon follows the fitting anchor",self.diagram_markers.W1.box.pos.x==530-90*.72)
+
+local posted
+msg.post=function(url,id,data) posted={url=url,id=id,data=data} end
+gui.pick_node=function(node,x,y) return node.pos.x==x and node.pos.y==y end
+for id,marker in pairs(self.diagram_markers) do
+    if marker.usable then
+        check("equipment click is consumed",on_input(self,"touch",{pressed=true,x=marker.box.pos.x,y=marker.box.pos.y})==true)
+        check("equipment click uses existing flight action",posted.id=="slot_click" and posted.data.slot==id)
+        break
+    end
+end
+check("world clicks pass through",on_input(self,"touch",{pressed=true,x=960,y=540})==false)
+
+session.restore({faction="swarm",active_ship_id="patrol_interceptor",owned_ships={"patrol_interceptor"}})
+on_message(self,"show_flight_hud",{})
+check("faction switch replaces silhouette and releases old texture",self.silhouette_name=="hummingbird" and texture_creates==2 and texture_deletes==1)
 -- ---- The desired-speed (throttle segment) readout ----
 -- player_ship.script posts "set_throttle" every frame: the segment the mouse
 -- wheel / throttle keys have selected (0 = no speed, 9 = top speed) plus the
