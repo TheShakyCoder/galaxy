@@ -1,0 +1,191 @@
+{
+  "base": "6d1f0a546d484ebf2a67862e4c2d52c51a953190",
+  "engine": "Defold 1.13.1",
+  "new_resource_archive_bytes": 1838261,
+  "resources": [
+    {
+      "path": "/assets/materials/stations/ad.materialc",
+      "compiled_bytes": 189,
+      "archive_bytes": 189
+    },
+    {
+      "path": "/assets/materials/stations/hull.materialc",
+      "compiled_bytes": 262,
+      "archive_bytes": 225
+    },
+    {
+      "path": "/assets/models/stations/accord/fixed.meshsetc",
+      "compiled_bytes": 828798,
+      "archive_bytes": 143946
+    },
+    {
+      "path": "/assets/models/stations/accord/hull.texturec",
+      "compiled_bytes": 16777442,
+      "archive_bytes": 406125
+    },
+    {
+      "path": "/assets/models/stations/accord/rotor.meshsetc",
+      "compiled_bytes": 232989,
+      "archive_bytes": 36384
+    },
+    {
+      "path": "/assets/models/stations/accord/rotor.modelc",
+      "compiled_bytes": 156,
+      "archive_bytes": 109
+    },
+    {
+      "path": "/assets/models/stations/accord/rotor.rigscenec",
+      "compiled_bytes": 49,
+      "archive_bytes": 49
+    },
+    {
+      "path": "/assets/models/stations/ad.meshsetc",
+      "compiled_bytes": 614,
+      "archive_bytes": 248
+    },
+    {
+      "path": "/assets/models/stations/ads/civic.modelc",
+      "compiled_bytes": 149,
+      "archive_bytes": 99
+    },
+    {
+      "path": "/assets/models/stations/ads/civic.rigscenec",
+      "compiled_bytes": 39,
+      "archive_bytes": 39
+    },
+    {
+      "path": "/assets/models/stations/ads/civic.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 73743
+    },
+    {
+      "path": "/assets/models/stations/ads/current.modelc",
+      "compiled_bytes": 153,
+      "archive_bytes": 101
+    },
+    {
+      "path": "/assets/models/stations/ads/current.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 54635
+    },
+    {
+      "path": "/assets/models/stations/ads/hydrogen.modelc",
+      "compiled_bytes": 155,
+      "archive_bytes": 102
+    },
+    {
+      "path": "/assets/models/stations/ads/hydrogen.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 70265
+    },
+    {
+      "path": "/assets/models/stations/ads/logistics.modelc",
+      "compiled_bytes": 157,
+      "archive_bytes": 103
+    },
+    {
+      "path": "/assets/models/stations/ads/logistics.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 73557
+    },
+    {
+      "path": "/assets/models/stations/ads/molt.modelc",
+      "compiled_bytes": 147,
+      "archive_bytes": 98
+    },
+    {
+      "path": "/assets/models/stations/ads/molt.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 50960
+    },
+    {
+      "path": "/assets/models/stations/ads/mutual.modelc",
+      "compiled_bytes": 151,
+      "archive_bytes": 100
+    },
+    {
+      "path": "/assets/models/stations/ads/mutual.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 68627
+    },
+    {
+      "path": "/assets/models/stations/ads/tope.modelc",
+      "compiled_bytes": 147,
+      "archive_bytes": 98
+    },
+    {
+      "path": "/assets/models/stations/ads/tope.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 70715
+    },
+    {
+      "path": "/assets/models/stations/ads/verge.modelc",
+      "compiled_bytes": 149,
+      "archive_bytes": 99
+    },
+    {
+      "path": "/assets/models/stations/ads/verge.texturec",
+      "compiled_bytes": 2097344,
+      "archive_bytes": 67275
+    },
+    {
+      "path": "/assets/models/stations/swarm/fixed.meshsetc",
+      "compiled_bytes": 429758,
+      "archive_bytes": 74986
+    },
+    {
+      "path": "/assets/models/stations/swarm/hull.texturec",
+      "compiled_bytes": 16777442,
+      "archive_bytes": 381271
+    },
+    {
+      "path": "/assets/models/stations/swarm/rotor.meshsetc",
+      "compiled_bytes": 1083358,
+      "archive_bytes": 257548
+    },
+    {
+      "path": "/assets/models/stations/swarm/rotor.modelc",
+      "compiled_bytes": 154,
+      "archive_bytes": 108
+    },
+    {
+      "path": "/assets/models/stations/swarm/rotor.rigscenec",
+      "compiled_bytes": 48,
+      "archive_bytes": 48
+    },
+    {
+      "path": "/main/data/station_ads.luac",
+      "compiled_bytes": 219,
+      "archive_bytes": 166
+    },
+    {
+      "path": "/main/station_ads.luac",
+      "compiled_bytes": 894,
+      "archive_bytes": 538
+    },
+    {
+      "path": "/main/station_visual.luac",
+      "compiled_bytes": 1484,
+      "archive_bytes": 869
+    },
+    {
+      "path": "/main/stations.scriptc",
+      "compiled_bytes": 2261,
+      "archive_bytes": 975
+    },
+    {
+      "path": "/shader_-4218306864020369848.spc",
+      "compiled_bytes": 3067,
+      "archive_bytes": 1281
+    },
+    {
+      "path": "/shader_8586104937026123708.spc",
+      "compiled_bytes": 7556,
+      "archive_bytes": 2580
+    }
+  ],
+  "notes": [
+    "Measured from successful full-game station-only HTML5 build. Unique resource digests counted once.",
+    "New resource payload before HTTP compression; excludes small integration/index deltas and removal of old resources. Not a net download delta."
+  ]
+}

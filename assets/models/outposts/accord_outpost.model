@@ -1,4 +1,4 @@
-mesh: "/assets/models/outposts/accord_outpost.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/outposts/accord_outpost_palette.png"
-name: "accord_outpost"
+mesh: "/assets/models/stations/accord/fixed.glb"
+material: "/assets/materials/stations/hull.material"
+textures: "/assets/models/stations/accord/hull.png"
+name: "station"

@@ -1,0 +1,22 @@
+# Shared selection includes the optional sky rule, so the station profile also
+# preserves Space PR #22 when both independent visual changes are installed.
+path_settings { path: "/assets/models/stations/**/*.png" profile: "Station" }
+path_settings { path: "/assets/space/fields.cubemap" profile: "Station" }
+path_settings { path: "**" profile: "Default" }
+profiles {
+ name: "Station"
+ platforms {
+  os: OS_ID_GENERIC
+  formats { format: TEXTURE_FORMAT_RGB compression_level: BEST }
+  mipmaps: true
+  premultiply_alpha: false
+ }
+}
+profiles {
+ name: "Default"
+ platforms {
+  os: OS_ID_GENERIC
+  formats { format: TEXTURE_FORMAT_RGBA compression_level: BEST }
+  mipmaps: false
+ }
+}

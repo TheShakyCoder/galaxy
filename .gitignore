@@ -5,3 +5,4 @@
 /nakama-server/.cookie
 .DS_Store
 Thumbs.db
+/tests/station_exterior_preview/combined/

@@ -1,0 +1,57 @@
+{
+  "stations": [
+    {
+      "faction": "accord",
+      "triangles": 12352,
+      "swept_radius": 314.01951420541855,
+      "swept_aabb_min": [
+        -314.01951420541855,
+        -179.01951420541855,
+        -378.0
+      ],
+      "swept_aabb_max": [
+        314.01951420541855,
+        449.01951420541855,
+        378.0
+      ],
+      "dimensions": [
+        628.0390284108371,
+        628.0390284108371,
+        756.0
+      ],
+      "conservative_root_distance": 586.9433738762796,
+      "model_draws": 10
+    },
+    {
+      "faction": "swarm",
+      "triangles": 17600,
+      "swept_radius": 366.00000638023135,
+      "swept_aabb_min": [
+        -366.00000638023135,
+        -223.50000638023135,
+        8.0
+      ],
+      "swept_aabb_max": [
+        366.00000638023135,
+        508.50000638023135,
+        720.0
+      ],
+      "dimensions": [
+        732.0000127604627,
+        732.0000127604627,
+        712.0
+      ],
+      "conservative_root_distance": 881.4602977381882,
+      "model_draws": 10
+    }
+  ],
+  "byte_identical_rebuild": true,
+  "source_bytes": 2339291,
+  "texture_memory_rgb8_mips_bytes": 50331654,
+  "texture_memory_rgba8_mips_upper_bytes": 67108872,
+  "notes": [
+    "Bounds include every billboard and the full analytic rotational sweep.",
+    "Draw counts are component upper bounds, not measured GPU timing.",
+    "RGB8 with full mip chains; conservative RGBA8 allowance for drivers expanding RGB storage."
+  ]
+}

@@ -1,5 +1,63 @@
 name: "main"
 scale_along_z: 0
+
+
+# STATION EXTERIORS BEGIN
+embedded_instances { id: "accord_outpost_rotor" data: "components { id: \"model\" component: \"/assets/models/stations/accord/rotor.model\" }"
+children: "accord_outpost_ad1"
+children: "accord_outpost_ad2"
+children: "accord_outpost_ad3"
+children: "accord_outpost_ad4"
+children: "accord_outpost_ad5"
+children: "accord_outpost_ad6"
+children: "accord_outpost_ad7"
+children: "accord_outpost_ad8"
+position { x: 0 y: 135 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad1" data: "components { id: \"model\" component: \"/assets/models/stations/ads/verge.model\" }"
+position { x: 206.9752014379511 y: 206.9752014379511 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad2" data: "components { id: \"model\" component: \"/assets/models/stations/ads/tope.model\" }"
+position { x: 1.7923142917575493e-14 y: 292.70713694845375 z: 0 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad3" data: "components { id: \"model\" component: \"/assets/models/stations/ads/molt.model\" }"
+position { x: -206.97520143795106 y: 206.9752014379511 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad4" data: "components { id: \"model\" component: \"/assets/models/stations/ads/hydrogen.model\" }"
+position { x: -292.70713694845375 y: 3.5846285835150985e-14 z: 0 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad5" data: "components { id: \"model\" component: \"/assets/models/stations/ads/mutual.model\" }"
+position { x: -206.97520143795114 y: -206.97520143795106 z: 0 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad6" data: "components { id: \"model\" component: \"/assets/models/stations/ads/current.model\" }"
+position { x: -5.376942875272647e-14 y: -292.70713694845375 z: 0 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad7" data: "components { id: \"model\" component: \"/assets/models/stations/ads/civic.model\" }"
+position { x: 206.97520143795123 y: -206.97520143795094 z: 0 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "accord_outpost_ad8" data: "components { id: \"model\" component: \"/assets/models/stations/ads/logistics.model\" }"
+position { x: 292.70713694845375 y: -7.169257167030197e-14 z: 0 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_rotor" data: "components { id: \"model\" component: \"/assets/models/stations/swarm/rotor.model\" }"
+children: "swarm_outpost_ad1"
+children: "swarm_outpost_ad2"
+children: "swarm_outpost_ad3"
+children: "swarm_outpost_ad4"
+children: "swarm_outpost_ad5"
+children: "swarm_outpost_ad6"
+children: "swarm_outpost_ad7"
+children: "swarm_outpost_ad8"
+position { x: 0 y: 142.5 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad1" data: "components { id: \"model\" component: \"/assets/models/stations/ads/verge.model\" }"
+position { x: 242.85185767330307 y: 242.85185767330307 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad2" data: "components { id: \"model\" component: \"/assets/models/stations/ads/tope.model\" }"
+position { x: 2.1029903692023684e-14 y: 343.44439076908577 z: 618 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad3" data: "components { id: \"model\" component: \"/assets/models/stations/ads/molt.model\" }"
+position { x: -242.85185767330304 y: 242.85185767330307 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad4" data: "components { id: \"model\" component: \"/assets/models/stations/ads/hydrogen.model\" }"
+position { x: -343.44439076908577 y: 4.205980738404737e-14 z: 618 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad5" data: "components { id: \"model\" component: \"/assets/models/stations/ads/mutual.model\" }"
+position { x: -242.8518576733031 y: -242.85185767330304 z: 618 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad6" data: "components { id: \"model\" component: \"/assets/models/stations/ads/current.model\" }"
+position { x: -6.308971107607105e-14 y: -343.44439076908577 z: 618 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad7" data: "components { id: \"model\" component: \"/assets/models/stations/ads/civic.model\" }"
+position { x: 242.85185767330321 y: -242.85185767330287 z: 618 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "swarm_outpost_ad8" data: "components { id: \"model\" component: \"/assets/models/stations/ads/logistics.model\" }"
+position { x: 343.44439076908577 y: -8.411961476809473e-14 z: 618 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
+embedded_instances { id: "station_visuals" data: "components { id: \"script\" component: \"/main/stations.script\" }"
+position { x: 0 y: 0 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
+# STATION EXTERIORS END
 embedded_instances {
   id: "start_screen"
   data: "components {\n"
@@ -1038,6 +1096,7 @@ instances {
 }
 embedded_instances {
   id: "accord_outpost"
+  children: "accord_outpost_rotor"
   data: "components {\n"
   "  id: \"model\"\n"
   "  component: \"/assets/models/outposts/accord_outpost.model\"\n"
@@ -1065,6 +1124,7 @@ embedded_instances {
 }
 embedded_instances {
   id: "swarm_outpost"
+  children: "swarm_outpost_rotor"
   data: "components {\n"
   "  id: \"model\"\n"
   "  component: \"/assets/models/outposts/swarm_outpost.model\"\n"

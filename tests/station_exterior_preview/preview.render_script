@@ -1,0 +1,17 @@
+function init(self)
+ self.model=render.predicate({"model"})
+ self.view=vmath.matrix4();self.projection=vmath.matrix4()
+end
+function update(self)
+ render.set_depth_mask(true)
+ render.clear({[graphics.BUFFER_TYPE_COLOR0_BIT]=vmath.vector4(.006,.009,.016,1),[graphics.BUFFER_TYPE_DEPTH_BIT]=1})
+ render.set_viewport(0,0,render.get_window_width(),render.get_window_height())
+ render.set_view(self.view);render.set_projection(self.projection)
+ render.enable_state(graphics.STATE_DEPTH_TEST);render.set_depth_func(graphics.COMPARE_FUNC_LEQUAL)
+ render.enable_state(graphics.STATE_CULL_FACE);render.disable_state(graphics.STATE_BLEND)
+ render.draw(self.model)
+ render.disable_state(graphics.STATE_DEPTH_TEST);render.disable_state(graphics.STATE_CULL_FACE)
+end
+function on_message(self,id,m)
+ if id==hash("review_camera") then self.view=m.view;self.projection=m.projection end
+end
