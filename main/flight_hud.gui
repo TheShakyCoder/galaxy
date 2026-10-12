@@ -16,21 +16,43 @@ textures {
   name: "icons"
   texture: "/main/images/icons.atlas"
 }
+textures { name: "ui_panels" texture: "/main/ui/flight/panels.atlas" }
+
 nodes {
   type: TYPE_BOX
-  id: "speed_panel"
-  position { x: 163 y: 309 z: 0 w: 1 }
-  size { x: 276 y: 99 z: 0 w: 1 }
-  color { x: .015 y: .04 z: .065 w: .66 }
+  id: "systems_panel"
+  position { x: 163 y: 221 z: 0 w: 1 }
+  size { x: 278 y: 284 z: 0 w: 1 }
+  color { x: 1 y: 1 z: 1 w: 1 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   adjust_mode: ADJUST_MODE_FIT
   inherit_alpha: true
   alpha: 1.0
-  texture: ""
+  texture: "ui_panels/panel"
   parent: ""
   layer: ""
+ slice9 { x: 16 y: 16 z: 16 w: 16 }
+ size_mode: SIZE_MODE_MANUAL
+}
+nodes {
+  type: TYPE_BOX
+  id: "speed_panel"
+  position { x: 163 y: 309 z: 0 w: 1 }
+  size { x: 276 y: 99 z: 0 w: 1 }
+  color { x: 1 y: 1 z: 1 w: 0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 0.0
+  texture: "ui_panels/panel"
+  parent: ""
+  layer: ""
+ slice9 { x: 16 y: 16 z: 16 w: 16 }
+ size_mode: SIZE_MODE_MANUAL
 }
 nodes {
   type: TYPE_TEXT
@@ -53,7 +75,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 1.12 y: 1.12 z: 1 w: 1 }
+  scale { x: 1.05 y: 1.05 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -76,7 +98,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.57 y: 0.57 z: 1 w: 1 }
+  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -100,7 +122,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.7 y: 0.7 z: 1 w: 1 }
+  scale { x: 0.65 y: 0.65 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -124,7 +146,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.65 y: 0.65 z: 1 w: 1 }
+  scale { x: 0.6 y: 0.6 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -148,7 +170,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
+  scale { x: 0.42 y: 0.42 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -172,7 +194,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.75 y: 0.75 z: 1 w: 1 }
+  scale { x: 0.7 y: 0.7 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -195,7 +217,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.65 y: 0.65 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -241,7 +263,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.57 y: 0.57 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_BOX
@@ -254,7 +276,7 @@ nodes {
   yanchor: YANCHOR_NONE
   adjust_mode: ADJUST_MODE_FIT
   inherit_alpha: true
-  alpha: 1.0
+  alpha: 0.0
   texture: ""
   parent: ""
   layer: ""
@@ -280,7 +302,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.57 y: 0.57 z: 1 w: 1 }
+  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -303,7 +325,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.55 y: 0.55 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -326,23 +348,25 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.45 y: 0.45 z: 1 w: 1 }
+  scale { x: 0.37 y: 0.37 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_BOX
   id: "currency_panel"
   position { x: 469 y: 967 z: 0 w: 1 }
   size { x: 878 y: 40 z: 0 w: 1 }
-  color { x: .015 y: .04 z: .065 w: .66 }
+  color { x: 1 y: 1 z: 1 w: 1 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
   adjust_mode: ADJUST_MODE_FIT
   inherit_alpha: true
   alpha: 1.0
-  texture: ""
+  texture: "ui_panels/panel"
   parent: ""
   layer: ""
+ slice9 { x: 16 y: 16 z: 16 w: 16 }
+ size_mode: SIZE_MODE_MANUAL
 }
 nodes {
   type: TYPE_TEXT
@@ -365,7 +389,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.58 y: 0.58 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -388,7 +412,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.58 y: 0.58 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -411,7 +435,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.58 y: 0.58 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_BOX
@@ -450,24 +474,9 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.67 y: 0.67 z: 1 w: 1 }
+  scale { x: 0.58 y: 0.58 z: 1 w: 1 }
 }
-nodes {
-  type: TYPE_BOX
-  id: "systems_panel"
-  position { x: 163 y: 175 z: 0 w: 1 }
-  size { x: 276 y: 168 z: 0 w: 1 }
-  color { x: .015 y: .04 z: .065 w: .66 }
-  pivot: PIVOT_CENTER
-  xanchor: XANCHOR_NONE
-  yanchor: YANCHOR_NONE
-  adjust_mode: ADJUST_MODE_FIT
-  inherit_alpha: true
-  alpha: 1.0
-  texture: ""
-  parent: ""
-  layer: ""
-}
+
 nodes {
   type: TYPE_TEXT
   id: "power_caption"
@@ -475,7 +484,7 @@ nodes {
   font: "default_font"
   position { x: 163 y: 172 z: 0 w: 1 }
   size { x: 240.0 y: 30.0 z: 0.0 w: 1.0 }
-  color { x: .38 y: .73 z: .82 w: 1 }
+  color { x: 0.73 y: 0.48 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
@@ -489,7 +498,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.57 y: 0.57 z: 1 w: 1 }
+  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -498,7 +507,7 @@ nodes {
   font: "default_font"
   position { x: 163 y: 143 z: 0 w: 1 }
   size { x: 240.0 y: 34.0 z: 0.0 w: 1.0 }
-  color { x: 0.45 y: 0.8 z: 1.0 w: 1.0 }
+  color { x: 0.73 y: 0.48 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
   yanchor: YANCHOR_NONE
@@ -512,7 +521,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.85 y: 0.85 z: 1 w: 1 }
+  scale { x: 0.8 y: 0.8 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -535,7 +544,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.57 y: 0.57 z: 1 w: 1 }
+  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -558,7 +567,7 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.85 y: 0.85 z: 1 w: 1 }
+  scale { x: 0.8 y: 0.8 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT
@@ -581,14 +590,14 @@ nodes {
   text_tracking: 0.0
   parent: ""
   layer: ""
-  scale { x: 0.5 y: 0.5 z: 1 w: 1 }
+  scale { x: 0.32 y: 0.32 z: 1 w: 1 }
 }
 
 nodes {
  type: TYPE_BOX
  id: "left_rule"
  position { x: 32 y: 982 }
- size { x: 2 y: 126 }
+ size { x: 3 y: 126 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -597,7 +606,7 @@ nodes {
  type: TYPE_BOX
  id: "top_rule"
  position { x: 469 y: 991 }
- size { x: 878 y: 1 }
+ size { x: 878 y: 3 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -606,7 +615,7 @@ nodes {
  type: TYPE_BOX
  id: "vitals_rule"
  position { x: 32 y: 216 }
- size { x: 2 y: 276 }
+ size { x: 3 y: 276 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -615,7 +624,7 @@ nodes {
  type: TYPE_BOX
  id: "radar_rule"
  position { x: 1760 y: 311 }
- size { x: 248 y: 1 }
+ size { x: 248 y: 3 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -624,7 +633,7 @@ nodes {
  type: TYPE_BOX
  id: "target_rule"
  position { x: 1590 y: 1025 }
- size { x: 580 y: 1 }
+ size { x: 580 y: 3 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -632,8 +641,8 @@ nodes {
 nodes {
  type: TYPE_BOX
  id: "equipment_rule"
- position { x: 960 y: 53 }
- size { x: 860 y: 1 }
+ position { x: 1120 y: 53 }
+ size { x: 860 y: 3 }
  color { x: 0.26 y: 0.67 z: 0.77 w: 0.5 }
  alpha: 1
 }
@@ -641,11 +650,11 @@ nodes {
 nodes {
  type: TYPE_TEXT
  id: "flight_brand"
- text: "G A L A X Y   /   FLIGHT COMMAND"
+ text: "GALAXY / FLIGHT COMMAND"
  font: "default_font"
- position { x: 232 y: 1050 }
+ position { x: 270 y: 1050 }
  size { x: 550 y: 30 }
- scale { x: 0.52 y: 0.52 z: 1 }
+ scale { x: 0.48 y: 0.48 z: 1 w: 1 }
  color { x: .44 y: .64 z: .72 w: 1 }
  alpha: 1
  outline_alpha: 0
@@ -659,7 +668,7 @@ nodes {
  font: "default_font"
  position { x: 1685 y: 1047 }
  size { x: 550 y: 30 }
- scale { x: 0.5 y: 0.5 z: 1 }
+ scale { x: 0.48 y: 0.48 z: 1 w: 1 }
  color { x: .44 y: .64 z: .72 w: 1 }
  alpha: 1
  outline_alpha: 0
@@ -669,13 +678,27 @@ nodes {
 nodes {
  type: TYPE_TEXT
  id: "equipment_caption"
- text: "ONBOARD SYSTEMS"
+ text: "COMPUTERS / ENGINES / HULL"
  font: "default_font"
- position { x: 960 y: 242 }
+ position { x: 1120 y: 242 }
  size { x: 550 y: 30 }
- scale { x: 0.48 y: 0.48 z: 1 }
+ scale { x: 0.4 y: 0.4 z: 1 w: 1 }
  color { x: .44 y: .64 z: .72 w: 1 }
  alpha: 1
  outline_alpha: 0
  shadow_alpha: 0
+}
+
+nodes {
+ position { x: 530 y: 510 z: 0 }
+ size { x: 300 y: 30 z: 0 }
+ scale { x: 0.4 y: 0.4 z: 1 }
+ type: TYPE_TEXT
+ text: "WEAPON HARDPOINTS"
+ font: "default_font"
+ id: "weapon_caption"
+ color { x: 0.6 y: 0.75 z: 0.82 w: 1 }
+ outline { x: 0 y: 0 z: 0 w: 0 }
+ shadow { x: 0 y: 0 z: 0 w: 0 }
+ adjust_mode: ADJUST_MODE_FIT
 }

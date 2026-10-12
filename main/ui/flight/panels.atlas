@@ -1,0 +1,3 @@
+images { image: "/main/ui/flight/panel.png" }
+images { image: "/main/ui/flight/button.png" }
+extrude_borders: 2
