@@ -1,0 +1,441 @@
+{
+  "result": "PASS",
+  "variants": 72,
+  "legacy_skins_preserved": 288,
+  "rebuild_verified": true,
+  "checks": "binary geometry, normals, winding, UVs, detailed-source equality, 2K texture agreement, original hashes, material contracts, factory integration, Moray symmetry, exact extents",
+  "rows": [
+    {
+      "id": "sardine.porcelain_dynasty",
+      "triangles": 43452,
+      "vertices": 28080,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.starlight",
+      "triangles": 43452,
+      "vertices": 28080,
+      "result": "PASS"
+    },
+    {
+      "id": "sardine.grand_prix",
+      "triangles": 43452,
+      "vertices": 28080,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.porcelain_dynasty",
+      "triangles": 31872,
+      "vertices": 19866,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.starlight",
+      "triangles": 31872,
+      "vertices": 19866,
+      "result": "PASS"
+    },
+    {
+      "id": "pilotfish.grand_prix",
+      "triangles": 31872,
+      "vertices": 19866,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.porcelain_dynasty",
+      "triangles": 29860,
+      "vertices": 18837,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.starlight",
+      "triangles": 29860,
+      "vertices": 18837,
+      "result": "PASS"
+    },
+    {
+      "id": "piranha.grand_prix",
+      "triangles": 29860,
+      "vertices": 18837,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.porcelain_dynasty",
+      "triangles": 29912,
+      "vertices": 18993,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.starlight",
+      "triangles": 29912,
+      "vertices": 18993,
+      "result": "PASS"
+    },
+    {
+      "id": "anglerfish.grand_prix",
+      "triangles": 29912,
+      "vertices": 18993,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.porcelain_dynasty",
+      "triangles": 30000,
+      "vertices": 18989,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.starlight",
+      "triangles": 30000,
+      "vertices": 18989,
+      "result": "PASS"
+    },
+    {
+      "id": "barracuda.grand_prix",
+      "triangles": 30000,
+      "vertices": 18989,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.porcelain_dynasty",
+      "triangles": 35572,
+      "vertices": 22035,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.starlight",
+      "triangles": 35572,
+      "vertices": 22035,
+      "result": "PASS"
+    },
+    {
+      "id": "remora.grand_prix",
+      "triangles": 35572,
+      "vertices": 22035,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.porcelain_dynasty",
+      "triangles": 31012,
+      "vertices": 19346,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.starlight",
+      "triangles": 31012,
+      "vertices": 19346,
+      "result": "PASS"
+    },
+    {
+      "id": "moray.grand_prix",
+      "triangles": 31012,
+      "vertices": 19346,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.porcelain_dynasty",
+      "triangles": 28620,
+      "vertices": 19098,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.starlight",
+      "triangles": 28620,
+      "vertices": 19098,
+      "result": "PASS"
+    },
+    {
+      "id": "lionfish.grand_prix",
+      "triangles": 28620,
+      "vertices": 19098,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.porcelain_dynasty",
+      "triangles": 28004,
+      "vertices": 17854,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.starlight",
+      "triangles": 28004,
+      "vertices": 17854,
+      "result": "PASS"
+    },
+    {
+      "id": "marlin.grand_prix",
+      "triangles": 28004,
+      "vertices": 17854,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.porcelain_dynasty",
+      "triangles": 33092,
+      "vertices": 20009,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.starlight",
+      "triangles": 33092,
+      "vertices": 20009,
+      "result": "PASS"
+    },
+    {
+      "id": "manta_ray.grand_prix",
+      "triangles": 33092,
+      "vertices": 20009,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.porcelain_dynasty",
+      "triangles": 29120,
+      "vertices": 18402,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.starlight",
+      "triangles": 29120,
+      "vertices": 18402,
+      "result": "PASS"
+    },
+    {
+      "id": "tiger_shark.grand_prix",
+      "triangles": 29120,
+      "vertices": 18402,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.porcelain_dynasty",
+      "triangles": 34816,
+      "vertices": 21155,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.starlight",
+      "triangles": 34816,
+      "vertices": 21155,
+      "result": "PASS"
+    },
+    {
+      "id": "hammerhead.grand_prix",
+      "triangles": 34816,
+      "vertices": 21155,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.porcelain_dynasty",
+      "triangles": 33232,
+      "vertices": 24689,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.starlight",
+      "triangles": 33232,
+      "vertices": 24689,
+      "result": "PASS"
+    },
+    {
+      "id": "hummingbird.grand_prix",
+      "triangles": 33232,
+      "vertices": 24689,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.porcelain_dynasty",
+      "triangles": 37668,
+      "vertices": 27623,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.starlight",
+      "triangles": 37668,
+      "vertices": 27623,
+      "result": "PASS"
+    },
+    {
+      "id": "oxpecker.grand_prix",
+      "triangles": 37668,
+      "vertices": 27623,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.porcelain_dynasty",
+      "triangles": 33548,
+      "vertices": 25339,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.starlight",
+      "triangles": 33548,
+      "vertices": 25339,
+      "result": "PASS"
+    },
+    {
+      "id": "shrike.grand_prix",
+      "triangles": 33548,
+      "vertices": 25339,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.porcelain_dynasty",
+      "triangles": 31152,
+      "vertices": 24336,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.starlight",
+      "triangles": 31152,
+      "vertices": 24336,
+      "result": "PASS"
+    },
+    {
+      "id": "kingfisher.grand_prix",
+      "triangles": 31152,
+      "vertices": 24336,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.porcelain_dynasty",
+      "triangles": 33076,
+      "vertices": 24571,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.starlight",
+      "triangles": 33076,
+      "vertices": 24571,
+      "result": "PASS"
+    },
+    {
+      "id": "falcon.grand_prix",
+      "triangles": 33076,
+      "vertices": 24571,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.porcelain_dynasty",
+      "triangles": 35204,
+      "vertices": 26364,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.starlight",
+      "triangles": 35204,
+      "vertices": 26364,
+      "result": "PASS"
+    },
+    {
+      "id": "egret.grand_prix",
+      "triangles": 35204,
+      "vertices": 26364,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.porcelain_dynasty",
+      "triangles": 33768,
+      "vertices": 25539,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.starlight",
+      "triangles": 33768,
+      "vertices": 25539,
+      "result": "PASS"
+    },
+    {
+      "id": "goshawk.grand_prix",
+      "triangles": 33768,
+      "vertices": 25539,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.porcelain_dynasty",
+      "triangles": 33452,
+      "vertices": 25235,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.starlight",
+      "triangles": 33452,
+      "vertices": 25235,
+      "result": "PASS"
+    },
+    {
+      "id": "osprey.grand_prix",
+      "triangles": 33452,
+      "vertices": 25235,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.porcelain_dynasty",
+      "triangles": 35204,
+      "vertices": 25198,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.starlight",
+      "triangles": 35204,
+      "vertices": 25198,
+      "result": "PASS"
+    },
+    {
+      "id": "frigatebird.grand_prix",
+      "triangles": 35204,
+      "vertices": 25198,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.porcelain_dynasty",
+      "triangles": 41884,
+      "vertices": 29890,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.starlight",
+      "triangles": 41884,
+      "vertices": 29890,
+      "result": "PASS"
+    },
+    {
+      "id": "pelican.grand_prix",
+      "triangles": 41884,
+      "vertices": 29890,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.porcelain_dynasty",
+      "triangles": 33680,
+      "vertices": 25459,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.starlight",
+      "triangles": 33680,
+      "vertices": 25459,
+      "result": "PASS"
+    },
+    {
+      "id": "golden_eagle.grand_prix",
+      "triangles": 33680,
+      "vertices": 25459,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.porcelain_dynasty",
+      "triangles": 33532,
+      "vertices": 25347,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.starlight",
+      "triangles": 33532,
+      "vertices": 25347,
+      "result": "PASS"
+    },
+    {
+      "id": "harpy_eagle.grand_prix",
+      "triangles": 33532,
+      "vertices": 25347,
+      "result": "PASS"
+    }
+  ]
+}

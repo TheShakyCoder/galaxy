@@ -1,4 +1,4 @@
-mesh: "/assets/skins/tiger_shark/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/tiger_shark/starlight/albedo.png"
+mesh: "/assets/skins/hd/tiger_shark/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/tiger_shark/starlight/albedo.png"
 name: "tiger_shark_starlight"

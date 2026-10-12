@@ -1,4 +1,4 @@
-mesh: "/assets/skins/sardine/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/sardine/porcelain_dynasty/albedo.png"
+mesh: "/assets/skins/hd/sardine/porcelain_dynasty/model.glb"
+material: "/assets/materials/theme_finish/porcelain_dynasty.material"
+textures: "/assets/skins/hd/sardine/porcelain_dynasty/albedo.png"
 name: "sardine_porcelain_dynasty"

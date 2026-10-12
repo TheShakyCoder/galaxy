@@ -1,0 +1,10 @@
+function init(self) self.models=render.predicate({"model"}) end
+function update(self)
+ local w,h=render.get_window_width(),render.get_window_height()
+ render.set_viewport(0,0,w,h);render.set_depth_mask(true)
+ render.clear({[graphics.BUFFER_TYPE_COLOR0_BIT]=vmath.vector4(.018,.028,.046,1),[graphics.BUFFER_TYPE_DEPTH_BIT]=1})
+ render.set_view(vmath.matrix4_look_at(vmath.vector3(24,10,12),vmath.vector3(0,0,-1),vmath.vector3(0,1,0)))
+ render.set_projection(vmath.matrix4_perspective(math.rad(38),w/h,.1,100))
+ render.enable_state(graphics.STATE_DEPTH_TEST);render.enable_state(graphics.STATE_CULL_FACE)
+ render.draw(self.models)
+end

@@ -1,4 +1,4 @@
-mesh: "/assets/skins/manta_ray/grand_prix/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/manta_ray/grand_prix/albedo.png"
+mesh: "/assets/skins/hd/manta_ray/grand_prix/model.glb"
+material: "/assets/materials/theme_finish/grand_prix.material"
+textures: "/assets/skins/hd/manta_ray/grand_prix/albedo.png"
 name: "manta_ray_grand_prix"

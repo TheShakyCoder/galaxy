@@ -1,4 +1,4 @@
-mesh: "/assets/skins/barracuda/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/barracuda/starlight/albedo.png"
+mesh: "/assets/skins/hd/barracuda/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/barracuda/starlight/albedo.png"
 name: "barracuda_starlight"
