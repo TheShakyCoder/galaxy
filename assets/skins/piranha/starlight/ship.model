@@ -1,4 +1,4 @@
-mesh: "/assets/skins/piranha/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/piranha/starlight/albedo.png"
+mesh: "/assets/skins/hd/piranha/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/piranha/starlight/albedo.png"
 name: "piranha_starlight"

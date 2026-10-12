@@ -1,4 +1,4 @@
-mesh: "/assets/skins/egret/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/egret/starlight/albedo.png"
+mesh: "/assets/skins/hd/egret/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/egret/starlight/albedo.png"
 name: "egret_starlight"

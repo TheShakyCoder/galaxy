@@ -1,4 +1,4 @@
-mesh: "/assets/skins/lionfish/porcelain_dynasty/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/lionfish/porcelain_dynasty/albedo.png"
+mesh: "/assets/skins/hd/lionfish/porcelain_dynasty/model.glb"
+material: "/assets/materials/theme_finish/porcelain_dynasty.material"
+textures: "/assets/skins/hd/lionfish/porcelain_dynasty/albedo.png"
 name: "lionfish_porcelain_dynasty"

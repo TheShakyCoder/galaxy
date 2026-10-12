@@ -1,0 +1,52 @@
+local sizes={sardine=16.2,pilotfish=16,piranha=15,anglerfish=17,barracuda=64.8,remora=64,moray=60,lionfish=68,marlin=259.2,manta_ray=256,tiger_shark=240,hammerhead=272,hummingbird=17,oxpecker=16,shrike=16.5,kingfisher=17,falcon=68,egret=64,goshawk=66,osprey=68,frigatebird=272,pelican=256,golden_eagle=264,harpy_eagle=272}
+local function show(self)
+ self.generation=self.generation+1
+ local generation=self.generation
+ if self.child then go.delete(self.child);self.child=nil end
+ if self.loaded then self.retired[#self.retired+1]={url=self.loaded,frames=2};self.loaded=nil end
+ local url="hub#"..self.ship.."_"..self.theme.."_"..self.variant
+ -- Do not unload a resource that a rapid selection is about to reuse.
+ for i=#self.retired,1,-1 do if self.retired[i].url==url then table.remove(self.retired,i) end end
+ factory.load(url,function(_,_,ok)
+  if generation~=self.generation then
+   self.retired[#self.retired+1]={url=url,frames=2};return
+  end
+  if not ok then print("THEME_REVIEW_LOAD_FAILED "..url);return end
+  self.loaded=url
+  self.child=factory.create(url,vmath.vector3(),vmath.quat(),nil,16.2/sizes[self.ship])
+  go.set(msg.url(nil,self.child,"model"),"light",vmath.vector4(18,25,28,1))
+  self.report_frames=3
+ end)
+end
+function init(self)
+ self.ship="sardine";self.theme="porcelain_dynasty";self.variant="detail"
+ self.angle=0;self.pause=true;self.generation=0;self.retired={}
+ show(self)
+end
+function update(self,dt)
+ for i=#self.retired,1,-1 do
+  local r=self.retired[i];r.frames=r.frames-1
+  if r.frames<=0 then if r.url~=self.loaded then factory.unload(r.url) end;table.remove(self.retired,i) end
+ end
+ local command=html5 and html5.run("window.galaxyThemeCommand || ''") or ""
+ if command~="" then
+  html5.run("window.galaxyThemeCommand = ''")
+  if command=="rotate" then self.pause=not self.pause
+  elseif command=="rear" then self.angle=math.pi;self.pause=true
+  elseif command=="front" then self.angle=0;self.pause=true
+  else
+   if sizes[command] then self.ship=command
+   elseif command=="detail" or command=="original" then self.variant=command
+   elseif command=="porcelain_dynasty" or command=="starlight" or command=="grand_prix" then self.theme=command end
+   show(self)
+  end
+ end
+ if not self.pause then self.angle=self.angle+dt*.3 end
+ if self.child then go.set_rotation(vmath.quat_rotation_y(self.angle),self.child) end
+ if self.report_frames and self.report_frames>0 then
+  self.report_frames=self.report_frames-1
+  if self.report_frames==0 and html5 then
+   html5.run("document.getElementById('rendered').textContent='Viewing: "..self.ship.." / "..self.theme.." / "..self.variant.."'")
+  end
+ end
+end

@@ -1,4 +1,4 @@
-mesh: "/assets/skins/harpy_eagle/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/harpy_eagle/starlight/albedo.png"
+mesh: "/assets/skins/hd/harpy_eagle/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/harpy_eagle/starlight/albedo.png"
 name: "harpy_eagle_starlight"

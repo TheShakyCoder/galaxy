@@ -1,4 +1,4 @@
-mesh: "/assets/skins/barracuda/grand_prix/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/barracuda/grand_prix/albedo.png"
+mesh: "/assets/skins/hd/barracuda/grand_prix/model.glb"
+material: "/assets/materials/theme_finish/grand_prix.material"
+textures: "/assets/skins/hd/barracuda/grand_prix/albedo.png"
 name: "barracuda_grand_prix"

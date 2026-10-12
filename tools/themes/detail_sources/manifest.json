@@ -1,0 +1,175 @@
+{
+  "source_commit": "9aa4dc4a",
+  "source_pr": "https://github.com/TheShakyCoder/galaxy/pull/20",
+  "format": "Lossless float32 position/normal/UV and uint16 indices. Offline authoring sources, not runtime dependencies.",
+  "ships": [
+    {
+      "ship": "sardine",
+      "source_glb_sha256": "8c7af6f89b76c1102088da59599cfa58e6fc9fa7fd12827c6f2b85e34212188e",
+      "sha256": "f9281029cb0e46b5eb82712cb6fbd97578ff36a2e27a787bac3eccc673bb25c2",
+      "vertices": 28080,
+      "triangles": 43452
+    },
+    {
+      "ship": "pilotfish",
+      "source_glb_sha256": "aebf2976f3c07872ed1e001cabe2587c38d25ed1f280c7ad31216177d0c4bb97",
+      "sha256": "71645053955a4d7f050f94ebfab2e2392f87ce09a6541f15b9e05eacb12ef237",
+      "vertices": 19866,
+      "triangles": 31872
+    },
+    {
+      "ship": "piranha",
+      "source_glb_sha256": "7d29c8160965c12795cce871fb06332fd4e82019e7182e546e3868a6cab47652",
+      "sha256": "99dfbfb7412c5cdf06d84048647a6c1c4295f4ab0767c7622954f1b6cd46cf94",
+      "vertices": 18837,
+      "triangles": 29860
+    },
+    {
+      "ship": "anglerfish",
+      "source_glb_sha256": "f099cb5977fd7b459788f6d098b10befc0af9c9ceca315f64b3917e992d23e92",
+      "sha256": "aeb993d31641ddd3dee044aa91c11aa1d458e529e692795c228722938207557c",
+      "vertices": 18993,
+      "triangles": 29912
+    },
+    {
+      "ship": "barracuda",
+      "source_glb_sha256": "eaa8203aa9bec2529685dda9a7c2f608b0619ff41303ab447088b338a9c38a79",
+      "sha256": "925aa2cc1c8f4a33c6e295c4418d24acb6c047ce039165fcd1a9957bdbf8abec",
+      "vertices": 18989,
+      "triangles": 30000
+    },
+    {
+      "ship": "remora",
+      "source_glb_sha256": "290601d3d3ef94530bd0adc949d7403f9fb525f8ea8101b7d7001d2eaffc31d0",
+      "sha256": "5b21c2665d4ff60522f16cb637faa19094bd26122b8468dd3fae372ff8d3832c",
+      "vertices": 22035,
+      "triangles": 35572
+    },
+    {
+      "ship": "moray",
+      "source_glb_sha256": "5a68feb6cd2b875a5caa72026c5d713e7b69008766b1c61be86b151e13dbc3c2",
+      "sha256": "864e059900a3f395ff2d309d14c0ecfc9f3dc8bbb5f199284d966a4950ee7959",
+      "vertices": 19346,
+      "triangles": 31012
+    },
+    {
+      "ship": "lionfish",
+      "source_glb_sha256": "c59483dcd65c8ba8cbc65143660dbcb430d57a9eb8aa2ba3dc201c5b1dabe831",
+      "sha256": "60635dfc7b0fc5325b6f590b11584bca7b3442a09cc7f56cf4f5895a3fbfa796",
+      "vertices": 19098,
+      "triangles": 28620
+    },
+    {
+      "ship": "marlin",
+      "source_glb_sha256": "25ea0d1f067b2d2837db9dc6a975980cab1d85e1a8535db4e2e9b1c64ef1b827",
+      "sha256": "d01f0ecff3093abfe2b31f55dbf86cb6d9210e3691feecf992afd02c2dc1b86c",
+      "vertices": 17854,
+      "triangles": 28004
+    },
+    {
+      "ship": "manta_ray",
+      "source_glb_sha256": "de24a910539c6debbb608c5a4eb134201c4294a23a599ad5dd0ec2e9b499f26e",
+      "sha256": "9893d5f93ae473740047cfba5a536ffb0f153dbd4a539894b6c1f35d871ac3b4",
+      "vertices": 20009,
+      "triangles": 33092
+    },
+    {
+      "ship": "tiger_shark",
+      "source_glb_sha256": "d644c9c8bdd7355c7c133da5f247bc557198e46f625340a68a71ed0c21e9fe99",
+      "sha256": "716609d1e4bdc4a3ba8f414af2e55e29e23b0b52a5d515863faa5b8ba6f81ba6",
+      "vertices": 18402,
+      "triangles": 29120
+    },
+    {
+      "ship": "hammerhead",
+      "source_glb_sha256": "3e463bfafb0aae414c12bb0ff127aef316617b1e1eab182dd6855a06f15b2046",
+      "sha256": "b1f5c313964c74e92b21a7eedf19323614376366d837716fc2d3108149cc1f64",
+      "vertices": 21155,
+      "triangles": 34816
+    },
+    {
+      "ship": "hummingbird",
+      "source_glb_sha256": "893e03ee95f60f442b4efabdf4786bf099514cbca7c439ed7b6f81bf8c05b315",
+      "sha256": "c8f6ecdd1ebce94f49dc22b0d308efc1f4139b0fb78594e75f1757153a755278",
+      "vertices": 24689,
+      "triangles": 33232
+    },
+    {
+      "ship": "oxpecker",
+      "source_glb_sha256": "9944f4a2bf005ef434f754fbff10cb9220df962ebffdff227f9ebcff4dc621d8",
+      "sha256": "d5157a738951553d418156f130365edcc71a1ce0fa18103996f6b1c9712cbfbd",
+      "vertices": 27623,
+      "triangles": 37668
+    },
+    {
+      "ship": "shrike",
+      "source_glb_sha256": "c3419b6733d57b65ce8968af48d9738dcc02c65cc32aa08ec30b7dcfb76c1c6c",
+      "sha256": "7dddfc7675df709d88fa4bf692f6bb2a74ee29d8afa3a6226560d946f0897c87",
+      "vertices": 25339,
+      "triangles": 33548
+    },
+    {
+      "ship": "kingfisher",
+      "source_glb_sha256": "74c1175e88f354610d2188e564c13a9c7731b3a31475000b9e4b6e52197c3085",
+      "sha256": "08b5c3079e5ede8f01c1aa383f1cd9c7777098f359939f30c5470fc1c19c8abd",
+      "vertices": 24336,
+      "triangles": 31152
+    },
+    {
+      "ship": "falcon",
+      "source_glb_sha256": "77a4e674cd4ad3bb0a5cd8d62dc0e3c96b00f1d4d055a742c10d6b5bbd2300d3",
+      "sha256": "32cf9a8fc87cf8dce5f886a27c7a77a9ccde731c1101f270e783cb13b997875f",
+      "vertices": 24571,
+      "triangles": 33076
+    },
+    {
+      "ship": "egret",
+      "source_glb_sha256": "82a110acdf5c412baccddb2d67ced5c18c02d7c66506e5fd7d8018f67f762423",
+      "sha256": "c07e4939e5da4744d33717d362591d6a83dcf3e2ed4e14250544ff5cfb5f0b9b",
+      "vertices": 26364,
+      "triangles": 35204
+    },
+    {
+      "ship": "goshawk",
+      "source_glb_sha256": "0319f2542f5ff5cf6a11500b28d5aa6f058f54ce29842b02e761a049d49b7b50",
+      "sha256": "4feef7f94da7a0301b310b3d8eb9eef849c87e5b332012f4f6c8ce5fdc7f9f6a",
+      "vertices": 25539,
+      "triangles": 33768
+    },
+    {
+      "ship": "osprey",
+      "source_glb_sha256": "5e35d162969d8459ec4af835ae63d1371970f8521362aa68467148c8a4589a1b",
+      "sha256": "a521d68330472428cf71b1447bdf8cc55be827ab02082089614b71f3c3fa9f1f",
+      "vertices": 25235,
+      "triangles": 33452
+    },
+    {
+      "ship": "frigatebird",
+      "source_glb_sha256": "398613a9ba7f4f49226b169d31c367de41f0231d0d533f0d1d3a3523de2d88ad",
+      "sha256": "6963b2ff62d8771cfadb0b4e316de3848d42aa165ecc9222cd91f0ecfa314a85",
+      "vertices": 25198,
+      "triangles": 35204
+    },
+    {
+      "ship": "pelican",
+      "source_glb_sha256": "b28ad317c23ee41df9af555966412b98c41cd0315476b42975824d76bf5d3632",
+      "sha256": "6b50a56ffdf6408113377f88a52b7475dad79cd96644017e756e4bb9cd4a6f25",
+      "vertices": 29890,
+      "triangles": 41884
+    },
+    {
+      "ship": "golden_eagle",
+      "source_glb_sha256": "fd5d82429d6a932f425929979ac24b8ab1d7fbd7b6454ed2c42098c063d3802d",
+      "sha256": "cdef613adb81066f8384a4f59728fa0c72ff36403138b85eb20c79fecf70dba7",
+      "vertices": 25459,
+      "triangles": 33680
+    },
+    {
+      "ship": "harpy_eagle",
+      "source_glb_sha256": "884279d0ff9ec828078611fc4b4f6919ca684bd2ba7c8943046faba3a177f034",
+      "sha256": "8d766ab3f903ae8afc224c0ed91cdae79da0bbe3fca19d795a5269adecbdac80",
+      "vertices": 25347,
+      "triangles": 33532
+    }
+  ]
+}

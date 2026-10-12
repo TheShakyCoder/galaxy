@@ -1,4 +1,4 @@
-mesh: "/assets/skins/golden_eagle/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/golden_eagle/starlight/albedo.png"
+mesh: "/assets/skins/hd/golden_eagle/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/golden_eagle/starlight/albedo.png"
 name: "golden_eagle_starlight"

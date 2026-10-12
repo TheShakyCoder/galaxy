@@ -1,4 +1,4 @@
-mesh: "/assets/skins/marlin/starlight/model.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/skins/marlin/starlight/albedo.png"
+mesh: "/assets/skins/hd/marlin/starlight/model.glb"
+material: "/assets/materials/theme_finish/starlight.material"
+textures: "/assets/skins/hd/marlin/starlight/albedo.png"
 name: "marlin_starlight"
