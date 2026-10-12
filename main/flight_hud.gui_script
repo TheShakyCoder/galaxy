@@ -13,6 +13,14 @@
 -- main/player_ship.script posts, every frame:
 --  - "set_speed" - the ship's current speed (m/sec, see that script's
 --    header comment on why it's not a real physics speed yet)
+--  - "set_throttle" - { segment, max_segment, speed }: the DESIRED speed,
+--    as one of main/flight_throttle.lua's ten segments (0 = no speed,
+--    9 = the ship's own top speed) plus the m/sec that segment commands -
+--    shown under the speed panel (per direct instruction: the ship's speed
+--    is broken into ten segments the mouse wheel moves between). Same
+--    "commanded" footing as set_speed's actual value: boost and Follow
+--    Friend command speeds that aren't throttle segments, so this keeps
+--    showing the segment the lever itself is set to.
 --  - "dock_prompt" - a text string ("Press [K] to dock" / "Docking in
 --    N..." / nil to hide) while docking is possible or underway
 --  - "jump_preset" - a text string ("PRESET: <system> [J]" / nil to hide)
@@ -596,6 +604,8 @@ function init(self)
 	self.hull_gauge = new_gauge(190,vmath.vector4(0.40,0.86,0.76,1))
 	self.power_gauge = new_gauge(116,vmath.vector4(0.73,0.48,1,1))
 	self.speed_node = gui.get_node("speed_value")
+	self.throttle_node = gui.get_node("throttle_value")
+	self.throttle_text = nil -- last text written, so an unchanged segment costs nothing (see the "set_throttle" handler)
 	self.dock_prompt_node = gui.get_node("dock_prompt")
 	self.target_text_node = gui.get_node("target_text")
 	self.jump_preset_node = gui.get_node("jump_preset")
@@ -964,6 +974,17 @@ function on_message(self, message_id, message)
 		msg.post("#gui", "disable")
 	elseif message_id == hash("set_speed") then
 		gui.set_text(self.speed_node, string.format("%.0f m/s", message.speed))
+	elseif message_id == hash("set_throttle") then
+		-- The desired speed: which of the ten segments the throttle is set
+		-- to, and the speed that segment commands (plan.md §2.10). Cached
+		-- like radar_range / ship_status: it only changes when the segment
+		-- does, not every frame.
+		local text = string.format("THROTTLE %d / %d  (%.0f m/s)",
+			message.segment or 0, message.max_segment or 9, message.speed or 0)
+		if text ~= self.throttle_text then
+			self.throttle_text = text
+			gui.set_text(self.throttle_node, text)
+		end
 	elseif message_id == hash("dock_prompt") then
 		gui.set_enabled(self.dock_prompt_node, message.text ~= nil)
 		if message.text then

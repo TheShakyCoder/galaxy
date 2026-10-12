@@ -1,6 +1,11 @@
 from pathlib import Path
-import sys
+import sys, hashlib
 p=Path(sys.argv[1]); html=p.read_text(encoding='utf8')
+# Local review archives keep stable filenames; fingerprint their index so a
+# browser revisiting after a rebuild fetches the new game data.
+fingerprint=hashlib.sha256((p.parent/'archive/game0.arci').read_bytes()).hexdigest()[:16]
+if 'galaxy-review-archive' not in html:
+ html=html.replace("<script id='engine-start'", f"<script id='galaxy-review-archive'>CUSTOM_PARAMETERS.archive_location_filter = path => 'archive' + path + '?build={fingerprint}';</script>\n<script id='engine-start'")
 if 'galaxy-review-controls' not in html:
  controls='''<style>
  body {background:#040a10!important} .canvas-app-container {background:#040a10!important}
@@ -11,5 +16,6 @@ if 'galaxy-review-controls' not in html:
  <button id="review-fullscreen">Full screen</button><button data-command="patrol_interceptor">Patrol</button><button data-command="escort_assault">Escort</button><button data-command="frigate_tactical">Frigate</button><button data-command="damage">Toggle low vitals</button><button data-command="dock">Dock prompt</button><button data-command="clear">Clear target</button></div></details>
  <script>document.getElementById('review-fullscreen').onclick=()=>document.documentElement.requestFullscreen();document.querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>window.galaxyReviewCommand=b.dataset.command);</script>
  '''
- html=html.replace('</body>',controls+'</body>');p.write_text(html,encoding='utf8')
+ html=html.replace('</body>',controls+'</body>')
+p.write_text(html,encoding='utf8')
 print(p)

@@ -1,4 +1,4 @@
-mesh: "/assets/models/frigate_tactical/harpy_eagle.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/frigate_tactical/harpy_eagle_palette.png"
+mesh: "/assets/models/hd/harpy_eagle/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/harpy_eagle/albedo.png"
 name: "harpy_eagle"

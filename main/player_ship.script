@@ -21,6 +21,7 @@
 
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
+local flight_throttle = require("main.flight_throttle")
 local session = require("main.session")
 local catalog = require("main.data.modules.catalog")
 local network = require("main.network")
@@ -386,23 +387,40 @@ local function camera_distance_height(ship_id)
 	return (fc and fc.distance) or CAMERA_DEFAULT_DISTANCE, (fc and fc.height) or CAMERA_DEFAULT_HEIGHT
 end
 
--- Throttle (target speed as a fraction of max speed) starts at 0 on game
+-- Throttle: the desired speed is one of main/flight_throttle.lua's ten
+-- discrete segments, 0 (no speed) to 9 (the ship's own speed_m_per_sec) -
+-- see that module for the segment -> speed mapping. It starts at 0 on game
 -- load and on every launch from an outpost, so the ship sits still until the
--- player throttles up - throttle_up/throttle_down (input/game.input_binding's
--- =/- and numpad +/-) move it, stop_throttle (Q) zeroes it, and
--- full_throttle (E) snaps it to 1.0 - see update()'s throttle
--- handling below.
+-- player throttles up, and the ship's ACTUAL speed then eases toward
+-- whatever the segment commands at its own acceleration (update() below).
+-- The mouse wheel (zoom_in/zoom_out - the actions bound to MOUSE_WHEEL_UP/
+-- DOWN, named for the camera zoom they were originally reserved for and
+-- which the outpost screen already reuses for its own list scrolling) steps
+-- it one segment per notch, throttle_up/throttle_down (=/- and numpad +/-)
+-- one segment per press, stop_throttle (Q) takes it to 0 and full_throttle
+-- (E) to 9 - see on_input below. Nothing is held/ramped: one notch in means
+-- exactly one segment, in either direction.
 local function default_input()
 	return {
 		pitch_up = false, pitch_down = false, yaw_left = false, yaw_right = false, boost = false,
-		throttle_up = false, throttle_down = false,
 	}
+end
+
+-- Every throttle input goes through here (mouse wheel, +/-, Q/E, Match
+-- Speed), so they can't disagree about the segment and it can never be left
+-- outside 0..9. Commanding a speed by hand also cancels Follow Friend (Y),
+-- which drives target speed itself and would otherwise overwrite the new
+-- segment's target on the very next frame - same rule the old continuous
+-- throttle keys applied.
+local function set_speed_segment(self, segment)
+	self.speed_segment = flight_throttle.clamp(segment)
+	self.follow_friend = false
 end
 
 function init(self)
 	self.flying = false
 	self.input = default_input()
-	self.throttle = 0.0
+	self.speed_segment = 0 -- the DESIRED speed as a main/flight_throttle.lua segment (0..9) - the wheel and the throttle keys move it, see set_speed_segment() above
 	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
 	self.engine_sound_on = false -- whether the engine loop is currently playing - see set_engine_sound()
 	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
@@ -470,7 +488,7 @@ local function start_flight(self)
 	end
 	self.flying = true
 	self.input = default_input()
-	self.throttle = 0.0
+	self.speed_segment = 0 -- ships launch on segment 0 and stay at rest until the player throttles up - see update()
 	self.speed = 0 -- ship starts at rest and stays there until the player throttles up - see update()
 	self.engine_sound_on = false -- a fresh launch always starts at rest, so the engine loop is silent - see set_engine_sound()
 	self.angular_velocity = vmath.vector3()
@@ -1500,25 +1518,33 @@ function on_input(self, action_id, action)
 		self.input.yaw_right = not action.released
 	elseif action_id == hash("boost") then
 		self.input.boost = not action.released
+	elseif action_id == hash("zoom_in") or action_id == hash("zoom_out") then
+		-- Mouse wheel: the desired speed, one segment per notch (see the
+		-- throttle comment above default_input()). MOUSE_WHEEL_UP is a
+		-- segment up and MOUSE_WHEEL_DOWN a segment down. `action.value == 1`
+		-- is Defold's own test for "the wheel actually scrolled" on this
+		-- event (the wheel's own release reports value 0), so one notch is
+		-- exactly one segment rather than one press and one release - a
+		-- throttle that jumped two notches per scroll would be a bug here.
+		if action.value == 1 then
+			set_speed_segment(self, self.speed_segment + (action_id == hash("zoom_in") and 1 or -1))
+		end
 	elseif action_id == hash("throttle_up") then
-		self.input.throttle_up = not action.released
-		if action.pressed then
-			self.follow_friend = false -- manual throttle always wins over Y's own speed-matching
+		-- One segment per press (and per key-repeat), not a held ramp.
+		if action.pressed or action.repeated then
+			set_speed_segment(self, self.speed_segment + 1)
 		end
 	elseif action_id == hash("throttle_down") then
-		self.input.throttle_down = not action.released
-		if action.pressed then
-			self.follow_friend = false
+		if action.pressed or action.repeated then
+			set_speed_segment(self, self.speed_segment - 1)
 		end
 	elseif action_id == hash("stop_throttle") then
 		if action.pressed then
-			self.throttle = 0.0
-			self.follow_friend = false
+			set_speed_segment(self, 0)
 		end
 	elseif action_id == hash("full_throttle") then
 		if action.pressed then
-			self.throttle = 1.0
-			self.follow_friend = false
+			set_speed_segment(self, flight_throttle.MAX_SEGMENT)
 		end
 	elseif action_id == hash("cancel_target") then
 		-- C - clears whatever TAB/X currently has locked; follow-friend is
@@ -1562,21 +1588,21 @@ function on_input(self, action_id, action)
 		-- (nothing to do)
 	elseif action_id == hash("match_speed") then
 		-- T - Match Speed: a ONE-SHOT snapshot, not a continuous track -
-		-- sets this ship's own throttle LEVER to whatever fraction of its
-		-- own top speed currently equals the target's broadcast speed,
-		-- right now; update()'s existing acceleration-bounded lerp (same
-		-- one +/-/Q/E already drive) eases self.speed toward that from
-		-- here, same as any other throttle change. Doesn't keep re-syncing
-		-- afterward if the target's speed changes later - press T again
-		-- for that - and, like any manual throttle change, always
+		-- selects the throttle SEGMENT nearest to whatever fraction of this
+		-- ship's own top speed currently equals the target's broadcast
+		-- speed, right now; update()'s existing acceleration-bounded chase
+		-- (same one +/-/Q/E already drive) eases self.speed toward that from
+		-- here, same as any other throttle change. The segment is discrete,
+		-- so the match is to the nearest notch, not exact. Doesn't keep
+		-- re-syncing afterward if the target's speed changes later - press T
+		-- again for that - and, like any manual throttle change, always
 		-- overrides follow-friend. Ported technique from the source
 		-- project's own on_input "match_speed" handler (§0).
 		if action.pressed then
 			local target = self.target_id and remote_registry.ships[self.target_id]
 			if target then
 				local _, max_speed = flight_stats(self.ship_id)
-				self.throttle = math.max(0, math.min(1, (target.speed or 0) / max_speed))
-				self.follow_friend = false
+				set_speed_segment(self, flight_throttle.segment_for_speed(target.speed or 0, max_speed))
 			end
 		end
 	elseif action_id == hash("follow_friend") then
@@ -1777,21 +1803,17 @@ function update(self, dt)
 	end
 	go.set_rotation(rot)
 
-	-- self.throttle is the CONTROL position (0..1, what the stick/lever is
-	-- set to) - this ramp is how fast holding +/- moves that lever, same
-	-- acceleration-derived rate as before (e.g. 10 m/sec^2 on a 52.5
-	-- m/sec ship sweeps the lever 0 -> full in ~5.25 sec). Q/E (on_input)
-	-- can still snap it straight to 0/1.0.
-	local throttle_delta = (self.input.throttle_up and 1 or 0) - (self.input.throttle_down and 1 or 0)
-	if throttle_delta ~= 0 then
-		self.throttle = self.throttle + (acceleration / max_speed) * throttle_delta * dt
-		self.throttle = math.max(0.0, math.min(1.0, self.throttle))
-	end
+	-- self.speed_segment is the CONTROL position - which of
+	-- main/flight_throttle.lua's ten segments (0..9) the desired speed is set
+	-- to, moved a whole segment at a time by on_input (mouse wheel, +/-,
+	-- Q/E, T). Nothing ramps it here, and it needs no per-frame clamping
+	-- either: set_speed_segment() is the only thing that writes it, so it's
+	-- always a whole segment in 0..9.
 
 	-- self.speed is the ACTUAL current speed - it always chases
 	-- target_speed, accelerating/decelerating at the ship's own
-	-- acceleration_m_per_sec2 (the same stat the lever ramp above uses),
-	-- regardless of how abruptly the target itself moves - a plain
+	-- acceleration_m_per_sec2 (the same stat the throttle always eased it
+	-- at), regardless of how abruptly the target itself moves - a plain
 	-- move-toward-target bounded by acceleration*dt each frame, not an
 	-- exponential lerp (acceleration is a constant rate, not a "close the
 	-- gap by a fraction" one).
@@ -1800,13 +1822,13 @@ function update(self, dt)
 	-- travelling at... boost [pushes] the ship to the boost maximum
 	-- speed... [releasing] the speed should revert [to] what it was
 	-- previous[ly]") is the ship's own absolute boost_speed_m_per_sec
-	-- UNSCALED by throttle while held - not self.throttle*boost_speed
+	-- UNSCALED by throttle while held - not segment_speed*boost_speed
 	-- (that earlier version only ever reached the full boost speed at
 	-- full throttle, contradicting "no matter what speed"). Releasing it
-	-- drops target_speed straight back to whatever the throttle lever
-	-- alone commands (self.throttle*max_speed) - "what it was previous" -
-	-- with self.speed easing back down/up to that the same
-	-- acceleration-bounded way as any other target change.
+	-- drops target_speed straight back to whatever segment the throttle is
+	-- set to - "what it was previous" - with self.speed easing back down/up
+	-- to that the same acceleration-bounded way as any other target
+	-- change.
 	local target_speed
 	if self.follow_friend and target_ship then
 		-- Y's Follow Friend also eases velocity toward matching the
@@ -1816,7 +1838,9 @@ function update(self, dt)
 		-- technique from the source project's own update() (§0).
 		target_speed = target_ship.speed or 0
 	else
-		target_speed = self.input.boost and boost_speed or (self.throttle * max_speed)
+		-- The throttle's own commanded speed, scaled from the selected
+		-- segment (0..9) by this ship's own top speed.
+		target_speed = self.input.boost and boost_speed or flight_throttle.target_speed(self.speed_segment, max_speed)
 	end
 	local max_speed_delta = acceleration * dt
 	local speed_delta = target_speed - self.speed
@@ -1842,6 +1866,16 @@ function update(self, dt)
 	pos = pos + forward * self.speed * dt
 	go.set_position(pos)
 	msg.post("flight_hud#gui", "set_speed", { speed = self.speed })
+	-- The desired speed's own readout: which of the ten segments the throttle
+	-- is set to, and the speed that segment commands. Deliberately the
+	-- LEVER's commanded speed, not target_speed - boost and Follow Friend
+	-- both command speeds that aren't a throttle segment at all, and the
+	-- actual/boosted speed is already the "set_speed" readout above.
+	msg.post("flight_hud#gui", "set_throttle", {
+		segment = self.speed_segment,
+		max_segment = flight_throttle.MAX_SEGMENT,
+		speed = flight_throttle.target_speed(self.speed_segment, max_speed),
+	})
 
 	-- Realtime presence (AskUserQuestion's "Realtime presence only" slice) -
 	-- broadcast this ship's own transform at NETWORK_SEND_INTERVAL, not

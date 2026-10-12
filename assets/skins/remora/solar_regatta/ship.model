@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_support/remora.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/remora/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/remora/solar_regatta/albedo.png"
 name: "remora_solar_regatta"

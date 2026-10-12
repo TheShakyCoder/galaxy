@@ -3025,9 +3025,9 @@ so reuse is fine per §0.
 | `yaw_left`/`yaw_right` | A/D, Left/Right | Yaw the ship |
 | `boost` | Space (held) | Boost speed — costs Hydrogen/sec (§2.6, §2.1.1) |
 | `thrust_down` | Left Ctrl | Reverse/downward thrust |
-| `throttle_up`/`throttle_down` | =/−, keypad +/− | Step throttle by 25% |
-| `stop_throttle`/`full_throttle` | Q / E | Snap throttle to 0% / 100% |
-| `shift` (held) | Shift | Modifier — fine-grained throttle via scroll wheel |
+| `throttle_up`/`throttle_down` | =/−, keypad +/− | Step the desired speed one segment up/down (§2.10.2) |
+| `stop_throttle`/`full_throttle` | Q / E | Snap the desired speed to segment 0 (stop) / 9 (top speed) §2.10.2 |
+| `shift` (held) | Shift | Modifier — Shift+1–9 toggles the weapon in that slot (§2.14) |
 | `slide` | Alt | Activate slide thrusters (a fitted module, §2.8) |
 | `activate_scanner` | P | Activate a mineral-analysis-type module (§2.8, ties to mining) |
 | `track_target` | Right-click | Track/pivot toward the clicked target |
@@ -3036,7 +3036,7 @@ so reuse is fine per §0.
 | `match_speed` | T | One-shot: set throttle to match the target's current speed |
 | `follow_friend` | Y | Toggle formation-following a same-faction target |
 | `camera_cycle` | V | Cycle camera mode |
-| `zoom_in`/`zoom_out` | Mouse wheel | Camera zoom |
+| `zoom_in`/`zoom_out` | Mouse wheel | In flight, the ten-segment throttle (§2.10.2); in the outpost screens, list/grid scrolling (§2.9) |
 | `toggle_guns` | G | Toggle all fitted weapons' enabled state at once |
 | `weapon_1`–`weapon_9` | 1–9 | Per-slot weapon toggle (§2.8: weapons are toggle-type) |
 | `fire_missiles` | F | Fire missiles/ordinance (§2.8) |
@@ -3050,12 +3050,17 @@ so reuse is fine per §0.
   weapon toggles (`weapon_1`–`weapon_9` plus Shift), weapon firing, dock (K),
   jump (J) and the map (N) all drive real behavior now — see §2.10.1 and
   §2.12–§2.15. Still reserved-only, each waiting on the system it belongs to:
-  `camera_cycle` (V, needs a camera-mode cycle), `zoom_in`/`zoom_out`,
+  `camera_cycle` (V, needs a camera-mode cycle),
   `fire_missiles` (F, needs the missile object model, §2.8/§4), `toggle_guns` (G),
   `target_nearest_missile` (Z) and `track_target` (right-click, needs a
   screen-to-world pick ray).
 - `esc`/`enter`/`backspace`/`text` are generic UI-focused bindings (menus/text
   input), not flight-specific.
+- `zoom_in`/`zoom_out` are no longer reserved for a camera zoom that was never
+  built: the wheel drives the flight throttle's segments (§2.10.2) and the outpost
+  screens' list scrolling (§2.9) instead. A camera zoom can still claim the wheel
+  later if one is ever built - it would need its own action names rather than
+  taking these back.
 
 #### 2.10.1 Minimal flight slice: player ship + third-person chase camera (decided, per direct instruction)
 
@@ -3164,6 +3169,93 @@ in the new script are flagged placeholders, same footing as other TBC numbers,
   whatever process is generating them - not a code issue, but still unconfirmed
   in a real engine and worth the player testing directly (W/A/S/D or arrow keys
   once in flight).
+
+#### 2.10.2 Ten-segment flight throttle (decided, per direct instruction)
+
+**Per direct instruction**: *"a ship speed should be broken down into 10 segments
+0 to 9. Zero represents no speed and [nine] represents maximum speed. Scrolling the
+mouse wheel can move the desired speed to one of those 10 segments and the ship
+should then accelerate or decelerate to the desired speed."*
+
+- **The throttle is now ten DISCRETE segments, 0 to 9**, not the continuous 0..1
+  lever §2.10.1 was built with. Segment 0 is a dead stop and segment 9 is the
+  ship's own top speed (`speed_m_per_sec`, §2.1.1); the eight segments between them
+  are even steps of that span, so segment `n` commands `n / 9 × top speed`. Scaled
+  by the ship's own top speed, the same ten segments mean the same fraction of
+  speed on any hull.
+- **The model lives in its own engine-free module, `main/flight_throttle.lua`**
+  (no `go.`/`vmath.`/`gui.` dependency, so `tests/flight_throttle_harness.lua`
+  exercises it under plain `luajit`, same footing as `main/session.lua`): segment
+  → fraction of top speed, segment → commanded m/sec, clamping/rounding into
+  0..9 (one notch of `step()`), and speed → nearest segment (for Match Speed).
+  `main/player_ship.script` is the only caller (and `main/data/ships.lua`'s
+  per-ship speed stays the source of what "segment 9" means).
+- **The mouse wheel moves the desired speed one segment per notch**
+  (`zoom_in`/`zoom_out`, the actions bound to `MOUSE_WHEEL_UP`/`DOWN` — see
+  §2.10's own note on that binding). Per the engine manual, a wheel action reports
+  `action.value == 1` when the wheel actually scrolled (its own release reports 0),
+  so the handler tests that rather than `action.pressed` — one notch is one
+  segment, never two.
+- **`throttle_up`/`throttle_down` (=/−, keypad +/−) step it one segment per press
+  (and per key-repeat)** instead of ramping a lever while held, `stop_throttle` (Q)
+  takes it to 0 and `full_throttle` (E) to 9. Match Speed (T) selects the segment
+  nearest the target's broadcast speed — nearest, because the lever can only sit on
+  a notch. Every one of those inputs goes through a single `set_speed_segment()`, so
+  they can't disagree and the segment can never leave 0..9; like any manual throttle
+  change it also cancels Follow Friend (Y), which commands speed directly.
+- **The ship accelerates/decelerates to the segment** exactly as before, through
+  the existing acceleration-bounded chase in `update()` — `self.speed` moves toward
+  the commanded speed by at most `acceleration_m_per_sec2 × dt` per frame. Nothing
+  in the movement, networking (the broadcast speed is still the ship's actual
+  speed), FTL or docking code changed. **Boost (Space) still overrides the segment
+  while held** (§2.1.1's `boost_speed_m_per_sec`, per its own earlier direct
+  instruction), dropping back to the selected segment's speed on release; Follow
+  Friend still matches its target's speed directly. Neither is a throttle segment,
+  which is why the HUD readout below shows the segment's commanded speed rather
+  than `target_speed`.
+- **The flight HUD shows the desired speed** under the speed panel (per direct
+  instruction's "desired speed" framing): a new `throttle_value` text node in
+  `main/flight_hud.gui`, filled by a new `set_throttle` message from
+  `player_ship.script` — e.g. `THROTTLE 3 / 9  (18 m/s)` on the Patrol Interceptor
+  (§2.1.4's revised specs put its top speed at 55 m/sec, so segment 3 commands
+  3/9 x 55 = 18.3). The existing `SPEED` readout still shows the ship's ACTUAL
+  speed, so the two together read as "set to segment 3, now travelling 9 m/s and
+  climbing". Cached in the GUI script like the Power/Hull readouts, since it only
+  changes when the segment does.
+- **The engine loop's own thrust level now steps between segments** (it keys off
+  the commanded speed, §2.12) rather than sweeping smoothly — nine steps of pitch
+  between idle and +20%, with the ship's speed still easing between them. Left as
+  is: it's the same mapping, read from a lever that is now discrete.
+- **Verified three ways: harnesses, an HTML5 build, and the game actually flown in
+  a browser.** The Lua scripts were syntax-checked with `luajit -bl`; the segment
+  model has its own harness (`tests/flight_throttle_harness.lua`, 23 assertions);
+  the HUD readout is covered by `tests/flight_hud_harness.lua`; and
+  `tests/flight_speed_harness.lua` stubs the engine and drives
+  `main/player_ship.script`'s real `on_input`/`update` end to end — one wheel notch
+  is one segment, the wheel's own release moves nothing, the ship reaches segment
+  9's speed in `top speed / acceleration` seconds and drops to a lower segment or a
+  stop over the same span, the HUD gets the segment and its speed, Match Speed lands
+  on the nearest segment, and boost still overrides and reverts.
+- **Then confirmed live, in the wasm build, flown in Chrome** (this is a build +
+  play test, not code review): `com.dynamo.bob.Bob` (the editor jar's own bob
+  classes - see the note above on why `java -jar` is the wrong entry point) built
+  the project for both `arm64-macos` and `wasm-web`; the web bundle was served
+  locally and driven through the DevTools protocol with a local play token
+  (`php artisan galaxy:dev-token <email> local`, read from the page's own
+  `#dev_token=` fragment - the dev-token path only exists in DEBUG builds, so the
+  bundle was built `--variant debug`). Real wheel events over the canvas produced,
+  in order: `THROTTLE 0 / 9  (0 m/s)` with the ship at rest on launch; three
+  notches up → `THROTTLE 3 / 9  (18 m/s)` with the actual speed readout climbing to
+  18 m/s; two notches down → `THROTTLE 1 / 9  (6 m/s)`, the ship decelerating to 6;
+  fifteen notches up → `THROTTLE 9 / 9  (55 m/s)`, full speed and clamped. That
+  covers the requested behaviour end to end, including the engine's own side of
+  the wheel event.
+- **Known limitation, not a code issue**: the desktop `build/arm64-osx/dmengine`
+  this bob build produces exits 1 with no log output when launched from a shell
+  here (under `lldb` it gets as far as AppKit/audio init, then returns 1 from
+  `main`) - so the native binary was not flown; the browser build was. Anything
+  more needs the editor's own Build and Run (which launches the engine itself)
+  or a fresh look at why a bare `dmengine` invocation bails here.
 
 ### 2.11 Asteroid fields: hull, mining, procedural meshes and breakup
 

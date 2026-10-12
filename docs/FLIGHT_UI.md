@@ -62,3 +62,20 @@ The final spatial layout was checked at 1280 x 720, including Frigate hardpoints
 Escort silhouette, low vitals and weapon cooldowns. Power is electric violet.
 
 ![Native flight review](../artifacts/flight-ui/spatial-weapons.png)
+
+## Upstream HUD reconciliation
+
+Merged upstream `32b34e5` without rewriting its throttle or flight logic. The
+ten-segment mouse-wheel/keyboard throttle, acceleration, boost, Follow Friend,
+Match Speed and desired-speed message handling are retained. The selected
+throttle segment and commanded speed now sit beneath actual velocity in the
+lower-left panel, styled to match the existing flight typography.
+
+The merge conflict was in the regression harness: both upstream's throttle
+assertions and this PR's weapon-map/gauge checks are retained. Upstream's
+`player_ship.script` and `flight_throttle.lua` are unchanged by this PR.
+
+Reconciliation validation: HUD, throttle and flight-speed harnesses pass; full-game
+and preview HTML5 builds pass. Native 1280x720 review confirms the throttle readout,
+Frigate weapon anchors and low vitals without browser console errors.
+

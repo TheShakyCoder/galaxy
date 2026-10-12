@@ -29,8 +29,9 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
   are planned.
 - **Outposts**: buy and sell ships, weapons and modules, and fit them into your
   ship's weapon, computer, engine and hull slots by drag and drop.
-- **Flight**: third-person chase camera, throttle and boost, self-levelling, and
-  speeds in real metres per second.
+- **Flight**: third-person chase camera, a ten-segment throttle (0 = no speed,
+  9 = top speed) with boost, self-levelling, and speeds in real metres per
+  second.
 - **Star map**: 58 systems named after real stars, with Sol as the Accord home and
   Polaris as the Swarm home. You FTL-jump between them within your ship's jump
   range, which costs Hydrogen.
@@ -69,8 +70,8 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 |---|---|
 | W / S, ↑ / ↓ | Pitch |
 | A / D, ← / → | Yaw |
-| = / −, keypad + / − | Throttle up / down |
-| E / Q | Full throttle / stop |
+| = / −, keypad + / − | Throttle up / down one segment |
+| E / Q | Full throttle (segment 9) / stop (segment 0) |
 | Space (hold) | Boost (uses Hydrogen) |
 | Tab | Cycle through targets in sensor range (ships, outposts, asteroids), nearest first |
 | X / F1 | Target the nearest enemy / nearest friendly |
@@ -85,7 +86,12 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | Shift+1–9 | Switch the weapon in slot W1–W9 on or off. Weapons that are on fire by themselves at your target (enemy outposts only, so far) |
 | 1–9 | Use the active module in that Computer/Engine/Hull slot (numbered C1…, then E1…, then H1…; the Fitting tab shows each slot's key) |
 | P | Asteroid Analyser (if fitted): reveal what every asteroid within 400 m is made of |
-| Mouse wheel | Zoom |
+| Mouse wheel | In flight: throttle up / down one segment. In the outpost screens: scroll the lists |
+
+Desired speed is ten segments, 0 (no speed) to 9 (the ship's own top speed): the
+mouse wheel, =/− and Q/E all set the segment, and the ship then accelerates or
+decelerates to it at its own acceleration rate. Space (boost) still overrides it
+while held, and T rounds the target's speed to the nearest segment.
 
 Other keys (G, F, slide thrusters and so on) are reserved
 for features that aren't built yet.

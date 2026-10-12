@@ -21,8 +21,8 @@ textures { name: "ui_panels" texture: "/main/ui/flight/panels.atlas" }
 nodes {
   type: TYPE_BOX
   id: "systems_panel"
-  position { x: 163 y: 221 z: 0 w: 1 }
-  size { x: 278 y: 284 z: 0 w: 1 }
+  position { x: 163 y: 238 z: 0 w: 1 }
+  size { x: 278 y: 318 z: 0 w: 1 }
   color { x: 1 y: 1 z: 1 w: 1 }
   pivot: PIVOT_CENTER
   xanchor: XANCHOR_NONE
@@ -59,7 +59,7 @@ nodes {
   id: "speed_value"
   text: "0 m/s"
   font: "default_font"
-  position { x: 163 y: 315 z: 0 w: 1 }
+  position { x: 163 y: 350 z: 0 w: 1 }
   size { x: 240.0 y: 50.0 z: 0.0 w: 1.0 }
   color { x: 0.9 y: 0.95 z: 1.0 w: 1.0 }
   pivot: PIVOT_CENTER
@@ -82,7 +82,7 @@ nodes {
   id: "speed_caption"
   text: "VELOCITY / M.S-1"
   font: "default_font"
-  position { x: 163 y: 279 z: 0 w: 1 }
+  position { x: 163 y: 318 z: 0 w: 1 }
   size { x: 240.0 y: 30.0 z: 0.0 w: 1.0 }
   color { x: .38 y: .73 z: .82 w: 1 }
   pivot: PIVOT_CENTER
@@ -99,6 +99,29 @@ nodes {
   parent: ""
   layer: ""
   scale { x: 0.5 y: 0.5 z: 1 w: 1 }
+}
+nodes {
+  type: TYPE_TEXT
+  id: "throttle_value"
+  text: "THROTTLE 0 / 9  (0 m/s)"
+  font: "default_font"
+  position { x: 163 y: 283 z: 0.0 w: 1.0 }
+  size { x: 240.0 y: 30.0 z: 0.0 w: 1.0 }
+  color { x: 0.74 y: 0.82 z: 0.88 w: 1.0 }
+  pivot: PIVOT_CENTER
+  xanchor: XANCHOR_NONE
+  yanchor: YANCHOR_NONE
+  adjust_mode: ADJUST_MODE_FIT
+  inherit_alpha: true
+  alpha: 1.0
+  outline_alpha: 0.0
+  shadow_alpha: 0.0
+  line_break: false
+  text_leading: 1.0
+  text_tracking: 0.0
+  parent: ""
+  layer: ""
+  scale { x: 0.45 y: 0.45 z: 1 w: 1 }
 }
 nodes {
   type: TYPE_TEXT

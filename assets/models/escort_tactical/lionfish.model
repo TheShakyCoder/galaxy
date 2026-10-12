@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_tactical/lionfish.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/escort_tactical/lionfish_palette.png"
+mesh: "/assets/models/hd/lionfish/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/lionfish/albedo.png"
 name: "lionfish"

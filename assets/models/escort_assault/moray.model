@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_assault/moray.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/escort_assault/moray_palette.png"
+mesh: "/assets/models/hd/moray/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/moray/albedo.png"
 name: "moray"

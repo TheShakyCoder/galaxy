@@ -4,6 +4,20 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 alpha milestones carry an `-alpha.N` label. The current version lives in
 `main/version.lua` (see "Versioning" in the README).
 
+## [0.4.0-alpha.5] - 2026-10-12
+
+### Flight
+- Ship speed is now ten **segments**, 0 (no speed) to 9 (the ship's own top speed),
+  and the **mouse wheel** moves the desired speed between them — one segment per
+  notch. `=`/`−` step it a segment at a time too, Q takes it to 0 and E to 9, and
+  the ship then accelerates or decelerates to whatever the selected segment commands
+  at its own acceleration rate. T (Match Speed) selects the segment nearest the
+  target's speed, since the throttle can now only sit on one of the ten notches.
+  Boost and Follow Friend still override the segment while they are active.
+- The flight HUD's speed panel now shows the **desired** speed under the actual one:
+  `THROTTLE 3 / 9  (18 m/s)` — the selected segment and the speed it commands — so
+  setting a segment and watching the ship ease up to it read as one thing.
+
 ## [0.4.0-alpha.4] - 2026-10-07
 
 ### Flight

@@ -31,6 +31,7 @@ function update(self,dt)
   elseif ships.SHIPS[command] then load_ship(command) end
  end
  send("set_speed",{speed=52.5})
+ send("set_throttle",{segment=9,max_segment=9,speed=52.5})
  send("ship_status",{hull=self.damage and 130 or 600,hull_max=600,power=self.damage and 40 or 175,power_max=175,x=1840,y=120,z=-350})
  send("contacts",{own_pos=vmath.vector3(),heading=vmath.vector3(0,0,1),range=3000,target_id="enemy",
   contacts={{pos=vmath.vector3(-500,0,1240),id="enemy"},{pos=vmath.vector3(1700,0,300),id="friend"}},
