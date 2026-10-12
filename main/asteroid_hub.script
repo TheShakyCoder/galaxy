@@ -141,6 +141,7 @@ local function spawn_rock(index)
 	local id = factory.create("#asteroid_factory", pos, nil, {seed=seed}, a.diameter_m)
 	local known = analysed[current_system] or {}
 	go.set(model_url(id), "tint", known[index] and resource_tint(a.resource) or AMBIENT_TINT)
+	go.set(model_url(id), "analysis", vmath.vector4(known[index] and 1 or 0,0,0,0))
 	return { id = id, pos = pos, radius = a.diameter_m / 2, resource = a.resource, index = index, analysed = known[index] == true }
 end
 
@@ -178,6 +179,7 @@ local function finish_scan()
 	for _, a in ipairs(found) do
 		if go.exists(a.id) then
 			go.set(model_url(a.id), "tint", resource_tint(a.resource))
+			go.set(model_url(a.id), "analysis", vmath.vector4(1,0,0,0))
 		end
 		known[a.index] = true
 		a.analysed = true

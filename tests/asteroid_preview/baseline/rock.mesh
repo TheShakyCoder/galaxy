@@ -1,0 +1,5 @@
+material: "/tests/asteroid_preview/baseline/rock.material"
+vertices: "/assets/models/asteroids/rock.buffer"
+primitive_type: PRIMITIVE_TRIANGLES
+position_stream: "position"
+normal_stream: "normal"

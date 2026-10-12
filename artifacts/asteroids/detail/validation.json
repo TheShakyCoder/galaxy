@@ -1,0 +1,62 @@
+{
+  "base": "6d1f0a546d484ebf2a67862e4c2d52c51a953190",
+  "vertices_per_rock": 5280,
+  "triangles_per_rock": 1760,
+  "floats_per_vertex": 18,
+  "mesh_bytes_per_rock": 380160,
+  "mesh_bytes_50": 19008000,
+  "mesh_bytes_100": 38016000,
+  "mesh_memory_increase_bytes": 0,
+  "draws_per_rock": 1,
+  "shared_texture_dimensions": [
+    256,
+    256
+  ],
+  "shared_texture_rgba8_bytes": 262144,
+  "shared_texture_source_bytes": 73850,
+  "texture_samples_per_fragment": 3,
+  "cpu_generation": {
+    "original": {
+      "50": {
+        "median_seconds": 0.9296986998524517,
+        "samples_seconds": [
+          0.9296986998524517,
+          0.939570999937132,
+          0.9225456998683512
+        ]
+      },
+      "100": {
+        "median_seconds": 1.8650369001552463,
+        "samples_seconds": [
+          1.8650369001552463,
+          1.912326700054109,
+          1.8482636001426727
+        ]
+      }
+    },
+    "detail": {
+      "50": {
+        "median_seconds": 1.245088200084865,
+        "samples_seconds": [
+          1.2291456998791546,
+          1.2887196000665426,
+          1.245088200084865
+        ]
+      },
+      "100": {
+        "median_seconds": 3.3473836998455226,
+        "samples_seconds": [
+          2.584894899977371,
+          3.690301999915391,
+          3.3473836998455226
+        ]
+      }
+    }
+  },
+  "notes": [
+    "CPU timing is local Python-embedded Lua 5.1, excluding Defold buffer upload and GPU rendering. It is not browser frame time.",
+    "50 is the default field; Sol and Polaris have 100 rocks.",
+    "No extra debris objects, particles or draw calls; no distance LOD in this pass.",
+    "Baseline snapshots are preview-only copies from the base commit, never production dependencies."
+  ]
+}

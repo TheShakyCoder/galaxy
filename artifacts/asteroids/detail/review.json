@@ -1,0 +1,29 @@
+{
+  "engine": "Defold 1.13.1",
+  "base": "6d1f0a546d484ebf2a67862e4c2d52c51a953190",
+  "automated_tests": 8,
+  "regressions": [
+    "starfield_harness",
+    "flight_hud_harness",
+    "flight_throttle_harness",
+    "flight_speed_harness"
+  ],
+  "builds": [
+    "full game HTML5",
+    "native asteroid preview HTML5"
+  ],
+  "native_checks": [
+    "five archetypes / ten-rock population",
+    "original left versus upgraded right",
+    "close-up and four analysed resource colours",
+    "frozen fracture and dissolution stages",
+    "100-rock field and simultaneous timed destruction",
+    "50-rock field and repeated spawn/breakup"
+  ],
+  "notes": [
+    "Native 100-rock creation visibly pauses the browser; this is not a zero-cost upgrade.",
+    "Geometry buffer memory and mesh draw upper bounds are unchanged.",
+    "No live multiplayer, mobile/low-end GPU profile, or network account validation.",
+    "Concept art is separately saved locally; repository screenshots are actual engine captures."
+  ]
+}
