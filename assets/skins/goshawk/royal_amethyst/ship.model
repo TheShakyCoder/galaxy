@@ -1,4 +1,4 @@
-mesh: "/assets/models/escort_assault/goshawk.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/goshawk/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/goshawk/royal_amethyst/albedo.png"
 name: "goshawk_royal_amethyst"

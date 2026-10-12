@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_support/oxpecker.glb"
-material: "/builtins/materials/model.material"
+mesh: "/assets/models/hd/oxpecker/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
 textures: "/assets/skins/oxpecker/royal_amethyst/albedo.png"
 name: "oxpecker_royal_amethyst"

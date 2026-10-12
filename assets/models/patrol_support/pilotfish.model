@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_support/pilotfish.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/patrol_support/pilotfish_palette.png"
+mesh: "/assets/models/hd/pilotfish/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/pilotfish/albedo.png"
 name: "pilotfish"

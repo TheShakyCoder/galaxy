@@ -222,21 +222,22 @@ class Mesh:
                 self.tube([a,b],.018,'fin_light',6)
 
 
-def build_mesh():
+def build_mesh(detail_scale=1, engine_scale=1):
     m=Mesh()
+    steps=72*detail_scale; sides=48*detail_scale
     # 72 longitudinal intervals x 48 sides: smooth hull with a continuous UV seam.
-    for i in range(73):
-        z=7-13.45*i/72
-        for j in range(49):
-            a=TAU*j/48
-            m.vertex(surface(z,a),surface_normal(z,a),(.004+.738*i/72,j/48))
-    for i in range(72):
-        for j in range(48):
-            a=i*49+j; b=a+49
+    for i in range(steps+1):
+        z=7-13.45*i/steps
+        for j in range(sides+1):
+            a=TAU*j/sides
+            m.vertex(surface(z,a),surface_normal(z,a),(.004+.738*i/steps,j/sides))
+    for i in range(steps):
+        for j in range(sides):
+            a=i*(sides+1)+j; b=a+sides+1
             n=add(m.n[a],m.n[a+1])
             m.tri(a,b,b+1,n); m.tri(a,b+1,a+1,n)
-    for i,n in ((0,(0,0,1)),(72,(0,0,-1))):
-        m.face([m.p[i*49+j] for j in range(48)],'silver',n)
+    for i,n in ((0,(0,0,1)),(steps,(0,0,-1))):
+        m.face([m.p[i*(sides+1)+j] for j in range(sides)],'silver',n)
     m.parts['hull_triangles']=len(m.idx)//3
 
     # One modest, rayed dorsal fin, with a rounded shoulder instead of a shark spike.
@@ -268,9 +269,15 @@ def build_mesh():
         m.tube([surface(z,sign*1.22,.028) for z in (2.8,2,1,0,-1,-2,-3,-4,-5)],.034,'edge')
         m.tube([surface(z,sign*1.22,.062) for z in (2.65,2,1,0,-1,-2,-3,-4,-4.8)],.013,'cyan',6)
         # Compact paired thrusters flank the narrow tail stock.
-        center=(sign*.40,0,-5.58)
-        m.lathe(center,(0,0,-1),[(0,.21),(.30,.31),(.83,.32),(1.02,.28),(1.04,.205)],['navy','silver','edge','nozzle'],32)
-        m.lathe((sign*.40,0,-6.635),(0,0,-1),[(0,.19),(.018,.155)],['cyan'],32)
+        center=(sign*.40*engine_scale,0,-5.58)
+        length=1+(engine_scale-1)*.45
+        m.lathe(center,(0,0,-1),[(d*length,r*engine_scale) for d,r in [(0,.21),(.30,.31),(.83,.32),(1.02,.28),(1.04,.205)]],['navy','silver','edge','nozzle'],32*detail_scale)
+        m.lathe((center[0],0,-5.58-1.055*length),(0,0,-1),[(0,.19*engine_scale),(.018,.155*engine_scale)],['cyan'],32*detail_scale)
+        if detail_scale > 1:
+            # Raised cooling collars and a recessed annular nozzle lip.
+            for depth in (.43,.61,.79):
+                m.lathe((center[0],0,-5.58-depth*length),(0,0,-1),[(0,.325*engine_scale),(.035,.337*engine_scale),(.07,.325*engine_scale)],['edge','navy'],48)
+            m.lathe((center[0],0,-5.58-.97*length),(0,0,-1),[(0,.285*engine_scale),(.11,.29*engine_scale),(.16,.22*engine_scale),(.12,.20*engine_scale),(.02,.20*engine_scale)],['edge','nozzle','nozzle','dark'],64)
         # Small amber positioning lights at the pectoral-fin roots.
         p=surface(2.8,sign*1.72,.032)
         m.lathe(p,surface_normal(2.8,sign*1.72),[(0,.075),(.04,.064)],['brass'],16)

@@ -1,0 +1,173 @@
+{
+  "checks": "finite geometry, normals, winding, UVs, uint16 budget, originals, textures, descriptors, recolors, Moray symmetry, size hierarchy",
+  "ships": [
+    {
+      "ship": "sardine",
+      "result": "PASS",
+      "vertices": 28080,
+      "triangles": 43452,
+      "extent": 16.2
+    },
+    {
+      "ship": "pilotfish",
+      "result": "PASS",
+      "vertices": 19866,
+      "triangles": 31872,
+      "extent": 16.0
+    },
+    {
+      "ship": "piranha",
+      "result": "PASS",
+      "vertices": 18837,
+      "triangles": 29860,
+      "extent": 15.0
+    },
+    {
+      "ship": "anglerfish",
+      "result": "PASS",
+      "vertices": 18993,
+      "triangles": 29912,
+      "extent": 17.0
+    },
+    {
+      "ship": "barracuda",
+      "result": "PASS",
+      "vertices": 18989,
+      "triangles": 30000,
+      "extent": 64.8
+    },
+    {
+      "ship": "remora",
+      "result": "PASS",
+      "vertices": 22035,
+      "triangles": 35572,
+      "extent": 64.0
+    },
+    {
+      "ship": "moray",
+      "result": "PASS",
+      "vertices": 19346,
+      "triangles": 31012,
+      "extent": 60.0
+    },
+    {
+      "ship": "lionfish",
+      "result": "PASS",
+      "vertices": 19098,
+      "triangles": 28620,
+      "extent": 68.0
+    },
+    {
+      "ship": "marlin",
+      "result": "PASS",
+      "vertices": 17854,
+      "triangles": 28004,
+      "extent": 259.2
+    },
+    {
+      "ship": "manta_ray",
+      "result": "PASS",
+      "vertices": 20009,
+      "triangles": 33092,
+      "extent": 256.0
+    },
+    {
+      "ship": "tiger_shark",
+      "result": "PASS",
+      "vertices": 18402,
+      "triangles": 29120,
+      "extent": 240.0
+    },
+    {
+      "ship": "hammerhead",
+      "result": "PASS",
+      "vertices": 21155,
+      "triangles": 34816,
+      "extent": 272.0
+    },
+    {
+      "ship": "hummingbird",
+      "result": "PASS",
+      "vertices": 24689,
+      "triangles": 33232,
+      "extent": 17.0
+    },
+    {
+      "ship": "oxpecker",
+      "result": "PASS",
+      "vertices": 27623,
+      "triangles": 37668,
+      "extent": 16.0
+    },
+    {
+      "ship": "shrike",
+      "result": "PASS",
+      "vertices": 25339,
+      "triangles": 33548,
+      "extent": 16.5
+    },
+    {
+      "ship": "kingfisher",
+      "result": "PASS",
+      "vertices": 24336,
+      "triangles": 31152,
+      "extent": 17.0
+    },
+    {
+      "ship": "falcon",
+      "result": "PASS",
+      "vertices": 24571,
+      "triangles": 33076,
+      "extent": 68.0
+    },
+    {
+      "ship": "egret",
+      "result": "PASS",
+      "vertices": 26364,
+      "triangles": 35204,
+      "extent": 64.0
+    },
+    {
+      "ship": "goshawk",
+      "result": "PASS",
+      "vertices": 25539,
+      "triangles": 33768,
+      "extent": 66.0
+    },
+    {
+      "ship": "osprey",
+      "result": "PASS",
+      "vertices": 25235,
+      "triangles": 33452,
+      "extent": 68.0
+    },
+    {
+      "ship": "frigatebird",
+      "result": "PASS",
+      "vertices": 25198,
+      "triangles": 35204,
+      "extent": 272.0
+    },
+    {
+      "ship": "pelican",
+      "result": "PASS",
+      "vertices": 29890,
+      "triangles": 41884,
+      "extent": 256.0
+    },
+    {
+      "ship": "golden_eagle",
+      "result": "PASS",
+      "vertices": 25459,
+      "triangles": 33680,
+      "extent": 264.0
+    },
+    {
+      "ship": "harpy_eagle",
+      "result": "PASS",
+      "vertices": 25347,
+      "triangles": 33532,
+      "extent": 272.0
+    }
+  ]
+}

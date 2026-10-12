@@ -1,0 +1,39 @@
+local ships={"sardine","pilotfish","piranha","anglerfish","barracuda","remora","moray","lionfish","marlin","manta_ray","tiger_shark","hammerhead","hummingbird","oxpecker","shrike","kingfisher","falcon","egret","goshawk","osprey","frigatebird","pelican","golden_eagle","harpy_eagle"}
+local function show(self)
+ for _,slug in ipairs(ships) do
+  msg.post(slug.."#original","disable");msg.post(slug.."#detail","disable");msg.post(slug.."#recolor","disable")
+ end
+ msg.post(self.ship.."#"..self.variant,"enable")
+ self.report_frames=3
+end
+function init(self)
+ self.ship="sardine";self.variant="detail";self.angle=0;self.pause=true
+ for _,slug in ipairs(ships) do
+  go.set(slug.."#original","light",vmath.vector4(18,25,28,1))
+  go.set(slug.."#detail","light",vmath.vector4(18,25,28,1))
+  go.set(slug.."#recolor","light",vmath.vector4(18,25,28,1))
+ end
+ show(self);print("SHIP_DETAIL_REVIEW_READY")
+end
+function update(self,dt)
+ local command=html5 and html5.run("window.galaxyShipCommand || ''") or ""
+ if command~="" then
+  html5.run("window.galaxyShipCommand = ''")
+  if command=="original" or command=="detail" or command=="recolor" then self.variant=command
+  elseif command=="rotate" then self.pause=not self.pause
+  elseif command=="rear" then self.angle=math.pi; self.pause=true
+  elseif command=="front" then self.angle=0; self.pause=true
+  else
+   for _,slug in ipairs(ships) do if command==slug then self.ship=slug;break end end
+  end
+  show(self)
+ end
+ if not self.pause then self.angle=self.angle+dt*.3 end
+ go.set_rotation(vmath.quat_rotation_y(self.angle),self.ship)
+ if self.report_frames and self.report_frames>0 then
+  self.report_frames=self.report_frames-1
+  if self.report_frames==0 and html5 then
+   html5.run("document.getElementById('rendered').textContent = 'Viewing: "..self.ship.." / "..self.variant.."'")
+  end
+ end
+end

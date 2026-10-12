@@ -1,4 +1,4 @@
-mesh: "/assets/models/patrol_interceptor/hummingbird.glb"
-material: "/builtins/materials/model.material"
-textures: "/assets/models/patrol_interceptor/hummingbird_palette.png"
+mesh: "/assets/models/hd/hummingbird/ship.glb"
+material: "/assets/materials/ship_finish/ship.material"
+textures: "/assets/models/hd/hummingbird/albedo.png"
 name: "hummingbird"

@@ -32,8 +32,8 @@ def dorsal(m,h,z=1.5,height=1.15,length=3):
     fin(m,[(base*.85,z+.55),(base+height,z),(base+height*.95,z-.4),(base*.90,z-length)],.17)
 
 
-def build(ship):
-    s=ship.slug; m=Mesh(ship)
+def build(ship, detail_scale=1):
+    s=ship.slug; m=Mesh(ship, detail_scale)
     if s=='pilotfish': h=standard(1.15,1.1)
     elif s=='piranha':
         h=Hull([(-4.4,.18,.35),(-3,.60,1.45),(-1.5,1.13,2.13),(0,1.35,2.40),
