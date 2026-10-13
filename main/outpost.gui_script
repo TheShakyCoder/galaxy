@@ -65,6 +65,7 @@
 -- below: their current system if their faction has an outpost there,
 -- otherwise home).
 
+local console = require("main.ui.station_console")
 local session = require("main.session")
 local star_systems = require("main.data.star_systems")
 local ships = require("main.data.ships")
@@ -704,6 +705,7 @@ function init(self)
 	for _, node in pairs(self.ship_detail_nodes) do
 		gui.set_enabled(node, false)
 	end
+    console.init(self)
 end
 
 local CURRENCY_NAME = { tope = "Tope", hydrogen = "Hydrogen", valour = "Valour" }
@@ -901,7 +903,7 @@ local function refresh_overview(self)
         "Next: "..with_commas(ranks.xp_for_level(level+1)),"","HOME PORT",system_name(home),"","DOCKED AT",system_name(docked_system_id())},"\n")
     gui.set_text(self.overview_content_node,dossier)
     gui.set_text(gui.get_node("overview_vessel"),ship_display_name(id,faction).."\n"..(ship and ship.class or "").." / "..(ship and ship.role or "")
-        .."\n"..(session.is_ship_advanced(id) and "Advanced hull" or "Standard hull").."\nLivery: "..skin_display_name(session.get_equipped_skin(id)))
+        .."\n"..(session.is_ship_advanced(id) and "Advanced hull" or "Standard hull").."  /  Livery: "..skin_display_name(session.get_equipped_skin(id)))
     local components=effective_components(id)
     local filled={}
     for _,entry in ipairs(session.get_loadout() or {}) do
@@ -931,6 +933,15 @@ local function refresh_overview(self)
     local metrics=resource.get_text_metrics(gui.get_font_resource(gui.get_font(node)), gui.get_text(node), {width=830,line_break=true})
     local scale=math.min(.86,210/math.max(1,metrics.height))
     gui.set_scale(node,vmath.vector3(scale,scale,1))
+    local floor=ranks.xp_for_level(level)
+    local ceiling=ranks.xp_for_level(level+1)
+    console.refresh(self,{
+        faction=FACTION_DISPLAY[faction] or faction, rank=session.get_rank() or "Pilot", level=level,
+        xp=with_commas(session.get_xp()), next_xp=with_commas(ceiling),
+        xp_fraction=(session.get_xp()-floor)/math.max(1,ceiling-floor),
+        home=system_name(home),docked=system_name(docked_system_id()),filled=filled,components=components,
+        summary=lines[#lines-1].."\n"..lines[#lines],assignments=table.concat(assignments,"\n"),
+    })
 end
 
 -- Octagon-shaped node (per direct instruction: slot markers should be
@@ -1548,7 +1559,7 @@ local function build_card_list(out_list, panel_node, rows, list_source, scroll_o
 		local pos = vmath.vector3(panel_pos.x, top - (i - 1) * CARD_SPACING, 0)
 		local box = gui.new_box_node(pos, CARD_SIZE)
 		gui.set_pivot(box, gui.PIVOT_CENTER)
-		gui.set_color(box, row.color or CARD_COLOR)
+		console.card(box,row.color or CARD_COLOR)
 		gui.set_parent(box, panel_node, true)
 
 		-- Module icon (direct instruction: the Shop/Owned lists should show
@@ -1783,7 +1794,7 @@ local function build_ship_forsale_grid(out_list, panel_node, rows)
 
 		local box = gui.new_box_node(vmath.vector3(cx, base_cy, 0), vmath.vector3(GRID_CELL_W, GRID_CELL_H, 0))
 		gui.set_pivot(box, gui.PIVOT_CENTER)
-		gui.set_color(box, row.color or CARD_COLOR)
+		console.card(box,row.color or CARD_COLOR)
 		gui.set_parent(box, panel_node, true)
 
 		-- Name+price strip along the bottom edge of the cell. The render
@@ -2173,6 +2184,7 @@ local function set_page(self, page)
 	-- harmless/idempotent to call again for the "ships" branch above, which
 	-- already sent this via refresh_ship_cards.
 	refresh_forsale_preview(self)
+	console.page(self,page,session.get_faction())
 	if page == "overview" then refresh_overview_preview(self) end
 end
 
@@ -2389,7 +2401,8 @@ refresh_overview_preview = function(self)
     local position=path and PREVIEW_WORLD_POS[path]
     local camera=path and PREVIEW_CAMERA[path]
     msg.post("@render:","set_ship_preview",{visible=position~=nil,target_pos=position,
-        eye_offset=camera and camera.eye_offset * .9,far=camera and camera.far})
+        eye_offset=camera and camera.eye_offset * .68,far=camera and camera.far,
+        rect={x=354,y=275,w=1212,h=650},dock=true})
 end
 
 -- Lays out the detail modal's visible buttons (`slots`: list of

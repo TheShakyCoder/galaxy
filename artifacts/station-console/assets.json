@@ -1,0 +1,175 @@
+{
+  "assets": [
+    {
+      "path": "main/ui/station_hangars/accord.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 2456317,
+      "sha256": "a250c903d4f92dba1db37a3b22356cb6352455ae13a32e29366f94c7378893b1"
+    },
+    {
+      "path": "main/ui/station_hangars/swarm.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "bytes": 2617478,
+      "sha256": "b6cb6e914c463c0c7e18e83e75bd89d680e8201008c120a0b0d4176de0a720e7"
+    },
+    {
+      "path": "main/ui/station_console/button.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 2415,
+      "sha256": "33ba3b4aad7efcc357fde168b35e98384e54e2f061b00152c18c90bd20ed84cb"
+    },
+    {
+      "path": "main/ui/station_console/button_active.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 2479,
+      "sha256": "5708db67922a7a688a3b51c8b3dbd493b9cc9c7bd41e7bca48dba2273b6f111c"
+    },
+    {
+      "path": "main/ui/station_console/button_gold.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 2420,
+      "sha256": "2874e6c340263f4d770d0a9c8d0313e78b042714927735c2aecca9db955e5586"
+    },
+    {
+      "path": "main/ui/station_console/command.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 8894,
+      "sha256": "1e665a6877e38d0ba0e3d32efc71bef8aae8b7e9154bb0f91a3862ba5bf2f52a"
+    },
+    {
+      "path": "main/ui/station_console/computer.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 1689,
+      "sha256": "77d886d4d51272e9735fc575d9c1ccb7c22c4883c589069710730ede089e7e2a"
+    },
+    {
+      "path": "main/ui/station_console/engine.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 11791,
+      "sha256": "a95d6cf5b4f27e00929a6e3c7182ccc312a4a5eeaf3f50c2084f1f789c9ff977"
+    },
+    {
+      "path": "main/ui/station_console/fitting.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 3642,
+      "sha256": "2c75fd9f49c43a2cdf45daadd7aa7745c242f61d223e4277e97be706ac0265f2"
+    },
+    {
+      "path": "main/ui/station_console/hangar.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 5307,
+      "sha256": "c2f757dd54d2dd799ad514ba8e63c0b9af3ab6c00b9537b08875ae0d088fc57d"
+    },
+    {
+      "path": "main/ui/station_console/hull.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 5721,
+      "sha256": "774a469e1a134d928a39d7592223322d66e3c253cead0e4b52b8365b2cdcc6ba"
+    },
+    {
+      "path": "main/ui/station_console/livery.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 2824,
+      "sha256": "c1a54895e70c9758caf1b7d7bbd805e95ae335711166d4dcea29f21c49884e80"
+    },
+    {
+      "path": "main/ui/station_console/map.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 9432,
+      "sha256": "d000cd5414e7b12f1f5b22b36c48466de04295e17a411695f2faf228abf43374"
+    },
+    {
+      "path": "main/ui/station_console/orbital.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 15715,
+      "sha256": "6c18f9e778900a096db004dcb8bcdbd2655fc5c988416ee598d913e0f822d0ba"
+    },
+    {
+      "path": "main/ui/station_console/panel.png",
+      "dimensions": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "bytes": 2415,
+      "sha256": "33ba3b4aad7efcc357fde168b35e98384e54e2f061b00152c18c90bd20ed84cb"
+    },
+    {
+      "path": "main/ui/station_console/row.png",
+      "dimensions": [
+        256,
+        96
+      ],
+      "mode": "RGBA",
+      "bytes": 1208,
+      "sha256": "d780f11759bb3c134f3c2bbad34466e01e5adb3bb0e19a95d0c2c7ead36cdd49"
+    },
+    {
+      "path": "main/ui/station_console/weapon.png",
+      "dimensions": [
+        128,
+        128
+      ],
+      "mode": "RGBA",
+      "bytes": 1270,
+      "sha256": "78be5462dcff2c46c82ee8afd7c73ad1c10dd3b87facb3b0f8761b8130621d65"
+    }
+  ],
+  "source_bytes": 5151017
+}

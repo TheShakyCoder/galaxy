@@ -2,10 +2,14 @@
 local session=require "main.session"
 local network=require "main.network"
 local profile=require "main.profile"
-local function choose(faction)
+local function choose(faction,hull)
+ hull=hull or "patrol_interceptor"
  session.set_on_change(nil)
- session.restore({faction=faction,tope=250000,water=4200,iron=3100,hydrogen=1200,xp=12000})
+ session.restore({faction=faction,tope=250000,water=4200,iron=3100,hydrogen=1200,xp=12000,active_ship_id=hull,owned_ships={hull}})
+ -- Non-starter fixtures keep the starter modules as spares; do not invent slots.
+ if hull~="patrol_interceptor" then session.loadout={} end
  msg.post("outpost#gui","show_outpost")
+ if html5 then html5.run("document.getElementById('review-status').textContent='Viewing: "..faction.." / "..hull.."';") end
 end
 function init(self)
  -- Disable every external endpoint reachable from the station screen.
@@ -25,6 +29,7 @@ function update(self,dt)
  local command=html5.run("window.galaxyStationCommand || ''")
  if command~="" then
   html5.run("window.galaxyStationCommand = ''")
-  if command=="accord" or command=="swarm" then choose(command) end
+  local faction,hull=command:match("^(%a+):([%a_]+)$")
+  if (faction=="accord" or faction=="swarm") and require("main.data.ships").SHIPS[hull] then choose(faction,hull) end
  end
 end

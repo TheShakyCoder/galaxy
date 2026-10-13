@@ -1,0 +1,16 @@
+images { image: "/main/ui/station_console/button.png" }
+images { image: "/main/ui/station_console/button_active.png" }
+images { image: "/main/ui/station_console/button_gold.png" }
+images { image: "/main/ui/station_console/command.png" }
+images { image: "/main/ui/station_console/computer.png" }
+images { image: "/main/ui/station_console/engine.png" }
+images { image: "/main/ui/station_console/fitting.png" }
+images { image: "/main/ui/station_console/hangar.png" }
+images { image: "/main/ui/station_console/hull.png" }
+images { image: "/main/ui/station_console/livery.png" }
+images { image: "/main/ui/station_console/map.png" }
+images { image: "/main/ui/station_console/orbital.png" }
+images { image: "/main/ui/station_console/panel.png" }
+images { image: "/main/ui/station_console/row.png" }
+images { image: "/main/ui/station_console/weapon.png" }
+extrude_borders: 2

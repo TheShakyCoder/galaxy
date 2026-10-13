@@ -1,0 +1,233 @@
+RUN station_console_harness
+RUN launch_cooldown_harness
+RUN ship_price_harness
+RUN flight_hud_harness
+PASS station console: real IDs, all tabs/factions, bounded nodes, data gauges, text bounds, scoped preview lifecycle
+PASS station render messages: detail and launch reset viewport, material mode and pose
+PASS  no cooldown on a fresh character
+PASS  not flying on a fresh character
+PASS  first launch allowed
+PASS  flying after launch
+PASS  launching arms no cooldown
+PASS  second launch refused while flying
+PASS  dock clears flying
+PASS  dock arms a 10s cooldown
+PASS  9s in: still cooling down
+PASS  9s in: launch refused
+PASS  refused launch stayed docked
+PASS  refused launch changed nothing
+PASS  10s in: cooldown over
+PASS  10s in: launch allowed
+PASS  flying again
+PASS  in-flight profile saves flying
+PASS  restored as flying
+PASS  resume at the outpost
+PASS  resume clears flying
+PASS  resume arms a 60s cooldown
+PASS  launch refused during it
+PASS  59s in: still refused
+PASS  60s in: allowed
+PASS  docked session: no 60s cooldown
+PASS  docked session: launch still refused
+PASS  docked session: allowed after the 10s
+PASS  resume keeps the longer cooldown already running
+PASS  dock did not shorten it to 10s
+PASS  server-clock cooldown reads as 60s, not 360
+PASS  server-clock cooldown elapses with the host clock
+PASS  round trip keeps flying
+PASS  round trip keeps the cooldown
+PASS  reset clears the cooldown
+PASS  reset clears flying
+PASS  reset leaves no cooldown left
+PASS  dock is a server operation
+PASS  resume is a server operation
+PASS  server: launch from a docked profile allowed
+PASS  server: relaunch refused while the save says flying
+PASS  server: dock allowed and stamped on the server clock
+PASS  server: launch 9s after docking refused
+PASS  server: launch 10s after docking allowed
+PASS  server: resume after an in-flight session arms 60s
+PASS  server: launch right after that refused
+PASS  server: launch 60s after that allowed
+All launch-cooldown assertions passed.
+PASS  patrol_interceptor advanced.price is a non-empty list
+PASS  escort_support basic.price is a non-empty list
+PASS  escort_support basic.price[1] shape
+PASS  frigate_support basic.price is a non-empty list
+PASS  frigate_support basic.price[1] shape
+PASS  escort_interceptor basic.price is a non-empty list
+PASS  escort_interceptor basic.price[1] shape
+PASS  patrol_assault basic.price is a non-empty list
+PASS  patrol_assault basic.price[1] shape
+PASS  patrol_assault advanced.price is a non-empty list
+PASS  frigate_interceptor basic.price is a non-empty list
+PASS  frigate_interceptor basic.price[1] shape
+PASS  frigate_tactical basic.price is a non-empty list
+PASS  frigate_tactical basic.price[1] shape
+PASS  escort_tactical basic.price is a non-empty list
+PASS  escort_tactical basic.price[1] shape
+PASS  frigate_assault basic.price is a non-empty list
+PASS  frigate_assault basic.price[1] shape
+PASS  escort_assault basic.price is a non-empty list
+PASS  escort_assault basic.price[1] shape
+PASS  patrol_support basic.price is a non-empty list
+PASS  patrol_support basic.price[1] shape
+PASS  patrol_support advanced.price is a non-empty list
+PASS  patrol_tactical basic.price is a non-empty list
+PASS  patrol_tactical basic.price[1] shape
+PASS  patrol_tactical advanced.price is a non-empty list
+PASS  all 11 for-sale basic prices present
+PASS  advance fallback is a one-entry list
+PASS  two-entry price is returned
+PASS  can_afford false when one currency is short
+PASS  purchase refused
+PASS  tope untouched after refusal
+PASS  hydrogen untouched after refusal
+PASS  can_afford true when both are met
+PASS  purchase succeeds
+PASS  tope spent exactly
+PASS  hydrogen spent exactly
+PASS  advance price is two entries
+PASS  advance refused while short
+PASS  still basic after refusal
+PASS  tope untouched after refusal
+PASS  advance succeeds
+PASS  advanced flag set
+PASS  tope spent exactly
+PASS  hydrogen spent exactly
+PASS  double advance refused
+All ship-price assertions passed.
+PASS  scope face is a full disc
+PASS  outer ring sits on the panel edge
+PASS  two inner range rings
+PASS  exactly one sweep wedge
+PASS  sweep wedge is translucent so the scope shows through
+PASS  scope nodeRUN flight_throttle_harness
+s are all centred on the radar
+PASS  a heading marker exists
+PASS  heading marker is at the scope centre
+PASS  heading marker's apex points up (own heading)
+PASS  heading marker is small and bright
+PASS  heading marker draws over every blip pool
+PASS  cross-hairs span the scope
+PASS  sweep line is the wedge's leading edge
+PASS  sweep line starts radial from the centre (west pivot)
+PASS  one second of sweep = 120 degrees
+PASS  wedge still trails the line by the arc width
+PASS  half a second more = 180 degrees
+PASS  a full revolution wraps to 0
+PASS  power readout shows current / max
+PASS  hull readout shows current / max
+PASS  both readouts were written
+PASS  unchanged values are not rewritten
+PASS  a changed value does update
+PASS  a pool of outpost markers exists
+PASS  outpost markers are bigger than contacts
+PASS  outpost markers start hidden
+PASS  a pool of contact dots exists
+PASS  a pool of asteroid blips exists
+PASS  asteroid blips are semi-transparent
+PASS  asteroid blips are smaller than contacts
+PASS  near contact plots at half range to port
+PASS  world +X plots to port
+PASS  far contact is clamped to the rim, on the side it is actually on
+PASS  every dot stays inside the scope
+PASS  an asteroid at half range plots half way out
+PASS  world +Z plots above centre
+PASS  an out-of-range asteroid is clamped to the rim
+PASS  asteroids stay inside the scope
+PASS  unused asteroid blips are hidden
+PASS  no asteroids in range hides every blip
+PASS  turning the ship turns the scope: +X is now dead ahead
+PASS  and what was ahead is now to starboard
+PASS  no heading falls back to world +Z
+PASS  an outpost astern plots below centre
+PASS  a far outpost is clamped to the rim, on the side it is actually on
+PASS  a friendly outpost is coloured friendly (blue)
+PASS  an enemy outpost is coloured enemy (red)
+PASS  unused outpost markers are hidden
+PASS  no outposts in range hides every marker
+PASS  coordinates are shown as whole metres with grouping
+PASS  the selected contact is highlighted
+PASS  the highlighted contact is drawn bigger
+PASS  an untargeted contact keeps its own colour
+PASS  an untargeted asteroid keeps its dim colour
+PASS  an untargeted outpost keeps its relation colour
+PASS  the highlight follows the selection to the asteroids
+PASS  the contact it left goes back to its normal look
+PASS  no target_id highlights nothing
+PASS  zero capacity leaves gauges empty
+PASS  negative values cannot reverse a gauge
+PASS  over-capacity values stay inside the track
+PASS  hull gauge follows telemetry
+PASS  power gauge follows telemetry
+PASS  missing telemetry hides both fills
+PASS  all roster loadouts fit the equipment area
+PASS  slot ordering is numeric within each category
+PASS  launch builds interactive equipment
+PASS  weapon map loads the current hull
+PASS  same hull reuses its texture
+PASS  power has a distinct violet color
+PASS  spatial weapon cooldown remains visible
+PASS  spatial weapon follows the fitting anchor
+PASS  equipment click is consumed
+PASS  equipment click uses existing flight action
+PASS  world clicks pass through
+PASS  faction switch replaces silhouette and releases old texture
+PASS  the throttle readout shows the selected segment and its speed
+PASS  an unchanged throttle segment is not rewritten
+PASS  a new segment updates the readout
+flight_hud harness: all assertions passed.
+PASS  ten segments, 0 to 9
+PASS  segment 0 is no speed
+PASS  segment 9 is full speed
+PASS  the nine steps are an even split
+PASS  segment 0 commands a stop
+PASS  segment 9 commands the ship's top speed
+PASS  a middle segment commands its share of top speed
+PASS  every segment above 0 commands more speed than the one below it
+PASS  Below 0 clamps to a stop
+PASS  above 9 clamps to full speed
+PASS  a fractional segment rounds to the nearest notch
+PASS  no segment at all reads as a stop
+PASS  stepping down from 0 stays at 0
+PASS  stepping up from 9 stays at 9
+PASS  one notch up is one segment
+PASS  the whole range is nine notches
+PASS  a target at rest is segment 0
+PASS  a target at our top speed is segment 9
+PASS  half top speed lands on thRUN flight_speed_harness
+RUN starfield_harness
+PASS 7 Lua 5.1 harnesses
+e nearest notch
+PASS  a target faster than us clamps to 9
+PASS  a target flying backwards clamps to 0
+PASS  no top speed means no scaling, so a stop
+PASS  every segment survives a speed -> segment round trip
+flight_throttle harness: all assertions passed.
+PASS  the harness's ship has a real top speed and acceleration
+PASS  a launch starts on segment 0 (no speed)
+PASS  one wheel notch up is one segment
+PASS  the wheel's own release does not move it again
+PASS  the wheel clamps at segment 9
+PASS  one wheel notch down is one segment
+PASS  the wheel clamps at segment 0
+PASS  the throttle keys step the segment too
+PASS  E is full speed (segment 9)
+PASS  Q is a stop (segment 0)
+PASS  stepping down from a stop stays at a stop
+PASS  segment 9 commands exactly the ship's top speed
+PASS  the ship accelerated smoothly, never slowing on the way up
+PASS  it got there in about top-speed / acceleration seconds
+PASS  the speed on the HUD is the speed it is actually travelling at
+PASS  two notches down is segment 7
+PASS  the ship settled at the segment's own commanded speed
+PASS  closing the throttle stops the ship, over the same acceleration time
+PASS  four notches up is segment 4
+PASS  the HUD is told the segment and the speed it commands
+PASS  Match Speed picks the segment nearest the target's speed
+PASS  matching a target at top speed is segment 9
+PASS  boost still pushes the ship past the selected segment's speed
+PASS  releasing boost drops back to the selected segment's speed
+flight_speed harness: all assertions passed.
+starfield harness: all assertions passed

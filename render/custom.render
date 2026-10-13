@@ -1,1 +1,3 @@
 script: "/render/custom.render_script"
+
+materials { name: "station_ship" material: "/assets/materials/station_console/station_ship.material" }

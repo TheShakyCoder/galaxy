@@ -26,6 +26,8 @@ textures {
 }
 
 textures { name: "ui_panels" texture: "/main/ui/station/panels.atlas" }
+textures { name: "console" texture: "/main/ui/station_console/console.atlas" }
+textures { name: "hangars" texture: "/main/ui/station_hangars/hangars.atlas" }
 
 nodes {
   type: TYPE_BOX
