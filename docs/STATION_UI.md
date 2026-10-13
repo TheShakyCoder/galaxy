@@ -101,3 +101,14 @@ removed. Accord retains ivory/navy/brass structural character; Swarm replaces
 that character with graphite ribs and layered radiator vanes. The exact source
 image dimensions and SHA-256 hashes are recorded in `artifacts/station-console/assets.json`.
 Panel surfaces and icons are code-authored in the deterministic Python tool.
+
+## Approved faction insignias
+
+The dossier uses the user-supplied fish insignia for Accord and bird insignia
+for Swarm. Both transparent 1254 x 1254 originals are preserved byte-for-byte
+under `artifacts/faction-logos/`, with source hashes in `manifest.json`.
+`main/ui/faction_logos/` contains 256 x 256 runtime imports, retaining the
+original square aspect, artwork, colors and transparency. The logo is drawn
+without tint and switches with the faction. These replace the generic orbital
+placeholder; the decorative orbital asset remains available but unused here.
+The separate logo atlas adds 2,097,201 bytes (about 2 MiB) of compiled texture resource with the current HTML5 settings. The original high-resolution copies are documentation assets and are not referenced by the runtime.

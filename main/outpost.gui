@@ -1870,3 +1870,5 @@ nodes {
   layer: ""
  scale { x: 0.88 y: 0.88 z: 1 w: 1 }
 }
+
+textures { name: "faction_logos" texture: "/main/ui/faction_logos/logos.atlas" }

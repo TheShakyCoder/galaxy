@@ -1,0 +1,3 @@
+images { image: "/main/ui/faction_logos/accord.png" }
+images { image: "/main/ui/faction_logos/swarm.png" }
+extrude_borders: 2
