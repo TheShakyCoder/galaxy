@@ -2534,8 +2534,12 @@ refresh_overview_preview = function(self)
     local path=faction and faction.model
     local position=path and PREVIEW_WORLD_POS[path]
     local camera=path and PREVIEW_CAMERA[path]
+    -- View the berth from below, as if standing on the hangar floor. Mirror
+    -- only this camera's elevation, retaining each hull's fitted distance.
+    local eye=camera and camera.eye_offset
+    local berth_eye=eye and vmath.vector3(eye.x, -math.abs(eye.y), eye.z) * .68
     msg.post("@render:","set_ship_preview",{visible=position~=nil,target_pos=position,
-        eye_offset=camera and camera.eye_offset * .68,far=camera and camera.far,
+        eye_offset=berth_eye,far=camera and camera.far,
         rect={x=354,y=275,w=1212,h=650},dock=true})
 end
 
