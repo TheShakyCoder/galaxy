@@ -8,7 +8,7 @@ Sculpted skin meshes retain their separately authored geometry.
 import argparse,hashlib,json,math,re,struct
 from pathlib import Path
 from fleet.roster import SHIPS,BY_SLUG
-from fleet import fish,birds
+from fleet import fish,birds,hammerhead_detail
 from fleet.geometry import atlas,export
 from fleet.hd_detail import service_details,texture_2k
 import build_sardine_model as sardine
@@ -25,6 +25,9 @@ def build(ship):
             z0=-6.45; z1=7
             point=staticmethod(sardine.surface);normal=staticmethod(sardine.surface_normal)
         hull=Surface();source=sardine.make_atlas()
+    elif ship.slug=='hammerhead':
+        mesh=hammerhead_detail.build(ship)
+        hull=mesh.hull;source=hammerhead_detail.atlas(ship)
     else:
         mesh=(fish if ship.faction=='accord' else birds).build(ship,detail_scale=2)
         hull=mesh.hull;source=atlas(ship)
