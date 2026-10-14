@@ -1,61 +1,110 @@
--- Isolated demo: SPACE breaks the rocks; R generates the next six seeds.
--- Auto cycle exercises repeated resource creation/release without a server.
+local geometry=require "main.asteroid_geometry"
+local resources=require "main.data.asteroids"
 local handle_action
+local function clear(self)
+ for _,rock in ipairs(self.rocks or {}) do if go.exists(rock.id) then go.delete(rock.id) end end
+ self.rocks={}
+end
+local function seed_for(self,kind,index)
+ -- Defold numeric properties are float32. Keep review seeds exactly representable
+ -- so the picker agrees with the value the spawned component actually receives.
+ local seed=geometry.seed("asteroid_review",self.variation*113+index*17)%16000000
+ while geometry.archetype(seed)~=kind do seed=seed+1 end
+ return seed
+end
 local function spawn(self)
-	self.ids={}
-	for i=1,6 do
-		local pos=vmath.vector3(((i-1)%3-1)*1.8,i<=3 and 0.9 or -0.9,0)
-		self.ids[i]=factory.create("#rock_factory",pos,nil,{seed=self.seed+i*104729},1.45)
-	end
-	self.age=0
-	self.broken=false
+ clear(self)
+ local count=self.mode=="population" and 10 or (self.mode=="compare" and 2 or (self.mode=="field" and self.count or 1))
+ for i=1,count do
+  local kind=self.mode=="population" and (i-1)%5+1 or self.kind
+  if self.mode=="field" then kind=(i-1)%5+1 end
+  local index=self.mode=="compare" and 1 or i
+  local seed=seed_for(self,kind,index)
+  local pos,scale=vmath.vector3(),1.8
+  if self.mode=="population" then pos=vmath.vector3(((i-1)%5-2)*1.5,i<=5 and .8 or -.8,0);scale=1.3
+  elseif self.mode=="compare" then pos=vmath.vector3(i==1 and -1.05 or 1.05,0,0)
+  elseif self.mode=="field" then pos=vmath.vector3(((i-1)%10-4.5)*.73,(math.floor((i-1)/10)-(count/10-1)/2)*.73,0);scale=.65 end
+  local old=self.mode=="compare" and i==1 or (self.mode~="compare" and self.old)
+  local id=factory.create(old and "#baseline_factory" or "#rock_factory",pos,nil,{seed=seed},scale)
+  self.rocks[#self.rocks+1]={id=id,old=old}
+ end
+ self.age=0;self.broken=false;self.stage=0;self.report=3
+end
+local function shade(self)
+ local tint=self.analysed and resources.RESOURCE_BY_ID[self.resource].tint or {1,1,1}
+ for _,r in ipairs(self.rocks) do if go.exists(r.id) then
+  local url=msg.url(nil,r.id,"model")
+  go.set(url,"tint",vmath.vector4(tint[1]*1.4,tint[2]*1.4,tint[3]*1.4,1))
+  if not r.old then go.set(url,"analysis",vmath.vector4(self.analysed and 1 or 0,0,0,0)) end
+ end end
 end
 local function explode(self)
-	if self.broken then return end
-	self.broken=true
-	self.age=4
-	for _,id in ipairs(self.ids) do msg.post(msg.url(nil,id,"script"),"disintegrate") end
+ if self.broken then return end
+ self.broken=true;self.age=0
+ for _,r in ipairs(self.rocks) do if go.exists(r.id) then msg.post(msg.url(nil,r.id,"script"),"disintegrate") end end
+ self.report=3
 end
 function init(self)
-	msg.post(".","acquire_input_focus")
-	self.seed=1729
-	spawn(self)
-	self.auto=false
-	print("ASTEROID_PREVIEW_READY: SPACE break; R new seeds; A auto cycle; 1/2/3 inspect stages")
+ msg.post(".","acquire_input_focus")
+ self.mode="population";self.kind=1;self.variation=1;self.count=50;self.old=false
+ self.analysed=false;self.resource="iron";self.auto=false;self.spin=true;self.turn=0;self.pitch=.2
+ spawn(self);shade(self)
+end
+handle_action=function(self,command)
+ local key,value=command:match("^([^:]+):?(.*)$")
+ if key=="kind" then self.kind=tonumber(value) or 1;self.mode="close";spawn(self)
+ elseif key=="population" or key=="compare" or key=="close" then self.mode=key;if key=="compare" then self.old=false end;spawn(self)
+ elseif key=="field" then self.count=tonumber(value) or 50;self.mode="field";spawn(self)
+ elseif key=="old" then self.old=not self.old;if self.mode=="compare" then self.mode="close" end;spawn(self)
+ elseif key=="reseed" then self.variation=self.variation+1;spawn(self)
+ elseif key=="analysed" then self.analysed=not self.analysed
+ elseif key=="resource" then if resources.RESOURCE_BY_ID[value] then self.resource=value end
+ elseif key=="spin" then self.spin=not self.spin
+ elseif key=="explode" then explode(self)
+ elseif key=="auto" then self.auto=not self.auto
+ elseif key=="intact" or key=="fractured" or key=="dissolving" then
+  spawn(self);self.auto=false;self.stage=key=="intact" and 0 or (key=="fractured" and .65 or 1.5)
+  for _,r in ipairs(self.rocks) do go.set(msg.url(nil,r.id,"model"),"breakup",vmath.vector4(self.stage,0,0,0)) end
+ end
+ shade(self);self.report=3
 end
 function update(self,dt)
-	if html5 then
-		local command=html5.run("window.asteroidReviewCommand || ''")
-		if command~="" then
-			html5.run("window.asteroidReviewCommand = ''")
-			print("ASTEROID_REVIEW_ACTION: "..command)
-			handle_action(self,hash(command),{pressed=true})
-		end
-	end
-	self.age=self.age+dt
-	if not self.broken then
-		for _,id in ipairs(self.ids) do
-			go.set_rotation(vmath.quat_rotation_y(self.age*0.18)*vmath.quat_rotation_x(0.25),id)
-		end
-	end
-	if self.auto and self.age>=4 and not self.broken then explode(self) end
-	if self.auto and self.age>=8 then self.seed=self.seed+7919; spawn(self) end
+ if html5 then
+  local command=html5.run("(window.asteroidReviewCommands || []).shift() || ''")
+  if command~="" then handle_action(self,command) end
+ end
+ self.age=self.age+dt
+ if self.spin then self.turn=self.turn+dt*.13 end
+ if not self.broken then
+  for _,r in ipairs(self.rocks) do if go.exists(r.id) then go.set_rotation(vmath.quat_rotation_y(self.turn)*vmath.quat_rotation_x(self.pitch),r.id) end end
+ end
+ if self.auto then
+  if self.age>=4 and not self.broken then explode(self)
+  elseif self.broken and self.age>=4 then self.variation=self.variation+1;spawn(self);shade(self) end
+ end
+ local width,height=window.get_size();local aspect=width/math.max(1,height)
+ local half_width=self.mode=="close" and 1.1 or (self.mode=="compare" and 2.2 or 4.0)
+ local half_height=self.mode=="close" and 1.1 or (self.mode=="compare" and 1.1 or (self.mode=="field" and self.count==100 and 4.0 or 1.9))
+ local d=math.max(half_height,half_width/aspect)/math.tan(.36)
+ if self.mode=="close" and (self.broken or self.stage>0) then d=d*2.4 end
+ msg.post("@render:","review_camera",{distance=d})
+ if self.report>0 then
+  self.report=self.report-1
+  if self.report==0 and html5 then
+   local state=self.mode.." / "..geometry.ARCHETYPES[self.kind].." / "..(self.old and "original" or "detail").." / "..(self.analysed and ("analysed "..self.resource) or "unanalysed")
+   if self.broken then state=state.." / timed breakup" elseif self.stage>0 then state=state.." / stage "..self.stage end
+   html5.run("document.getElementById('review-status').textContent='Viewing: "..state.."'")
+  end
+ end
 end
-handle_action=function(self,action_id,action)
-	if not action.pressed then return end
-	if action_id==hash("explode") then explode(self)
-	elseif action_id==hash("auto") then self.auto=not self.auto
-	elseif action_id==hash("intact") or action_id==hash("fractured") or action_id==hash("dissolving") then
-		for _,id in ipairs(self.ids) do if go.exists(id) then go.delete(id) end end
-		spawn(self)
-		local age=action_id==hash("intact") and 0 or (action_id==hash("fractured") and 0.65 or 1.5)
-		for _,id in ipairs(self.ids) do go.set(msg.url(nil,id,"model"),"breakup",vmath.vector4(age,0,0,0)) end
-		self.auto=false
-	elseif action_id==hash("reseed") then
-		for _,id in ipairs(self.ids) do if go.exists(id) then go.delete(id) end end
-		self.seed=self.seed+7919; spawn(self)
-	end
+function on_input(self,id,a)
+ if id==hash("explode") and a.pressed then handle_action(self,"explode")
+ elseif id==hash("reseed") and a.pressed then handle_action(self,"reseed")
+ elseif id==hash("auto") and a.pressed then handle_action(self,"auto")
+ elseif id==hash("intact") and a.pressed then handle_action(self,"intact")
+ elseif id==hash("fractured") and a.pressed then handle_action(self,"fractured")
+ elseif id==hash("dissolving") and a.pressed then handle_action(self,"dissolving")
+ elseif id==hash("click") then self.drag=a.pressed or (self.drag and not a.released)
+ elseif not id and self.drag and a.dx then self.turn=self.turn+a.dx*.008;self.pitch=self.pitch+a.dy*.008 end
 end
-function on_input(self,action_id,action)
-	handle_action(self,action_id,action)
-end
+function final(self) clear(self) end
