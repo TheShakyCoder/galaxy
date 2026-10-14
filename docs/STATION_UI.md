@@ -23,7 +23,9 @@ Defold nodes supply every label, gauge, icon, button and interactive panel.
   normals, UVs and albedo. It adds no normal map, cast shadow, reflection probe
   or bloom. Flight rendering retains its existing material behavior.
 - `main/ui/station_pose.lua` selects the off-world preview rig for a slow
-  six-degree-per-second turn beginning at 65 degrees. Other previews retain
+  six-degree-per-second turn beginning at 65 degrees. The overview camera sits
+  below the ship and looks upward from the hangar floor, retaining the fitted
+  distance for each hull. Other previews retain
   their original rotation. The renderer clears this state and the custom
   viewport when the overview closes or a detail modal takes over.
 
