@@ -25,28 +25,28 @@
     {
       "faction": "swarm",
       "triangles": 17600,
-      "swept_radius": 366.00000638023135,
+      "swept_radius": 382.9149499841866,
       "swept_aabb_min": [
-        -366.00000638023135,
-        -223.50000638023135,
+        -382.9149499841866,
+        -240.4149499841866,
         8.0
       ],
       "swept_aabb_max": [
-        366.00000638023135,
-        508.50000638023135,
-        720.0
+        382.9149499841866,
+        525.4149499841866,
+        725.0
       ],
       "dimensions": [
-        732.0000127604627,
-        732.0000127604627,
-        712.0
+        765.8298999683732,
+        765.8298999683732,
+        717.0
       ],
-      "conservative_root_distance": 881.4602977381882,
+      "conservative_root_distance": 895.3691248121555,
       "model_draws": 10
     }
   ],
   "byte_identical_rebuild": true,
-  "source_bytes": 2339291,
+  "source_bytes": 2339343,
   "texture_memory_rgb8_mips_bytes": 50331654,
   "texture_memory_rgba8_mips_upper_bytes": 67108872,
   "notes": [

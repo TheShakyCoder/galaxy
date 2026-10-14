@@ -33,7 +33,7 @@ function update(self,dt)
   elseif key=="slot" then self.slot=tonumber(value) or 1;self.mode="screen";self.speed=0
   elseif key=="ad" then self.ad=self.ad%8+1;ads.set_ad(self.faction=="swarm" and "swarm_outpost" or "accord_outpost",self.slot,names[self.ad])
   elseif key=="reset" then self.distance=1400;self.angle=0;self.yaw=0;self.pitch=.3;self.mode="hero";self.orbit=false
-  elseif key=="side" or key=="end" then self.mode=key;self.orbit=false
+  elseif key=="side" or key=="end" or key=="level" then self.mode=key;self.orbit=false
   end
   self.report=3
  end
@@ -52,11 +52,12 @@ function update(self,dt)
  local d=self.distance;local a=self.angle+self.yaw
  local offset=swarm and vmath.vector3(math.cos(a+.7)*d,math.sin(a+.7)*d,d*.07) or vmath.vector3(math.sin(a+1.1)*d,d*(.15+self.pitch),math.cos(a+1.1)*d)
  if self.faction=="both" then target=vmath.vector3(0,135,200);offset=vmath.vector3(500,1700,d) end
- if self.mode=="side" then offset=vmath.vector3(d,0,0);up=vmath.vector3(0,0,1)
+ if self.mode=="level" then offset=vmath.vector3(d,0,0);up=vmath.vector3(0,1,0)
+ elseif self.mode=="side" then offset=vmath.vector3(d,0,0);up=vmath.vector3(0,0,1)
  elseif self.mode=="end" then offset=vmath.vector3(0,0,d);up=vmath.vector3(0,1,0)
  elseif self.mode=="screen" then
   local f=swarm and "swarm" or "accord";local theta=math.pi/4+(self.slot-1)*math.pi/4+self.stations[f].phase
-  local radius=(swarm and 362 or 306)*math.cos(math.pi/8)+(swarm and 9 or 10)
+  local radius=(swarm and 362 or 306)*math.cos(math.pi/8)+(swarm and 43 or 10)
   local n=vmath.vector3(math.cos(theta),math.sin(theta),0)
   target=vmath.vector3(0,swarm and 142.5 or 135,swarm and 618 or 0)+n*radius
   offset=n*320;up=vmath.vector3(0,0,1)

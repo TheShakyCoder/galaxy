@@ -155,6 +155,7 @@ def dock(m,z,sign,r=72):
         m.radial_box(a,r+2,z-sign*18,(4,5,18),'metal')
 
 def frame(m,a,r,z,w=200,h=100):
+    start=len(m.p)
     m.radial_box(a,r-2,z,(w+14,8,h+14),'navy')
     for x in (-1,1):
         # Four sides, deliberately separate from the logo sampler.
@@ -162,6 +163,17 @@ def frame(m,a,r,z,w=200,h=100):
         c=add(mul(n,r+3),add(mul(u,x*(w/2+4)),(0,0,z)))
         m.box(c,(5,5,h+10),'metal',(u,n,(0,0,1)))
         m.radial_box(a,r+2,z+x*(h/2+4),(w,5,4),'brass')
+    # Quarter-turn the complete frame clockwise when viewed from outside.
+    # Tangent becomes -Z and Z becomes tangent; radial depth is unchanged.
+    u=(-math.sin(a),math.cos(a),0);n=(math.cos(a),math.sin(a),0)
+    centre=(r*n[0],r*n[1],z)
+    def turn(v):
+        tangent=sum(v[k]*u[k] for k in range(3))
+        radial=sum(v[k]*n[k] for k in range(3))
+        return (u[0]*v[2]+n[0]*radial,u[1]*v[2]+n[1]*radial,-tangent)
+    for i in range(start,len(m.p)):
+        m.p[i]=add(centre,turn(sub(m.p[i],centre)))
+        m.n[i]=turn(m.n[i])
 
 def station(faction):
     fixed=Mesh();rotor=Mesh();slots=[]
@@ -212,7 +224,9 @@ def station(faction):
         ring(rotor,512,74,9,'brass',64)
         for i in range(8):
             a=phase+(i+.5)*TAU/8;r=362*math.cos(math.pi/8)
-            frame(rotor,a,r+5,618);slots.append((a,r+9,618))
+            # The turned panels now cross the cap's rim rings in Z. Keep the
+            # frame back beyond their 366 m radius so no ring cuts the text.
+            frame(rotor,a,r+39,618);slots.append((a,r+43,618))
             for offset in (-65,0,65):
                 u=(-math.sin(a),math.cos(a),0);n=(math.cos(a),math.sin(a),0)
                 rotor.box(add(mul(n,r+2),add(mul(u,offset),(0,0,552))),(14,4,2),'cyan',(u,n,(0,0,1)))
@@ -247,7 +261,9 @@ def main():
         fixed,rotor,pivot,slots=station(faction)
         for name,m in [('fixed',fixed),('rotor',rotor)]:
             m.save(folder/(name+'.glb'));write(folder/(name+'.model'),model(f'/assets/models/stations/{faction}/{name}.glb',f'/assets/models/stations/{faction}/hull.png'))
-        ad=Mesh();ad.face([(-100,0,-50),(100,0,-50),(100,0,50),(-100,0,50)],normal=(0,-1,0),full=True);ad.save(OUT/'ad.glb')
+        # Rotate positions, keeping UVs attached: existing artwork turns sideways
+        # without stretching, cropping, or changing the source PNGs.
+        ad=Mesh();ad.face([(-50,0,100),(-50,0,-100),(50,0,-100),(50,0,100)],normal=(0,-1,0),full=True);ad.save(OUT/'ad.glb')
         for slug,*_ in ADS:write(OUT/'ads'/(slug+'.model'),model('/assets/models/stations/ad.glb',f'/assets/models/stations/ads/{slug}.png','ad'))
         rows.append(dict(faction=faction,pivot=pivot,slots=slots,period=110 if faction=='accord' else 120,triangles=(len(fixed.idx)+len(rotor.idx))//3+16,vertices=len(fixed.p)+len(rotor.p)+32))
         print(faction,rows[-1]['triangles'],'triangles')
