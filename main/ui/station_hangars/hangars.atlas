@@ -1,0 +1,3 @@
+images { image: "/main/ui/station_hangars/accord.png" }
+images { image: "/main/ui/station_hangars/swarm.png" }
+extrude_borders: 2

@@ -26,6 +26,8 @@ textures {
 }
 
 textures { name: "ui_panels" texture: "/main/ui/station/panels.atlas" }
+textures { name: "console" texture: "/main/ui/station_console/console.atlas" }
+textures { name: "hangars" texture: "/main/ui/station_hangars/hangars.atlas" }
 
 nodes {
   type: TYPE_BOX
@@ -1868,3 +1870,5 @@ nodes {
   layer: ""
  scale { x: 0.88 y: 0.88 z: 1 w: 1 }
 }
+
+textures { name: "faction_logos" texture: "/main/ui/faction_logos/logos.atlas" }

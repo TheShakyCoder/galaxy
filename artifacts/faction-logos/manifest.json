@@ -1,0 +1,28 @@
+[
+  {
+    "faction": "accord",
+    "source": "artifacts/faction-logos/accord.png",
+    "sha256": "e69b6b18c2e1562a3ead1cd1e5ed351b56ed88597f5eace0014be5951c413130",
+    "source_dimensions": [
+      1254,
+      1254
+    ],
+    "runtime_dimensions": [
+      256,
+      256
+    ]
+  },
+  {
+    "faction": "swarm",
+    "source": "artifacts/faction-logos/swarm.png",
+    "sha256": "f64740cdbc6a7bfa860955d1eb3f2bf0b93acd4e8f2374fd9a0043d9dbd664a0",
+    "source_dimensions": [
+      1254,
+      1254
+    ],
+    "runtime_dimensions": [
+      256,
+      256
+    ]
+  }
+]

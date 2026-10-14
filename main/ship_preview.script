@@ -7,12 +7,20 @@
 -- viewport-overlay pass, which aims its own camera at whichever ship's
 -- position the outpost GUI script asked for. This script only ever
 -- touches rotation, never position.
+local station_pose = require("main.ui.station_pose")
 local ROTATION_SPEED_DEG_PER_SEC = 30
 local MSG_SET_LIGHT = hash("set_light")
 
 function update(self, dt)
 	self.angle = (self.angle or 0) + ROTATION_SPEED_DEG_PER_SEC * dt
-	go.set_rotation(vmath.quat_rotation_y(math.rad(self.angle)))
+    if station_pose.is_target(go.get_position()) then
+        self.dock_time=(self.dock_time or 0)+dt
+        -- Start at a readable three-quarter berth view, then turn slowly.
+        go.set_rotation(vmath.quat_rotation_y(math.rad(65+self.dock_time*6)))
+    else
+        self.dock_time=nil
+        go.set_rotation(vmath.quat_rotation_y(math.rad(self.angle)))
+    end
 end
 
 -- Per-preview light position (direct instruction: behind and slightly

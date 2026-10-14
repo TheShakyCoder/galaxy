@@ -42,6 +42,8 @@ local space_render = require "render.space"
 --
 -- message constants
 --
+local station_pose = require("main.ui.station_pose")
+
 local MSG_CLEAR_COLOR =         hash("clear_color")
 local MSG_WINDOW_RESIZED =      hash("window_resized")
 local MSG_SET_VIEW_PROJ =       hash("set_view_projection")
@@ -273,7 +275,7 @@ end
 -- See the file header comment above for why this viewport-restricted-redraw
 -- approach is used at all instead of a render target. Caller is
 -- responsible for resetting the viewport back to fullscreen afterwards.
-local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, predicates, state)
+local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, predicates, state, dock)
     local scale = math.min(state.window_width / state.width, state.window_height / state.height)
     local offset_x = (state.window_width - state.width * scale) * 0.5
     local offset_y = (state.window_height - state.height * scale) * 0.5
@@ -303,7 +305,12 @@ local function draw_ship_preview_at(design_rect, target_pos, eye_offset, far, pr
     local constants = render.constant_buffer()
     local light_pos = light_pos_for(target_pos, eye_offset)
     constants.light = vmath.vector4(light_pos.x, light_pos.y, light_pos.z, 1.0)
+    if dock then
+        constants.tint=vmath.vector4(1,1,1,1)
+        render.enable_material("station_ship")
+    end
     local ok = pcall(render.draw, predicates.model, { constants = constants })
+    if dock then render.disable_material() end
     if not ok then
         render.draw(predicates.model)
     end
@@ -317,8 +324,8 @@ local function draw_ship_preview_overlay(self, predicates, state)
     if not self.preview.visible then
         return
     end
-    draw_ship_preview_at(PREVIEW_GUI_RECT, self.preview.target_pos,
-        self.preview.eye_offset, self.preview.far, predicates, state)
+    draw_ship_preview_at(self.preview.rect or PREVIEW_GUI_RECT, self.preview.target_pos,
+        self.preview.eye_offset, self.preview.far, predicates, state, self.preview.dock)
     render.set_viewport(0, 0, state.window_width, state.window_height)
 end
 
@@ -470,6 +477,10 @@ function on_message(self, message_id, message)
         update_camera(camera, state)
     elseif message_id == MSG_SET_SHIP_PREVIEW then
         self.preview.visible = message.visible
+        -- Missing rect/mode resets to the existing detail-modal contract.
+        self.preview.rect = message.rect
+        self.preview.dock = message.dock == true
+        station_pose.set(message.visible and message.dock and message.target_pos or nil)
         if message.target_pos then
             self.preview.target_pos = message.target_pos
         end
