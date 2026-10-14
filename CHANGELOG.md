@@ -4,6 +4,28 @@ All notable changes to Galaxy. Versions follow [Semantic Versioning](https://sem
 pre-release milestones carry a label (`-alpha.N`, then `-beta`). The current version lives
 in `main/version.lua` (see "Versioning" in the README).
 
+## [Unreleased]
+
+### Outpost
+- **Pick your next jump from the outpost's Sector Map.** The map now shows your
+  ship's FTL range as a green circle around the system you're docked at, colours
+  systems by whether you can jump there, and lets you click one to see its distance,
+  Hydrogen cost and threat. Picking a reachable system sets it as your jump
+  destination. You can't jump while docked: launch, then press J.
+
+### Flight
+- **F3 shows a temporary debug readout** in flight: your position, velocity,
+  speed, forward/up/right vectors, heading, pitch, roll and turn rates. Press F3
+  again to hide it.
+- **Camera drag is inverted vertically.** Holding the left mouse button and dragging
+  down now looks up, and dragging up looks down. Left/right is unchanged.
+- **Escort Assault (Moray / Goshawk) has its own stats.** It was using the shared
+  placeholder stats. It is now a heavy tank: 2,000 hull, armor 30, but slow
+  (35 m/s, 20°/s turning), with a 7.5 LY jump range and a 16,000 Iron repair cost.
+- **Camera drag is instant.** The camera now goes straight to where you drag it
+  instead of easing after the mouse. The automatic return two seconds later still
+  eases back.
+
 ## [0.5.0-beta] - 2026-10-12
 
 ### Flight

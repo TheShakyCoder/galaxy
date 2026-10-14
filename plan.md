@@ -134,17 +134,25 @@ online sanity check (not full legal clearance):
     independent will leading to secession), but not yet written up.
 
 ### 1.1 Faction Selection & Persistence Rules
-- **Registered account**: the faction-choice prompt (Accord vs. Swarm) is shown once,
-  at account registration. The selection is written to the account and is
-  **permanent** — there is no in-game faction-change or paid-respec feature.
-- **Guest play** (no account): there's no persistent storage to hold the choice, so the
-  faction-choice prompt is shown **every time the game loads**, each session.
-- **Robots is never offered as a selectable option**, in either the account or guest
-  flow — it exists only as computer-managed PvE opposition.
-- **Returning registered users skip the faction prompt entirely** — their faction was
-  already locked in at registration, and (per §3.2) a silent-login token takes them
-  straight into the game without re-choosing anything.
-- Full auth/session flow (guest vs. register vs. silent-login) is detailed in §3.2.
+- **One faction per game server, not per account (decided).** The plan was originally
+  written when there was only one game server. Multiple servers per account are now
+  planned (each server is its own Nakama world, §3.7), and a player chooses a faction
+  **separately on each server**, e.g. Accord on one and Swarm on another.
+- **When**: the faction prompt (Accord vs. Swarm) is shown the **first time the player
+  enters a given server**, not at website registration. The website account holds no
+  faction at all.
+- **Permanent on that server**: the choice is saved in that server's Nakama profile and
+  cannot be changed. The server refuses a second `choose_faction` ("Faction already
+  chosen", `nakama-server/modules/economy.lua`). There is no faction-change or paid-respec
+  feature.
+- **Returning players skip the prompt** on any server where they already have a
+  faction. The start screen loads that server's profile and goes straight to the
+  outpost (`main/start_screen.gui_script`).
+- **No guest play.** Guest mode has been removed. Every player is a verified website
+  account (§3.2, §3.7).
+- **Robots is never offered as a selectable option.** It exists only as
+  computer-managed PvE opposition.
+- Sign-in flow is detailed in §3.2.
 
 ## 2. Core Gameplay Systems
 
@@ -224,8 +232,19 @@ capacity/slots (§2.8) and role, not these inherent stats.
     real per-ship numbers (Vanir / Fenrir / Gungnir / Jotunn stat blocks, §2.8.11), so
     those were left untouched — as was `escort_tactical`, already sourced from the real
     Liche stat block.
+  - **`escort_assault`** (= **Maul / Wraith**; per direct instruction, "the
+    escort_assault chassis should have the same specs as the original wraith/maul
+    ship"): the full Maul/Wraith stat block, from the Wayback Machine's 2015-09
+    snapshots of the wiki pages (the live fandom pages are blocked). Hull 2,000 /
+    8.9 a second, armor 30, critical defense 120, durability 16,000 Iron; avoidance
+    235, turning 20°/s and 20°/s², inertial compensation 50, acceleration 4, speed 35,
+    boost 55 at 2.1 Hydrogen/s; FTL 7.5 LY / 20 s / 80 Hydrogen per LY; power 200 /
+    10 a second, firewall and emitter 150, sensor 3,000 m. The two pages match except
+    visual range (Maul 300 m, Wraith 250 m). Stats are per chassis, so Maul's 300 m
+    is used for both skins. The wiki's slot counts (W4 / H4 / E2 / C2) are not applied
+    yet: the chassis has no `slot_positions` layout.
   - **Every other ship** (`patrol_support`, `patrol_tactical`, `escort_interceptor`,
-    `escort_support`, `escort_assault`) keeps the §2.1.1 baseline above — §2.13
+    `escort_support`) keeps the §2.1.1 baseline above — §2.13
     records no real hull/power for their own counterparts yet, and inventing one is
     against §0/§4.
   Every chassis keeps its own explicit copy in `main/data/ships.lua` (shared by its
@@ -1918,7 +1937,7 @@ indistinguishable — there was nowhere to attach a per-copy upgrade state at al
 Reworked to track unique **instances** instead:
 
 - `M.owned` is now a list of `{ id, item_key, level }` — one entry per physical copy,
-  `id` a simple incrementing integer (in-memory/per-guest-session only, never
+  `id` a simple incrementing integer (originally in-memory/per-guest-session only, never
   persisted or compared across sessions, same as the rest of §3.2's guest state).
 - `M.loadout` is now a list of `{ slot, instance_id }` — installing/uninstalling only
   ever moves an instance's `loadout` membership; `owned` entries (and therefore
@@ -2794,6 +2813,41 @@ the player is currently in.
   neutral grey, and the existing Overview/Fitting/Ships tabs still work correctly
   after the tab-bar recentering.
 
+- **Superseded — range ring and jump selection (per direct instruction:** "when
+  docked at the outpost and looking at the sector map, show the circle of the
+  available distance that the ship can jump and allow the player to select a system
+  to jump to. However a player cannot jump until they have undocked from the
+  outpost. Refer to SuperShips"). The tab is no longer view-only, and the two
+  bullets above about "no interactivity" and "current = home system" are out of
+  date:
+  - **Current system** = `session.docked_system()`, the system whose outpost the
+    player is docked at.
+  - **FTL range ring**: a translucent green circle centred on the docked system,
+    radius = the active ship's `ftl_range_ly` (`star_systems.ly_to_map_units`) ×
+    the tab's own scale-to-fit factor.
+  - **Reachability colours** (the reference's scheme, now ported, the same as
+    `main/flight_map.gui_script`): cyan = docked here, green = in range, enterable
+    and affordable, red = restricted (enemy home/buffer zone), grey = out of range
+    or not enough Hydrogen.
+  - **Click a system** to select it (enlarged dot). Two lines under the map show its
+    name, distance, Hydrogen cost and threat, plus a status line: "Jump destination
+    set - undock, then press J to jump", "Out of FTL range", "Not enough Hydrogen",
+    "Restricted…" or "You are docked here".
+  - **No jump while docked — the SuperShips preset model.** Selecting a reachable
+    system only *arms* it as `player_ship.script`'s jump preset ("set_jump_preset",
+    measured from the docked system with the active ship). SuperShips' station has
+    no map, but its preset deliberately survives docking and launch, and J executes
+    it; Galaxy already worked that way in flight. There is no [JUMP] button on this
+    tab, and J does nothing while docked (`player_ship.script`'s `on_input` ignores
+    input when not flying). After launch the flight HUD shows "PRESET: <system> [J]"
+    and J (or the flight map's [JUMP]) starts the normal FTL countdown, which spends
+    Hydrogen and is re-checked by the server.
+  - **Re-checked on launch**: `start_flight` drops the preset if it's no longer in
+    range from the launch system with the active ship (e.g. the player switched to a
+    shorter-range ship after picking it). Docking passes any still-armed preset back
+    to the outpost (`show_outpost`'s `preset_system_id`), so the tab shows it as
+    selected.
+
 #### 2.8.11 Hull and Engine modules (decided — Patrol-tier first pass, from real BSGO research)
 
 Per direct instruction ("research all the bsgo components for hull, engine & computer,
@@ -2962,20 +3016,19 @@ vacant slot previews which stats it would affect.
 
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 
-- **Guest** (§1.1): always spawns at the **outpost of their chosen faction's home
-  system** — Sol for Accord, Polaris for Swarm (§2.7). Consistent with guest state
-  being ephemeral/re-chosen every load — there's no "last location" to return to.
-- **Registered, authenticated player** (§3.2 silent-login flow): spawns at the
-  system they **last successfully exited**, defined as either (a) quitting the game
-  without having been defeated, or (b) docking/orbiting at that system's outpost
-  before quitting. This last-exited system is persisted to the account (Nakama
-  storage, §3.3) and restored automatically on the next silent login.
-- **Defeat (decided)**: if a registered player's last session ended in defeat (ship
-  destroyed) rather than a successful exit, they spawn **the same way a guest
-  does** — at their faction's home-system outpost.
-- **Brand new account (decided)**: a freshly registered player with no "last exited
-  system" yet also spawns **the same way a guest does** — home-system outpost, for
-  their very first spawn.
+- **Home-system spawn**: the **outpost of the player's faction's home system** on that
+  server — Sol for Accord, Polaris for Swarm (§2.7). (Guest mode, which always used
+  this spawn, has been removed — §3.2.)
+- **Returning player** (§3.2): spawns at the system they **last successfully exited**
+  on that server, defined as either (a) quitting the game without having been
+  defeated, or (b) docking/orbiting at that system's outpost before quitting. This
+  last-exited system is saved in that server's Nakama profile (§3.3) and restored on
+  the next sign-in. Location is per server, like faction (§1.1).
+- **Defeat (decided)**: if a player's last session ended in defeat (ship destroyed)
+  rather than a successful exit, they use the home-system spawn.
+- **New to a server (decided)**: a player who has just chosen their faction on a
+  server has no "last exited system" there yet, so their first spawn there is the
+  home-system spawn.
 - **Outpost scope (resolved)**: every system has an outpost per faction by default,
   with the home-system-plus-nearest-6 exception denying the opposing faction one —
   see §2.7's new "Outposts" subsection for the full rule and implementation. A
@@ -3292,11 +3345,17 @@ ship."*
   available. Yaw/pitch accumulate from the cursor's own pixels at
   `CAMERA_ORBIT_YAW_PER_PIXEL`/`..._PITCH_PER_PIXEL` (0.008 rad/px, one shared rate
   on both axes so a circular drag swings at a constant speed): dragging right turns
-  the view right and dragging down looks down, i.e. the usual third-person
-  mouse-look sense of "rotating the camera around the ship". Pitch is clamped to
+  the view right and dragging down looks **up** (vertical axis inverted, per direct
+  instruction — it was originally drag-down-looks-down). Pitch is clamped to
   `+/-CAMERA_ORBIT_MAX_PITCH` (1.4 rad, ~80 degrees) so the view direction can never
   end up parallel to the camera's own up vector, where the rendered horizon is
   undefined.
+- **The drag is instant, not eased (per direct instruction).** While the manual
+  offset is applied (the drag, plus the two seconds after it), the camera rotation is
+  set straight to chase + offset each frame, bypassing the `CAMERA_FOLLOW_SPEED`
+  slerp, so the camera is exactly where the mouse put it. It originally went through
+  that slerp and visibly lagged behind the cursor. Only the automatic return below
+  still eases.
 - **A fresh drag seeds its offsets from wherever the camera already is**
   (`camera_orbit_angles()` decomposes the current camera rotation against the chase
   base into the same yaw/pitch pair, read off the offset's own forward vector).
@@ -3368,6 +3427,26 @@ ship."*
   events while LMB is held is relied on from the same event the existing outpost
   drag-to-scroll uses rather than re-observed here. Worth a live pass when the
   desktop engine is next flown.
+
+#### 2.10.4 F3 debug readout: position and vectors (decided, per direct instruction)
+
+Per direct instruction: "when in flight mode provide a toggle switch that hides and
+shows a temporary gui showing the ships position and vector details". **Temporary** -
+a developer aid, not a player feature; remove it (or gate it to debug builds) once
+it has served its purpose.
+
+- **F3** (`toggle_debug_info` in `input/game.input_binding`) toggles it, in flight
+  only; it works with the star map open too. It stays on across docking and launch
+  until toggled off.
+- `main/player_ship.script` builds the text each frame while it's on
+  (`debug_info_text()`) and posts it as `debug_info` to `main/flight_hud.gui_script`,
+  which draws it top-left (under the currency bar) on a translucent box; `text = nil`
+  hides it.
+- **Lines**: current system; position (x/y/z, metres) and distance from the system
+  origin; velocity vector (forward × speed, m/s); speed, target speed, throttle
+  segment and BOOST; forward / up / right unit vectors; heading (from world +Z
+  towards +X), pitch and roll (`level_roll_angle`, 0 = level) in degrees; turn rates
+  (the body-frame angular velocity, deg/s); the raw rotation quaternion.
 
 ### 2.11 Asteroid fields: hull, mining, procedural meshes and breakup
 
@@ -4181,6 +4260,9 @@ rotating line."*
   (§3.2's start screen, `main/start_screen.gui`) as its first on-screen content.
   `main/main.script` still exists but is currently unattached to anything — the
   original empty template scaffold, not yet repurposed.
+- **Two sibling projects** under `~/Defold/GalaxyX/`: `Galaxy/` (this game, the layout
+  below) and `laravel/` (the account website, §3.7). Work that touches sign-in,
+  accounts, game-server registration, or the local DDEV stack usually spans both.
 - **Project layout** (current):
   ```
   Galaxy/
@@ -4190,7 +4272,7 @@ rotating line."*
       main.script          # unused so far
       start_screen.gui         # §3.2 boot screen
       start_screen.gui_script
-      faction_select.gui         # §1.1 guest faction-choice screen
+      faction_select.gui         # §1.1 per-server faction-choice screen
       faction_select.gui_script
       outpost.gui                # §2.8/§2.9 fitting + Ships tabs
       outpost.gui_script
@@ -4207,7 +4289,7 @@ rotating line."*
       asteroid.script            # §2.11 per-rock buffer resource + breakup timer
       asteroid_geometry.lua      # §2.11 pure-Lua seeded rock generator
       network.lua                # §3.3 Nakama client: ops, state, prediction
-      session.lua           # §3.2's in-memory guest session state
+      session.lua           # §3.2 client-side session state
       data/                # §3.1's data tables (star_systems.lua, ships.lua, asteroids.lua, modules/)
       models/              # per-ship hulls (§2.1.2); patrol_1/ is the first
       images/               # atlases + extracted top-down PNGs
@@ -4269,54 +4351,34 @@ rotating line."*
 
 ### 3.2 Authentication & session (decided — flow and mechanism)
 
-**Implemented (partial)**: `main/start_screen.gui` + `main/start_screen.gui_script`,
-wired into `main/main.collection` — the screen for boot-flow step 3 below (no valid
-token). Pressing **Play as Guest** now hands off to `main/faction_select.gui` (a
-second embedded instance in the same collection), which offers **The Accord** or
-**The Swarm** and stores the pick in the new `main/session.lua` (in-memory only, per
-the guest-state design above). Register/Log In still just shows a placeholder
-status. Built and verified with Defold's command-line build tool (`bob.jar`): every
-file compiles cleanly, no errors. Not yet implemented: the step 1/2 silent-login
-check, or what happens after a faction is actually picked (spawning at the
-home-system outpost, §2.9) — see §4.
+**Accounts live on the website, not in the game (§3.7).** The original design was an
+in-game start screen with Play as Guest / Register / Log In, and a faction locked at
+registration. It has been replaced: **guest mode is removed**, and the game never
+registers or logs anyone in itself.
 
-**Two ways to play**: Guest, or Registered Account (register or log in) — same
-distinction as §1.1, detailed here as an implementation flow.
+**Boot flow (implemented)**:
+1. The player registers, verifies their email and logs in on the website, then presses
+   **Play**. If more than one server is open, they pick a server first.
+2. The game site only serves the game to logged-in, verified users (nginx
+   `auth_request` to the website).
+3. On start-up the game (`main/start_screen.gui_script` → `main/network.lua`) asks the
+   website for a **play token** (an HS256 JWT valid ~2 minutes) for the chosen server,
+   along with that server's Nakama connection details.
+4. The game signs in to that server's Nakama with `AuthenticateCustom` (custom ID =
+   the website user's UUID). `nakama-server/modules/auth.lua` verifies the token;
+   every other Nakama auth/link method is refused. The resulting Nakama session is
+   refreshed with its refresh token while playing. When it can't be refreshed, the game
+   asks the website for a new play token.
+5. The game loads the player's profile **on that server**:
+   - **Has a faction there** → straight to the outpost.
+   - **New to that server** → `main/faction_select.gui` asks for a faction, which is
+     saved server-side and permanent on that server (§1.1).
 
-**Silent re-entry for returning registered users**: once a user has registered/logged
-in, issue a persisted **bearer token** (a signed session token, e.g. JWT), stored
-client-side (browser storage). On future visits, a valid stored token authenticates
-the user automatically — they go straight into the game with no login screen and no
-faction prompt (their faction is already permanently set, §1.1).
+Because identity is the website UUID, a player is the same person on every server, but
+each server keeps its own faction, ships, balances and progress.
 
-**Boot flow**:
-1. Game loads → check for a stored, still-valid auth token.
-2. **Valid token found** (returning registered user) → skip straight into the game;
-   account's permanent faction loads automatically.
-3. **No valid token** (first-time visitor, guest, logged-out, or expired session) →
-   show **one combined start screen** with two choices: **Play as Guest** or
-   **Register / Log In**. Guest and register/login share this same first screen
-   rather than being separate entry points.
-   - **Play as Guest** → faction-choice prompt shown immediately, every time (§1.1).
-   - **Register** (new account) → account creation, then the one-time **permanent**
-     faction-choice prompt (§1.1), then issue + store the auth token for future
-     silent logins.
-   - **Log In** (existing account, new device or cleared storage) → credential
-     check, then straight into the game with the account's already-locked faction —
-     no faction prompt, since it was set at registration.
-
-Token expiry/refresh handling and exact client storage (localStorage vs. cookie) are
-still TBD — see §4.
-
-**Guest identity/session state (decided)**: in-memory only, client-side — a plain
-Lua table in the running game instance (using the `shared_state = 1` already set in
-`game.project`), holding the guest's chosen faction and session data for that
-page-load's lifetime only. Nothing is written to localStorage/IndexedDB or any other
-persistent client storage for guests — that's reserved for registered-account tokens
-above. This is what makes the "reprompt every load" rule in §1.1 automatically true:
-there's nothing to persist, so there's nothing to leak between loads. Server-side
-counterpart is in §3.3's guest caveat (an ephemeral Nakama session, never a stored
-account).
+**Debug builds only**: a dev play token (`php artisan galaxy:dev-token`, §3.7) can be
+passed as `#dev_token=` in the page URL or `GALAXY_PLAY_TOKEN`, skipping the website.
 
 ### 3.3 Backend: Nakama (decided)
 
@@ -4342,15 +4404,9 @@ accounts), while Nakama runs actual game state.
   economy and competitive PvP — module power/cooldown/wear and combat resolution
   (§2.8) should run authoritatively on the Nakama server, not be trusted from the
   client, to keep the economy and PvP fair.
-- **Caveat — guest mode vs. Nakama's usual device-auth pattern**: Nakama's typical
-  "guest" flow is device-ID auto-authentication, which quietly creates a persistent
-  per-device account server-side. That conflicts with the decided guest rule (no
-  persistence, faction re-prompted every load, §1.1) — so **guest mode should not use
-  Nakama's device-auth path**. Only Register/Log In creates a real, stored Nakama
-  account. **Decided (§3.2)**: guests still get a Nakama session for the current
-  visit only — needed since the game world is live/shared (other players, contested
-  nodes, shared mining) — but it's a throwaway session, never written to Nakama's
-  persistent user/device tables and never looked up again after disconnect.
+- **Sign-in**: only custom auth with a website play token is accepted (§3.2, §3.7).
+  Device-ID auth and every other method are refused, so no anonymous/guest accounts
+  are created. (Guest mode has been removed.)
 - **Caveat — infrastructure**: Nakama is self-hosted (or via Heroic Labs Cloud) —
   this adds real server hosting/ops/cost to a project that would otherwise be a
   static Poki-hosted HTML5 build. This is the concrete answer to the earlier open
@@ -4370,7 +4426,8 @@ with one deliberate deviation:
   both, a `migrate up` step before Nakama actually starts.
 - `nakama-server/.env.example` — copy to `.env` (gitignored) to override
   `POSTGRES_PASSWORD` for any real deployment; defaults to `localdb` for local dev.
-- `nakama-server/modules/` — empty for now (just a README pointing at the reference
+- `nakama-server/modules/` — originally empty; now holds the server modules (`auth.lua` play-token sign-in, §3.7; `economy.lua`, `progress.lua`, `system_match.lua`, `players.lua` website RPCs, etc.). The line below is the original note:
+  empty for now (just a README pointing at the reference
   project's background-match/NPC-population pattern as a model for later — not
   ported directly, since that logic is specific to its own roster).
 - **Deviation from the reference setup**: the reference project also wires up Steam
@@ -4573,6 +4630,82 @@ Build-and-Run is known to launch it, and the browser build is the one this sessi
 DDEV setup actually fly. The desktop target is in the hook because it was asked for
 explicitly ("Both HTML5 + desktop").
 
+### 3.7 Website — the `laravel/` sibling project (accounts, play gate, game servers)
+
+`~/Defold/GalaxyX/laravel` is a separate project with its own git repo. It is a
+Laravel 13 / PHP 8.4 site with Inertia + Vue pages and MariaDB, running at **fig.limited**
+in production and **galaxy.ddev.site** locally. It owns *who a player is*. Nakama owns
+*what they have* on each game server. Its `VERSION` file follows the game's release
+(currently `0.5.0-beta`).
+
+**What it does**
+- **Accounts**: register, email verification, login, password reset, profile (Laravel
+  Breeze, `routes/auth.php`). Every user has a permanent public `uuid`, which becomes
+  their Nakama custom ID on every game server.
+- **Game servers** (`servers` table, `App\Models\Server`): each row is one Nakama
+  deployment, i.e. one game world. It stores the Nakama host/port/ssl/server key, an
+  optional `internal_url`, a `http_key` for server-to-server RPCs, a
+  `play_token_secret` shared with that server's `PLAY_TOKEN_SECRET`, and an open/closed
+  flag. Servers are added or updated with `php artisan galaxy:server <slug> …`. A new
+  server's default name is a random IAU constellation (`App\Support\Constellations`).
+  The slug is also that Nakama's `SERVER_ID`.
+- **Players** (`players` pivot): which users have joined which server, with
+  first-played and last-played times. A row is written whenever a play token is issued.
+- **Play hand-off** (`PlayController`, `/play`):
+  1. A verified user clicks **Play**. If more than one server is open they pick one
+     (`Play/Servers.vue`). The choice is stored in the session, then they are
+     redirected to the game site (`GALAXY_PLAY_URL`: play.fig.limited, or
+     play.ddev.site locally).
+  2. The game site's nginx gates every page load with `auth_request` to
+     `/play/auth-check`, which returns 204 or 401 and never redirects.
+  3. On start-up the game calls `/play/token` and gets back a play token, the user's
+     UUID, the chosen server's Nakama connection details, and `account_url`. The
+     session cookie is shared because `SESSION_DOMAIN` is the parent domain. The
+     endpoint returns 401 if the user isn't logged in, or 409 `choose_server` if no
+     server was chosen.
+  4. The play token is an HS256 JWT (`App\Support\PlayToken`): `sub` = UUID, `aud` =
+     server slug, `name`, `exp` (TTL `GALAXY_PLAY_TOKEN_TTL`, 120 s by default),
+     `jti`. It is signed with that server's `play_token_secret`. The game sends it via
+     `AuthenticateCustom`, and `nakama-server/modules/auth.lua` verifies it. Every
+     other Nakama auth/link method is refused.
+- **Dashboard** (`DashboardController`): for each server the user has joined, it shows
+  live game data (faction, ship, balances, location) read with the server-only RPC
+  `player_summary` (`App\Services\NakamaClient`, authenticated with `http_key`).
+- **Account deletion** (`ProfileController::destroy`): calls `delete_player` on every
+  server the user joined. If a server can't be reached, its game account is left
+  orphaned (logged). Nobody can sign in to it without the website.
+- **Dev tokens**: `php artisan galaxy:dev-token <email> <server> --days=30` (only when
+  `APP_ENV=local`) issues a long-lived token for debug builds. Pass it via
+  `#dev_token=` or `GALAXY_PLAY_TOKEN` (`main/network.lua`).
+
+**Contract between the two projects** — these change together:
+- The token claims and signing (`PlayToken.php` ↔ `nakama-server/modules/auth.lua` /
+  `hs256.lua`).
+- The `/play/token` JSON shape ↔ `main/network.lua`'s start-up call.
+- The `player_summary` / `delete_player` RPCs (`nakama-server/modules/players.lua`) ↔
+  `NakamaClient.php` and `Dashboard.vue`. A new economy field (e.g. Valour, §2.6) is
+  only shown on the dashboard once both ends carry it.
+- Per-server secrets: a server's website row (`galaxy:server … --http-key --secret`)
+  must match that Nakama's `NAKAMA_HTTP_KEY` / `PLAY_TOKEN_SECRET`.
+
+**Local dev (DDEV, run from `laravel/`)**: one `ddev start` brings up the whole stack:
+- `galaxy.ddev.site` (the site)
+- `play.ddev.site` (the HTML5 build, served from a read-only mount of `Galaxy/build`,
+  gated by `.ddev/nginx_full/galaxy-game-proxy.conf`)
+- `nakama.ddev.site` / `nakama-console.ddev.site` (Nakama + Postgres from
+  `.ddev/docker-compose.nakama.yaml`, which mirrors `Galaxy/nakama-server/docker-compose.yml`)
+
+The game itself is rebuilt by the post-start hook (§3.6). The local `local` server row
+must use the dev secrets listed at the top of `docker-compose.nakama.yaml`.
+
+**Production**: the `Dockerfile` (serversideup/php 8.4 + nginx, deployed on Coolify)
+runs migrations on start. Nakama deploys separately (`Galaxy/nakama-server/
+docker-compose.coolify.yml`).
+
+**Tests**: Pest feature tests in `laravel/tests/Feature` (`PlayTest`,
+`DashboardTest`, `ProfileTest`, `ServerCommandsTest`, plus auth). Laravel Boost conventions
+are in `laravel/AGENTS.md`.
+
 ## 4. Open Questions / TODO
 - [ ] Tune real weapon firing-arc numbers (§2.8): `ships.lua`'s per-weapon-slot
       `angle_deg` (bearing the mount points, still placeholder on Patrol
@@ -4620,11 +4753,10 @@ explicitly ("Both HTML5 + desktop").
       abandoned the un-augmented rest), but needs prose/detail.
 - [ ] Write the story of why/how the Swarm broke from Accord control to become an
       independent, player-selectable faction — flagged as an open thread in §1.
-- [x] ~~Decide where guest identity/session state technically lives~~ — resolved:
-      in-memory Lua state client-side + an ephemeral, never-stored Nakama session
-      server-side (§3.2, §3.3).
-- [ ] Decide UI/flow placement for the guest faction-choice screen in the boot sequence
-      (before or after `main/main.collection` loads).
+- [x] ~~Decide where guest identity/session state technically lives~~ — obsolete:
+      guest mode removed; all players are website accounts (§3.2).
+- [x] ~~Decide UI/flow placement for the guest faction-choice screen~~ — obsolete:
+      the faction screen now appears on first entry to each server (§1.1, §3.2).
 - [ ] Decide whether Robots need their own distinct ship/unit designs, or reuse a
       subset of Accord/Swarm ship tiers for PvE encounters.
 - [x] ~~Research BSGO's actual Veil Sector map topology~~ — resolved: sourced from a
@@ -4741,9 +4873,8 @@ explicitly ("Both HTML5 + desktop").
         real tabs had become **Fitting** (ship visual + Shop/Owned lists, §2.8) and
         **Ships** (Ships For Sale/Owned Ships, §2.1.2) — see §2.9.1 below for the
         third tab, **Overview**, added after that and made the default.
-- [ ] Implement the guest Nakama session as genuinely ephemeral/throwaway (per §3.3)
-      — verify it never gets written to a persistent user/device table, only Nakama's
-      normal device-auth path should ever do that.
+- [x] ~~Implement the guest Nakama session as genuinely ephemeral/throwaway~~ —
+      obsolete: guest mode removed (§3.2).
 - [ ] Write a privacy policy/ToS covering registered-account data (email/password,
       saved history/achievements) now that a real backend with real user data exists.
 - [ ] Design the specific server-authoritative Nakama match modules needed for combat
@@ -4852,10 +4983,10 @@ explicitly ("Both HTML5 + desktop").
 - [ ] Decide what else besides the Asteroid Analyser fills out hull/engine/computer
       module slots — Computer now has one defined (purchasable, not gifted, §2.8);
       Hull and Engine still have zero concrete entries.
-- [x] ~~Confirm the spawn-on-defeat fallback~~ — resolved: same as guest,
+- [x] ~~Confirm the spawn-on-defeat fallback~~ — resolved:
       home-system outpost (§2.9).
-- [x] ~~Confirm the brand-new-account first-spawn fallback~~ — resolved: same as
-      guest, home-system outpost (§2.9).
+- [x] ~~Confirm the first-spawn-on-a-new-server fallback~~ — resolved:
+      home-system outpost (§2.9).
 - [x] ~~Decide outpost scope~~ — resolved: every system has an outpost per faction
       by default, with a home-region exception. Implemented in
       `main/data/star_systems.lua` (§2.7).

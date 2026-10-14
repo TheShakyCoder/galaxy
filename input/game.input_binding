@@ -143,6 +143,10 @@ key_trigger {
   action: "target_nearest_friendly"
 }
 key_trigger {
+  input: KEY_F3
+  action: "toggle_debug_info"
+}
+key_trigger {
   input: KEY_Z
   action: "target_nearest_missile"
 }
