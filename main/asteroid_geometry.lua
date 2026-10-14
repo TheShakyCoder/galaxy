@@ -57,32 +57,71 @@ local function sphere()
 	return vertices, faces
 end
 
+M.ARCHETYPES = {"weathered", "shard", "contact_binary", "fractured", "rubble"}
+function M.archetype(seed)
+	-- Separate visual domain: never accept or sample a resource ID.
+	local r=random(seed+7919);r();r();r()
+	return math.floor(r()*#M.ARCHETYPES)+1
+end
+
 function M.generate(seed)
 	local rand = random(seed)
+	local kind=M.archetype(seed)
 	local directions, faces = sphere()
 	local stretch = {0.65+rand()*0.5,0.65+rand()*0.5,0.65+rand()*0.5}
+	if kind==2 then stretch={1.65+rand()*.3,.53+rand()*.15,.63+rand()*.15}
+	elseif kind==3 then stretch={1.4,.8,.85}
+	elseif kind==4 then stretch={1.0,.8,1.15} end
 	local phase = {rand()*6.28,rand()*6.28,rand()*6.28}
 	local craters = {}
-	for i = 1, 9 do
+	for i = 1, 15 do
 		local y, angle = rand()*2-1, rand()*math.pi*2
 		local r = sqrt(1-y*y)
-		craters[i] = {dir={r*cos(angle),y,r*sin(angle)}, width=0.018+rand()*0.065, depth=0.08+rand()*0.14}
+		craters[i] = {dir={r*cos(angle),y,r*sin(angle)}, width=0.009+rand()^2*0.12, depth=0.07+rand()*0.17}
+	end
+	local blocks,planes={},{}
+	for i=1,12 do
+		local y,angle=rand()*2-1,rand()*math.pi*2;local r=sqrt(1-y*y)
+		blocks[i]={dir={r*cos(angle),y,r*sin(angle)},width=.025+rand()*.085,height=.13+rand()*.23}
+		planes[i]={dir=blocks[i].dir,distance=.72+rand()*.2}
 	end
 	local points, shades, max_radius = {}, {}, 0
 	for i,d in ipairs(directions) do
 		local x,y,z = d[1],d[2],d[3]
 		local broad = sin(x*3.1+phase[1])*cos(y*2.7+phase[2])*sin(z*3.3+phase[3])
 		local grit = sin(x*19+phase[3])*sin(y*17+phase[1])*cos(z*21+phase[2])
-		local radius, depression = 1+0.24*broad+0.035*grit, 0
+		local radius, depression, rim = 1+0.19*broad+0.025*grit, 0, 0
+		if kind==2 then radius=radius*(.88+.12*math.abs(x))
+		elseif kind==3 then radius=radius*(.58+.75*math.abs(x)^1.3)
+		elseif kind==4 then
+			for _,plane in ipairs(planes) do
+				local facing=dot(d,plane.dir)
+				if facing>0 then radius=math.min(radius,plane.distance/facing) end
+			end
+		end
 		for _,c in ipairs(craters) do
 			local q = (1-dot(d,c.dir))/c.width
-			local bowl = c.depth*exp(-q*3)
-			radius = radius-bowl+0.045*exp(-((q-0.95)*3)^2)
+			local strength=kind==4 and .35 or (kind==5 and .5 or 1)
+			local bowl = c.depth*exp(-q*q*2.6)*strength
+			local edge=.075*exp(-((q-.95)*4)^2)*strength
+			radius = radius-bowl+edge
 			depression = depression+bowl
+			rim=rim+edge
 		end
+		local rubble=0
+		for _,block in ipairs(blocks) do
+			local q=(1-dot(d,block.dir))/block.width
+			rubble=math.max(rubble,block.height*exp(-q*q*2.0))
+		end
+		radius=radius+rubble*(kind==5 and 1.6 or .25)
+		-- A few ledges/fault scarps, rather than uniform high-frequency spikes.
+		local strata=sin((y*.85+z*.32)*19+phase[2])
+		local ridge=math.max(0,1-math.abs(strata)*5)
+		radius=math.max(.23,radius+ridge*(kind==2 and .055 or .025))
 		local p = {x*radius*stretch[1],y*radius*stretch[2],z*radius*stretch[3]}
 		points[i] = p
-		shades[i] = 0.72+0.16*broad+0.08*grit-depression*0.7
+		-- Cavity/regolith shading baked into vertex RGB; no resource input.
+		shades[i] = math.max(.30,.73+.13*broad+.04*grit-depression*1.3+rim*1.7+ridge*.09+rubble*.15)
 		max_radius = math.max(max_radius,sqrt(dot(p,p)))
 	end
 	-- Entire surface remains inside the existing gameplay/targeting sphere.
@@ -119,9 +158,11 @@ function M.generate(seed)
 		g.delay = rand()*0.32
 		g.motion = {rand()*2-1,rand()*2-1,rand()*2-1,0.35+rand()*0.4}
 		for _,f in ipairs(g.faces) do
-			for k = 1,3 do local i=f[k]; emit(points[i],normals[i],shades[i],g,0) end
+			local face_n=unit(cross(sub(points[f[2]],points[f[1]]),sub(points[f[3]],points[f[1]])))
+			local hard=kind==4 and .88 or (kind==2 and .55 or .18)
+			for k = 1,3 do local i=f[k]; emit(points[i],unit(add(mul(normals[i],1-hard),mul(face_n,hard))),shades[i],g,0) end
 		end
-		-- Close each wedge with darker freshly fractured rock. Sorted edge keys
+		-- Close each wedge with brighter fresh stone. Sorted edge keys
 		-- make stream ordering deterministic across Lua implementations.
 		local keys = {}
 		for key in pairs(g.edges) do keys[#keys+1] = key end
@@ -130,7 +171,7 @@ function M.generate(seed)
 			local edge = g.edges[key]
 			local a,b = points[edge[2]],points[edge[1]]
 			local n = unit(cross(sub(b,a),mul(a,-1)))
-			emit(a,n,0.53,g,1); emit(b,n,0.53,g,1); emit({0,0,0},n,0.45,g,1)
+			emit(a,n,1.03,g,1); emit(b,n,1.03,g,1); emit({0,0,0},n,.86,g,1)
 		end
 	end
 	return streams

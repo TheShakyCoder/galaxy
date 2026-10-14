@@ -66,6 +66,39 @@ class GeometryTests(unittest.TestCase):
         self.lua.execute('math.random = function() error("global RNG used") end; math.randomseed = math.random')
         self.geometry.generate(12)
 
+    def test_archetypes_cover_field_without_resource_correlation(self):
+        import struct
+        data = self.lua.eval('require("main.data.asteroids")')
+        counts = {name: [0]*5 for name in ('inert','hydrogen','iron','water')}
+        for system in ['sol','polaris'] + ['visual_audit_'+str(i) for i in range(100)]:
+            for i,rock in data.field_for(system).items():
+                # Match the numeric seed delivered by Defold properties.
+                seed = struct.unpack('f',struct.pack('f',self.geometry.seed(system,i)))[0]
+                kind = self.geometry.archetype(seed)
+                self.assertIn(kind, range(1,6))
+                counts[rock.resource][kind-1] += 1
+        for row in counts.values():
+            self.assertGreater(min(row), 0)
+            for count in row:
+                self.assertLess(abs(count/sum(row)-.2), .065)
+
+    def test_each_archetype_has_exact_original_buffer_budget(self):
+        found = {}
+        for seed in range(1,100):
+            found.setdefault(self.geometry.archetype(seed),seed)
+        self.assertEqual(len(found),5)
+        for kind,seed in found.items():
+            mesh=self.geometry.generate(seed)
+            self.assertEqual(sum(len(mesh[k]) for k in ('position','normal','color','fragment','motion'))*4,380160)
+            self.assertTrue(all(math.isfinite(x) for x in mesh.position.values()))
+
+    def test_surface_rebake_is_identical(self):
+        import hashlib, subprocess, sys
+        path=ROOT/'assets/models/asteroids/surface.png'
+        before=hashlib.sha256(path.read_bytes()).digest()
+        subprocess.run([sys.executable,str(ROOT/'tools/build_asteroid_surface.py')],check=True,stdout=subprocess.DEVNULL)
+        self.assertEqual(before,hashlib.sha256(path.read_bytes()).digest())
+
 
 class LifecycleTests(unittest.TestCase):
     def test_hub_depletion_respawn_scan_and_jump(self):

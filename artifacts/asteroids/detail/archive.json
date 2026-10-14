@@ -1,0 +1,36 @@
+{
+  "resources": [
+    {
+      "path": "/assets/models/asteroids/rock.materialc",
+      "compiled_bytes": 247,
+      "archive_bytes": 223
+    },
+    {
+      "path": "/assets/models/asteroids/rock.meshc",
+      "compiled_bytes": 143,
+      "archive_bytes": 99
+    },
+    {
+      "path": "/assets/models/asteroids/surface.texturec",
+      "compiled_bytes": 196654,
+      "archive_bytes": 99776
+    },
+    {
+      "path": "/main/asteroid_geometry.luac",
+      "compiled_bytes": 6909,
+      "archive_bytes": 3523
+    },
+    {
+      "path": "/main/asteroid_hub.scriptc",
+      "compiled_bytes": 7079,
+      "archive_bytes": 2777
+    },
+    {
+      "path": "/shader_2613359617110608610.spc",
+      "compiled_bytes": 12156,
+      "archive_bytes": 3722
+    }
+  ],
+  "upgraded_resource_payload_bytes": 110120,
+  "note": "Full game HTML5 archive; new texture plus complete replacement resource payloads. Not a net delta, excludes archive index changes and HTTP compression."
+}

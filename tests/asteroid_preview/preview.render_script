@@ -1,16 +1,15 @@
 function init(self)
-	self.models=render.predicate({"model"})
-	self.view=vmath.matrix4_look_at(vmath.vector3(0,0,6),vmath.vector3(),vmath.vector3(0,1,0))
+ self.models=render.predicate({"model"});self.distance=6
 end
 function update(self)
-	local w,h=render.get_window_width(),render.get_window_height()
-	render.set_viewport(0,0,w,h)
-	render.set_depth_mask(true)
-	render.clear({[graphics.BUFFER_TYPE_COLOR0_BIT]=vmath.vector4(0.016,0.025,0.045,1),[graphics.BUFFER_TYPE_DEPTH_BIT]=1})
-	local distance=math.max(6,3.6/(w/h)/math.tan(math.rad(21)))
-	render.set_view(vmath.matrix4_look_at(vmath.vector3(0,0,distance),vmath.vector3(),vmath.vector3(0,1,0)))
-	render.set_projection(vmath.matrix4_perspective(math.rad(42),w/h,0.1,100))
-	render.enable_state(graphics.STATE_DEPTH_TEST)
-	render.enable_state(graphics.STATE_CULL_FACE)
-	render.draw(self.models)
+ local w,h=render.get_window_width(),render.get_window_height()
+ render.set_viewport(0,0,w,h);render.set_depth_mask(true)
+ render.clear({[graphics.BUFFER_TYPE_COLOR0_BIT]=vmath.vector4(.012,.019,.03,1),[graphics.BUFFER_TYPE_DEPTH_BIT]=1})
+ render.set_view(vmath.matrix4_look_at(vmath.vector3(0,0,self.distance),vmath.vector3(),vmath.vector3(0,1,0)))
+ render.set_projection(vmath.matrix4_perspective(.72,w/math.max(1,h),.05,100))
+ render.enable_state(graphics.STATE_DEPTH_TEST);render.enable_state(graphics.STATE_CULL_FACE)
+ render.draw(self.models)
+end
+function on_message(self,id,m)
+ if id==hash("review_camera") then self.distance=m.distance end
 end

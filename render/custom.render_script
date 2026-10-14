@@ -1,3 +1,5 @@
+local space_render = require "render.space"
+
 -- Custom render script (§2.8.9, THIRD attempt at a live ship preview - a
 -- deliberately different technical approach from the first two, which were
 -- both rolled back: attempt 1 (a render target referenced only from the
@@ -361,6 +363,7 @@ function init(self)
 
     local state = create_state()
     self.state = state
+    self.space = space_render.create()
 
     local camera_world = create_camera(state, "camera_world", true)
     init_camera(camera_world, get_stretch_projection)
@@ -390,6 +393,7 @@ function update(self)
 
     -- setup camera view and projection
     --
+    space_render.draw(self.space)
     local draw_options_world = set_camera_world(state)
     render.set_viewport(0, 0, state.window_width, state.window_height)
 
@@ -407,6 +411,7 @@ function update(self)
     -- render the other components: sprites, tilemaps, particles etc
     --
     render.enable_state(graphics.STATE_BLEND)
+    space_render.draw_wisps(self.space, draw_options_world)
     render.draw(predicates.tile, draw_options_world)
     render.draw(predicates.particle, draw_options_world)
     render.disable_state(graphics.STATE_DEPTH_TEST)
@@ -437,6 +442,10 @@ function update(self)
 end
 
 function on_message(self, message_id, message)
+    if message_id == hash("set_space_sky") then
+        space_render.configure(self.space, message)
+        return
+    end
     local state = self.state
     local camera = state.main_camera
 
