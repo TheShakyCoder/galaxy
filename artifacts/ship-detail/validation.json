@@ -81,8 +81,8 @@
     {
       "ship": "hammerhead",
       "result": "PASS",
-      "vertices": 21155,
-      "triangles": 34816,
+      "vertices": 43203,
+      "triangles": 63308,
       "extent": 272.0
     },
     {

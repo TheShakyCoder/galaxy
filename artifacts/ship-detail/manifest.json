@@ -289,16 +289,18 @@
       "original_texture_sha256": "8b261ed523049d67a4d9767d7590d56f108d69f53ae1f07b202c9c8635d321ae",
       "mesh": "/assets/models/hd/hammerhead/ship.glb",
       "texture": "/assets/models/hd/hammerhead/albedo.png",
-      "vertices": 21155,
-      "triangles": 34816,
+      "vertices": 43203,
+      "triangles": 63308,
       "original_triangles": 11280,
       "extent": 272,
       "texture_size": 2048,
-      "mesh_sha256": "3e463bfafb0aae414c12bb0ff127aef316617b1e1eab182dd6855a06f15b2046",
+      "mesh_sha256": "2187fdbe67038f409003cba7b5e696ee139706565fceef12b4695594ec6a3908",
       "features": [
-        "Smoother curved hull",
-        "Paired vent panels and fasteners",
-        "2K hull engraving"
+        "Approved 2026-10-14 Hammerhead concept: tapered wing head and compact tip sensors",
+        "Segmented cheek armor and under-head intake",
+        "Five gill heat exchangers per side",
+        "Conformal body plates, fin joints, protected sensors and engine collars",
+        "2K machined panel finish"
       ]
     },
     {
