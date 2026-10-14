@@ -56,11 +56,17 @@ def patch(m, point, normal, u0, u1, v0, v1, nu, nv, color=None, uv=None):
 
 
 def head_point(x,a,offset=0):
+    # Broad root fairing, swept trailing edge and thin outer foil. Unlike a
+    # transverse tube, both chord and vertical thickness taper toward the tips.
     t=abs(x)/3.04
-    z=5.08+.28*math.sin(math.pi*t)-.04*t
-    ry=.46+.07*math.sin(math.pi*t)-.10*t
-    rz=.90-.50*t*t
-    return (x,.07+(ry+offset)*math.cos(a),z+(rz+offset)*math.sin(a))
+    leading=6.00+.22*math.sin(math.pi*t)-.38*t*t
+    trailing=3.95+1.10*t
+    chord=leading-trailing
+    q=(1+math.sin(a))*.5
+    thickness=.43*max(0,1-t)**1.25+.06
+    camber=.045*math.sin(math.pi*q)*(1-t)
+    return (x,.07+camber+(thickness+offset)*math.cos(a)*(.65+.35*q),
+            trailing+chord*q+offset*math.sin(a))
 
 
 def head_normal(x,a):
@@ -89,7 +95,7 @@ def surface_panel(m,h,z0,z1,a0,a1,color=None):
 
 
 def head(m):
-    # Continuous foil-shaped core replaces the old flattened ellipsoid.
+    # Continuous wing-shaped core blends into the body and tapers at the tips.
     patch(m,head_point,head_normal,-3.04,3.04,0,TAU,48,32,'navy')
     for sign in (-1,1):
         x=sign*3.04
@@ -104,17 +110,13 @@ def head(m):
     # Recessed optical eyes: layered housings, black cavity, inset glass,
     # a small cyan lens and separate concentric metal rings.
     for sign in (-1,1):
-        p=(sign*3.02,.07,5.08);axis=(sign*.98,0,.20)
-        m.lathe(p,axis,[(0,.35),(.12,.385),(.23,.35),(.25,.285)],['edge','silver','dark'],40)
+        # A compact eye blister on the upper outer wing, not a barrel cap.
+        p=head_point(sign*2.92,.65,.025);axis=(sign*.68,.55,.48)
+        m.lathe(p,axis,[(0,.125),(.035,.145),(.065,.125),(.075,.102)],['edge','silver','dark'],32)
         n=unit(axis)
-        m.lathe(add(p,mul(n,.252)),axis,[(0,.28),(.009,.266)],['dark'],40)
-        m.lathe(add(p,mul(n,.263)),axis,[(0,.205),(.035,.184),(.05,.13)],['navy','glass'],32)
-        m.lathe(add(p,mul(n,.315)),axis,[(0,.066),(.008,.052)],['cyan'],24)
-        for a in (.3,1.9,3.45,5.05):
-            # Tiny fasteners in the front annulus, not floating beyond the rim.
-            side=unit(cross(n,(0,1,0)));up=cross(side,n)
-            q=add(add(p,mul(n,.248)),add(mul(side,.317*math.cos(a)),mul(up,.317*math.sin(a))))
-            m.lathe(q,n,[(0,.019),(.012,.015)],['dark'],8)
+        m.lathe(add(p,mul(n,.077)),axis,[(0,.100),(.005,.094)],['dark'],32)
+        m.lathe(add(p,mul(n,.083)),axis,[(0,.076),(.013,.065),(.020,.047)],['navy','glass'],24)
+        m.lathe(add(p,mul(n,.105)),axis,[(0,.028),(.004,.022)],['cyan'],20)
         # Flush cheek intake and paired slit lights on the forward/lower foil.
         for xa in (1.10,2.10):
             x=sign*xa

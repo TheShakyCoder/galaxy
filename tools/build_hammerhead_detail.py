@@ -5,7 +5,7 @@ from fleet.roster import BY_SLUG
 
 def main():
     row=build(BY_SLUG['hammerhead'])
-    row['features']=['Approved 2026-10-14 Hammerhead concept: sculpted head and recessed optical eyes',
+    row['features']=['Approved 2026-10-14 Hammerhead concept: tapered wing head and compact tip sensors',
         'Segmented cheek armor and under-head intake','Five gill heat exchangers per side',
         'Conformal body plates, fin joints, protected sensors and engine collars','2K machined panel finish']
     path=ROOT/'artifacts/ship-detail/manifest.json'

@@ -5,10 +5,15 @@ Future ship updates follow the user's one-ship-at-a-time workflow: concept,
 approval, that ship's assets, then native game review. Do not regenerate the
 whole fleet to make an individual ship adjustment.
 
-The Hammerhead now has a sculpted foil-shaped head, segmented cheek armor,
+The Hammerhead now has a tapered wing-shaped head, segmented cheek armor,
 recessed optical eyes, cheek vents, a lower intake, five gill heat exchangers
 per side, conformal body plates, fin mounting saddles and detailed twin engines.
 The 2K atlas uses machined panel detail instead of the old fish-scale pattern.
+
+The user's subsequent real-shark reference supersedes the concept's head shape:
+a broad, thick root blends into the body and tapers to thin outer wings. Compact
+upper-tip sensor eyes replace the large cylindrical end caps. The exported
+outer head section is checked to be less than 40% of the root thickness.
 The default menu thumbnail and fitting underlay are rendered from this GLB.
 
 Only the Hammerhead HD mesh, atlas and menu images change. All other ship
@@ -44,7 +49,7 @@ The renderer updates only its two menu images and its fitting dimensions entry.
   warnings/errors observed. Live accounts, multiplayer and fleet-scale
   performance have not been tested.
 
-Cost: 43,795 vertices / 63,852 triangles versus 21,155 / 34,816 before. One
+Cost: 43,203 vertices / 63,308 triangles versus 21,155 / 34,816 before. One
 mesh/material draw remains; the 2K atlas size is unchanged. GLB grows from
 1,196,484 to about 2.1 MB. This is an individual ship upgrade, not a fleet-wide
 performance change.
