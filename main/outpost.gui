@@ -424,7 +424,7 @@ nodes {
 nodes {
   type: TYPE_TEXT
   id: "tab_skins_label"
-  text: "05 / LIVERIES"
+  text: "05 / SKINS"
   font: "default_font"
   position { x: 1440.0 y: 80 z: 0 w: 1 }
   size { x: 220.0 y: 55.0 z: 0.0 w: 1.0 }
