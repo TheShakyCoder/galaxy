@@ -1,0 +1,4 @@
+mesh: "/assets/models/stations/accord/rotor.glb"
+material: "/assets/materials/stations/hull.material"
+textures: "/assets/models/stations/accord/hull.png"
+name: "station"

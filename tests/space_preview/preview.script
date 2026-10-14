@@ -1,0 +1,71 @@
+-- Uses the production sky/render/HUD and the actual Sardine chase camera.
+local session=require "main.session"
+local systems=require "main.data.star_systems"
+local ships=require "main.data.ships"
+local function send(id,data) msg.post("#gui",id,data or {}) end
+local function select_system(self,id)
+    session.current_system=id
+    send("system_changed",{text="SYSTEM: "..systems.SYSTEMS[id].name})
+    if html5 then html5.run("document.getElementById('system').value='"..id.."';document.getElementById('space-status').textContent='Viewing: "..id.." / native Defold'") end
+    print("SPACE_REVIEW: "..id)
+end
+function init(self)
+    session.set_on_change(nil)
+    session.restore({faction="accord",active_ship_id="patrol_interceptor",owned_ships={"patrol_interceptor"},flying=true})
+    self.yaw=0;self.pitch=0;self.t=0;self.turn=false;self.move=false;self.held={}
+    msg.post(".","acquire_input_focus")
+    msg.post("flight_camera#camera","acquire_camera_focus")
+    go.set("player_ship#model","tint",vmath.vector4(1.4,1.4,1.4,1))
+    go.set("player_ship#model","light",vmath.vector4(-2000,8000,-5000,1))
+    for i,p in ipairs({{22,5,90,22},{-38,-12,160,36},{65,22,260,45}}) do
+        factory.create("#rock_factory",vmath.vector3(p[1],p[2],p[3]),nil,{seed=7919+i*104729},p[4])
+    end
+    timer.delay(.15,false,function()
+        send("show_flight_hud");select_system(self,"sol")
+        send("currency",{tope=42860,water=2400,iron=1860,hydrogen=720})
+        send("hotkeys",{text="DRAG TO LOOK     ARROWS TO TURN     SPACE REVIEW / OFFLINE"})
+        msg.post("starfield#script","start")
+        print("SPACE_PREVIEW_READY")
+    end)
+end
+function update(self,dt)
+    self.t=self.t+dt
+    local command=html5 and html5.run("window.spaceCommand || ''") or ""
+    if command~="" then
+        html5.run("window.spaceCommand=''")
+        if systems.SYSTEMS[command] then select_system(self,command)
+        elseif command=="old" then session.flying=not session.flying
+        elseif command=="turn" then self.turn=not self.turn
+        elseif command=="move" then self.move=not self.move
+        elseif command=="reset" then self.yaw=0;self.pitch=0;self.turn=false;self.move=false;go.set_position(vmath.vector3(),"player_ship")
+        elseif command=="front" then self.yaw=0;self.pitch=0;self.turn=false
+        elseif command=="right" then self.yaw=-math.pi/2;self.pitch=0;self.turn=false
+        elseif command=="back" then self.yaw=math.pi;self.pitch=0;self.turn=false
+        elseif command=="left" then self.yaw=math.pi/2;self.pitch=0;self.turn=false
+        elseif command=="up" then self.yaw=0;self.pitch=1.55;self.turn=false
+        elseif command=="down" then self.yaw=0;self.pitch=-1.55;self.turn=false
+        elseif command=="overlay" then
+            msg.post("@render:","set_ship_preview",{visible=true,target_pos=go.get_position("player_ship"),eye_offset=vmath.vector3(15,10,-26),far=1000})
+        elseif command=="close_overlay" then msg.post("@render:","set_ship_preview",{visible=false}) end
+        if html5 then html5.run("document.getElementById('space-status').textContent='Viewing: "..session.current_system.." / "..(session.flying and "new" or "old").." / "..command.."'") end
+    end
+    self.yaw=self.yaw+dt*((self.turn and .12 or 0)+(self.held.yaw_left and .5 or 0)-(self.held.yaw_right and .5 or 0))
+    self.pitch=math.max(-1.55,math.min(1.55,self.pitch+dt*((self.held.pitch_up and .5 or 0)-(self.held.pitch_down and .5 or 0))))
+    local pos=go.get_position("player_ship")
+    if self.move then pos=pos+vmath.vector3(0,0,dt*52.5);go.set_position(pos,"player_ship") end
+    local rot=vmath.quat_rotation_y(math.pi+self.yaw)*vmath.quat_rotation_x(self.pitch)
+    local cfg=ships.SHIPS.patrol_interceptor.flight_camera
+    go.set_position(pos+vmath.rotate(rot,vmath.vector3(0,cfg.height,cfg.distance)),"flight_camera")
+    go.set_rotation(rot,"flight_camera")
+    send("set_speed",{speed=self.move and 52.5 or 0})
+    send("set_throttle",{segment=self.move and 9 or 0,max_segment=9,speed=52.5})
+    send("ship_status",{hull=600,hull_max=600,power=175,power_max=175,x=pos.x,y=pos.y,z=pos.z})
+    send("slot_states",{states={W1={state="live"},W2={state="live"},E1={state="live"},C1={state="live"}}})
+end
+function on_input(self,id,action)
+    for _,key in ipairs({"yaw_left","yaw_right","pitch_up","pitch_down"}) do
+        if id==hash(key) then self.held[key]=not action.released end
+    end
+    if id==hash("touch") then self.drag=not action.released end
+    if not id and self.drag then self.yaw=self.yaw-(action.dx or 0)*.003;self.pitch=self.pitch+(action.dy or 0)*.003 end
+end

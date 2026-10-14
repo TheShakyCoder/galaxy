@@ -8,6 +8,9 @@ out mediump vec3 var_normal;
 out mediump vec4 var_color;
 out highp vec3 var_rock_position;
 out mediump float var_fade;
+out highp vec3 var_view_position;
+out mediump vec3 var_surface_normal;
+out mediump float var_heat;
 uniform vs_uniforms {
     highp mat4 mtx_worldview;
     highp mat4 mtx_proj;
@@ -29,6 +32,9 @@ void main() {
     var_normal = normalize((mtx_normal*vec4(rotate_piece(normal,axis,angle),0.0)).xyz);
     var_color = color;
     var_rock_position = position;
+    var_view_position = (mtx_worldview * vec4(p,1.0)).xyz;
+    var_surface_normal = normal;
+    var_heat = color.a * (1.0-smoothstep(0.0,.7,age)) * step(.001,age);
     var_fade = 1.0-smoothstep(1.1,2.0,breakup.x);
     // Hidden fracture walls cannot bleed through an intact rock.
     if (color.a > 0.5 && age <= 0.0) var_fade = 0.0;

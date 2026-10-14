@@ -1,0 +1,57 @@
+-- Eight static world-space wisps, recycled only when the ship leaves them.
+-- One shared mesh draw; no particles, factories, global PRNG or gameplay edits.
+local session=require "main.session"
+local COUNT=8
+local CORNERS={{-1,-1},{1,-1},{1,1},{-1,-1},{1,1},{-1,1}}
+local function random(self)
+    self.seed=self.seed*48271%2147483647
+    return self.seed/2147483647
+end
+local function place(self,i,pos,rot)
+    local angle=random(self)*math.pi*2
+    local radius=25+random(self)*65
+    self.points[i]=pos+vmath.rotate(rot,vmath.vector3(math.cos(angle)*radius,math.sin(angle)*radius,25+random(self)*90))
+    self.birth[i]=self.clock
+end
+local function upload(self)
+    local positions=buffer.get_stream(self.buffer,"position")
+    local normals=buffer.get_stream(self.buffer,"normal")
+    local k=1
+    local low=vmath.vector3(math.huge);local high=vmath.vector3(-math.huge)
+    for i,p in ipairs(self.points) do
+        low.x=math.min(low.x,p.x-25);low.y=math.min(low.y,p.y-25);low.z=math.min(low.z,p.z-25)
+        high.x=math.max(high.x,p.x+25);high.y=math.max(high.y,p.y+25);high.z=math.max(high.z,p.z+25)
+        for _=1,6 do positions[k]=p.x;positions[k+1]=p.y;positions[k+2]=p.z;normals[k+2]=self.birth[i];k=k+3 end
+    end
+    buffer.set_metadata(self.buffer,hash("AABB"),{low.x,low.y,low.z,high.x,high.y,high.z},buffer.VALUE_TYPE_FLOAT32)
+    resource.set_buffer(self.vertices,self.buffer)
+end
+function init(self)
+    self.seed=19331;self.points={};self.birth={};self.clock=0;self.active=false
+    self.buffer=buffer.create(COUNT*6,{{name=hash("position"),type=buffer.VALUE_TYPE_FLOAT32,count=3},{name=hash("normal"),type=buffer.VALUE_TYPE_FLOAT32,count=3}})
+    local normals=buffer.get_stream(self.buffer,"normal");local k=1
+    for i=1,COUNT do for _,uv in ipairs(CORNERS) do normals[k]=uv[1];normals[k+1]=uv[2];normals[k+2]=i;k=k+3 end end
+    self.placeholder=go.get("#mesh","vertices")
+    self.vertices=resource.create_buffer("/space_wisps_runtime.bufferc",{buffer=self.buffer,transfer_ownership=false})
+    go.set("#mesh","vertices",self.vertices)
+    msg.post("#mesh","disable")
+end
+function update(self,dt)
+    local active=session.flying==true
+    if not active then
+        if self.active then msg.post("#mesh","disable");self.active=false end
+        return
+    end
+    self.clock=self.clock+(dt or 0)
+    go.set("#mesh","wisp_clock",vmath.vector4(self.clock,0,0,0))
+    local pos=go.get_position("player_ship");local rot=go.get_rotation("player_ship")
+    local changed=false
+    for i=1,COUNT do
+        if not self.active or vmath.length(self.points[i]-pos)>145 then place(self,i,pos,rot);changed=true end
+    end
+    if changed then upload(self) end
+    if not self.active then msg.post("#mesh","enable");self.active=true end
+end
+function final(self)
+    if self.vertices then go.set("#mesh","vertices",self.placeholder);resource.release(self.vertices) end
+end

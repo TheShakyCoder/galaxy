@@ -1,6 +1,2 @@
 name: "asteroid_preview"
-embedded_instances {
-  id: "preview"
-  data: "components {\n  id: \"script\"\n  component: \"/tests/asteroid_preview/preview.script\"\n}\n"
-        "embedded_components {\n  id: \"rock_factory\"\n  type: \"factory\"\n  data: \"prototype: \\\"/main/asteroid.go\\\"\\n\"\n}\n"
-}
+embedded_instances { id: "preview" data: "components { id: \"script\" component: \"/tests/asteroid_preview/preview.script\" }\nembedded_components { id: \"rock_factory\" type: \"factory\" data: \"prototype: \\\"/main/asteroid.go\\\"\\n\" }\nembedded_components { id: \"baseline_factory\" type: \"factory\" data: \"prototype: \\\"/tests/asteroid_preview/baseline/asteroid.go\\\"\\n\" }\n" }

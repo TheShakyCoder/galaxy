@@ -4,3 +4,4 @@ key_trigger { input: KEY_A action: "auto" }
 key_trigger { input: KEY_1 action: "intact" }
 key_trigger { input: KEY_2 action: "fractured" }
 key_trigger { input: KEY_3 action: "dissolving" }
+mouse_trigger { input: MOUSE_BUTTON_1 action: "click" }

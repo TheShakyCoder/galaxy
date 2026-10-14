@@ -1,6 +1,15 @@
 from pathlib import Path
 import sys, hashlib, re
 p=Path(sys.argv[1]); html=p.read_text(encoding='utf8')
+# Bob can reuse an HTML launcher generated with the full game's title.
+# Match the launcher to the engine actually emitted for this preview bundle.
+engines=list(p.parent.glob('*_wasm.js'))
+engines=[engine for engine in engines if not engine.name.endswith('_pthread_wasm.js')]
+if len(engines)!=1:
+ raise SystemExit('Expected exactly one non-threaded WASM engine in the preview bundle')
+engine_name=engines[0].name.removesuffix('_wasm.js')
+html=re.sub(r'EngineLoader\.load\("canvas",\s*"[^"]+"\)', lambda _: 'EngineLoader.load("canvas", "'+engine_name+'")', html)
+html=re.sub(r'<title>.*?</title>', '<title>Station UI Review</title>', html)
 fingerprint=hashlib.sha256((p.parent/'archive/game0.arci').read_bytes()).hexdigest()[:16]
 html=re.sub(r"<script id='galaxy-review-archive'>.*?</script>\s*",'',html,flags=re.S)
 html=html.replace("<script id='engine-start'",f"<script id='galaxy-review-archive'>CUSTOM_PARAMETERS.archive_location_filter = path => 'archive' + path + '?build={fingerprint}';</script>\n<script id='engine-start'")

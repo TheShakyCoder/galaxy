@@ -30,9 +30,12 @@ Defold nodes supply every label, gauge, icon, button and interactive panel.
 The ship is still the base hull, explicitly identified under the preview;
 the livery catalog retains its original thumbnails. Original fleet models,
 textures, skins, gameplay sizes, prices, unlocks, hardpoint IDs, input handling,
-account persistence and server contracts are unchanged. This branch is based
-independently on master `6d1f0a5`; it needs none of PRs 22, 23 or 24 and does not
-change `game.project` or their texture-profile selection.
+account persistence and server contracts are unchanged. The console was
+originally based independently on master `6d1f0a5`.
+On 2026-10-14 it was reconciled with upstream `663bd2e`, which includes merged
+PRs 22, 23 and 24. The shared renderer retains both the upstream space passes
+and the docked ship override. `game.project` and its texture-profile selection
+match upstream unchanged.
 
 ## Offline review
 
@@ -48,7 +51,9 @@ Open `/Station%20UI%20Review/index.html`. The collapsible offline review control
 select either faction and any of the 12 class/role hulls. Wait for the visible
 `Viewing: faction / hull` acknowledgement before capturing a frame. The helper
 fingerprints the archive index to avoid stale browser resources after builds.
-It is safe to run again after each bundle, which replaces the generated HTML.
+It also matches the launcher to the emitted WASM engine name, because Bob may
+reuse a launcher with the full-game title when alternating builds. It is safe
+to run again after each bundle, which replaces the generated HTML.
 
 The fixture disables assignments/outpost requests, account/logout navigation
 and profile flush. Purchases use disposable sample funds. Non-starter hulls
@@ -112,3 +117,19 @@ original square aspect, artwork, colors and transparency. The logo is drawn
 without tint and switches with the faction. These replace the generic orbital
 placeholder; the decorative orbital asset remains available but unused here.
 The separate logo atlas adds 2,097,201 bytes (about 2 MiB) of compiled texture resource with the current HTML5 settings. The original high-resolution copies are documentation assets and are not referenced by the runtime.
+
+
+## Upstream reconciliation, 2026-10-14
+
+Upstream `663bd2e56aa6fb13a7b2d0c6c90664c7da79bd19` merged into the PR
+branch without textual conflicts. Both full-game and isolated station HTML5
+bundles passed with Defold 1.13.1. Thirteen Lua 5.1 harnesses passed:
+station console, space, space wisps, station exteriors, launch cooldown,
+ship prices, flight HUD, throttle, speed, camera, starfield, asteroid script
+and asteroid hub. `git diff --check` passed.
+
+Native 1280 x 720 browser smoke review confirmed both faction backgrounds,
+approved insignias and lit ship previews, plus the Swarm launch countdown
+and return to the station. No new warnings or errors appeared after correcting
+the offline launcher filename. The full interaction matrix above was performed
+on 2026-10-13; live gameplay and account testing were not repeated here.

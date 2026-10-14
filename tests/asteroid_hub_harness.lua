@@ -7,13 +7,14 @@ vmath={vector3=function(x,y,z) return setmetatable({x=x,y=y,z=z},vector) end,
  length=function(v) return math.sqrt(v.x*v.x+v.y*v.y+v.z*v.z) end}
 local field={{x=1,y=2,z=3,diameter_m=10,resource="iron"},{x=2,y=3,z=4,diameter_m=20,resource="iron"}}
 local states, live, messages, timers, created = {}, {}, {}, {}, {}
+local material={}
 local registry=require("main.asteroid_registry")
 package.loaded['main.data.asteroids']={field_for=function() return field end,
  RESOURCE_BY_ID={iron={tint={1,1,1}}},RESOURCES={{id="iron",name="Iron"}}}
 package.loaded['main.network']={asteroid_state=function(_,index) return states[index] end}
 msg={url=function(_,id,component) return {id=id,component=component} end,
  post=function(url,event,data) messages[#messages+1]={url=url,event=event,data=data} end}
-go={set=function(url) assert(live[url.id],"setting deleted object") end,
+go={set=function(url,name,value) assert(live[url.id],"setting deleted object");material[url.id]=material[url.id] or {};material[url.id][name]=value end,
  cancel_animations=function(url) assert(live[url.id],"animating deleted object") end,
  animate=function() end,delete=function(id) live[id]=nil end,exists=function(id) return live[id] end}
 factory={create=function(_,pos,rot,props,scale)
@@ -27,8 +28,11 @@ dofile('main/asteroid_hub.script')
 local self={}
 on_message(self,'spawn_field',{system_id='sol'})
 assert(#registry.asteroids==2 and created[1].props.seed~=created[2].props.seed)
+assert(material[1].analysis.x==0 and material[2].analysis.x==0)
 local original_seed=created[1].props.seed
 on_message(self,'analyse',{position=vmath.vector3(0,0,0),range=100,scan_time=1})
+update(self,.1)
+assert(material[1].analysis.x==0 and material[2].analysis.x==0,'scan pulse leaked veins')
 states[1]={available=false}
 update(self,0.016)
 assert(#registry.asteroids==1 and registry.by_index[1]==nil and live[1])
@@ -47,3 +51,19 @@ assert(not live[1] and not live[2] and not live[3])
 assert(#registry.asteroids==1 and registry.by_index[1]==nil)
 final(self)
 assert(next(live)==nil and #registry.asteroids==0)
+-- A completed scan reveals only this client's rocks, survives respawn and a
+-- round trip to this system; another system starts unanalysed.
+states={};on_message(self,'spawn_field',{system_id='scan_test'})
+local id=registry.by_index[1].id
+assert(material[id].analysis.x==0)
+on_message(self,'analyse',{position=vmath.vector3(0,0,0),range=100,scan_time=1})
+timers[#timers]()
+assert(material[id].analysis.x==1)
+states[1]={available=false};update(self,.016)
+states[1]={available=true};update(self,.016)
+assert(material[registry.by_index[1].id].analysis.x==1)
+on_message(self,'spawn_field',{system_id='unseen_system'})
+assert(material[registry.by_index[1].id].analysis.x==0)
+on_message(self,'spawn_field',{system_id='scan_test'})
+assert(material[registry.by_index[1].id].analysis.x==1)
+final(self)

@@ -1,0 +1,35 @@
+#version 140
+in highp vec3 position;
+in mediump vec3 normal;
+in mediump vec4 color;
+in highp vec4 fragment;
+in highp vec4 motion;
+out mediump vec3 var_normal;
+out mediump vec4 var_color;
+out highp vec3 var_rock_position;
+out mediump float var_fade;
+uniform vs_uniforms {
+    highp mat4 mtx_worldview;
+    highp mat4 mtx_proj;
+    mediump mat4 mtx_normal;
+    highp vec4 breakup;
+};
+vec3 rotate_piece(vec3 v, vec3 axis, float angle) {
+    float c = cos(angle), s = sin(angle);
+    return v*c + cross(axis,v)*s + axis*dot(axis,v)*(1.0-c);
+}
+void main() {
+    float age = max(0.0, breakup.x-fragment.w);
+    vec3 axis = normalize(motion.xyz + vec3(0.001));
+    float angle = age * (0.7+motion.w);
+    float shrink = 1.0-smoothstep(1.05,2.0,breakup.x);
+    vec3 drift = normalize(fragment.xyz)*motion.w*age;
+    vec3 p = fragment.xyz + rotate_piece(position-fragment.xyz,axis,angle)*shrink + drift;
+    gl_Position = mtx_proj * mtx_worldview * vec4(p,1.0);
+    var_normal = normalize((mtx_normal*vec4(rotate_piece(normal,axis,angle),0.0)).xyz);
+    var_color = color;
+    var_rock_position = position;
+    var_fade = 1.0-smoothstep(1.1,2.0,breakup.x);
+    // Hidden fracture walls cannot bleed through an intact rock.
+    if (color.a > 0.5 && age <= 0.0) var_fade = 0.0;
+}

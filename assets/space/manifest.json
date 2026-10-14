@@ -1,0 +1,33 @@
+{
+  "size": 1024,
+  "seed": 20261012,
+  "stars": 17000,
+  "faces": {
+    "right": {
+      "sha256": "1288ac1fed8fff1c990e58325ae6c0e03852d2e97595e2a4adbdfd83dfba1abc",
+      "bytes": 676583
+    },
+    "left": {
+      "sha256": "d6662a08c81e5bd310969531ea671d1dc12efeb875fa30e95681c7eeda9cdb70",
+      "bytes": 673339
+    },
+    "top": {
+      "sha256": "8612ac0e6fd5f7fbcc5c9852d70e8528a747bbea6c548ac277a6cb4e14f3c704",
+      "bytes": 697900
+    },
+    "bottom": {
+      "sha256": "f09c6023deed7e9c944faf203fe21378199704eb5ca4f6a42b1b330178c205a5",
+      "bytes": 691170
+    },
+    "front": {
+      "sha256": "ff9fc8ee5cdcb663cee31ed3092cf0c4caf5f7f9cf498bfeab9715d2f79b2f53",
+      "bytes": 658030
+    },
+    "back": {
+      "sha256": "292e005c898dbb75b35a5a4048d7c1eead0d244b00b476668d40aad36274b3ff",
+      "bytes": 656933
+    }
+  },
+  "png_bytes": 4053955,
+  "rgba8_mip_bytes": 33554424
+}
