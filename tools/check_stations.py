@@ -31,11 +31,15 @@ def main():
         for name,digest in before.items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==digest,name+' nondeterministic'
     rows=[]
     ad,adtri=load(OUT/'ad.glb');assert adtri==2
-    assert max(p[0] for p in ad)-min(p[0] for p in ad)==200
-    assert max(p[2] for p in ad)-min(p[2] for p in ad)==100
+    assert max(p[0] for p in ad)-min(p[0] for p in ad)==100
+    assert max(p[2] for p in ad)-min(p[2] for p in ad)==200
     for row in json.loads((OUT/'manifest.json').read_text())['stations']:
         f=row['faction'];fixed,ft=load(OUT/f/'fixed.glb');rotor,rt=load(OUT/f/'rotor.glb');pivot=row['pivot']
         assert len(row['slots'])==8
+        if f=='swarm':
+            # Turned frames cross both rim rings axially. Their back faces
+            # are 10 m behind the ad plane and must clear the slimmed 274.5 m rims.
+            assert all(r-10>274.5 for _,r,_ in row['slots']), 'Swarm rim obscures turned billboard'
         for a,r,z in row['slots']:
             # Transform all four billboard corners around the actual rotor axis.
             for x,y,zz in ad:rotor.append((-math.sin(a)*x+math.cos(a)*r,math.cos(a)*x+math.sin(a)*r,z+zz))

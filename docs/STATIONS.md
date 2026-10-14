@@ -32,8 +32,8 @@ and its eight screens rotate; docks, supports and stem remain fixed. Periods are
 
 | Station | Triangles, including ads | Full swept dimensions | Model draw upper bound |
 | --- | ---: | --- | ---: |
-| Accord | 12,352 | 628.04 x 628.04 x 756 m | 10 |
-| Swarm | 17,600 | 732 x 732 x 712 m | 10 |
+| Accord | 12,352 | 471.03 x 471.03 x 756 m | 10 |
+| Swarm | 17,600 | 586.41 x 586.41 x 717 m | 10 |
 
 The independent GLB checker includes billboard corners and the complete analytic
 rotation envelope, not just one angle. Both fit an 800 m cube. Both meshes together
@@ -51,7 +51,19 @@ and `validation.json`. Draw counts are component bounds, not a GPU timing result
 
 ## Sponsor artwork
 
-Each faction has eight flat 200x100 m screens. Supply an opaque 1024x512 RGB PNG,
+Each faction has eight flat screens with 200x100 m artwork. Each complete
+billboard and its frame is rotated 90 degrees clockwise when viewed from
+outside relative to the original layout, including the lettering. The artwork
+now spans 100 m tangentially and 200 m along the station axis; source PNGs
+and UV proportions are unchanged. This aligns the text with the Y-up flight
+view at zero pitch on the side of the station. The drum/crown bodies are now
+25% narrower radially, with unchanged axial length. Billboard artwork and
+frames retain their full size and move inward to suit the slimmer body.
+Swarm frame backs remain 2 m beyond the slimmed cap rims, keeping the text clear.
+Docks, stems, root positions and all collision/hit-box settings are unchanged.
+Both stations still fit the existing 800 m limit.
+
+Supply an opaque 1024x512 RGB PNG,
 2:1 aspect, without baked perspective. Keep essential text/logos 64 pixels from
 the left/right and 32 pixels from the top/bottom (6.25% per edge).
 [Download the guide](station-ad-template.png); remove its guide marks for delivery.
@@ -111,7 +123,7 @@ python tools/prepare_station_exterior_preview.py "<external-output>/Station Exte
 ```
 
 Serve that bundle directory locally. Controls include faction, same scale, old/new,
-orbit/drag, orthographic side/end, bounding box, viewing distance, spin speed,
+orbit/drag, a Y-up zero-pitch view, orthographic side/end, bounding box, viewing distance, spin speed,
 screen close-up, slot selection and ad cycling. A small existing ship gives scale.
 Keep bundle output outside the checkout. Legacy outpost builder entry points now
 call the canonical generator; old GLBs/palette textures remain for comparison.
@@ -126,3 +138,17 @@ rotation/fixed-dock/visibility/ad API Lua harness, existing starfield/HUD/thrott
 speed harnesses, standalone/combined preview builds and full-game HTML5 build.
 Native browser inspection found no runtime errors or warnings. Live multiplayer,
 mobile/low-end hardware performance and live account persistence were not tested.
+
+
+## Ad orientation review, 2026-10-14
+
+Both factions' existing billboard artwork and frames turn clockwise by a
+quarter-turn relative to the original station layout. Native Y-up, zero-pitch
+side views: [Accord](../artifacts/stations/ads-accord-level.jpg) and
+[Swarm](../artifacts/stations/ads-swarm-level.jpg). Close-up review confirmed
+uncropped artwork and clear lettering after slimming the drum/crown and retaining Swarm rim clearance.
+
+Geometry/UV/winding/bounds validation, byte-identical regeneration, station
+lifecycle/ad API harnesses, and preview/full-game HTML5 builds passed. The
+native browser review reported no warnings or errors. Texture PNGs, draw counts
+and triangle counts are unchanged. No live-account or multiplayer test was run.

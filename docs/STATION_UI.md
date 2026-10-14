@@ -109,6 +109,14 @@ that character with graphite ribs and layered radiator vanes. The exact source
 image dimensions and SHA-256 hashes are recorded in `artifacts/station-console/assets.json`.
 Panel surfaces and icons are code-authored in the deterministic Python tool.
 
+## Hangar card captions
+
+The Fleet Hangar ship-name/price strips use 45% opacity (previously 85%),
+allowing more of the card beneath to show through. Name and price text retain
+full opacity for readability. This change applies to both factions' ship grids.
+Native review: [Accord](../artifacts/station-console/translucent-accord-hangar.jpg)
+and [Swarm](../artifacts/station-console/translucent-swarm-hangar.jpg).
+
 ## Approved faction insignias
 
 The dossier uses the user-supplied fish insignia for Accord and bird insignia
