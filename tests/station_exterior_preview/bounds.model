@@ -1,0 +1,4 @@
+mesh: "/tests/station_exterior_preview/bounds.glb"
+material: "/assets/materials/stations/hull.material"
+textures: "/assets/models/stations/accord/hull.png"
+name: "station"

@@ -1,0 +1,4 @@
+mesh: "/assets/models/stations/ad.glb"
+material: "/assets/materials/stations/ad.material"
+textures: "/assets/models/stations/ads/logistics.png"
+name: "station"

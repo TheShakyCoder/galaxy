@@ -1,0 +1,28 @@
+local session=require "main.session"
+local visual=require "main.station_visual"
+go.property("verge",resource.texture("/assets/models/stations/ads/verge.png"))
+go.property("tope",resource.texture("/assets/models/stations/ads/tope.png"))
+go.property("molt",resource.texture("/assets/models/stations/ads/molt.png"))
+go.property("hydrogen",resource.texture("/assets/models/stations/ads/hydrogen.png"))
+go.property("mutual",resource.texture("/assets/models/stations/ads/mutual.png"))
+go.property("current",resource.texture("/assets/models/stations/ads/current.png"))
+go.property("civic",resource.texture("/assets/models/stations/ads/civic.png"))
+go.property("logistics",resource.texture("/assets/models/stations/ads/logistics.png"))
+function init(self)
+    local resources={}
+    for _,name in ipairs({"verge","tope","molt","hydrogen","mutual","current","civic","logistics"}) do resources[name]=self[name] end
+    self.stations={}
+    for _,f in ipairs({"accord","swarm"}) do self.stations[f]=visual.create(f,resources) end
+end
+function update(self,dt)
+    local system=session.get_current_system()
+    for f,s in pairs(self.stations) do
+        visual.update(s,dt,session.flying==true and system~=nil and session.outpost_available(system,f)==true)
+    end
+end
+function on_message(self,id,message)
+    if id==hash("station_light") and message.position then
+        for _,s in pairs(self.stations) do visual.light(s,message.position) end
+    end
+end
+function final(self) for _,s in pairs(self.stations) do visual.final(s) end end

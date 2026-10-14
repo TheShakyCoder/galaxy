@@ -44,4 +44,4 @@ account_url = https://galaxy.ddev.site/dashboard
 
 
 [graphics]
-texture_profiles = /assets/space/space.texture_profiles
+texture_profiles = /assets/materials/stations/stations.texture_profiles

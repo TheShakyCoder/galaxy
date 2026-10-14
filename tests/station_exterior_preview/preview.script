@@ -1,0 +1,86 @@
+local visual=require "main.station_visual"
+local ads=require "main.station_ads"
+go.property("verge",resource.texture("/assets/models/stations/ads/verge.png"))
+go.property("tope",resource.texture("/assets/models/stations/ads/tope.png"))
+go.property("molt",resource.texture("/assets/models/stations/ads/molt.png"))
+go.property("hydrogen",resource.texture("/assets/models/stations/ads/hydrogen.png"))
+go.property("mutual",resource.texture("/assets/models/stations/ads/mutual.png"))
+go.property("current",resource.texture("/assets/models/stations/ads/current.png"))
+go.property("civic",resource.texture("/assets/models/stations/ads/civic.png"))
+go.property("logistics",resource.texture("/assets/models/stations/ads/logistics.png"))
+local names={"verge","tope","molt","hydrogen","mutual","current","civic","logistics"}
+function init(self)
+ self.resources={};for _,n in ipairs(names) do self.resources[n]=self[n] end
+ self.stations={accord=visual.create("accord",self.resources),swarm=visual.create("swarm",self.resources)}
+ self.faction="accord";self.angle=0;self.orbit=false;self.distance=1400;self.speed=1;self.box=false;self.old=false;self.slot=1;self.ad=1;self.mode="hero"
+ self.yaw=0;self.pitch=.3
+ go.set("sardine#model","light",vmath.vector4(4000,6000,4000,1))
+ msg.post(".","acquire_input_focus")
+ self.report=3
+end
+function update(self,dt)
+ local cmd=html5 and html5.run("window.stationCommand || ''") or ""
+ if cmd~="" then
+  html5.run("window.stationCommand = ''")
+  local key,value=cmd:match("^([^:]+):?(.*)$")
+  if key=="accord" or key=="swarm" or key=="both" then self.faction=key;self.mode="hero";self.distance=key=="both" and 2400 or 1400;self.angle=0
+  elseif key=="spin" then self.speed=tonumber(value) or 1
+  elseif key=="orbit" then self.orbit=not self.orbit
+  elseif key=="bounds" then self.box=not self.box
+  elseif key=="old" then self.old=not self.old
+  elseif key=="distance" then self.distance=tonumber(value) or 1800;self.mode="hero"
+  elseif key=="screen" then self.mode="screen";self.speed=0
+  elseif key=="slot" then self.slot=tonumber(value) or 1;self.mode="screen";self.speed=0
+  elseif key=="ad" then self.ad=self.ad%8+1;ads.set_ad(self.faction=="swarm" and "swarm_outpost" or "accord_outpost",self.slot,names[self.ad])
+  elseif key=="reset" then self.distance=1400;self.angle=0;self.yaw=0;self.pitch=.3;self.mode="hero";self.orbit=false
+  elseif key=="side" or key=="end" then self.mode=key;self.orbit=false
+  end
+  self.report=3
+ end
+ if self.orbit then self.angle=self.angle+dt*.15 end
+ for f,s in pairs(self.stations) do
+  s.speed=self.speed
+  local on=self.faction==f or self.faction=="both"
+  visual.update(s,dt,on and not self.old)
+  msg.post(f.."_old#model",on and self.old and "enable" or "disable")
+  local offset=self.faction=="both" and (f=="accord" and -530 or 530) or 0
+  go.set_position(vmath.vector3(offset,0,0),f.."_outpost");go.set_position(vmath.vector3(offset,0,0),f.."_old")
+ end
+ local swarm=self.faction=="swarm"
+ local target=vmath.vector3(0,swarm and 142.5 or 135,swarm and 360 or 0)
+ local up=swarm and vmath.vector3(0,0,1) or vmath.vector3(0,1,0)
+ local d=self.distance;local a=self.angle+self.yaw
+ local offset=swarm and vmath.vector3(math.cos(a+.7)*d,math.sin(a+.7)*d,d*.07) or vmath.vector3(math.sin(a+1.1)*d,d*(.15+self.pitch),math.cos(a+1.1)*d)
+ if self.faction=="both" then target=vmath.vector3(0,135,200);offset=vmath.vector3(500,1700,d) end
+ if self.mode=="side" then offset=vmath.vector3(d,0,0);up=vmath.vector3(0,0,1)
+ elseif self.mode=="end" then offset=vmath.vector3(0,0,d);up=vmath.vector3(0,1,0)
+ elseif self.mode=="screen" then
+  local f=swarm and "swarm" or "accord";local theta=math.pi/4+(self.slot-1)*math.pi/4+self.stations[f].phase
+  local radius=(swarm and 362 or 306)*math.cos(math.pi/8)+(swarm and 9 or 10)
+  local n=vmath.vector3(math.cos(theta),math.sin(theta),0)
+  target=vmath.vector3(0,swarm and 142.5 or 135,swarm and 618 or 0)+n*radius
+  offset=n*320;up=vmath.vector3(0,0,1)
+ end
+ if self.mode~="screen" then offset=vmath.normalize(offset)*d end
+ local width,height=window.get_size()
+ local aspect=width/math.max(1,height)
+ local projection=vmath.matrix4_perspective(.7,aspect,.5,20000)
+ if self.mode=="side" or self.mode=="end" then projection=vmath.matrix4_orthographic(-d*.35*aspect,d*.35*aspect,-d*.35,d*.35,.5,20000) end
+ msg.post("@render:","review_camera",{view=vmath.matrix4_look_at(target+offset,target,up),projection=projection,system=swarm and "polaris" or "sol"})
+ go.set_position(vmath.vector3(0,swarm and 142.5 or 135,swarm and 360 or 0),"bounds")
+ msg.post("bounds#model",self.box and "enable" or "disable")
+ msg.post("sardine#model",self.mode=="screen" and "disable" or "enable")
+ if self.report>0 then
+  self.report=self.report-1
+  if self.report==0 and html5 then
+   local tex=go.get((swarm and "swarm" or "accord").."_outpost_ad"..self.slot.."#model","texture0");local name="external"
+   for n,r in pairs(self.resources) do if r==tex then name=n end end
+   html5.run("document.getElementById('rendered').textContent='Viewing: "..self.faction.." / "..(self.old and "original" or "detail").." / "..self.mode.." / slot "..self.slot.." / "..name.."'; document.querySelector('[aria-label=\"Spin speed\"]').value='"..self.speed.."'")
+  end
+ end
+end
+function on_input(self,id,a)
+ if id==hash("click") then self.drag=a.pressed or (self.drag and not a.released) end
+ if not id and self.drag and a.dx then self.yaw=self.yaw+a.dx*.005;self.pitch=math.max(-.8,math.min(.8,self.pitch+a.dy*.003)) end
+end
+function final(self) for _,s in pairs(self.stations) do visual.final(s) end end

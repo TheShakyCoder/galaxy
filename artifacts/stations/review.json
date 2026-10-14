@@ -1,0 +1,27 @@
+{
+  "engine": "Defold 1.13.1",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "builds": [
+    "standalone station HTML5 preview",
+    "optional station + sky HTML5 preview",
+    "full station-only HTML5 game"
+  ],
+  "checks": [
+    "all sixteen ad slot bindings acknowledged by native preview",
+    "unlit flat screen close-up and runtime bundled texture replacement",
+    "both factions, original/new comparison, common scale view",
+    "orthographic side/end and bounds overlay",
+    "byte-identical rebake and independent GLB swept-bounds validation",
+    "production observer visibility, full-period rotations, fixed docks and ad API harness",
+    "existing starfield, flight HUD, throttle and speed harnesses"
+  ],
+  "runtime_console_errors_or_warnings": 0,
+  "not_tested": [
+    "live multiplayer and accounts",
+    "mobile/low-end GPU timing",
+    "runtime network image loader (not implemented)"
+  ]
+}
