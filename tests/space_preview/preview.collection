@@ -1,0 +1,7 @@
+name: "space_preview"
+embedded_instances { id: "review" data: "components { id: \"script\" component: \"/tests/space_preview/preview.script\" }\ncomponents { id: \"gui\" component: \"/main/flight_hud.gui\" }\nembedded_components { id: \"rock_factory\" type: \"factory\" data: \"prototype: \\\"/main/asteroid.go\\\"\\n\" }\n"  }
+embedded_instances { id: "player_ship" data: "components { id: \"model\" component: \"/assets/models/patrol_interceptor/patrol_interceptor.model\" }\ncomponents { id: \"script\" component: \"/tests/flight_preview/receiver.script\" }\n"  }
+embedded_instances { id: "flight_camera" data: "components { id: \"camera\" component: \"/main/flight_camera.camera\" }\n"  }
+instances { id: "space_sky" prototype: "/main/space.go" }
+instances { id: "starfield" prototype: "/main/starfield.go" }
+instances { id: "space_wisps" prototype: "/main/space_wisps.go" }

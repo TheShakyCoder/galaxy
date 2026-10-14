@@ -42,3 +42,6 @@ max_count = 256
 [galaxy]
 account_url = https://galaxy.ddev.site/dashboard
 
+
+[graphics]
+texture_profiles = /assets/space/space.texture_profiles

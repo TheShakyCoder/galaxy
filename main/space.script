@@ -1,0 +1,16 @@
+-- Read-only observer: flight/session logic and the existing dust stay untouched.
+local session=require "main.session"
+function init(self)
+    self.system=nil;self.visible=false
+end
+function update(self)
+    local visible=session.flying==true
+    local system=session.get_current_system()
+    if visible~=self.visible or system~=self.system then
+        self.visible=visible;self.system=system
+        msg.post("@render:","set_space_sky",{visible=visible,system_id=system or "sol"})
+    end
+end
+function final(self)
+    msg.post("@render:","set_space_sky",{visible=false})
+end
