@@ -6,7 +6,7 @@ local CYAN = vmath.vector4(.38,.85,.92,1)
 local GOLD = vmath.vector4(.80,.64,.36,1)
 local PAGES = {"overview","fitting","ships","map","skins"}
 local ICONS = {"command","fitting","hangar","map","livery"}
-local LABELS = {"COMMAND","FITTING","HANGAR","SECTOR MAP","LIVERIES"}
+local LABELS = {"COMMAND","FITTING","HANGAR","SECTOR MAP","SKINS"}
 local function node(id) return gui.get_node(id) end
 local function at(n,x,y,w,h)
     gui.set_position(n,vmath.vector3(x,y,0))
