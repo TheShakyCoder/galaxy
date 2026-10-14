@@ -88,6 +88,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | Shift+1–9 | Switch the weapon in slot W1–W9 on or off. Weapons that are on fire by themselves at your target (enemy outposts only, so far) |
 | 1–9 | Use the active module in that Computer/Engine/Hull slot (numbered C1…, then E1…, then H1…; the Fitting tab shows each slot's key) |
 | P | Asteroid Analyser (if fitted): reveal what every asteroid within 400 m is made of |
+| F3 | Show or hide a temporary debug readout: position, velocity and direction vectors, heading/pitch/roll |
 | Mouse wheel | In flight: throttle up / down one segment. In the outpost screens: scroll the lists |
 
 The camera orbit is a drag, not a click: the left mouse button only starts orbiting

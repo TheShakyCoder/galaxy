@@ -691,46 +691,51 @@ M.SHIPS = {
 			-- Purchase price from bsgo.fandom.com (Maul / Wraith), as-is: cubits -> Tope,
 			-- Tylium -> Hydrogen. Same for both factions (the two are counterparts there).
 			price = { { amount = 600000, currency = "hydrogen" } },
-			-- Full stat block: the §2.1.1 universal baseline. Per direct instruction
-			-- the **Hull and Computer Systems** numbers stay here rather than taking
-			-- the Rhino figures - the Rhino is `patrol_assault`'s own BSGO
-			-- counterpart, NOT an Escort-tier reference, and plan.md §2.13 records
-			-- no real hull/power for this ship's own counterpart. Left as the shared
-			-- placeholder (650 / 5, 175 / 6) rather than an invented number
-			-- (§0/§4), pending real per-ship tuning.
+			-- Full stat block sourced from the BSGO wiki's Maul and Wraith pages (per
+			-- direct instruction: "the escort_assault chassis should have the same
+			-- specs as the original wraith/maul ship"), read from the Wayback Machine's
+			-- 2015-09 snapshots of bsgo.wikia.com/wiki/Maul and /wiki/Wraith (the
+			-- live fandom pages are Cloudflare-blocked). Maul and Wraith are faction
+			-- counterparts with identical blocks EXCEPT Visual Range (Maul 300 m,
+			-- Wraith 250 m); stats are per-CHASSIS (§2.1.2), so one value has to
+			-- win - Maul's 300 is used for both Moray and Goshawk. Only these NUMBERS
+			-- come from the wiki; names/models stay this project's own. Durability
+			-- (16,000) maps to repair_cost_iron per §2.1.1. Equipment Slots (Weapon
+			-- 4/Hull 4/Engine 2/Computer 2) are NOT applied here: this chassis has no
+			-- slot_positions layout to pair counts with yet (same as escort_tactical).
 			data = {
 				-- Hull Systems
-				hull_points = 650,
-				hull_recovery_per_sec = 5,
-				repair_cost_iron = 10000, -- full-repair cost, paid in Iron (§2.6)
-				armor = 5,
-				critical_defense = 100,
+				hull_points = 2000,
+				hull_recovery_per_sec = 8.9,
+				repair_cost_iron = 16000, -- full-repair cost, paid in Iron (§2.6); the wiki's Durability
+				armor = 30,
+				critical_defense = 120,
 
 				-- Engine Systems
-				avoidance = 500,
-				turning_speed_deg_per_sec = 47.5,
-				turning_acceleration_deg_per_sec2 = 47.5,
-				inertial_compensation_m_per_sec = 100,
-				acceleration_m_per_sec2 = 10,
-				speed_m_per_sec = 52.5,
-				boost_speed_m_per_sec = 77.5,
-				boost_cost_hydrogen_per_sec = 0.6, -- Hydrogen fuel (§2.6)
+				avoidance = 235,
+				turning_speed_deg_per_sec = 20,
+				turning_acceleration_deg_per_sec2 = 20,
+				inertial_compensation_m_per_sec = 50,
+				acceleration_m_per_sec2 = 4,
+				speed_m_per_sec = 35,
+				boost_speed_m_per_sec = 55,
+				boost_cost_hydrogen_per_sec = 2.1, -- renamed from the wiki's own Tylium unit (§2.6)
 
 				-- FTL Systems
-				ftl_range_ly = 5.5,
-				ftl_charge_sec = 15,
-				ftl_cost_hydrogen_per_ly = 30, -- Hydrogen fuel (§2.6)
+				ftl_range_ly = 7.5,
+				ftl_charge_sec = 20,
+				ftl_cost_hydrogen_per_ly = 80, -- renamed from the wiki's own Tylium unit (§2.6)
 
 				-- Computer Systems
-				power = 175,
-				power_recharge_per_sec = 6,
-				firewall_rating = 200,
-				emitter_rating = 200,
+				power = 200,
+				power_recharge_per_sec = 10,
+				firewall_rating = 150,
+				emitter_rating = 150,
 				sensor_range_m = 3000, -- renamed from source's "Dradis Range" (§0)
-				visual_range_m = 500,
+				visual_range_m = 300, -- Maul's value; Wraith's is 250 (see header comment)
 			},
-			-- Same as the other Escort/Frigate-tier ships: no confirmed slot-count
-			-- number exists yet, so left empty rather than guessed (§0/§4).
+			-- Left empty: the wiki's counts (W4/H4/E2/C2, see header comment) need a
+			-- slot_positions layout before they can be applied.
 			components = {},
 		},
 		slot_positions = {},

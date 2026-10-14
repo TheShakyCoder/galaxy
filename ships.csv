@@ -4,7 +4,7 @@ patrol_assault,Piranha,Shrike,Patrol,Assault,715,5,10000,5,100,500,47.5,47.5,100
 patrol_tactical,Anglerfish,Kingfisher,Patrol,Tactical,650,5,10000,5,100,500,47.5,47.5,100,10,52.5,77.5,0.6,5.5,15,30,175,6,200,200,3000,500,,,,
 patrol_interceptor,Sardine,Hummingbird,Patrol,,450,2.5,10000,5,100,500,47.5,47.5,100,10,52.5,77.5,0.5,4.5,15,20,100,5,200,200,3000,500,3,2,4,2
 escort_support,Remora,Egret,Escort,Support,650,5,10000,5,100,500,47.5,47.5,100,10,52.5,77.5,0.6,5.5,15,30,175,6,200,200,3000,500,,,,
-escort_assault,Moray,Goshawk,Escort,Assault,650,5,10000,5,100,500,47.5,47.5,100,10,52.5,77.5,0.6,5.5,15,30,175,6,200,200,3000,500,,,,
+escort_assault,Moray,Goshawk,Escort,Assault,2000,8.9,16000,30,120,235,20,20,50,4,35,55,2.1,7.5,20,80,200,10,150,150,3000,300,,,,
 escort_tactical,Lionfish,Osprey,Escort,Tactical,1950,15,10000,25,100,260,25,25,50,5,40,60,2.7,7.5,20,80,300,10,150,150,3000,300,,,,
 escort_interceptor,Barracuda,Falcon,Escort,,650,5,10000,5,100,500,47.5,47.5,100,10,52.5,77.5,0.6,5.5,15,30,175,6,200,200,3000,500,,,,
 frigate_interceptor,Marlin,Frigatebird,Frigate,Interceptor,4290,33,66000,40,80,70,10,10,50,2.5,30,45,4.5,9,25,250,750,25,100,100,3000,300,8,2,5,2

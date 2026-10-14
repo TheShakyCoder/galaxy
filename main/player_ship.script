@@ -516,6 +516,7 @@ function init(self)
 	self.speed = 0 -- actual current speed (m/sec) - see update()'s acceleration-bounded lerp toward target_speed below
 	self.engine_sound_on = false -- whether the engine loop is currently playing - see set_engine_sound()
 	self.angular_velocity = vmath.vector3() -- rad/sec, local axes (x=pitch, y=yaw, z=roll) - see update()'s body-frame rotation block
+	self.debug_info = false -- F3's temporary position/vector readout (debug_info_text()); kept across flights until toggled off
 	self.time_since_rotation_input = 0 -- seconds since the last pitch/yaw input - see AUTO_LEVEL_DELAY
 	self.camera_rot = nil -- nil = "snap on next update", same convention the reference uses
 	self.camera_orbit_active = false -- whether the player has orbited the camera by hand this flight - the automatic return (see CAMERA_ORBIT_RETURN_DELAY) only ever engages once they have, so the plain chase view stays exactly as it was until then
@@ -567,6 +568,57 @@ function init(self)
 	msg.post("flight_camera#camera", "disable")
 end
 
+-- Can `system_id` be armed as a jump preset from `from_system` with
+-- `ship_id`'s FTL range? (Hydrogen is checked when the jump executes.)
+local function preset_in_range(system_id, from_system, ship_id)
+	if not star_systems.can_enter(system_id, session.get_faction()) then
+		return false
+	end
+	local _, _, _, _, _, ftl_range_ly = flight_stats(ship_id)
+	local dist = from_system and star_systems.distance(from_system, system_id)
+	return star_systems.in_ftl_range(dist, star_systems.ly_to_map_units(ftl_range_ly))
+end
+
+-- The flight HUD's "PRESET: <system> [J]" line, or hidden with none armed.
+local function show_jump_preset(self)
+	local sys = self.jump_preset_system and star_systems.SYSTEMS[self.jump_preset_system]
+	msg.post("flight_hud#gui", "jump_preset", { text = sys and ("PRESET: " .. sys.name .. " [J]") or nil })
+end
+
+-- F3's temporary debug readout (per direct instruction: "a toggle switch
+-- that hides and shows a temporary gui showing the ships position and vector
+-- details"). World units are metres; angles in degrees. Heading is measured
+-- from world +Z towards +X, pitch is the nose above/below the XZ plane, and
+-- roll is level_roll_angle()'s bank (0 = level).
+local function vec_text(v, fmt)
+	fmt = fmt or "%.1f"
+	return string.format("x " .. fmt .. "   y " .. fmt .. "   z " .. fmt, v.x, v.y, v.z)
+end
+
+local function debug_info_text(self, pos, rot, forward, target_speed)
+	local up = vmath.rotate(rot, UP)
+	local right = vmath.rotate(rot, RIGHT)
+	local velocity = forward * self.speed
+	local heading = math.deg(math.atan2(forward.x, forward.z)) % 360
+	local pitch = math.deg(math.asin(math.max(-1, math.min(1, forward.y))))
+	local roll = math.deg(level_roll_angle(rot))
+	local av = self.angular_velocity
+	local system = self.current_system_id and star_systems.SYSTEMS[self.current_system_id]
+	return table.concat({
+		"DEBUG (F3)   " .. (system and system.name or "-"),
+		"Position   " .. vec_text(pos),
+		"Distance from origin   " .. string.format("%.1f m", vmath.length(pos)),
+		"Velocity   " .. vec_text(velocity) .. "  m/s",
+		string.format("Speed   %.1f m/s   target %.1f   segment %d%s", self.speed, target_speed, self.speed_segment, self.input.boost and "   BOOST" or ""),
+		"Forward   " .. vec_text(forward, "%.3f"),
+		"Up   " .. vec_text(up, "%.3f"),
+		"Right   " .. vec_text(right, "%.3f"),
+		string.format("Heading %.1f   Pitch %.1f   Roll %.1f", heading, pitch, roll),
+		string.format("Turn rate   pitch %.1f   yaw %.1f   roll %.1f  deg/s", math.deg(av.x), math.deg(av.y), math.deg(av.z)),
+		string.format("Rotation   x %.3f   y %.3f   z %.3f   w %.3f", rot.x, rot.y, rot.z, rot.w),
+	}, "\n")
+end
+
 -- Defined with the weapons further down; start_flight shows it on launch.
 local show_hotkeys
 
@@ -580,7 +632,7 @@ local function start_flight(self)
 	-- outpost screen back up (it disabled itself on the way here - see
 	-- main/outpost.gui_script's do_launch).
 	if not session.launch() then
-		msg.post("outpost#gui", "show_outpost")
+		msg.post("outpost#gui", "show_outpost", { preset_system_id = self.jump_preset_system })
 		return
 	end
 	self.flying = true
@@ -676,6 +728,13 @@ local function start_flight(self)
 	msg.post(".", "acquire_input_focus")
 	msg.post("flight_camera#camera", "enable")
 	msg.post("flight_hud#gui", "show_flight_hud")
+	-- A preset armed while docked (outpost Sector Map tab) or kept from an
+	-- earlier flight: drop it if it's no longer in range from here with this
+	-- ship (the player may have changed ship), otherwise show it on the HUD.
+	if self.jump_preset_system and not preset_in_range(self.jump_preset_system, self.current_system_id, self.ship_id) then
+		self.jump_preset_system = nil
+	end
+	show_jump_preset(self)
 	-- Start the moving starfield (main/starfield.script) now that there's a
 	-- flight to show it in - it re-reads this ship's own transform every frame
 	-- from here on, so nothing else needs to be pushed to it.
@@ -830,7 +889,7 @@ local function complete_dock(self)
 	-- with the default render camera, where visible dust would float over the
 	-- outpost menu (see main/starfield.script's set_visible comment).
 	msg.post("starfield#script", "stop")
-	msg.post("outpost#gui", "show_outpost")
+	msg.post("outpost#gui", "show_outpost", { preset_system_id = self.jump_preset_system }) -- the Sector Map tab shows a preset that's still armed
 end
 
 -- The ship was destroyed: the player respawns at the outpost screen, which
@@ -1577,15 +1636,15 @@ function on_message(self, message_id, message)
 	elseif message_id == hash("ship_destroyed") then
 		ship_destroyed(self)
 	elseif message_id == hash("set_jump_preset") then
-		local faction = session.get_faction()
-		if star_systems.can_enter(message.system_id, faction) then
-			local _, _, _, _, _, ftl_range_ly = flight_stats(self.ship_id)
-			local dist = self.current_system_id and star_systems.distance(self.current_system_id, message.system_id)
-			if star_systems.in_ftl_range(dist, star_systems.ly_to_map_units(ftl_range_ly)) then
-				self.jump_preset_system = message.system_id
-				local name = star_systems.SYSTEMS[message.system_id].name
-				msg.post("flight_hud#gui", "jump_preset", { text = "PRESET: " .. name .. " [J]" })
-			end
+		-- Also sent by main/outpost.gui_script's Sector Map tab while docked:
+		-- then the jump is measured from the docked system with the active
+		-- ship, and only armed - it can't execute until launch (on_input
+		-- ignores J while not flying).
+		local from_system = self.flying and self.current_system_id or session.docked_system()
+		local ship_id = self.flying and self.ship_id or session.get_ship_id()
+		if preset_in_range(message.system_id, from_system, ship_id) then
+			self.jump_preset_system = message.system_id
+			show_jump_preset(self)
 		end
 	elseif message_id == hash("execute_jump_preset") then
 		-- main/flight_map.gui's [JUMP] button - same effect as pressing J
@@ -1602,6 +1661,14 @@ end
 function on_input(self, action_id, action)
 	if not self.flying then
 		return false
+	end
+	if action_id == hash("toggle_debug_info") and action.pressed then
+		-- F3: the temporary debug readout - works with the map open too.
+		self.debug_info = not self.debug_info
+		if not self.debug_info then
+			msg.post("flight_hud#gui", "debug_info", { text = nil })
+		end
+		return true
 	end
 	if action_id == hash("toggle_map") and action.pressed then
 		-- Checked first, and unconditionally (even while the map's
@@ -1647,14 +1714,13 @@ function on_input(self, action_id, action)
 			end
 			if press.dragged then
 				-- One accumulated delta per movement event: dragging the mouse
-				-- right turns the view right, dragging it down looks down (the
-				-- usual third-person mouse-look sense of "rotating the camera
-				-- around the ship"). Pitch is clamped - see
-				-- CAMERA_ORBIT_MAX_PITCH.
+				-- right turns the view right, dragging it down looks up
+				-- (inverted vertical, per direct instruction). Pitch is
+				-- clamped - see CAMERA_ORBIT_MAX_PITCH.
 				self.camera_orbit_yaw = self.camera_orbit_yaw - (action.x - press.last_x) * CAMERA_ORBIT_YAW_PER_PIXEL
 				self.camera_orbit_pitch = math.max(-CAMERA_ORBIT_MAX_PITCH, math.min(
 					CAMERA_ORBIT_MAX_PITCH,
-					self.camera_orbit_pitch - (action.y - press.last_y) * CAMERA_ORBIT_PITCH_PER_PIXEL))
+					self.camera_orbit_pitch + (action.y - press.last_y) * CAMERA_ORBIT_PITCH_PER_PIXEL))
 				self.camera_orbit_idle = 0 -- restart the two-second countdown
 			end
 			press.last_x, press.last_y = action.x, action.y
@@ -2042,6 +2108,10 @@ function update(self, dt)
 		speed = flight_throttle.target_speed(self.speed_segment, max_speed),
 	})
 
+	if self.debug_info then
+		msg.post("flight_hud#gui", "debug_info", { text = debug_info_text(self, pos, rot, forward, target_speed) })
+	end
+
 	-- Realtime presence (AskUserQuestion's "Realtime presence only" slice) -
 	-- broadcast this ship's own transform at NETWORK_SEND_INTERVAL, not
 	-- every frame (see that constant's own comment).
@@ -2296,16 +2366,20 @@ function update(self, dt)
 	-- derived - the ordinary rear chase with nothing targeted, or, with a
 	-- target locked, a rotation aimed along the ship->target direction so the
 	-- ship sits BETWEEN the camera and the target (camera_aim_at above).
-	-- Both are reached through the same slerp as everything else here: the
-	-- camera eases back around the ship rather than snapping.
+	-- While the offset is applied the camera snaps straight to it (no slerp,
+	-- per direct instruction), so it sits exactly where the drag puts it; the
+	-- return afterwards goes through the same slerp as everything else here,
+	-- so the camera eases back around the ship rather than snapping.
 	local chase_rot = rot * YAW_180
 	local camera_target_rot = chase_rot
+	local camera_snap = false
 	if self.camera_orbit_active then
 		self.camera_orbit_idle = self.camera_orbit_idle + dt
 		if self.camera_orbit_idle < CAMERA_ORBIT_RETURN_DELAY then
 			camera_target_rot = chase_rot
 				* vmath.quat_axis_angle(UP, self.camera_orbit_yaw)
 				* vmath.quat_axis_angle(RIGHT, self.camera_orbit_pitch)
+			camera_snap = true
 		else
 			if target then
 				camera_target_rot = camera_aim_at(pos, chase_rot, target.pos)
@@ -2317,7 +2391,7 @@ function update(self, dt)
 			self.camera_orbit_pitch = 0
 		end
 	end
-	if self.camera_rot == nil then
+	if self.camera_rot == nil or camera_snap then
 		self.camera_rot = camera_target_rot
 	else
 		local t = 1.0 - math.exp(-CAMERA_FOLLOW_SPEED * dt)

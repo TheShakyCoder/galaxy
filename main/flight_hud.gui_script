@@ -153,6 +153,17 @@ local RADAR_TARGET_SCALE = 1.8
 -- six-figure coordinate still fits the width.
 local POSITION_TEXT_SCALE = vmath.vector3(0.37, 0.37, 1)
 
+-- Temporary debug readout (per direct instruction: "a toggle switch that hides
+-- and shows a temporary gui showing the ships position and vector details") -
+-- F3 in main/player_ship.script. Top-left, under the currency bar, in the empty
+-- space above the vitals panel.
+local DEBUG_INFO_POS = vmath.vector3(40, 930, 0) -- top-left corner (PIVOT_NW)
+local DEBUG_INFO_SIZE = vmath.vector3(580, 310, 0)
+local DEBUG_INFO_PADDING = vmath.vector3(14, -12, 0)
+local DEBUG_INFO_BG_COLOR = vmath.vector4(0, 0, 0, 0.55)
+local DEBUG_INFO_TEXT_COLOR = vmath.vector4(0.75, 0.95, 0.75, 1)
+local DEBUG_INFO_TEXT_SCALE = vmath.vector3(0.4, 0.4, 1)
+
 -- Heading marker (per direct instruction): the ship itself, at the centre of
 -- the scope. A 3-vertex pie is an equilateral triangle with one vertex at 0
 -- degrees (3 o'clock - see new_octagon_node's own note in
@@ -633,6 +644,19 @@ function init(self)
 	self.power_text = nil -- last text written, so an unchanged value costs nothing
 	self.hull_text = nil
 	self.position_text = nil
+	-- Temporary debug readout (F3, see the "debug_info" handler): a
+	-- translucent box with the ship's position/vector lines, hidden until
+	-- toggled on.
+	self.debug_bg_node = gui.new_box_node(DEBUG_INFO_POS, DEBUG_INFO_SIZE)
+	gui.set_pivot(self.debug_bg_node, gui.PIVOT_NW)
+	gui.set_color(self.debug_bg_node, DEBUG_INFO_BG_COLOR)
+	gui.set_enabled(self.debug_bg_node, false)
+	self.debug_text_node = gui.new_text_node(DEBUG_INFO_POS + DEBUG_INFO_PADDING, "")
+	gui.set_font(self.debug_text_node, "default_font")
+	gui.set_pivot(self.debug_text_node, gui.PIVOT_NW)
+	gui.set_scale(self.debug_text_node, DEBUG_INFO_TEXT_SCALE)
+	gui.set_color(self.debug_text_node, DEBUG_INFO_TEXT_COLOR)
+	gui.set_enabled(self.debug_text_node, false)
 	self.build_version_node = gui.get_node("build_version")
 	gui.set_text(self.build_version_node, "v" .. version.VERSION)
 
@@ -1007,6 +1031,15 @@ function on_message(self, message_id, message)
 		gui.set_enabled(self.scan_status_node, message.text ~= nil)
 		if message.text then
 			gui.set_text(self.scan_status_node, message.text)
+		end
+	elseif message_id == hash("debug_info") then
+		-- main/player_ship.script's F3 debug readout: text while it's on,
+		-- nil to hide it.
+		local on = message.text ~= nil
+		gui.set_enabled(self.debug_bg_node, on)
+		gui.set_enabled(self.debug_text_node, on)
+		if on then
+			gui.set_text(self.debug_text_node, message.text)
 		end
 	elseif message_id == hash("jump_preset") then
 		-- Persistent readout of main/player_ship.script's own

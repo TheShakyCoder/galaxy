@@ -199,6 +199,21 @@ local MAP_LABEL_OFFSET_Y = 16
 local MAP_LABEL_SCALE = vmath.vector3(0.38, 0.38, 1)
 local MAP_DOT_COLOR = vmath.vector4(0.5, 0.55, 0.62, 1.0) -- neutral grey - every system except the current one
 local MAP_CURRENT_COLOR = vmath.vector4(0.4, 0.9, 1.0, 1.0) -- cyan, same color the reference used for "where you are right now"
+-- FTL range ring + jump selection (per direct instruction: "show the circle of
+-- the available distance that the ship can jump and allow the player to select
+-- a system to jump to. However a player cannot jump until they have undocked").
+-- Same colors/rules as main/flight_map.gui_script, which this mirrors; picking
+-- a reachable system arms player_ship.script's jump preset, which survives
+-- launch (the SuperShips preset model), so the jump itself is J after undocking.
+local MAP_REACHABLE_COLOR = vmath.vector4(0.3, 0.9, 0.4, 1.0) -- green: in FTL range, enterable and affordable
+local MAP_RESTRICTED_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0) -- red: the other faction's home/buffer zone
+local MAP_RANGE_CIRCLE_COLOR = vmath.vector4(0.3, 0.9, 0.4, 0.16) -- translucent fill, as in flight_map.gui_script
+local MAP_RANGE_CIRCLE_SEGMENTS = 48
+local MAP_DOT_SIZE_SELECTED = vmath.vector3(22, 22, 0)
+local MAP_SELECTION_TEXT_POS = vmath.vector3(960, 118, 0) -- under map_panel (bottom edge y=150)
+local MAP_SELECTION_STATUS_POS = vmath.vector3(960, 84, 0)
+local MAP_SELECTION_TEXT_SCALE = vmath.vector3(0.6, 0.6, 1)
+local MAP_DEFAULT_FTL_RANGE_LY = 4.5 -- same fallback as player_ship.script's DEFAULT_FTL_RANGE
 
 -- Icon shown per slot (main/images/icons.atlas) — a filled module's own
 -- icon (catalog.lua's `icon` field) when installed, otherwise that slot
@@ -615,8 +630,29 @@ function init(self)
 		local data_half = vmath.vector3(math.max(max_x - min_x, 1) / 2, math.max(max_y - min_y, 1) / 2, 0)
 		local panel_half_usable = MAP_PANEL_HALF_SIZE - vmath.vector3(MAP_MARGIN, MAP_MARGIN, 0)
 		local map_scale = math.min(panel_half_usable.x / data_half.x, panel_half_usable.y / data_half.y)
+		self.map_scale = map_scale -- screen px per map unit, for the range ring's radius
 
-		self.map_dots = {} -- system_id -> { box = node, label = node }
+		-- Created before the dots so it draws underneath them (creation order).
+		self.map_range_node = gui.new_pie_node(MAP_PANEL_CENTER, vmath.vector3(0, 0, 0))
+		gui.set_perimeter_vertices(self.map_range_node, MAP_RANGE_CIRCLE_SEGMENTS)
+		gui.set_outer_bounds(self.map_range_node, gui.PIEBOUNDS_ELLIPSE)
+		gui.set_fill_angle(self.map_range_node, 360)
+		gui.set_inner_radius(self.map_range_node, 0)
+		gui.set_pivot(self.map_range_node, gui.PIVOT_CENTER)
+		gui.set_color(self.map_range_node, MAP_RANGE_CIRCLE_COLOR)
+		gui.set_enabled(self.map_range_node, false)
+
+		self.map_selection_text_node = gui.new_text_node(MAP_SELECTION_TEXT_POS, "")
+		self.map_selection_status_node = gui.new_text_node(MAP_SELECTION_STATUS_POS, "")
+		for _, node in ipairs({ self.map_selection_text_node, self.map_selection_status_node }) do
+			gui.set_font(node, "default_font")
+			gui.set_pivot(node, gui.PIVOT_CENTER)
+			gui.set_scale(node, MAP_SELECTION_TEXT_SCALE)
+			gui.set_enabled(node, false)
+		end
+		self.map_selected_id = nil
+
+		self.map_dots = {} -- system_id -> { box = node, label = node, pos = vector3 }
 		for id, sys in pairs(star_systems.SYSTEMS) do
 			local pos = MAP_PANEL_CENTER + vmath.vector3(
 				(sys.map_x - data_center.x) * map_scale,
@@ -635,7 +671,7 @@ function init(self)
 			gui.set_color(label, MAP_DOT_COLOR)
 			gui.set_enabled(label, false)
 
-			self.map_dots[id] = { box = box, label = label }
+			self.map_dots[id] = { box = box, label = label, pos = pos }
 		end
 	end
 
@@ -1922,19 +1958,108 @@ end
 -- outpost together, §3's project-layout note - faction is only chosen
 -- once the player clicks through faction_select). The "current" system is
 -- the one whose outpost the player is docked at (docked_system_id).
+-- The active ship's FTL range in map units (star_systems' own distance unit).
+local function map_ftl_range(self)
+	local ly = session.ship_stat(session.get_ship_id(), "ftl_range_ly") or MAP_DEFAULT_FTL_RANGE_LY
+	return star_systems.ly_to_map_units(ly)
+end
+
+-- Jump facts for `id` seen from the docked system - the same rules as
+-- main/flight_map.gui_script's select_system().
+local function map_jump_info(self, id)
+	local current_id = docked_system_id()
+	local dist = current_id and star_systems.distance(current_id, id)
+	local can_enter = star_systems.can_enter(id, session.get_faction())
+	local in_range = can_enter and dist ~= nil and star_systems.in_ftl_range(dist, map_ftl_range(self))
+	local cost = dist and star_systems.hydrogen_cost(dist, session.ftl_cost_per_ly(session.get_ship_id()))
+	local can_afford = cost ~= nil and session.get_hydrogen() >= cost
+	return {
+		is_current = id == current_id,
+		dist = dist,
+		cost = cost,
+		can_enter = can_enter,
+		in_range = in_range,
+		reachable = in_range and can_afford,
+	}
+end
+
 local function refresh_map(self)
-	local faction = session.get_faction()
 	local current_id = docked_system_id()
 	local current_name = (current_id and star_systems.SYSTEMS[current_id] and star_systems.SYSTEMS[current_id].name) or "-"
 	gui.set_text(self.map_current_text_node, "Current system: " .. current_name)
+
+	local current_dot = current_id and self.map_dots[current_id]
+	if current_dot then
+		local diameter = map_ftl_range(self) * self.map_scale * 2
+		gui.set_position(self.map_range_node, current_dot.pos)
+		gui.set_size(self.map_range_node, vmath.vector3(diameter, diameter, 0))
+	end
+	gui.set_enabled(self.map_range_node, current_dot ~= nil and self.active_page == "map")
+
 	for id, dot in pairs(self.map_dots) do
-		local is_current = id == current_id
-		local color = is_current and MAP_CURRENT_COLOR or MAP_DOT_COLOR
-		local size = is_current and MAP_DOT_SIZE_CURRENT or MAP_DOT_SIZE
+		local info = map_jump_info(self, id)
+		local color
+		if info.is_current then
+			color = MAP_CURRENT_COLOR
+		elseif not info.can_enter then
+			color = MAP_RESTRICTED_COLOR
+		elseif info.reachable then
+			color = MAP_REACHABLE_COLOR
+		else
+			color = MAP_DOT_COLOR
+		end
+		local size = MAP_DOT_SIZE
+		if info.is_current then
+			size = MAP_DOT_SIZE_CURRENT
+		elseif id == self.map_selected_id then
+			size = MAP_DOT_SIZE_SELECTED
+		end
 		gui.set_color(dot.box, color)
 		gui.set_color(dot.label, color)
 		gui.set_size(dot.box, size)
 	end
+end
+
+-- Hides the selection lines under the map.
+local function clear_map_selection_text(self)
+	gui.set_enabled(self.map_selection_text_node, false)
+	gui.set_enabled(self.map_selection_status_node, false)
+end
+
+-- Click on a map dot: describe it, and arm it as the jump preset when it's
+-- reachable. Docked, there is no [JUMP]: player_ship.script keeps the preset
+-- through launch, and J (or the flight map's [JUMP]) executes it.
+local function select_map_system(self, id)
+	local sys = star_systems.SYSTEMS[id]
+	if not sys then
+		return
+	end
+	self.map_selected_id = id
+	local info = map_jump_info(self, id)
+	local status
+	if info.is_current then
+		status = "You are docked here"
+	elseif not info.can_enter then
+		status = "Restricted - enemy home/buffer zone"
+	elseif not info.in_range then
+		status = "Out of FTL range"
+	elseif not info.reachable then
+		status = "Not enough Hydrogen"
+	else
+		status = "Jump destination set - undock, then press J to jump"
+		msg.post("player_ship#script", "set_jump_preset", { system_id = id })
+	end
+	local details = sys.name
+	if not info.is_current and info.dist then
+		details = string.format("%s  -  %.1f ly  -  %d Hydrogen  -  Threat %d",
+			sys.name, star_systems.map_units_to_ly(info.dist), info.cost, sys.threat or 0)
+	end
+	gui.set_text(self.map_selection_text_node, details)
+	gui.set_text(self.map_selection_status_node, status)
+	gui.set_color(self.map_selection_status_node, info.reachable and MAP_REACHABLE_COLOR or MAP_DOT_COLOR)
+	gui.set_enabled(self.map_selection_text_node, true)
+	gui.set_enabled(self.map_selection_status_node, true)
+	refresh_map(self)
 end
 
 -- Loads main/images/skins/<name>.jpg as a GUI texture once per Skins-tab
@@ -2138,6 +2263,11 @@ local function set_page(self, page)
 		gui.set_enabled(dot.box, page == "map")
 		gui.set_enabled(dot.label, page == "map")
 	end
+	if page ~= "map" then
+		-- refresh_map() re-enables the ring on the Map tab
+		gui.set_enabled(self.map_range_node, false)
+		clear_map_selection_text(self)
+	end
 
 	if page == "overview" then
 		clear_hover(self)
@@ -2175,7 +2305,11 @@ local function set_page(self, page)
 		self.cards = {}
 		clear_card_list(self.ship_cards)
 		self.ship_cards = {}
-		refresh_map(self)
+		if self.map_selected_id then
+			select_map_system(self, self.map_selected_id) -- re-describe the armed/last-picked system
+		else
+			refresh_map(self)
+		end
 	end
 
 	-- Leaving the Ships tab entirely (overview/fitting): clears the
@@ -2751,6 +2885,9 @@ function on_message(self, message_id, message, sender)
 		self.launching = false
 		self.launch_countdown_time_left = 0
 		self.cooldown_text = nil -- force update() to redo the cooldown label too (it only rewrites it when the text changes)
+		-- The jump preset player_ship.script still has armed (it survives
+		-- docking), so the Sector Map tab shows it; nil once it was used.
+		self.map_selected_id = message.preset_system_id
 		gui.set_enabled(self.launch_countdown_node, false)
 		local faction = session.get_faction()
 		local home_name, faction_label, ship_name = ship_overview_text(faction)
@@ -3085,6 +3222,14 @@ function on_input(self, action_id, action)
 	end
 
 	if action.pressed then
+		if self.active_page == "map" then
+			for id, dot in pairs(self.map_dots) do
+				if gui.pick_node(dot.box, action.x, action.y) then
+					select_map_system(self, id)
+					return true
+				end
+			end
+		end
 		if hits(self.tab_nodes.overview, action) then
 			set_page(self, "overview")
 			return true
