@@ -38,8 +38,8 @@ def main():
         assert len(row['slots'])==8
         if f=='swarm':
             # Turned frames cross both rim rings axially. Their back faces
-            # are 10 m behind the ad plane and must clear the 366 m rims.
-            assert all(r-10>366 for _,r,_ in row['slots']), 'Swarm rim obscures turned billboard'
+            # are 10 m behind the ad plane and must clear the slimmed 274.5 m rims.
+            assert all(r-10>274.5 for _,r,_ in row['slots']), 'Swarm rim obscures turned billboard'
         for a,r,z in row['slots']:
             # Transform all four billboard corners around the actual rotor axis.
             for x,y,zz in ad:rotor.append((-math.sin(a)*x+math.cos(a)*r,math.cos(a)*x+math.sin(a)*r,z+zz))

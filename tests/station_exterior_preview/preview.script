@@ -57,7 +57,7 @@ function update(self,dt)
  elseif self.mode=="end" then offset=vmath.vector3(0,0,d);up=vmath.vector3(0,1,0)
  elseif self.mode=="screen" then
   local f=swarm and "swarm" or "accord";local theta=math.pi/4+(self.slot-1)*math.pi/4+self.stations[f].phase
-  local radius=(swarm and 362 or 306)*math.cos(math.pi/8)+(swarm and 43 or 10)
+  local radius=swarm and 286.5 or 306*.75*math.cos(math.pi/8)+10
   local n=vmath.vector3(math.cos(theta),math.sin(theta),0)
   target=vmath.vector3(0,swarm and 142.5 or 135,swarm and 618 or 0)+n*radius
   offset=n*320;up=vmath.vector3(0,0,1)

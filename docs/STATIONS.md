@@ -32,8 +32,8 @@ and its eight screens rotate; docks, supports and stem remain fixed. Periods are
 
 | Station | Triangles, including ads | Full swept dimensions | Model draw upper bound |
 | --- | ---: | --- | ---: |
-| Accord | 12,352 | 628.04 x 628.04 x 756 m | 10 |
-| Swarm | 17,600 | 765.83 x 765.83 x 717 m | 10 |
+| Accord | 12,352 | 471.03 x 471.03 x 756 m | 10 |
+| Swarm | 17,600 | 586.41 x 586.41 x 717 m | 10 |
 
 The independent GLB checker includes billboard corners and the complete analytic
 rotation envelope, not just one angle. Both fit an 800 m cube. Both meshes together
@@ -56,10 +56,12 @@ billboard and its frame is rotated 90 degrees clockwise when viewed from
 outside relative to the original layout, including the lettering. The artwork
 now spans 100 m tangentially and 200 m along the station axis; source PNGs
 and UV proportions are unchanged. This aligns the text with the Y-up flight
-view at zero pitch on the side of the station. No hull rescaling or collision
-changes accompany this rotation. Swarm panels and frames sit 34 m farther outward to clear its rim rings.
-Together with the taller frames, the overall Swarm envelope is now
-765.83 x 765.83 x 717 m; both stations still fit the existing 800 m limit.
+view at zero pitch on the side of the station. The drum/crown bodies are now
+25% narrower radially, with unchanged axial length. Billboard artwork and
+frames retain their full size and move inward to suit the slimmer body.
+Swarm frame backs remain 2 m beyond the slimmed cap rims, keeping the text clear.
+Docks, stems, root positions and all collision/hit-box settings are unchanged.
+Both stations still fit the existing 800 m limit.
 
 Supply an opaque 1024x512 RGB PNG,
 2:1 aspect, without baked perspective. Keep essential text/logos 64 pixels from
@@ -144,7 +146,7 @@ Both factions' existing billboard artwork and frames turn clockwise by a
 quarter-turn relative to the original station layout. Native Y-up, zero-pitch
 side views: [Accord](../artifacts/stations/ads-accord-level.jpg) and
 [Swarm](../artifacts/stations/ads-swarm-level.jpg). Close-up review confirmed
-uncropped artwork and clear lettering after the Swarm rim-clearance adjustment.
+uncropped artwork and clear lettering after slimming the drum/crown and retaining Swarm rim clearance.
 
 Geometry/UV/winding/bounds validation, byte-identical regeneration, station
 lifecycle/ad API harnesses, and preview/full-game HTML5 builds passed. The

@@ -14,21 +14,21 @@ children: "accord_outpost_ad7"
 children: "accord_outpost_ad8"
 position { x: 0 y: 135 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad1" data: "components { id: \"model\" component: \"/assets/models/stations/ads/verge.model\" }"
-position { x: 206.9752014379511 y: 206.9752014379511 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 156.9991680314297 y: 156.9991680314297 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad2" data: "components { id: \"model\" component: \"/assets/models/stations/ads/tope.model\" }"
-position { x: 1.7923142917575493e-14 y: 292.70713694845375 z: 0 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 1.3595438038075038e-14 y: 222.0303527113403 z: 0 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad3" data: "components { id: \"model\" component: \"/assets/models/stations/ads/molt.model\" }"
-position { x: -206.97520143795106 y: 206.9752014379511 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -156.99916803142966 y: 156.9991680314297 z: 0 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad4" data: "components { id: \"model\" component: \"/assets/models/stations/ads/hydrogen.model\" }"
-position { x: -292.70713694845375 y: 3.5846285835150985e-14 z: 0 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -222.0303527113403 y: 2.7190876076150077e-14 z: 0 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad5" data: "components { id: \"model\" component: \"/assets/models/stations/ads/mutual.model\" }"
-position { x: -206.97520143795114 y: -206.97520143795106 z: 0 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -156.99916803142972 y: -156.99916803142966 z: 0 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad6" data: "components { id: \"model\" component: \"/assets/models/stations/ads/current.model\" }"
-position { x: -5.376942875272647e-14 y: -292.70713694845375 z: 0 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -4.078631411422511e-14 y: -222.0303527113403 z: 0 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad7" data: "components { id: \"model\" component: \"/assets/models/stations/ads/civic.model\" }"
-position { x: 206.97520143795123 y: -206.97520143795094 z: 0 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 156.99916803142978 y: -156.99916803142955 z: 0 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "accord_outpost_ad8" data: "components { id: \"model\" component: \"/assets/models/stations/ads/logistics.model\" }"
-position { x: 292.70713694845375 y: -7.169257167030197e-14 z: 0 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 222.0303527113403 y: -5.4381752152300154e-14 z: 0 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_rotor" data: "components { id: \"model\" component: \"/assets/models/stations/swarm/rotor.model\" }"
 children: "swarm_outpost_ad1"
 children: "swarm_outpost_ad2"
@@ -40,21 +40,21 @@ children: "swarm_outpost_ad7"
 children: "swarm_outpost_ad8"
 position { x: 0 y: 142.5 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad1" data: "components { id: \"model\" component: \"/assets/models/stations/ads/verge.model\" }"
-position { x: 266.8934882336457 y: 266.8934882336457 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 202.58609280994588 y: 202.58609280994588 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: 0.38268343236508984 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad2" data: "components { id: \"model\" component: \"/assets/models/stations/ads/tope.model\" }"
-position { x: 2.3111803250574184e-14 y: 377.44439076908577 z: 618 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 1.7543065397785835e-14 y: 286.5 z: 618 } rotation { x: 0 y: 0 z: 1.0 w: 6.123233995736766e-17 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad3" data: "components { id: \"model\" component: \"/assets/models/stations/ads/molt.model\" }"
-position { x: -266.89348823364566 y: 266.8934882336457 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -202.58609280994585 y: 202.58609280994588 z: 618 } rotation { x: 0 y: 0 z: 0.9238795325112867 w: -0.3826834323650897 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad4" data: "components { id: \"model\" component: \"/assets/models/stations/ads/hydrogen.model\" }"
-position { x: -377.44439076908577 y: 4.622360650114837e-14 z: 618 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -286.5 y: 3.508613079557167e-14 z: 618 } rotation { x: 0 y: 0 z: 0.7071067811865476 w: -0.7071067811865475 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad5" data: "components { id: \"model\" component: \"/assets/models/stations/ads/mutual.model\" }"
-position { x: -266.8934882336457 y: -266.89348823364566 z: 618 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -202.5860928099459 y: -202.58609280994585 z: 618 } rotation { x: 0 y: 0 z: 0.3826834323650899 w: -0.9238795325112867 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad6" data: "components { id: \"model\" component: \"/assets/models/stations/ads/current.model\" }"
-position { x: -6.933540975172254e-14 y: -377.44439076908577 z: 618 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: -5.26291961933575e-14 y: -286.5 z: 618 } rotation { x: 0 y: 0 z: 1.2246467991473532e-16 w: -1.0 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad7" data: "components { id: \"model\" component: \"/assets/models/stations/ads/civic.model\" }"
-position { x: 266.8934882336459 y: -266.8934882336455 z: 618 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 202.586092809946 y: -202.5860928099457 z: 618 } rotation { x: 0 y: 0 z: -0.38268343236509006 w: -0.9238795325112866 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "swarm_outpost_ad8" data: "components { id: \"model\" component: \"/assets/models/stations/ads/logistics.model\" }"
-position { x: 377.44439076908577 y: -9.244721300229674e-14 z: 618 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
+position { x: 286.5 y: -7.017226159114334e-14 z: 618 } rotation { x: 0 y: 0 z: -0.7071067811865475 w: -0.7071067811865477 } scale3 { x: 1 y: 1 z: 1 } }
 embedded_instances { id: "station_visuals" data: "components { id: \"script\" component: \"/main/stations.script\" }"
 position { x: 0 y: 0 z: 0 } rotation { x: 0 y: 0 z: 0 w: 1 } scale3 { x: 1 y: 1 z: 1 } }
 # STATION EXTERIORS END

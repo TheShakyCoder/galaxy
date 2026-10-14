@@ -3,50 +3,50 @@
     {
       "faction": "accord",
       "triangles": 12352,
-      "swept_radius": 314.01951420541855,
+      "swept_radius": 235.51463565406394,
       "swept_aabb_min": [
-        -314.01951420541855,
-        -179.01951420541855,
+        -235.51463565406394,
+        -100.51463565406394,
         -378.0
       ],
       "swept_aabb_max": [
-        314.01951420541855,
-        449.01951420541855,
+        235.51463565406394,
+        370.5146356540639,
         378.0
       ],
       "dimensions": [
-        628.0390284108371,
-        628.0390284108371,
+        471.0292713081279,
+        471.0292713081278,
         756.0
       ],
-      "conservative_root_distance": 586.9433738762796,
+      "conservative_root_distance": 529.3062395568975,
       "model_draws": 10
     },
     {
       "faction": "swarm",
       "triangles": 17600,
-      "swept_radius": 382.9149499841866,
+      "swept_radius": 293.2047066470796,
       "swept_aabb_min": [
-        -382.9149499841866,
-        -240.4149499841866,
+        -293.2047066470796,
+        -150.7047066470796,
         8.0
       ],
       "swept_aabb_max": [
-        382.9149499841866,
-        525.4149499841866,
+        293.2047066470796,
+        435.7047066470796,
         725.0
       ],
       "dimensions": [
-        765.8298999683732,
-        765.8298999683732,
+        586.4094132941592,
+        586.4094132941592,
         717.0
       ],
-      "conservative_root_distance": 895.3691248121555,
+      "conservative_root_distance": 845.850809182339,
       "model_draws": 10
     }
   ],
   "byte_identical_rebuild": true,
-  "source_bytes": 2339343,
+  "source_bytes": 2339211,
   "texture_memory_rgb8_mips_bytes": 50331654,
   "texture_memory_rgba8_mips_upper_bytes": 67108872,
   "notes": [
