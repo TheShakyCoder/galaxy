@@ -136,6 +136,11 @@ package.loaded["main.network"] = {
 	set_asteroids_callback = function() end,
 	fire = function() end,
 	report = function() end,
+	-- Outpost state for the HUD's Outpost Progress readout and targeting
+	-- (nothing known in these tests).
+	outpost_state = function() return nil end,
+	outpost_returns_in = function() return 0 end,
+	asteroid_state = function() return nil end,
 }
 package.loaded["main.profile"] = { flush = function(fn) if fn then fn() end end, save = function() end }
 package.loaded["main.audio"] = {

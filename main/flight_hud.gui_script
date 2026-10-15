@@ -111,7 +111,7 @@
 local layout = require "main.ui.flight_layout"
 local RADAR_CENTER = vmath.vector3(1760, 150, 0)
 local RADAR_RADIUS = 110 -- px, half of radar_panel's own 220x220 size in main/flight_hud.gui
-local DOT_POOL_SIZE = 16
+local DOT_POOL_SIZE = 64 -- ships plus NPC drones (up to 34 in a threat-50 system, plan.md §2.18)
 local DOT_SIZE = vmath.vector3(6, 6, 0)
 local DOT_COLOR = vmath.vector4(0.9, 0.25, 0.25, 1.0)
 
@@ -240,6 +240,8 @@ end
 
 -- Target marker colours by relation to the player (BSGO: red enemies,
 -- blue friendlies) and the targeted object's panel in the same colour.
+-- NPC drones on the radar (plan.md §2.18): the machine orange their models use.
+local DRONE_DOT_COLOR = vmath.vector4(1.0, 0.6, 0.2, 1.0)
 local RELATION_COLORS = {
 	enemy = vmath.vector4(1.0, 0.32, 0.26, 1.0),
 	friendly = vmath.vector4(0.35, 0.72, 1.0, 1.0),
@@ -915,7 +917,7 @@ local function refresh_radar(self, message)
 				gui.set_color(node, RADAR_TARGET_COLOR)
 				gui.set_size(node, DOT_SIZE * RADAR_TARGET_SCALE)
 			else
-				gui.set_color(node, DOT_COLOR)
+				gui.set_color(node, c.kind == "drone" and DRONE_DOT_COLOR or DOT_COLOR)
 				gui.set_size(node, DOT_SIZE)
 			end
 			gui.set_enabled(node, true)

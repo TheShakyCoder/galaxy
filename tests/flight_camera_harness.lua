@@ -127,7 +127,39 @@ mat.__mul = function(a, b)
 	return { x = r[0], y = r[1], z = r[2], w = r[3] }
 end
 
+-- General 4x4 inverse (Gauss-Jordan), for pick_target's unprojected click ray.
+local function mat_inv(a)
+	local n, inv = {}, {}
+	for i = 1, 16 do n[i] = a.m[i]; inv[i] = (i - 1) % 5 == 0 and 1 or 0 end
+	for c = 0, 3 do
+		local p = c
+		for r = c + 1, 3 do
+			if math.abs(n[r * 4 + c + 1]) > math.abs(n[p * 4 + c + 1]) then p = r end
+		end
+		for k = 0, 3 do
+			n[c * 4 + k + 1], n[p * 4 + k + 1] = n[p * 4 + k + 1], n[c * 4 + k + 1]
+			inv[c * 4 + k + 1], inv[p * 4 + k + 1] = inv[p * 4 + k + 1], inv[c * 4 + k + 1]
+		end
+		local d = n[c * 4 + c + 1]
+		for k = 0, 3 do
+			n[c * 4 + k + 1] = n[c * 4 + k + 1] / d
+			inv[c * 4 + k + 1] = inv[c * 4 + k + 1] / d
+		end
+		for r = 0, 3 do
+			if r ~= c then
+				local f = n[r * 4 + c + 1]
+				for k = 0, 3 do
+					n[r * 4 + k + 1] = n[r * 4 + k + 1] - f * n[c * 4 + k + 1]
+					inv[r * 4 + k + 1] = inv[r * 4 + k + 1] - f * inv[c * 4 + k + 1]
+				end
+			end
+		end
+	end
+	return new_matrix(inv)
+end
+
 vmath = {
+	inv = mat_inv,
 	vector3 = v3,
 	vector4 = function(x, y, z, w) return { x = x, y = y, z = z, w = w } end,
 	quat = function(x, y, z, w)
@@ -225,6 +257,11 @@ package.loaded["main.network"] = {
 	set_asteroids_callback = function() end,
 	fire = function() end,
 	report = function() end,
+	-- Outpost state for the HUD's Outpost Progress readout and targeting
+	-- (nothing known in these tests).
+	outpost_state = function() return nil end,
+	outpost_returns_in = function() return 0 end,
+	asteroid_state = function() return nil end,
 }
 package.loaded["main.profile"] = { flush = function(fn) if fn then fn() end end, save = function() end }
 package.loaded["main.audio"] = {
@@ -376,6 +413,21 @@ check("a drag back to the press pixel is not a click: nothing gets targeted",
 check("...but the drag did engage the manual orbit", ship_state.camera_orbit_active == true)
 fly(ship_state, 5)
 
+-- ---- Holding the button still keeps the view: the countdown waits for the release ----
+press(960, 540)
+move(900, 540)
+fly(ship_state, 5) -- button still down, mouse not moving
+check("while the button is held the countdown doesn't run",
+	ship_state.camera_orbit_idle == 0 and ship_state.camera_orbit_yaw ~= 0)
+check("...and the camera stays where the player put it",
+	angle_between(camera_forward(), chase_forward()) > 0.3)
+release(900, 540)
+fly(ship_state, 1.9)
+check("after the release the camera still waits out the two seconds",
+	angle_between(camera_forward(), chase_forward()) > 0.3)
+fly(ship_state, 5)
+check("...then returns behind the ship", vlen(camera_forward() - chase_forward()) < 1e-3)
+
 -- ---- Two seconds after the last manual movement, with no target: rear chase ----
 press(960, 540)
 move(900, 540) -- 60 px = 0.48 rad of yaw
@@ -437,7 +489,9 @@ fly(ship_state, 5)
 press(960, 540)
 move(960, 520)
 for i = 1, 50 do move(960, 520 + i * 100) end -- 5000 px of drag downwards
-check("pitch is clamped at CAMERA_ORBIT_MAX_PITCH", ship_state.camera_orbit_pitch <= -1.4 + 1e-9)
+-- Dragging down looks up (the vertical axis is inverted, per direct
+-- instruction), so the clamp is reached at +MAX_PITCH here.
+check("pitch is clamped at CAMERA_ORBIT_MAX_PITCH", math.abs(math.abs(ship_state.camera_orbit_pitch) - 1.4) < 1e-9)
 fly(ship_state, 1)
 check("...so the camera is never left looking straight down its own up vector",
 	math.abs(camera_forward().y) < 0.99)

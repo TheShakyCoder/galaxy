@@ -1,0 +1,131 @@
+-- Procedural drone population per system (plan.md §2.18, per direct
+-- instruction: "each system spawns their own set of drones ... procedural,
+-- and should vary in ability depending on the threat level of the system").
+-- Pure Lua, no engine calls; tools/sync_server_rules.py copies it to the
+-- server, which runs the drones (nakama-server/modules/system_match.lua).
+--
+-- population(system_id, salt) returns the same list every time for the same
+-- system and salt: the seed is the system id plus a per-server salt, so a
+-- system never changes on one server but servers can differ. From the
+-- system's `threat` (main/data/star_systems.lua, clamped to 50):
+--   * threat 0: no drones;
+--   * count = base + per_threat x threat (4 at threat 1 .. 34 at threat 50);
+--   * tier (level/hull/power) from the threat band (main/data/drones.lua TIERS);
+--   * types: only those whose min_threat the system reaches;
+--   * groups of 2-5 drones sharing an anchor - an asteroid of the system's
+--     field (60 %) or a random point - kept clear of both outposts.
+
+local drones = require("main.data.drones")
+local star_systems = require("main.data.star_systems")
+local asteroids = require("main.data.asteroids")
+
+local M = {}
+
+local function hash(s)
+	local h = 0
+	for i = 1, #s do
+		h = (h * 31 + string.byte(s, i)) % 2147483647
+	end
+	return h
+end
+
+-- Deterministic [0, 1) noise, the same sin-hash main/data/asteroids.lua uses.
+local function prng(seed, index, salt)
+	local x = math.sin(seed * 12.9898 + index * 78.233 + salt * 37.719) * 43758.5453
+	return x - math.floor(x)
+end
+
+function M.threat(system_id)
+	local sys = star_systems.SYSTEMS[system_id]
+	return math.max(0, math.min(sys and sys.threat or 0, drones.POPULATION.max_threat))
+end
+
+-- The drone types a system of `threat` can have, weakest first.
+function M.types_for_threat(threat)
+	local list = {}
+	for _, id in ipairs(drones.TYPE_ORDER) do
+		if threat >= drones.TYPES[id].min_threat then
+			table.insert(list, id)
+		end
+	end
+	return list
+end
+
+function M.count_for_threat(threat)
+	if threat <= 0 then
+		return 0
+	end
+	return math.floor(drones.POPULATION.base + drones.POPULATION.per_threat * threat + 0.5)
+end
+
+local function far_from_outposts(system_id, x, z)
+	local clear = drones.POPULATION.outpost_clearance_m
+	for _, faction in ipairs({ "accord", "swarm" }) do
+		local p = star_systems.outpost_position(system_id, faction)
+		if p and (p.x - x) ^ 2 + (p.z - z) ^ 2 < clear * clear then
+			return false
+		end
+	end
+	return true
+end
+
+-- An anchor for group `g`: an asteroid's position or a random point inside
+-- the system, clear of both outposts (a few tries, then the system centre).
+local function anchor_for(system_id, seed, g)
+	local field = asteroids.field_for(system_id)
+	local width, height, depth = star_systems.system_size(system_id)
+	for attempt = 0, 7 do
+		local k = g * 8 + attempt
+		local x, y, z
+		if #field > 0 and prng(seed, k, 11) < drones.POPULATION.asteroid_anchor_share then
+			local a = field[1 + math.floor(prng(seed, k, 12) * #field)]
+			x, y, z = a.x, a.y, a.z
+		else
+			x = (prng(seed, k, 13) - 0.5) * width * 0.7
+			y = (prng(seed, k, 14) - 0.5) * height * 0.2
+			z = (prng(seed, k, 15) - 0.5) * depth * 0.7
+		end
+		if far_from_outposts(system_id, x, z) then
+			return { x = x, y = y, z = z }
+		end
+	end
+	return { x = 0, y = 0, z = 0 }
+end
+
+-- The system's drones: a list of { index, group, type, tier, level,
+-- hull_points, power, anchor = {x,y,z} }, in a fixed order.
+function M.population(system_id, salt)
+	local threat = M.threat(system_id)
+	local count = M.count_for_threat(threat)
+	if count == 0 then
+		return {}
+	end
+	local seed = hash(system_id .. "|" .. tostring(salt or ""))
+	local tier = drones.tier_for_threat(threat).id
+	local types = M.types_for_threat(threat)
+	local list, g = {}, 0
+	local pop = drones.POPULATION
+	while #list < count do
+		g = g + 1
+		local size = pop.group_min + math.floor(prng(seed, g, 1) * (pop.group_max - pop.group_min + 1))
+		size = math.min(size, count - #list)
+		local anchor = anchor_for(system_id, seed, g)
+		for _ = 1, size do
+			local i = #list + 1
+			local type_id = types[1 + math.floor(prng(seed, i, 2) * #types)]
+			local stats = drones.TYPES[type_id].by_tier[tier]
+			-- Spread the group around its anchor.
+			local angle = prng(seed, i, 3) * 2 * math.pi
+			local r = prng(seed, i, 4) * drones.BEHAVIOUR.patrol_radius_m * 0.5
+			list[i] = {
+				index = i, group = g, type = type_id, tier = tier,
+				level = stats.level, hull_points = stats.hull_points, power = stats.power,
+				anchor = anchor,
+				start = { x = anchor.x + r * math.cos(angle), y = anchor.y, z = anchor.z + r * math.sin(angle) },
+			}
+		end
+	end
+	return list
+end
+
+return M

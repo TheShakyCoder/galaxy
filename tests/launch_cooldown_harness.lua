@@ -44,22 +44,25 @@ check("launching arms no cooldown", session.launch_cooldown_left() == 0)
 --    cooldown could simply be skipped by never reporting the dock.
 check("second launch refused while flying", session.launch() == false)
 
--- 3. Docking starts the 10-second cooldown.
+-- 3. Docking adds no delay (2026-10-15): launch straight away.
 check("dock clears flying", session.dock() == true and session.is_flying() == false)
-check("dock arms a 10s cooldown", session.launch_cooldown_left() == 10)
+check("dock arms no delay", session.launch_cooldown_left() == 0)
+check("launch right after docking allowed", session.launch() == true)
+session.dock()
 
--- 4. ...during which launching is refused, and changes nothing.
+-- 4. A repair delays the next launch by 20 s, refusing (and changing nothing)
+--    until then.
+check("repair arms a 20s delay", session.repair_delay() == true and session.launch_cooldown_left() == 20)
 local system_before = session.get_current_system()
-advance(9)
-check("9s in: still cooling down", math.abs(session.launch_cooldown_left() - 1) < 0.001)
-check("9s in: launch refused", session.launch() == false)
+advance(19)
+check("19s in: launch refused", session.launch() == false)
 check("refused launch stayed docked", session.is_flying() == false)
 check("refused launch changed nothing", session.get_current_system() == system_before)
 
 -- 5. ...and allowed again once it elapses.
 advance(1)
-check("10s in: cooldown over", session.launch_cooldown_left() == 0)
-check("10s in: launch allowed", session.launch() == true)
+check("20s in: delay over", session.launch_cooldown_left() == 0)
+check("20s in: launch allowed", session.launch() == true)
 check("flying again", session.is_flying() == true)
 
 -- 6. A session that ENDS in space (reload / close / quit mid-flight) is not a
@@ -80,20 +83,23 @@ check("59s in: still refused", session.launch() == false)
 advance(1)
 check("60s in: allowed", session.launch() == true)
 
--- 7. A session that ends DOCKED gets the 60s too: reloading at the outpost
---    is ending the game just the same.
+-- 7. A session that ends DOCKED (or a fresh load from the website) adds no
+--    delay; a repair delay still running carries over in the profile.
 session.dock()
-advance(2) -- 8 seconds of the dock cooldown left
 local docked_save = session.serialize()
 session.reset()
 session.restore(docked_save)
 session.resume()
-check("docked session: 60s cooldown", session.launch_cooldown_left() == 60)
-check("docked session: launch refused", session.launch() == false)
-advance(59)
-check("docked session: still refused at 59s", session.launch() == false)
-advance(1)
-check("docked session: allowed after the 60s", session.launch() == true)
+check("docked session: no delay", session.launch_cooldown_left() == 0)
+session.repair_delay()
+advance(5)
+docked_save = session.serialize()
+session.reset()
+session.restore(docked_save)
+session.resume()
+check("docked session: the repair delay carries over (15s left)", math.abs(session.launch_cooldown_left() - 15) < 0.001)
+advance(15)
+check("docked session: allowed once it ends", session.launch() == true)
 
 -- 8. A dock never SHORTENS a cooldown that is already running.
 session.reset()
@@ -101,7 +107,8 @@ session.restore({ faction = "accord", flying = true, launch_blocked_until = now 
 session.resume()
 check("resume keeps the longer cooldown already running", session.launch_cooldown_left() == 500)
 session.dock()
-check("dock did not shorten it to 10s", session.launch_cooldown_left() > 10)
+session.repair_delay()
+check("dock/repair did not shorten it", session.launch_cooldown_left() == 500)
 
 -- 9. The profiles' timestamps are on the SERVER's clock, so the game lines its
 --    own clock up with the server's before reading them (session.sync_clock,
@@ -118,9 +125,10 @@ check("server-clock cooldown elapses with the host clock", session.launch() == t
 
 -- 10. Both fields round-trip through the profile and are cleared by reset().
 session.dock()
+session.repair_delay()
 session.restore(session.serialize())
 check("round trip keeps flying", session.is_flying() == false)
-check("round trip keeps the cooldown", session.launch_cooldown_left() == 10)
+check("round trip keeps the delay", session.launch_cooldown_left() == 20)
 session.reset()
 check("reset clears the cooldown", session.launch_blocked_until == nil)
 check("reset clears flying", session.flying == nil)
@@ -161,14 +169,9 @@ local relaunch = server_apply(flying_save, "launch")
 check("server: relaunch refused while the save says flying", relaunch == false)
 
 local docked, docked_save = server_apply(flying_save, "dock")
-check("server: dock allowed and stamped on the server clock", docked == true and docked_save.launch_blocked_until == server_seconds + 10)
-
-server_seconds = server_seconds + 9
-local early = server_apply(docked_save, "launch")
-check("server: launch 9s after docking refused", early == false)
-server_seconds = server_seconds + 1
+check("server: dock allowed, no delay", docked == true and (docked_save.launch_blocked_until or 0) <= server_seconds)
 local in_time = server_apply(docked_save, "launch")
-check("server: launch 10s after docking allowed", in_time == true)
+check("server: launch straight after docking allowed", in_time == true)
 
 -- The player left the game mid-flight: the save still says flying, so the
 -- session that follows starts with the long cooldown instead.
@@ -180,9 +183,9 @@ server_seconds = server_seconds + 60
 local after_wait = server_apply(resumed_save, "launch")
 check("server: launch 60s after that allowed", after_wait == true)
 
--- Reloading while DOCKED arms the same 60s on the server.
+-- Reloading while DOCKED adds nothing on the server either.
 local resumed_docked, resumed_docked_save = server_apply(docked_save, "resume")
-check("server: resume after a docked session arms 60s", resumed_docked == true and resumed_docked_save.launch_blocked_until == server_seconds + 60)
+check("server: resume after a docked session adds no delay", resumed_docked == true and (resumed_docked_save.launch_blocked_until or 0) <= server_seconds)
 
 if failures > 0 then
 	print(failures .. " FAILURE(S)")

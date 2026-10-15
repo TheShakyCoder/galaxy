@@ -1,0 +1,413 @@
+-- In-flight map of the CURRENT system (M key, per direct instruction: "when in
+-- flight pressing m brings up a map of the local system. All asteroids are
+-- shown along with planetoids and both outposts if present. All friendly
+-- ships are shown and all enemy ships and drones are shown if they are within
+-- the ship's sensor range").
+--
+-- A top-down X/Z plot of the whole system, north (+Z) up. Screen right is
+-- world -X, the same handedness the flight view and the radar use (see
+-- main/flight_hud.gui_script's scope_position: with the bow along +Z, world
+-- +X is off the PORT side).
+--
+-- main/player_ship.script owns the open/closed flag (self.system_map_open)
+-- and, while open, sends a small "system_map" message every frame: the
+-- system, the ship's own position/heading, sensor range and target. The
+-- objects themselves are read straight from the shared registries (shared
+-- Lua state, game.project shared_state = 1) rather than sent - a whole
+-- system's asteroids would not fit in a Defold message:
+--   * asteroids  - main/asteroid_registry.lua (+ main/network.lua
+--                  asteroid_state to hide depleted ones), all of them;
+--   * outposts   - main/network.lua outpost_state + main/outpost_rules.lua
+--                  positions: each faction's outpost, beacon and platforms
+--                  that are standing, always shown;
+--   * ships      - main/remote_registry.lua: friendly always, enemy only
+--                  within sensor range.
+--   * drones     - main/drone_registry.lua, only within sensor range.
+-- Planetoids don't exist in the game yet; they have their own pool and
+-- colour here, to be fed once they do. A click on a blip posts "set_target" to player_ship.
+-- Every node is created once in init() as a pool and reused.
+
+local asteroid_registry = require "main.asteroid_registry"
+local asteroid_data = require "main.data.asteroids"
+local remote_registry = require "main.remote_registry"
+local drone_registry = require "main.drone_registry"
+local network = require "main.network"
+local outpost_rules = require "main.outpost_rules"
+local star_systems = require "main.data.star_systems"
+
+local REDRAW_SEC = 0.1
+
+local MAP_CENTER = vmath.vector3(960, 520, 0)
+local MAP_SIZE = 880 -- px across the system's larger horizontal extent
+local CLICK_RADIUS = 14 -- px
+
+local ASTEROID_POOL = 200
+local PLANETOID_POOL = 16
+local SHIP_POOL = 64
+local DRONE_POOL = 64
+local OUTPOST_POOL = 12 -- 2 factions x (outpost + beacon + 4 platforms)
+
+local COLOR_BG = vmath.vector4(0.02, 0.03, 0.05, 0.9)
+local COLOR_FRAME = vmath.vector4(0.25, 0.35, 0.5, 0.35)
+local COLOR_GRID = vmath.vector4(0.25, 0.35, 0.5, 0.12)
+local COLOR_TEXT = vmath.vector4(0.85, 0.9, 1, 1)
+local COLOR_DIM = vmath.vector4(0.6, 0.66, 0.75, 1)
+local COLOR_ASTEROID = vmath.vector4(0.55, 0.58, 0.62, 0.8) -- not analysed
+local COLOR_PLANETOID = vmath.vector4(0.75, 0.6, 0.45, 1)
+local COLOR_FRIENDLY = vmath.vector4(0.3, 0.9, 0.45, 1)
+local COLOR_ENEMY = vmath.vector4(0.95, 0.3, 0.3, 1)
+local COLOR_DRONE = vmath.vector4(1, 0.6, 0.2, 1)
+local COLOR_OWN = vmath.vector4(0.4, 0.9, 1, 1)
+local COLOR_SENSOR = vmath.vector4(0.4, 0.9, 1, 0.07)
+local COLOR_TARGET = vmath.vector4(1, 0.85, 0.2, 1)
+
+local OUTPOST_SIZE = { outpost = 16, beacon = 8, platform = 7 }
+local SHIP_SIZE = 8
+local OWN_DOT = 12
+local OWN_LINE_LENGTH = 34 -- px, heading line from the ship's centre
+local OWN_LINE_WIDTH = 3
+local OWN_TIP_LENGTH = 11 -- px, each barb of the arrow tip
+local OWN_TIP_ANGLE = 30 -- degrees each barb opens from the heading line
+local DRONE_SIZE = 7
+
+local function new_box(size, color)
+	local n = gui.new_box_node(MAP_CENTER, vmath.vector3(size, size, 0))
+	gui.set_pivot(n, gui.PIVOT_CENTER)
+	gui.set_color(n, color)
+	gui.set_enabled(n, false)
+	return n
+end
+
+local function new_disc(size, color, vertices)
+	local n = gui.new_pie_node(MAP_CENTER, vmath.vector3(size, size, 0))
+	gui.set_perimeter_vertices(n, vertices or 24)
+	gui.set_outer_bounds(n, gui.PIEBOUNDS_ELLIPSE)
+	gui.set_fill_angle(n, 360)
+	gui.set_inner_radius(n, 0)
+	gui.set_pivot(n, gui.PIVOT_CENTER)
+	gui.set_color(n, color)
+	gui.set_enabled(n, false)
+	return n
+end
+
+local function new_text(pos, text, scale, color, pivot)
+	local n = gui.new_text_node(pos, text)
+	gui.set_font(n, "default_font")
+	gui.set_pivot(n, pivot or gui.PIVOT_CENTER)
+	gui.set_scale(n, vmath.vector3(scale, scale, 1))
+	gui.set_color(n, color)
+	gui.set_enabled(n, false)
+	return n
+end
+
+local function pool(count, make)
+	local list = {}
+	for i = 1, count do
+		list[i] = { node = make(), id = nil }
+	end
+	return list
+end
+
+function init(self)
+	self.static = {}
+	local bg = gui.new_box_node(vmath.vector3(960, 540, 0), vmath.vector3(1920, 1080, 0))
+	gui.set_color(bg, COLOR_BG)
+	gui.set_enabled(bg, false)
+	table.insert(self.static, bg)
+	local frame = gui.new_box_node(MAP_CENTER, vmath.vector3(MAP_SIZE + 8, MAP_SIZE + 8, 0))
+	gui.set_color(frame, COLOR_FRAME)
+	gui.set_enabled(frame, false)
+	table.insert(self.static, frame)
+	local inner = gui.new_box_node(MAP_CENTER, vmath.vector3(MAP_SIZE, MAP_SIZE, 0))
+	gui.set_color(inner, vmath.vector4(0.01, 0.015, 0.03, 1))
+	gui.set_enabled(inner, false)
+	table.insert(self.static, inner)
+	-- A 4 x 4 grid, so distances can be judged (see the scale line).
+	for i = 1, 3 do
+		local offset = (i / 4 - 0.5) * MAP_SIZE
+		local v = gui.new_box_node(MAP_CENTER + vmath.vector3(offset, 0, 0), vmath.vector3(1, MAP_SIZE, 0))
+		local h = gui.new_box_node(MAP_CENTER + vmath.vector3(0, offset, 0), vmath.vector3(MAP_SIZE, 1, 0))
+		for _, n in ipairs({ v, h }) do
+			gui.set_color(n, COLOR_GRID)
+			gui.set_enabled(n, false)
+			table.insert(self.static, n)
+		end
+	end
+	self.title = new_text(vmath.vector3(960, 1020, 0), "", 0.8, COLOR_TEXT)
+	self.scale_text = new_text(vmath.vector3(960, 985, 0), "", 0.45, COLOR_DIM)
+	self.legend = new_text(vmath.vector3(960, 45, 0),
+		"You  -  Friendly  -  Enemy  -  Drone  -  Outposts (square), beacon, sentry platforms  -  Asteroids (analysed: resource colour)"
+		.. "\nEnemies and drones only within sensor range (shaded).  Click a blip to target it.  M to close.", 0.42, COLOR_DIM)
+	for _, n in ipairs({ self.title, self.scale_text, self.legend }) do
+		table.insert(self.static, n)
+	end
+
+	-- Draw order = creation order: sensor range, asteroids, planetoids,
+	-- outposts, ships, drones, own ship, target ring.
+	self.sensor = new_disc(10, COLOR_SENSOR, 48)
+	self.asteroids = pool(ASTEROID_POOL, function() return new_disc(6, COLOR_ASTEROID, 10) end)
+	self.planetoids = pool(PLANETOID_POOL, function() return new_disc(14, COLOR_PLANETOID, 20) end)
+	self.outposts = pool(OUTPOST_POOL, function() return new_box(OUTPOST_SIZE.outpost, COLOR_FRIENDLY) end)
+	-- Other ships are round dots: the map doesn't know their headings.
+	self.ships = pool(SHIP_POOL, function() return new_disc(SHIP_SIZE, COLOR_FRIENDLY, 16) end)
+	self.drones = pool(DRONE_POOL, function() return new_disc(DRONE_SIZE, COLOR_DRONE, 4) end)
+	-- The player's own ship: a round marker with a heading line and an arrow
+	-- tip showing which way it is flying (per direct instruction - a 3-vertex
+	-- pie drew as a plain square, which showed no direction).
+	self.own = new_disc(OWN_DOT, COLOR_OWN, 20)
+	self.own_line = new_box(1, COLOR_OWN)
+	gui.set_pivot(self.own_line, gui.PIVOT_W) -- grows outward from the ship
+	gui.set_size(self.own_line, vmath.vector3(OWN_LINE_LENGTH, OWN_LINE_WIDTH, 0))
+	self.own_tip = { new_box(1, COLOR_OWN), new_box(1, COLOR_OWN) }
+	for _, n in ipairs(self.own_tip) do
+		gui.set_pivot(n, gui.PIVOT_E) -- each barb ends at the arrow's point
+		gui.set_size(n, vmath.vector3(OWN_TIP_LENGTH, OWN_LINE_WIDTH, 0))
+	end
+	self.target_ring = new_box(1, COLOR_TARGET)
+	gui.set_alpha(self.target_ring, 0.35)
+
+	self.open = false
+	self.scale = 1
+end
+
+-- World X/Z -> map pixels (north = +Z up, screen right = world -X).
+local function to_screen(self, x, z)
+	return vmath.vector3(MAP_CENTER.x - x * self.scale, MAP_CENTER.y + z * self.scale, 0)
+end
+
+local function inside(p)
+	local h = MAP_SIZE / 2
+	return math.abs(p.x - MAP_CENTER.x) <= h and math.abs(p.y - MAP_CENTER.y) <= h
+end
+
+local function hide_pool(list, from)
+	for i = from, #list do
+		gui.set_enabled(list[i].node, false)
+		list[i].id = nil
+	end
+end
+
+local function set_open(self, open)
+	self.open = open
+	self.redraw = 0
+	for _, n in ipairs(self.static) do
+		gui.set_enabled(n, open)
+	end
+	if not open then
+		for _, list in ipairs({ self.asteroids, self.planetoids, self.outposts, self.ships, self.drones }) do
+			hide_pool(list, 1)
+		end
+		gui.set_enabled(self.sensor, false)
+		gui.set_enabled(self.own, false)
+		gui.set_enabled(self.own_line, false)
+		for _, n in ipairs(self.own_tip) do
+			gui.set_enabled(n, false)
+		end
+		gui.set_enabled(self.target_ring, false)
+		self.last = nil
+	end
+end
+
+-- Places `items` ({x, z, id, color?, size?}) into `list`'s nodes; returns
+-- the screen position of the one whose id is `target_id`, if drawn.
+local function draw_pool(self, list, items, default_color, target_id)
+	local n, target_pos = 0, nil
+	for _, item in ipairs(items or {}) do
+		local p = to_screen(self, item.x, item.z)
+		if n < #list and inside(p) then
+			n = n + 1
+			local slot = list[n]
+			gui.set_position(slot.node, p)
+			gui.set_color(slot.node, item.color or default_color)
+			if item.size then
+				gui.set_size(slot.node, vmath.vector3(item.size, item.size, 0))
+			end
+			gui.set_enabled(slot.node, true)
+			slot.id = item.id
+			if item.id and item.id == target_id then
+				target_pos = p
+			end
+		end
+	end
+	hide_pool(list, n + 1)
+	return target_pos
+end
+
+local function relation_color(relation)
+	return relation == "friendly" and COLOR_FRIENDLY or COLOR_ENEMY
+end
+
+-- Everything to plot right now, from the shared registries (see header).
+local function collect(self, m)
+	local system_id = m.system_id
+	local own_faction = m.faction
+	local own = m.own or { x = 0, z = 0 }
+	local range2 = (m.sensor_range or 0) ^ 2
+	local function in_range(x, z)
+		return (x - own.x) ^ 2 + (z - own.z) ^ 2 <= range2
+	end
+
+	local asteroids = {}
+	for _, a in ipairs(asteroid_registry.asteroids) do
+		local st = network.asteroid_state(system_id, a.index)
+		if not (st and st.available == false) then
+			local resource = a.analysed and asteroid_data.RESOURCE_BY_ID[a.resource]
+			local tint = resource and resource.tint
+			table.insert(asteroids, {
+				x = a.pos.x, z = a.pos.z, id = "asteroid:" .. a.index,
+				color = tint and vmath.vector4(tint[1], tint[2], tint[3], 1) or nil,
+				size = math.max(4, math.min(12, a.radius * 2 * self.scale)),
+			})
+		end
+	end
+
+	local outposts = {}
+	for _, faction in ipairs({ "accord", "swarm" }) do
+		local st = network.outpost_state(system_id, faction)
+		local p = system_id and star_systems.outpost_position(system_id, faction)
+		local available = p and (st and st.available or (st == nil and outpost_rules.permanent(system_id, faction)))
+		if available then
+			local relation = faction == own_faction and "friendly" or "enemy"
+			table.insert(outposts, { x = p.x, z = p.z, id = "outpost:" .. faction, relation = relation, kind = "outpost" })
+			if st and st.beacon and st.beacon.available then
+				local b = outpost_rules.beacon_position(p)
+				table.insert(outposts, { x = b.x, z = b.z, id = "beacon:" .. faction, relation = relation, kind = "beacon" })
+			end
+			for slot, part in ipairs(st and st.platforms or {}) do
+				if part.available then
+					local q = outpost_rules.platform_position(p, slot)
+					table.insert(outposts, { x = q.x, z = q.z, id = "platform:" .. faction .. ":" .. slot, relation = relation, kind = "platform" })
+				end
+			end
+		end
+	end
+
+	local ships = {}
+	for user_id, ship in pairs(remote_registry.ships) do
+		local friendly = ship.faction == own_faction
+		if ship.pos and (friendly or in_range(ship.pos.x, ship.pos.z)) then
+			table.insert(ships, { x = ship.pos.x, z = ship.pos.z, id = user_id, relation = friendly and "friendly" or "enemy" })
+		end
+	end
+
+	-- NPC drones (plan.md §2.18), like enemies: only within sensor range.
+	local drones = {}
+	for index, d in pairs(drone_registry.drones) do
+		if not d.down and d.pos and in_range(d.pos.x, d.pos.z) then
+			table.insert(drones, { x = d.pos.x, z = d.pos.z, id = "drone:" .. index })
+		end
+	end
+
+	return asteroids, {}, outposts, ships, drones -- planetoids: none in the game yet
+end
+
+local function draw(self, m)
+	local extent = math.max(m.width or 10000, m.depth or 10000)
+	self.scale = MAP_SIZE / extent
+	gui.set_text(self.title, (m.system_name or "?") .. " - system map")
+	gui.set_text(self.scale_text, string.format("Grid square: %s m    Sensor range: %s m",
+		tostring(math.floor(extent / 4 + 0.5)), tostring(math.floor((m.sensor_range or 0) + 0.5))))
+
+	local own = m.own
+	if own then
+		local p = to_screen(self, own.x, own.z)
+		local d = (m.sensor_range or 0) * 2 * self.scale
+		gui.set_position(self.sensor, p)
+		gui.set_size(self.sensor, vmath.vector3(d, d, 0))
+		gui.set_enabled(self.sensor, true)
+		-- The hull's heading (hx, hz) is screen direction (-hx, hz) on this
+		-- map; a box pivoted at its west edge points screen-right at rotation 0.
+		local angle = math.deg(math.atan2(own.hz or 1, -(own.hx or 0)))
+		local rad = math.rad(angle)
+		local tip = p + vmath.vector3(math.cos(rad) * OWN_LINE_LENGTH, math.sin(rad) * OWN_LINE_LENGTH, 0)
+		local visible = inside(p)
+		gui.set_position(self.own, p)
+		gui.set_enabled(self.own, visible)
+		gui.set_position(self.own_line, p)
+		gui.set_rotation(self.own_line, vmath.vector3(0, 0, angle))
+		gui.set_enabled(self.own_line, visible)
+		-- Two barbs meeting at the tip, angled back from the heading.
+		for i, n in ipairs(self.own_tip) do
+			local barb = angle + (i == 1 and 1 or -1) * OWN_TIP_ANGLE
+			gui.set_position(n, tip)
+			gui.set_rotation(n, vmath.vector3(0, 0, barb))
+			gui.set_enabled(n, visible)
+		end
+	end
+
+	local target_id = m.target_id
+	local target_pos = nil
+	local asteroids, planetoids, outpost_list, ship_list, drones = collect(self, m)
+	target_pos = draw_pool(self, self.asteroids, asteroids, COLOR_ASTEROID, target_id) or target_pos
+	target_pos = draw_pool(self, self.planetoids, planetoids, COLOR_PLANETOID, target_id) or target_pos
+	local outposts = {}
+	for _, o in ipairs(outpost_list) do
+		table.insert(outposts, { x = o.x, z = o.z, id = o.id, color = relation_color(o.relation), size = OUTPOST_SIZE[o.kind] or 8 })
+	end
+	target_pos = draw_pool(self, self.outposts, outposts, COLOR_FRIENDLY, target_id) or target_pos
+	local ships = {}
+	for _, s in ipairs(ship_list) do
+		table.insert(ships, { x = s.x, z = s.z, id = s.id, color = relation_color(s.relation) })
+	end
+	target_pos = draw_pool(self, self.ships, ships, COLOR_FRIENDLY, target_id) or target_pos
+	target_pos = draw_pool(self, self.drones, drones, COLOR_DRONE, target_id) or target_pos
+
+	if target_pos then
+		gui.set_position(self.target_ring, target_pos)
+		gui.set_size(self.target_ring, vmath.vector3(22, 22, 0))
+		gui.set_enabled(self.target_ring, true)
+	else
+		gui.set_enabled(self.target_ring, false)
+	end
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("toggle") then
+		set_open(self, message.open)
+		if message.open then
+			msg.post(".", "acquire_input_focus")
+		else
+			msg.post(".", "release_input_focus")
+		end
+	elseif message_id == hash("system_map") and self.open then
+		self.last = message
+	end
+end
+
+function update(self, dt)
+	if not (self.open and self.last) then
+		return
+	end
+	self.redraw = (self.redraw or 0) - dt
+	if self.redraw <= 0 then
+		self.redraw = REDRAW_SEC
+		draw(self, self.last)
+	end
+end
+
+-- Clicks on a blip target it (nearest within CLICK_RADIUS); every other
+-- input passes through to flight, so the ship keeps flying with the map open.
+function on_input(self, action_id, action)
+	if not self.open or action_id ~= hash("touch") or not action.pressed then
+		return false
+	end
+	local best, best_d = nil, CLICK_RADIUS * CLICK_RADIUS
+	for _, list in ipairs({ self.drones, self.ships, self.outposts, self.planetoids, self.asteroids }) do
+		for _, slot in ipairs(list) do
+			if slot.id and gui.is_enabled(slot.node) then
+				local p = gui.get_position(slot.node)
+				local d = (p.x - action.x) ^ 2 + (p.y - action.y) ^ 2
+				if d < best_d then
+					best, best_d = slot.id, d
+				end
+			end
+		end
+	end
+	if best then
+		msg.post("player_ship#script", "set_target", { id = best })
+		return true
+	end
+	-- Inside the map area, swallow the click (don't target something in the
+	-- 3D view behind the map); outside it, let flight have it.
+	return math.abs(action.x - MAP_CENTER.x) <= MAP_SIZE / 2 and math.abs(action.y - MAP_CENTER.y) <= MAP_SIZE / 2
+end

@@ -26,6 +26,7 @@ would be today (a new day shows fresh ones before any progress is saved).
 local nk = require("nakama")
 local ranks = require("main.data.ranks")
 local rewards = require("main.data.xp_rewards")
+local drone_data = require("main.data.drones")
 local assignment_data = require("main.data.assignments")
 
 local M = {}
@@ -98,6 +99,9 @@ function M.grant(profile, event, units, now_ms)
 		xp = math.floor(units / rewards.OUTPOST_DAMAGE_PER_XP)
 	elseif event == "outpost_destroyed" then
 		xp = math.floor(units)
+	elseif event == "drone_destroyed" then
+		-- units = the drone's level (main/data/drones.lua REWARDS, ours)
+		xp = math.floor(units * drone_data.REWARDS.xp_per_level)
 	elseif event == "asteroid_analysed" then
 		xp = units * rewards.ASTEROID_FIRST_ANALYSIS
 	elseif event == "system_arrival" then

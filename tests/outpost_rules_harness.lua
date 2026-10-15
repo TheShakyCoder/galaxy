@@ -107,6 +107,18 @@ end
 local b = rules.beacon_position(pos)
 check("beacon toward the centre", math.abs(b.x) < math.abs(pos.x) and near(math.sqrt((b.x - pos.x) ^ 2 + (b.z - pos.z) ^ 2), outposts.stat("beacon_offset_m")))
 
+-- Spine cylinder: centred on the spine, not the object's origin.
+local sp = rules.spine({ x = -4000, y = 0, z = -4000 }, "swarm")
+check("swarm spine centre offset", sp.centre.x == -4000 and sp.centre.y == 142.5 and sp.centre.z == -4000 + 366.5)
+check("a point beside the spine is 20 m from its surface", near(rules.spine_distance(sp, { x = sp.centre.x + 100, y = sp.centre.y, z = sp.centre.z }), 20))
+check("a point inside is at 0", rules.spine_distance(sp, sp.centre) == 0)
+local t = rules.spine_ray(sp, { x = sp.centre.x - 1000, y = sp.centre.y, z = sp.centre.z }, { x = 1, y = 0, z = 0 })
+check("a ray at the side hits the wall at 920 m", t and near(t, 920))
+t = rules.spine_ray(sp, { x = sp.centre.x, y = sp.centre.y, z = sp.centre.z - 2000 }, { x = 0, y = 0, z = 1 })
+check("a ray down the axis hits the end cap at 1620 m", t and near(t, 1620))
+check("a ray that passes above misses", rules.spine_ray(sp, { x = sp.centre.x - 1000, y = sp.centre.y + 200, z = sp.centre.z }, { x = 1, y = 0, z = 0 }) == nil)
+check("a ray pointing away misses", rules.spine_ray(sp, { x = sp.centre.x - 1000, y = sp.centre.y, z = sp.centre.z }, { x = -1, y = 0, z = 0 }) == nil)
+
 -- Nearest outpost.
 local only = { sol = true, polaris = true }
 check("here when available", rules.nearest_available("sol", "accord", function(id) return id == "sol" end) == "sol")

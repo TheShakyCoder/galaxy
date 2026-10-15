@@ -83,6 +83,7 @@ browser space MMOs of the early 2010s, but its setting, names and art are its ow
 | T | Match target's speed |
 | Y | Follow friendly target |
 | N | Star map |
+| M | System map: asteroids, outposts and defences, friendly ships, and enemies within sensor range. Click a blip to target it |
 | J | Execute FTL jump |
 | K | Dock at a nearby outpost, or cancel a jump |
 | Shift+1–9 | Switch the weapon in slot W1–W9 on or off. Weapons that are on fire by themselves at your target (enemy outposts only, so far) |
@@ -202,10 +203,10 @@ render/               custom render script
 nakama-server/        Nakama + Postgres (local and Coolify compose files)
 deploy/, Dockerfile   web build and nginx config
 docs/                 deployment guide
+plan.md               full design document and open questions
 tools/                build/check scripts for models, icons and themes, plus the
                       release helpers (rules sync, website version check) and the
                       local dev build (build_game.sh, run by laravel's ddev hook)
-plan.md               full design document and open questions
 ```
 
 ## Roadmap

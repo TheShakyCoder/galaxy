@@ -202,6 +202,73 @@ function M.beacon_position(pos)
 	return { x = pos.x - pos.x / len * offset, y = pos.y, z = pos.z - pos.z / len * offset }
 end
 
+-- The outpost's collision cylinder around its spine (main/data/outposts.lua
+-- collision + the faction skin's spine_centre), for an outpost object at
+-- `pos`: { centre, a, b, radius, half_length } - `a`/`b` are the ends of the
+-- spine's axis segment (world {x,y,z}; outposts are never rotated, so the
+-- axis is world Z).
+function M.spine(pos, faction)
+	local c = outposts.stat("collision")
+	local offset = outposts.skin(faction).spine_centre
+	local centre = { x = pos.x + offset.x, y = pos.y + offset.y, z = pos.z + offset.z }
+	local h = c.length_m / 2
+	return {
+		centre = centre, radius = c.radius_m, half_length = h,
+		a = { x = centre.x, y = centre.y, z = centre.z - h },
+		b = { x = centre.x, y = centre.y, z = centre.z + h },
+	}
+end
+
+-- Radius of the sphere around the spine centre that just contains the
+-- cylinder - the target marker's size.
+function M.spine_bounding_radius()
+	local c = outposts.stat("collision")
+	return math.sqrt(c.radius_m * c.radius_m + (c.length_m / 2) ^ 2)
+end
+
+-- Distance from point `p` to the cylinder's SURFACE (0 inside it): how far
+-- a weapon has to reach. Measured to the axis segment, less the radius -
+-- exact along the sides, rounded (capsule-like) past the flat ends.
+function M.spine_distance(spine, p)
+	local z = math.max(spine.a.z, math.min(spine.b.z, p.z))
+	local dx, dy, dz = p.x - spine.centre.x, p.y - spine.centre.y, p.z - z
+	return math.max(0, math.sqrt(dx * dx + dy * dy + dz * dz) - spine.radius)
+end
+
+-- Where a ray (origin `o`, unit direction `d`, tables {x,y,z}) first meets
+-- the cylinder, as a distance along the ray, or nil if it misses. Solves the
+-- side wall, then the two flat ends.
+function M.spine_ray(spine, o, d)
+	local best = nil
+	local ox, oy = o.x - spine.centre.x, o.y - spine.centre.y
+	local a = d.x * d.x + d.y * d.y
+	local r2 = spine.radius * spine.radius
+	if a > 1e-9 then
+		local b = 2 * (ox * d.x + oy * d.y)
+		local c = ox * ox + oy * oy - r2
+		local disc = b * b - 4 * a * c
+		if disc >= 0 then
+			local sq = math.sqrt(disc)
+			for _, t in ipairs({ (-b - sq) / (2 * a), (-b + sq) / (2 * a) }) do
+				local z = o.z + t * d.z
+				if t >= 0 and z >= spine.a.z and z <= spine.b.z and (not best or t < best) then
+					best = t
+				end
+			end
+		end
+	end
+	if math.abs(d.z) > 1e-9 then
+		for _, zc in ipairs({ spine.a.z, spine.b.z }) do
+			local t = (zc - o.z) / d.z
+			local x, y = ox + t * d.x, oy + t * d.y
+			if t >= 0 and x * x + y * y <= r2 and (not best or t < best) then
+				best = t
+			end
+		end
+	end
+	return best
+end
+
 -- The system with an available outpost of `faction` nearest to `system_id`
 -- (itself if it has one). `available(system_id)` answers per system. A
 -- faction's permanent outposts guarantee an answer; the home system is the

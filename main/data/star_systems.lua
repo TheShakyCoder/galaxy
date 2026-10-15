@@ -110,6 +110,13 @@ local function system_extent(sys)
 		sys.depth_m or M.DEFAULT_SYSTEM_SIZE_M
 end
 
+-- `system_id`'s world extent: width (X), height (Y), depth (Z) in metres,
+-- or the defaults for an unknown id. Used by the in-flight system map
+-- (main/system_map.gui_script) to fit the system on screen.
+function M.system_size(system_id)
+	return system_extent(M.SYSTEMS[system_id] or {})
+end
+
 -- Default outpost position (decided, per direct instruction): opposite
 -- diagonal corners of the system's horizontal (X/Z) extent, on the Y=0
 -- plane, inset a flat M.OUTPOST_CORNER_INSET (1000 units) from each corner

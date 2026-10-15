@@ -24,6 +24,8 @@ local star_systems = require("main.data.star_systems")
 local outposts = require("main.data.outposts")
 local sentry_platforms = require("main.data.sentry_platforms")
 local outpost_rules = require("main.outpost_rules")
+local drone_registry = require("main.drone_registry")
+local drone_data = require("main.data.drones")
 local flight_throttle = require("main.flight_throttle")
 local session = require("main.session")
 local catalog = require("main.data.modules.catalog")
@@ -466,9 +468,9 @@ local CAMERA_ORBIT_PITCH_PER_PIXEL = 0.008
 -- parallel to its own up vector, where the horizon it renders becomes
 -- undefined.
 local CAMERA_ORBIT_MAX_PITCH = 1.4 -- ~80 degrees
--- How long the camera sits still after the player's last manual movement
+-- How long the camera sits still after the player RELEASES the button
 -- before it starts easing back on its own (per direct instruction:
--- "countdown two seconds").
+-- "countdown two seconds"; held = no countdown, also per direct instruction).
 local CAMERA_ORBIT_RETURN_DELAY = 2.0
 -- A press only counts as a camera drag (rather than a click-to-target) once
 -- the cursor has moved this far from where the button went down - the same
@@ -601,6 +603,7 @@ function init(self)
 	self.docking = false
 	self.dock_time_left = 0
 	self.map_open = false
+	self.system_map_open = false -- M: the current system's map (main/system_map.gui_script)
 	self.jump_preset_system = nil
 	self.jumping = false
 	self.jump_time_left = 0
@@ -733,6 +736,7 @@ local function start_flight(self)
 	self.docking = false
 	self.dock_time_left = 0
 	self.map_open = false
+	self.system_map_open = false -- M: the current system's map (main/system_map.gui_script)
 	-- self.jump_preset_system is deliberately NOT reset here - same
 	-- "survives everything except actually being consumed/reselected"
 	-- persistence the source project's own version describes.
@@ -968,6 +972,10 @@ local function complete_dock(self)
 		self.map_open = false
 		msg.post("flight_map#gui", "toggle", { open = false })
 	end
+	if self.system_map_open then
+		self.system_map_open = false
+		msg.post("system_map#gui", "toggle", { open = false })
+	end
 	msg.post("flight_camera#camera", "disable")
 	msg.post("flight_hud#gui", "hide_flight_hud")
 	-- Stop the starfield with the flight - while docked the world is drawn
@@ -1006,6 +1014,11 @@ local function toggle_map(self)
 		return
 	end
 	self.map_open = not self.map_open
+	if self.map_open and self.system_map_open then
+		-- one map at a time
+		self.system_map_open = false
+		msg.post("system_map#gui", "toggle", { open = false })
+	end
 	local _, _, _, _, _, ftl_range_ly = flight_stats(self.ship_id)
 	msg.post("flight_map#gui", "toggle", {
 		open = self.map_open,
@@ -1013,6 +1026,17 @@ local function toggle_map(self)
 		ftl_range = star_systems.ly_to_map_units(ftl_range_ly), -- flight_map.gui_script/star_systems.in_ftl_range both work in map units, not light-years
 		preset_system_id = self.jump_preset_system, -- lets flight_map.gui_script re-highlight whatever's already armed when reopening, rather than forgetting it visually
 	})
+end
+
+-- M: the current system's map (main/system_map.gui_script, per direct
+-- instruction). Unlike the sector map it doesn't take over the flight keys -
+-- the ship keeps flying while it's open; update() feeds it every frame.
+local function toggle_system_map(self)
+	self.system_map_open = not self.system_map_open
+	if self.system_map_open and self.map_open then
+		toggle_map(self) -- one map at a time: close the sector map
+	end
+	msg.post("system_map#gui", "toggle", { open = self.system_map_open })
 end
 
 -- Actually starts the FTL countdown for whatever's currently armed in
@@ -1097,11 +1121,15 @@ end
 -- "asteroid:<index>" (main/asteroid_registry.lua).
 local OUTPOST_TARGET_PREFIX = "outpost:"
 local BEACON_TARGET_PREFIX = "beacon:"
+local DRONE_TARGET_PREFIX = "drone:" -- NPC drones (plan.md §2.18), "drone:<index>"
 local PLATFORM_TARGET_PREFIX = "platform:"
 local ASTEROID_TARGET_PREFIX = "asteroid:"
 local DEFAULT_SENSOR_RANGE = 3000 -- m, for a ship without its own sensor_range_m
 local SHIP_RADIUS = 15 -- m, rough size of a ship for clicking and the marker
-local OUTPOST_RADIUS = outposts.stat("radius_m") -- m, same for an outpost (main/data/outposts.lua)
+-- An outpost's target marker covers its collision cylinder (main/data/
+-- outposts.lua `collision`): the sphere that just contains it, centred on
+-- the spine. Clicking tests the cylinder itself (pick_target).
+local OUTPOST_RADIUS = outpost_rules.spine_bounding_radius()
 local CLICK_MIN_RADIUS = 28 -- px: small or distant objects are still easy to click
 local FACTION_NAMES = { accord = "Accord", swarm = "Swarm" }
 
@@ -1168,8 +1196,12 @@ local function resolve_target(self, id)
 		if not p or (st and st.present == false) then
 			return nil
 		end
+		-- Aim at the middle of the station's spine, not the object's origin
+		-- (the models sit up to ~370 m away from it).
+		local spine = outpost_rules.spine(p, faction)
 		return {
-			id = id, pos = vmath.vector3(p.x, p.y, p.z), radius = OUTPOST_RADIUS, kind = "outpost", faction = faction,
+			id = id, pos = vmath.vector3(spine.centre.x, spine.centre.y, spine.centre.z), radius = OUTPOST_RADIUS,
+			spine = spine, kind = "outpost", faction = faction,
 			relation = faction == session.get_faction() and "friendly" or "enemy",
 			name = outposts.skin(faction, st and st.tier).name,
 			destroyed = not session.outpost_available(self.current_system_id, faction),
@@ -1184,6 +1216,19 @@ local function resolve_target(self, id)
 			relation = faction == session.get_faction() and "friendly" or "enemy",
 			name = outposts.BEACON.faction_skins[faction].name,
 		} or nil
+	end
+	local drone_index = tonumber(id:match("^drone:(%d+)$"))
+	if drone_index then
+		local d = drone_registry.drones[drone_index]
+		if not d or d.down or not d.pos then
+			return nil
+		end
+		local t = drone_data.TYPES[d.type]
+		return {
+			id = id, pos = d.pos, radius = t and t.radius_m or 12, kind = "drone", index = drone_index,
+			relation = "enemy", -- hostile to everyone (the Robots faction)
+			name = drone_data.display_name(d.type, d.tier), level = d.level, hp = d.hp, max_hp = d.max_hp,
+		}
 	end
 	local slot
 	faction, slot = platform_target(id)
@@ -1236,6 +1281,12 @@ local function target_candidates(self)
 	end
 	for _, a in ipairs(asteroid_registry.asteroids) do
 		table.insert(list, asteroid_target(a))
+	end
+	for index in pairs(drone_registry.drones) do
+		local drone = resolve_target(self, DRONE_TARGET_PREFIX .. index)
+		if drone then
+			table.insert(list, drone)
+		end
 	end
 	return list
 end
@@ -1356,9 +1407,31 @@ local function pick_target(self, x, y)
 	y = cy + (y - cy) * (self.gui_half_h / cy)
 	local best, best_dist = nil, math.huge
 	local cam = self.camera_pos or go.get_position()
+	-- The ray under the cursor, for targets with a collision shape (outposts'
+	-- spine cylinders): unproject the click at the near and far planes.
+	local ray_o, ray_d = nil, nil
+	if self.view_proj then
+		local inv = vmath.inv(self.view_proj)
+		local nx = (x - cx) / self.gui_half_w
+		local ny = (y - cy) / self.gui_half_h
+		local near = inv * vmath.vector4(nx, ny, -1, 1)
+		local far = inv * vmath.vector4(nx, ny, 1, 1)
+		local a = vmath.vector3(near.x / near.w, near.y / near.w, near.z / near.w)
+		local b = vmath.vector3(far.x / far.w, far.y / far.w, far.z / far.w)
+		ray_o, ray_d = a, vmath.normalize(b - a)
+	end
 	for _, target in ipairs(target_candidates(self)) do
 		local sx, sy, size, in_front = project(self, target.pos, target.radius)
-		if sx and in_front then
+		if target.spine then
+			-- Outposts: a hit on the cylinder itself, or (still easy to click
+			-- when far away) within CLICK_MIN_RADIUS px of its centre.
+			local t = ray_o and outpost_rules.spine_ray(target.spine, ray_o, ray_d)
+			local near_centre = sx and in_front and (sx - x) ^ 2 + (sy - y) ^ 2 <= CLICK_MIN_RADIUS * CLICK_MIN_RADIUS
+			local dist = t or (near_centre and vmath.length(target.pos - cam)) or nil
+			if dist and dist < best_dist then
+				best, best_dist = target, dist
+			end
+		elseif sx and in_front then
 			local reach = math.max(size, CLICK_MIN_RADIUS)
 			local dx, dy = sx - x, sy - y
 			local dist = vmath.length(target.pos - cam)
@@ -1446,6 +1519,7 @@ local function update_firing(self, target)
 		(target.kind == "outpost" and target.faction ~= session.get_faction() and not target.permanent
 			and session.outpost_available(self.current_system_id, target.faction))
 		or ((target.kind == "beacon" or target.kind == "platform") and target.faction ~= session.get_faction())
+		or target.kind == "drone"
 		or target.kind == "asteroid")
 	if can_fire then
 		slots = weapons_on_slots(self)
@@ -1621,10 +1695,11 @@ local function update_weapon_fire(self, dt, target, pos, rot)
 			if module and module.max_range_m and timer <= 0 then
 				local to_target = target.pos - pos
 				local dist = vmath.length(to_target)
-				-- Asteroids, beacons and platforms are measured to their surface
-				-- (as the server does); the outpost to its centre.
+				-- Asteroids, beacons and platforms are measured to their surface,
+				-- the outpost to its spine cylinder's surface (as the server does).
 				local surface = target.kind ~= "outpost"
-				local reach = surface and dist - target.radius or dist
+				local reach = target.spine and outpost_rules.spine_distance(target.spine, pos)
+					or (surface and dist - target.radius or dist)
 				local forward = vmath.rotate(rot, SHIP_FORWARD)
 				local dir = dist > 0 and to_target / dist or forward
 				if reach <= module.max_range_m and vmath.dot(forward, dir) >= math.cos(math.rad((module.arc or 0) / 2)) then
@@ -1769,6 +1844,10 @@ end
 function on_message(self, message_id, message)
 	if message_id == hash("start_flight") then
 		start_flight(self)
+	elseif message_id == hash("set_target") then
+		-- main/system_map.gui_script: a blip was clicked on the system map.
+		self.target_id = message.id
+		self.follow_friend = false
 	elseif message_id == hash("ship_destroyed") then
 		ship_destroyed(self)
 	elseif message_id == hash("set_jump_preset") then
@@ -1810,6 +1889,12 @@ function on_input(self, action_id, action)
 		-- Checked first, and unconditionally (even while the map's
 		-- already open - this is also how it closes again).
 		toggle_map(self)
+		return true
+	end
+	if action_id == hash("toggle_system_map") and action.pressed then
+		if self.flying then
+			toggle_system_map(self)
+		end
 		return true
 	end
 	if self.map_open then
@@ -1939,6 +2024,10 @@ function on_input(self, action_id, action)
 		elseif action.released and self.camera_press then
 			if not self.camera_press.dragged then
 				pick_target(self, action.x, action.y)
+			else
+				-- The two-second return countdown starts on release (per
+				-- direct instruction), not from the last mouse movement.
+				self.camera_orbit_idle = 0
 			end
 			self.camera_press = nil
 		end
@@ -2419,6 +2508,11 @@ function update(self, dt)
 			if target.permanent then
 				table.insert(details, "PERMANENT")
 			end
+		elseif target.kind == "drone" then
+			table.insert(details, "LEVEL " .. tostring(target.level or "?"))
+			if target.hp then
+				table.insert(details, "HULL " .. with_commas(target.hp) .. " / " .. with_commas(target.max_hp))
+			end
 		elseif target.kind == "beacon" or target.kind == "platform" then
 			local st = network.outpost_state(self.current_system_id, target.faction)
 			local part = st and (target.kind == "beacon" and st.beacon or (st.platforms and st.platforms[target.slot]))
@@ -2478,6 +2572,12 @@ function update(self, dt)
 			table.insert(contacts, { pos = remote.pos, id = user_id })
 		end
 	end
+	-- NPC drones share the contact pool, in their own colour (kind = "drone").
+	for index, d in pairs(drone_registry.drones) do
+		if not d.down and d.pos and vmath.length(d.pos - pos) <= radar_range then
+			table.insert(contacts, { pos = d.pos, id = DRONE_TARGET_PREFIX .. index, kind = "drone" })
+		end
+	end
 	-- Asteroids plot on that same scope as dim, semi-transparent points (per
 	-- direct instruction: "on the radar show asteroids as semi transparent
 	-- points"). main/asteroid_registry.lua is the current system's spawned
@@ -2503,6 +2603,18 @@ function update(self, dt)
 		-- scope. (Before the first frame there is none - the HUD falls back to
 		-- world +Z for that one message.)
 		self.radar_heading = self.radar_heading or vmath.vector3(0, 0, 1)
+	end
+
+	-- System map (M): what it can't read from the shared registries itself.
+	if self.system_map_open then
+		local width, _, depth = star_systems.system_size(self.current_system_id)
+		local sys = star_systems.SYSTEMS[self.current_system_id]
+		msg.post("system_map#gui", "system_map", {
+			system_id = self.current_system_id, system_name = sys and sys.name or "?",
+			width = width, depth = depth, faction = session.get_faction(),
+			own = { x = pos.x, z = pos.z, hx = self.radar_heading.x, hz = self.radar_heading.z },
+			sensor_range = sensor_range(self.ship_id), target_id = self.target_id,
+		})
 	end
 
 	local radar_asteroids = {}
@@ -2568,7 +2680,14 @@ function update(self, dt)
 	local camera_target_rot = chase_rot
 	local camera_snap = false
 	if self.camera_orbit_active then
-		self.camera_orbit_idle = self.camera_orbit_idle + dt
+		-- While the button is still held after a drag, the view stays where the
+		-- player put it: the countdown only runs once the button is released
+		-- (per direct instruction), even if the mouse has stopped moving.
+		if self.camera_press and self.camera_press.dragged then
+			self.camera_orbit_idle = 0
+		else
+			self.camera_orbit_idle = self.camera_orbit_idle + dt
+		end
 		if self.camera_orbit_idle < CAMERA_ORBIT_RETURN_DELAY then
 			camera_target_rot = chase_rot
 				* vmath.quat_axis_angle(UP, self.camera_orbit_yaw)

@@ -42,8 +42,17 @@ M.OUTPOSTS = {
 			hull_points = 50000,
 			destroyed_for_sec = 60 * 60,
 
-			-- Rough size, for clicking and the target marker (m).
-			radius_m = 150,
+			-- Collision shape (per direct instruction): a simple cylinder
+			-- covering the station's SPINE - the long central tube both
+			-- models are built around (tools/build_stations.py), lying along
+			-- the model's Z axis. Shared by both factions; where its centre
+			-- sits inside each model is the skin's `spine_centre`. Used for
+			-- clicking/targeting, the target marker and weapon range
+			-- (main/outpost_rules.lua spine_*). Covers the Accord spine
+			-- (z -378..378, radius <= 78) and the Swarm one (dock z 8 to
+			-- rotor tip z 725, radius <= 66). There is no physics engine:
+			-- ships don't bump into it.
+			collision = { shape = "cylinder", axis = "z", radius_m = 80, length_m = 760 },
 
 			-- Docking (per direct instruction): a ship may dock within
 			-- dock_range_m of its own faction's outpost; holding there for
@@ -78,12 +87,18 @@ M.OUTPOSTS = {
 			accord = {
 				name = "Accord outpost",
 				model = "/assets/models/outposts/accord_outpost.model",
+				-- Centre of the spine relative to the outpost object's origin
+				-- (the model's pivot height; the spine runs z -378..378).
+				spine_centre = { x = 0, y = 135, z = 0 },
 				rotor_model = "/assets/models/stations/accord/rotor.model",
 				rotor_period_sec = 110,
 			},
 			swarm = {
 				name = "Swarm outpost",
 				model = "/assets/models/outposts/swarm_outpost.model",
+				-- The Swarm spine runs from the dock (z 8) to the rotor tip
+				-- (z 725) at pivot height 142.5.
+				spine_centre = { x = 0, y = 142.5, z = 366.5 },
 				rotor_model = "/assets/models/stations/swarm/rotor.model",
 				rotor_period_sec = 120,
 			},
@@ -158,7 +173,8 @@ M.PROGRESS = {
 	gain_pct = {
 		mining = 2,           -- OURS: per asteroid depleted by one of the faction's pilots
 		presence_per_min = 1, -- OURS: per pilot of the faction in the system, per minute
-		npc_kill = nil, player_kill = nil, rescue_mission = nil, incursion_mission = nil, -- not in the game yet
+		npc_kill = 1,         -- OURS: per drone destroyed by one of the faction's pilots (plan.md §2.18)
+		player_kill = nil, rescue_mission = nil, incursion_mission = nil, -- not in the game yet
 	},
 	-- Lowered by: a steady auto-drain every minute (rate unknown), a FAILED
 	-- freighter-in-distress mission (-15 %), and (Nova) the enemy destroying

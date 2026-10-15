@@ -1,0 +1,14 @@
+script: "/main/system_map.gui_script"
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT
+max_nodes: 1024
+background_color {
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 0.0
+}
+fonts {
+  name: "default_font"
+  font: "/builtins/fonts/default.font"
+}

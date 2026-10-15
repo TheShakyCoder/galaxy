@@ -108,7 +108,8 @@ online sanity check (not full legal clearance):
   stronger in numbers/self-repair, strong in attrition and territory lockdown.
   **Player-selectable** — piloted by players, not purely autonomous (see §2.3; the
   "swarm" flavor is now a playstyle identity, not an NPC-only concept).
-- **Faction 3 — Robots** (new, generic sci-fi term, not BSG-specific): a separate,
+- **Faction 3 — Robots** (new, generic sci-fi term, not BSG-specific; its ships are the
+  NPC drones of §2.18): a separate,
   **purely computer/AI-managed faction — never player-selectable**. Functions as the
   common hostile PvE faction that both Accord and Swarm players fight (missions,
   contested-zone raids, etc.); not part of the Accord-vs-Swarm PvP axis. Lore: the
@@ -1716,9 +1717,23 @@ make it the active one):
 - Only **Patrol 1** exists in the roster so far (§2.1.2), so Ships For Sale is
   correctly empty and Owned Ships has exactly one entry — not a placeholder gap, the
   honest state of a one-ship roster.
-- **Known simplification, flagged not solved**: `owned`/`loadout` (fitted modules)
-  are a single global pool, not yet scoped per ship — irrelevant with one ship, but
-  will need a real answer once a second one exists (§4).
+- **Fittings are per ship (decided and implemented 2026-10-15)**: this used to be one
+  global `loadout`, so a Patrol ship's weapons showed up on a newly bought Frigate (a
+  reported bug). Per direct instruction, **a newly bought ship of any class never
+  inherits weapons or components** — it starts with nothing fitted — and only the
+  starting ship comes with its starter kit (W1 cannon, W2 mining cannon).
+  - **Storage:** `session.loadouts[ship_id]` holds each ship's own list, and
+    `session.loadout` is always the active ship's entry (repointed by
+    `select_ship`). `owned` stays one shared hold of instances, and an instance is
+    fitted to **one ship at a time** (installing it elsewhere moves it).
+  - **Class check:** `install` now refuses a module of another ship class
+    (`session.module_fits_ship`, the same rule as the outpost screen's filter).
+  - **Selling a ship** sends its fitted modules back to the hold.
+  - **Saves and server:** the save carries `loadouts` plus `loadout` (the active
+    ship's, which `system_match.lua` reads). An older save's shared list is
+    converted by putting each module back on one owned ship of its own class
+    (starting ship first); anything that fits nowhere becomes a spare.
+  - **Tests:** `tests/ship_loadout_harness.lua`.
 - **Verified** with the same real-hit-testing harness approach as the hover feature
   above, extended to also drive tab-switching and ship selection/purchase: confirmed
   the Fitting tab's markers are cleared while on the Ships tab and rebuilt correctly
@@ -3180,6 +3195,23 @@ vacant slot previews which stats it would affect.
   the regular entry), the control-level ladder, progress rules, rewards and the jump
   beacon, with sentry platforms in `main/data/sentry_platforms.lua`, all applied by
   `main/outpost_rules.lua` (§2.7 "Outpost progression").
+- **Outpost collision cylinder (per direct instruction, 2026-10-15)**: the shared
+  chassis has a `collision` cylinder — radius 80 m, length 760 m, along Z — covering
+  the station's **spine**, the long central tube both models are built around. Each
+  faction skin's `spine_centre` says where it sits in that model: Accord (0, 135, 0),
+  Swarm (0, 142.5, 366.5). It's used for:
+  - **targeting and the marker:** the target is now the spine's centre, not the
+    object's origin, which was up to ~370 m off and caused the off-centre target box;
+  - **clicking:** the click ray is tested against the cylinder (or within 28 px of
+    its centre when far away);
+  - **weapon range:** measured to the cylinder's surface, by both the game and the
+    server.
+
+  Helpers live in `main/outpost_rules.lua` (`spine`, `spine_ray`, `spine_distance`,
+  `spine_bounding_radius`); the old `radius_m = 150` is gone. There is no physics
+  engine, so ships still fly through stations. Docking range is still measured from
+  the object's origin. Tests: `outpost_rules_harness` (ray/distance) and
+  `outposts_data_harness` (each spine covered).
 - **Outposts are earned (2026-10-15, supersedes "every system has both by default")**:
   outside a faction's 7 permanent systems, its outpost stands only while that
   system's Outpost Progress is 90 %+ (§2.7). Docking, quitting and respawning go to
@@ -3597,6 +3629,14 @@ ship."*
   drag-to-scroll uses rather than re-observed here. Worth a live pass when the
   desktop engine is next flown.
 
+- **Return countdown starts on release (per direct instruction, 2026-10-15):** while
+  the left button is still held after a drag, the two-second return countdown is held
+  at zero, even if the mouse stops moving. It starts only when the button is released
+  (`player_ship.script`'s camera block and its "touch" release). Tested in
+  `tests/flight_camera_harness.lua`. That test had been crashing since the outpost
+  work: its network stub lacked `outpost_state` and its vmath lacked `inv`. Both are
+  added now, and its pitch-clamp check is updated for the inverted vertical drag.
+
 #### 2.10.4 F3 debug readout: position and vectors (decided, per direct instruction)
 
 Per direct instruction: "when in flight mode provide a toggle switch that hides and
@@ -3616,6 +3656,46 @@ it has served its purpose.
   segment and BOOST; forward / up / right unit vectors; heading (from world +Z
   towards +X), pitch and roll (`level_roll_angle`, 0 = level) in degrees; turn rates
   (the body-frame angular velocity, deg/s); the raw rotation quaternion.
+
+#### 2.10.5 M: system map (decided, per direct instruction 2026-10-15)
+
+Per direct instruction: *"when in flight pressing m brings up a map of the local
+system. All asteroids are shown along with planetoids and both outposts if present.
+All friendly ships are shown and all enemy ships and drones are shown if they are
+within the ship's sensor range."*
+
+- **Files:** `main/system_map.gui` / `.gui_script`, a `system_map` instance in
+  `main/main.collection`, and `KEY_M` → `toggle_system_map` in `input/game.input_binding`.
+- **Layout:** a top-down X/Z plot of the whole system (fitted to its larger extent,
+  `star_systems.system_size()`), north (+Z) up. Screen right is world −X, the same
+  handedness as the flight view and radar. A 4×4 grid, with the grid-square size and
+  sensor range printed under the title.
+- **What it shows:**
+  - every asteroid (depleted ones hidden; analysed ones in their resource colour);
+  - each faction's standing outpost (square), beacon and sentry platforms;
+  - **all friendly ships**;
+  - **enemy ships only within sensor range** (shaded circle around the player);
+  - the player's own ship as a round marker with a **heading line and arrow tip**
+    showing which way it's flying (per direct instruction — a 3-vertex pie drew as a
+    plain square); other ships are round dots, since their headings aren't known;
+  - the current target ringed.
+- **Not yet shown:** **planetoids and drones** don't exist yet; the map has pools and
+  colours for them (drones filtered by sensor range like enemies), to be fed once they
+  do (§2.13 J, §2.18).
+- **Data:** the map reads asteroids, outposts and ships straight from the shared
+  registries (`asteroid_registry`, `network` outpost/asteroid state,
+  `remote_registry`). A whole system's asteroids would not fit in a Defold message,
+  so `player_ship.script` only sends a small `system_map` message each frame (system,
+  own position/heading, sensor range, target). Redrawn 10× a second.
+- **Behaviour:**
+  - **Keeps flying:** unlike N, the ship keeps flying with it open. Only clicks
+    inside the map are taken: clicking a blip targets it (`set_target`).
+  - **One map at a time:** M and N close each other.
+  - **Auto-close:** the map closes on docking or being destroyed.
+  - **Flight only:** M does nothing while docked.
+- **Tests:** `tests/system_map_harness.lua` runs the real script with stubbed gui and
+  checks asteroid/outpost/ship filtering, the axis handedness, click-to-target and
+  closing. Not yet seen in the browser.
 
 ### 2.11 Asteroid fields: hull, mining, procedural meshes and breakup
 
@@ -4219,14 +4299,22 @@ to an outpost, there needs to be a cool down of 10 seconds before they can launc
 again. If a player reloads the browser or in some other way ends their game then
 the cool down needs to be 60 seconds."*
 
-- **Two lengths**: **10 s** after docking — or after being destroyed and returned to
-  an outpost, deliberately the same rule either way, since both go through
-  `main/player_ship.script`'s `complete_dock()` — and **60 s** when the previous
-  session *ended in space* instead (the browser reloaded, the tab closed, the game
-  quit mid-flight). **Superseded (per direct instruction, 2026-10-14):** the 60 s now
-  applies to *every* page load, docked or not — the earlier exemption for a session
-  that ended docked was dropped, so reloading at an outpost no longer skips it. The
-  cost, accepted: a returning player always waits a minute before their first launch.
+- **Current rule (per direct instruction, 2026-10-15 — supersedes the bullets
+  below where they differ):** only **two** things delay a launch:
+  - **60 s** after a session that ended **in flight** (the browser reloaded, the tab
+    closed, the game quit mid-flight);
+  - **20 s** after **any repair** at the outpost (§2.19). This value is arbitrary and
+    may change.
+
+  Docking, respawning after being destroyed, and loading the game from the website
+  while docked launch **straight away**. The numbers live in their own file,
+  `main/data/launch_delays.lua` (`RELOAD_IN_FLIGHT_SEC`, `REPAIR_SEC`, `DOCK_SEC = 0`),
+  so they're easy to change. `M.repair_delay()` is ready for the repair operation to
+  call. The 2026-10-14 change that put 60 s on *every* page load was a misreading and
+  is reverted. `tests/launch_cooldown_harness.lua` covers the new rule, on both the
+  client and the server.
+- **Original rule (history):** **10 s** after docking — or after being destroyed and
+  returned to an outpost — and **60 s** when the previous session *ended in space*.
 - **The rules live in `main/session.lua`** (the server-authority rule of §3.2/§3.3),
   as new operations: `M.dock()` clears the new `flying` flag ("is the ship in
   space") and stamps `launch_blocked_until` = now + 10; `M.resume()` — called once
@@ -4236,8 +4324,8 @@ the cool down needs to be 60 seconds."*
   whole rule against its own copy: `dock` and `resume` are new entries in `M.OPS`
   (the `economy` RPC's whitelist, §3.3).
 - **Why `launch` also refuses while `flying`**: docking is the only thing that
-  clears that flag, and docking is exactly what arms the 10 s — so the cooldown
-  cannot be skipped by a client that simply never reports its docking, which is
+  clears that flag, so a launch must always follow a docking the server recorded —
+  this keeps the in-flight reload delay from being skipped by a client that simply never reports its docking, which is
   what a purely time-based check would allow. Docking is still a client-reported
   event (as `arrive_jump` already is), but a launch now always has to be preceded by
   a docked state the server itself recorded.
@@ -4425,6 +4513,324 @@ rotating line."*
   time — a guaranteed runtime error on the first flight — so the helper now sits above
   `init()` alongside `apply_sweep`.
 
+### 2.18 NPC drones — the Robots faction (stages 1–2 implemented 2026-10-15)
+
+Per direct instruction: *"search the superships repo for information on the drone
+ships. These belong to a third faction that is for NPC only. Each system spawns their
+own set of drones, ideally procedural, and should vary in ability depending on the
+threat level of the system."* **Not built yet** — this section records the reference
+and the proposed design.
+
+**Faction.** The drones are the ships of §1's **Robots** faction: computer-run only,
+never player-selectable, and hostile to both the Accord and the Swarm (PvE, outside the
+Accord-vs-Swarm PvP axis). *Open:* keep the name "Robots" or rename the faction
+"Drones" (§4).
+
+**What SuperShips has (`~/Defold/SuperShips`) — ambient scenery only:**
+- **Server spawner:** `nakama-server/modules/npc_spawn.lua` creates one background
+  match at boot, `npc_scheduler.lua`. It keeps **10 drones in total** (a cap), fills
+  to the cap at boot, then tops up by one every 10 minutes. Each drone is a storage
+  record (`npc_ships` collection, system user, public read) holding only a random
+  spawn point within ±150 units of the system centre, a seed, and the label
+  `"Drone"`.
+- **Client movement:** `main/npc_ships.script` loads the list once and moves each
+  drone itself along a sine/cosine wander path computed from its seed and the clock.
+  Every game therefore shows roughly the same positions with no network traffic.
+  Drones are tinted dark red with a "Drone" nameplate.
+- **Radar and faction:** `main/npc_registry.lua` and `main/dradis.lua` plot drones on
+  the radar as NPC contacts. `main/factions.lua` defines a third faction ID, `NPC`,
+  which nothing reads.
+- **Missing:**
+  - The same 10 drones appear in **every** system; `ship.script`'s `apply_system()`
+    notes per-system drones as a deliberate scope cut.
+  - Drones have no types, stats, AI or combat, and can't be targeted or killed.
+  - Nothing is tied to threat.
+- **Worth carrying over:** the "background match owns the NPC population" pattern
+  (also pointed to by `nakama-server/modules/README.md`), seed-based determinism, and
+  a separate radar contact class. **Not carried over:** client-only movement — drones
+  that fight must be simulated on the server.
+
+**What Galaxy already has to build on:**
+- **Threat ratings:** every system has a `threat` in `main/data/star_systems.lua`, a
+  balancing reference carried over from BSGO. The values run 0–50, with Canopus at 0
+  and several at 1, plus one outlier: **Epsilon Indi = 255**. That looks like a data
+  error, and Epsilon Indi is also in the Accord's protected buffer (§4).
+- **Server match:** each system's match (`system_match.lua`) already ticks at 10 Hz and
+  owns server-side weapon damage, so drones fit there.
+- **Outpost hook:** Outpost Progress already has an empty
+  `PROGRESS.gain_pct.npc_kill` slot (§2.7 "Outpost progression").
+- **BSGO reference (names only, not to be used):** drones came as Seeker, Sentry, Guard
+  and Hunter drones, the Revenant and the Command Nexus (the "Drone Incursion"/Nexus
+  event, §2.13 J). No published stats.
+
+**Proposed design** (every number below is OURS, a starting point to tune):
+
+1. **Data — `main/data/drones.lua`** (own file, §3.1). One chassis per drone type,
+   with no `faction_skins` because only one faction flies them. Original names and
+   roles:
+
+   | Type | Role | Appears from threat |
+   |---|---|---|
+   | Scout | fast, fragile; flees and raises the alarm | 1 |
+   | Sentry | stationary guard post at an asteroid field | 10 |
+   | Guard | escorts a group or a Hive | 20 |
+   | Hunter | roams the system looking for players | 30 |
+   | Elite | rare, heavy brawler | 40 |
+   | Hive | command ship, at most one per system; its guards respawn while it lives | 45 |
+
+   Each type carries base stats (hull, armour, speed, turn, weapon damage/range/arc,
+   sensor/aggro range), the same field names as `ships.lua` where they overlap, and a
+   placeholder model.
+
+2. **Threat → population** (procedural, deterministic). A system's drones are worked
+   out from a **seed** (system id plus a per-server salt, so servers differ but a
+   system never changes on one server) and its `threat`:
+   - **Threat 0:** no drones (safe system).
+   - **Count:** `4 + 0.6 × threat`, so about 4 at threat 1 and 34 at threat 50.
+   - **Groups:** split into groups of 2–5.
+   - **Mix:** only types whose threshold the threat has reached; the seed picks the
+     mix and the anchor points (asteroid fields first, then random points away from
+     both outposts' docking range).
+   - **Level:** `1 + floor(threat / 5)`, so 1 to 11.
+   - **Scaling:** hull ×(1 + 0.15 × (level − 1)); damage and accuracy ×(1 + 0.10 ×
+     (level − 1)).
+   - **Out-of-range threat:** anything above 50 is clamped to 50 until the data is
+     fixed.
+
+3. **Simulation — server-authoritative**, in each system's match, and only while
+   players are present (no cost for empty systems):
+   - The population is generated when the match starts.
+   - Drones patrol their anchor, notice players within aggro range, chase and fire
+     using the same range and arc rules as player weapons, and return home past a
+     leash distance.
+   - **Respawn:** a destroyed group respawns after a delay (proposed 5 min); a Hive
+     after 30 min.
+   - **Network:** a new `DRONES` op code broadcasts drone positions and hull the same
+     way `SNAPSHOT` does for ships.
+   - **Targets and radar:** drones become targets (`drone:<id>`), and the radar gets
+     a third relation colour (hostile NPC).
+
+4. **Links to existing systems:**
+   - **Rewards:** drone kills give XP (new `xp_rewards.lua` entries, scaled by level)
+     and raise the killer's faction's Outpost Progress (`gain_pct.npc_kill`).
+   - **Galaxy-wide outpost bonus:** applies as for other XP.
+   - **Loot:** optional, later.
+   - **Combat state:** sets `in_combat`, which then drives the 10 s combat docking
+     and the ×4 combat jump charge, both already wired.
+
+**Implemented 2026-10-15 (stages 1–2), per direct instruction: "implement whatever we
+now have on NPC drones spawning in the system".** Before this, **no drones spawned at
+all**.
+
+**Real numbers from the BSGO wiki's "Drones" page** (via its MediaWiki API) replace the
+proposed level formula. There are four types × four quality tiers, each a fixed level
+with published hull and power, renamed (§0):
+
+| Tier | Scout | Sentry | Guard | Hunter |
+|---|---|---|---|---|
+| Decayed | L5, 250 | L5, 300 | L9, 600 | L9, 500 |
+| Weathered | L10, 375 | L10, 425 | L14, 900 | L14, 750 |
+| Hardened | L15, 500 | L15, 550 | L19, 1,200 | L19, 1,000 |
+| Alert | L25, 800 | L25, 800 | L29, 1,800 | L29, 1,500 |
+
+(L = level, then hull.) Power is 100 for scouts and sentries, 200 for guards and
+hunters. BSGO's own names were Seeker, Sentry, Hunter, Guard × Failing, Worn, Rugged,
+Vigilant. The unique **Revenant** (L90, 2,950 hull, speed 55, nuclear missiles, one
+system at a time, rare loot) and the **Command Nexus** (a stationary carrier that
+launches drone waves, the Drone Incursion event) are recorded but **not built**.
+
+**What's built:**
+- **Data:** `main/data/drones.lua` — `TIERS`, `TYPES` (wiki stats plus our speed,
+  radius and `min_threat`), `POPULATION`, `BEHAVIOUR` and `REWARDS`.
+- **Generator:** `main/drone_rules.lua` (pure Lua, synced to the server).
+  `population(system, salt)` is deterministic per system and server salt
+  (`context.env.drone_seed`):
+  - **count:** `4 + 0.6 × threat`, so 0 at threat 0 (Canopus), 5 at the home systems
+    (threat 1) and 34 at threat 50;
+  - **threat clamped to 50**, so Epsilon Indi's 255 gives 34;
+  - **tier by threat band:** ≤12 Decayed, ≤25 Weathered, ≤38 Hardened, ≤50 Alert;
+  - **types gated** at threat 1 / 10 / 20 / 30;
+  - **groups:** of 2–5, anchored at an asteroid (60 %) or a random point, at least
+    2,500 m from both outposts.
+- **Server** (`system_match.lua`):
+  - drones are generated when the match starts and simulated only while players are
+    present;
+  - **patrol:** within 500 m of their anchor;
+  - **chase:** the nearest player within 1,200 m (any faction) to a 400 m standoff,
+    giving up 3,000 m from the anchor;
+  - **combat:** they take weapon damage (`FIRE "drone:<i>"`) and respawn at their
+    start after 5 min;
+  - **network:** `OP_DRONES = 11` broadcasts all drones twice a second and on joining.
+- **Rewards (ours):**
+  - **XP:** `level × 10`, paid in full to every pilot who damaged the drone in the
+    last 2 min (`progress` event `drone_destroyed`), plus the galaxy-wide outpost XP
+    bonus.
+  - **Outpost Progress:** the killer's faction gains **+1 %**
+    (`PROGRESS.gain_pct.npc_kill`).
+- **Client:**
+  - `main/network.lua` → `main/drone_registry.lua`, cleared on a system change or
+    docking;
+  - `main/drones.script` (`drones.go` + `#drone_factory` → `main/drone.go`) spawns,
+    smooths and faces each drone, and hides it while it's down;
+  - placeholder models from `tools/build_drone_models.py` — box shapes built
+    **vertically**, unlike the factions' horizontal hulls, tinted machine-orange;
+  - **targeting:** Tab, X (nearest enemy) and click; the target panel shows
+    "Weathered Hunter drone, LEVEL 14, HULL …";
+  - **radar:** orange contacts, with the contact pool raised to 64;
+  - **system map:** drones within sensor range.
+- **Tests:**
+  - `tests/drone_rules_harness.lua`: determinism, salt, the clamp, and every
+    system's population following the rules;
+  - `tests/outpost_match_harness.lua` §8: 26 drones in Deneb, chase, destroyed in
+    ~31 s by the starter guns, XP and +1 %, respawn.
+
+  **Not yet seen in a browser.**
+
+**Order of work:**
+1. ~~Data file plus the procedural generator~~ — done.
+2. ~~Server simulation and drones as targets that can be shot down~~ — done (no
+   return fire yet).
+3. Ship damage, the prerequisite shared with outpost sentry platforms (§2.7, §4).
+4. Drones fire back, `in_combat`, and kill rewards.
+
+### 2.19 Taking hits — threat, durability, repair and feedback (decided — per direct instruction 2026-10-15)
+
+Asked to *"look at what we have regarding a player taking hits and see if there are
+any gaps that need to be filled from online resources"*, then decided per direct
+instruction. **Not built yet**; the decided numbers are in `main/data/combat.lua`
+(own data file, §3.1), which nothing reads until combat exists.
+
+**What exists today:**
+- **Stats:** every ship has hull, `hull_recovery_per_sec`, armour, critical defence,
+  avoidance and `repair_cost_iron` (its durability) in `ships.lua`, and the outpost's
+  Ship Statistics tab shows them. Combat reads none of them.
+- **HUD:** shows hull and power, but current always equals maximum (nothing damages a
+  player ship).
+- **Death:** `ship_destroyed()` in `player_ship.script` returns the player to the
+  nearest outpost, but nothing calls it.
+- **Repair modules:** the Hull Repair Booster (passive) and Emergency Hull Repair
+  (active; 200 hull / 60 s are placeholders) exist as data only.
+- **Weapons:** carry accuracy, critical offence, armour piercing, damage min/max and
+  `durability_min/max`. The server applies only average DPS, and only to outposts and
+  asteroids.
+- **Threat hooks:** `self.in_combat` drives the ×4 FTL charge and the 10 s in-combat
+  docking, but nothing sets it.
+
+**Sources, this pass:**
+- The archived BSGO wiki "Bsgo Guide by Jdog" and Outposts page (Wayback 2017).
+- BSGO Nova's `combat.html`.
+- The hit and damage maths were already recorded in §2.13 A (BSGO Nova
+  `combat-reference.html`).
+
+**What the sources say:**
+- **Respawn:** on death a window offers the **2 nearest outposts**, including this
+  system's if your faction has one. There are ~30 s to choose; otherwise it picks the
+  nearest. It can be refused when the system's enemy-pilot cap is full.
+- **Death penalty:** **no XP, skill or equipment loss** — the ship and its modules
+  lose durability instead.
+- **Low durability:** the ship gets penalties **below 20 %** until repaired; a module
+  at **0 %** stops working until repaired.
+- **Repair:** in Titanium (our Iron) or premium currency; the cost scales with
+  damage, ship size and module level. Takes a **30 s** countdown at an outpost,
+  instant at a home base. "Repair all" or per module.
+- **Loot:** split by damage dealt solo, equally in a group (Nova).
+- **Not published anywhere found:** the combat-state length, durability loss
+  amounts, wear rates and kill rewards — hence the decisions below.
+
+**Decisions (per direct instruction):**
+1. **Threat state = 15 s** (`THREAT_SEC`). It starts, and every further shot
+   refreshes it, when the ship is **shot at**, or when it **fires at an enemy** (a
+   player of the other faction, or their outpost, beacon or platform) **or a drone**.
+   **Firing at an asteroid does not** start it (decided 2026-10-15).
+   While it lasts:
+   - **hull regeneration is paused**;
+   - **power regeneration continues** (it never pauses);
+   - a **threat indicator** shows on the HUD;
+   - docking takes the 10 s in-combat time;
+   - an FTL jump charges ×4. Both of these hooks are already wired to `in_combat`.
+2. **Durability loss per hit: 1 %** (`DURABILITY_LOSS_PER_HIT_PCT`) — **arbitrary,
+   may change.** Every hit the ship takes removes 1 % durability from the ship
+   **and** from every module fitted to it. Ship and modules share **one** wear
+   percentage, so a ship 10 % damaged means each fitted module is 10 % damaged too.
+   **Dying adds no extra loss.**
+3. **Repair cost = durability lost, paid in Iron** (`IRON_PER_DURABILITY_POINT = 1`)
+   — **may change.** The ship's durability is its `repair_cost_iron`; each module
+   has its own durability. At W % wear:
+   `iron = W/100 × (ship durability + Σ fitted modules' durability)`.
+   Example: a Patrol Interceptor (4,500) with two 5,000-durability guns at 10 % wear
+   costs 0.10 × 14,000 = **1,400 Iron**.
+4. **PvP kill rewards = the same as a drone kill** (§2.18) — **temporary, to be
+   designed properly later** (`PVP_KILL_REWARD = "same_as_drone"`).
+5. **Damage feedback:**
+   - **Hit halo:** a **subtle halo** around the screen edge while the player is being
+     shot at. It pulses on each incoming shot and fades over ~0.6 s; peak alpha 0.35
+     (ours) so it never becomes a red-out.
+   - **Threat indicator:** shown for as long as the threat state lasts.
+
+6. **Hull damage persists after docking** (decided 2026-10-15). At the outpost the
+   player can **repair part or all** of the ship and its modules; repairs are
+   **instant**.
+   - No repair: launch straight away.
+   - **Any repair:** the next launch waits **20 s** (`launch_delays.REPAIR_SEC`,
+     arbitrary, easy to change — §2.16).
+
+   BSGO did the same: a repair started the "undock timer", and the Repair button was
+   disabled at 100 % durability (OB Build 1.3). Repairing hull durability also
+   restored full hull points (bsgonline OB Build 1.2).
+7. **Respawn choice** (decided 2026-10-15): a destroyed player picks between the
+   **2 nearest outposts** of their faction (this system's, if it has one). After
+   `RESPAWN_CHOICE_SEC` (30 s, BSGO's) the nearest is chosen automatically.
+   Currently the nearest is chosen with no choice offered; `RESPAWN_CHOICES = 2`.
+
+**Durability and effectiveness — research, 2026-10-15** (live BSGO wiki via its
+MediaWiki API, `bsgo.fandom.com/api.php`, which works where page fetches are blocked):
+- **The only published link between durability and effectiveness** is a threshold, not
+  a sliding scale. Closed Beta 1.3 patch notes: *"Ships at 20 % or less Hull
+  Durability"* suffer, until repaired above 20 %:
+  - **maximum hull points −50 %**;
+  - **one weapon slot inoperable**;
+  - **one other system slot inoperable by role** (engine for interceptors, hull for
+    assaults, computer for command ships).
+
+  A module at **0 %** can't be used until repaired (Jdog guide; Update 15 added a
+  notification for it). Recorded in `combat.lua` as `LOW_DURABILITY_*`. Our roles
+  map Interceptor → engine, Assault → hull, everything else → computer (ours).
+- **The user's understanding** — effectiveness falls gradually as durability drops —
+  was **not found in any source**. Recorded as a new open item (§4) rather than
+  invented.
+- **Other findings:**
+  - Upgrading a module (and advancing a ship) restores full durability (CB 1.3/1.4).
+  - BSGO's repair rate was **1 Titanium per 10 durability points** (CB 1.3), raised
+    later (Update 39); ours is 1:1 by decision.
+  - Update 39 also cut Line ships' durability loss rate.
+  - A skill, "Defensive Positioning", cut durability loss by 1 % per level.
+  - A recharge module could add durability (+15,218, `C31-Recharge Module`).
+- **Module durability values:** the wiki lists durability only for **weapons**
+  (`Weapons` page; already in `weapons_autocannons.lua` as `durability_min/max`) and
+  ships. **No hull, engine or computer module durability was found online**; the
+  user will supply these from the game.
+- The wiki also has a **`Drones`** page — a source for §2.18.
+
+**Still open (§4):**
+- **Gradual effectiveness loss:** whether module/ship effectiveness should also fall
+  gradually with durability (the user's recollection; unsourced), and if so by what
+  curve. BSGO's sourced rule is the 20 % threshold above.
+- **Module durability values:** hull, engine and computer — from the user, from the
+  game.
+- **Weapon durability by level:** confirm `durability_min/max` means durability at the
+  lowest and highest upgrade level.
+- **Repair module numbers:** real values for both repair modules.
+- **PvP rewards:** a proper design to replace "same as a drone kill".
+
+**Build order:**
+1. Server-side hits on player ships using the §2.13 A formulas, with a server-tracked
+   hull and threat timer.
+2. The HUD shows the real hull, the threat indicator and the hit halo; hull regen
+   pauses in threat.
+3. Durability wear per hit, plus the Iron repair at the outpost.
+4. Death → the 2-outpost respawn choice.
+5. Drones and sentry platforms fire back (§2.18, §2.7).
+
 ## 3. Technical Architecture
 
 - **Engine**: Defold (Lua scripting, component/GO-based).
@@ -4522,6 +4928,7 @@ rotating line."*
     star_systems.lua       -- ✅ implemented, §2.7
     outposts.lua           -- ✅ implemented, §2.9 (chassis + faction_skins; tiers/ladder are reference data)
     sentry_platforms.lua   -- ✅ implemented, §2.7 "Outpost progression"
+    combat.lua             -- decided numbers only (not used yet), §2.19
     modules/
       weapons_autocannons.lua   -- ✅ implemented
       weapons_launchers.lua     -- ✅ implemented
@@ -5145,10 +5552,9 @@ are in `laravel/AGENTS.md`.
       top-down ship silhouette~~ — resolved: `main/images/patrol_1_topdown.png`,
       extracted directly from the new 3D model, wired in as the `ship_visual`
       node's texture (§2.9). Still rudimentary/placeholder-quality art, not final.
-- [ ] Decide whether fitted modules (`owned`/`loadout`, §2.8) should be scoped
-      per-ship once a second ship exists, instead of the current single global pool
-      (§2.9's Ships tab) — deferred, not solved, since there's nothing to test it
-      against yet.
+- [x] ~~Decide whether fitted modules should be scoped per ship~~ — **done**
+      2026-10-15: per-ship loadouts, new ships start empty, class-checked installs
+      (§2.9 Ships tab).
 - [ ] Define real per-ship pricing for the Ships tab's For Sale list — currently a
       flat 500-Tope placeholder regardless of ship class, same as module Shop
       pricing (§2.6.1).
@@ -5193,6 +5599,29 @@ are in `laravel/AGENTS.md`.
       docking once anything sets `in_combat`; Merit payouts; real platform/beacon
       art; check the defences' 900/1,100 m placement against the station models
       in-engine.
+- [ ] Taking hits (§2.19, decided numbers in `main/data/combat.lua`): build in the
+      order listed there. Still needed:
+      - **gradual effectiveness loss** with durability — the user's recollection; not
+        found in sources, which give only the ≤20 % threshold (−50 % hull, 2 slots
+        off);
+      - hull/engine/computer **module durability values** (the user, from the game);
+      - confirming weapon `durability_min/max`;
+      - real repair-module numbers.
+
+      **Revisit later:** the 1 %-per-hit durability loss, the 1 Iron-per-point repair
+      formula, the 20 s repair launch delay and PvP kill rewards (temporarily the
+      same as drone kills) are all placeholders by instruction.
+- [ ] NPC drones (Robots faction, §2.18): stages 1–2 done (procedural spawn, patrol,
+      chase, targetable, kill rewards). Next:
+      - ship damage (§2.19), then drones firing back (weapons per type, Hunter
+        missiles);
+      - the Revenant and the Command Nexus / Drone Incursion;
+      - a Drone Clearance daily assignment;
+      - real models.
+
+      Still to decide: keep the faction name **Robots** or rename it **Drones**; fix
+      **Epsilon Indi's threat of 255** (clamped to 50 for now). Tune the invented
+      speed, aggro and XP numbers once played.
 - [ ] Tune the outpost corner-placement inset (`M.OUTPOST_CORNER_FRACTION = 0.8`,
       §2.7) — currently a placeholder, not real level-design placement.
 - [ ] Confirm the opposing-ship population cap value (`M.OPPOSING_SHIP_CAP = 50`,

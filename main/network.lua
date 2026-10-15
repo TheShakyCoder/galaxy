@@ -30,6 +30,7 @@ local nakama_session = require "nakama.session"
 local b64 = require "nakama.util.b64"
 local session = require "main.session"
 local outpost_rules = require "main.outpost_rules"
+local drone_registry = require "main.drone_registry"
 
 local M = {}
 
@@ -51,7 +52,7 @@ local SERVER_CONFIG = {
 }
 
 -- Star-system match protocol (see nakama-server/modules/system_match.lua).
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE, OP_DRONES = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
 -- The system the player is in while flying (nil when docked or logged out).
 -- Every (re)connect enters it again with a fresh ticket.
@@ -679,6 +680,11 @@ function M.handle_match_data(op, raw)
 			store_outposts(current_system_id, data)
 			if M.on_outposts then M.on_outposts(current_system_id) end
 		end
+	elseif op == OP_DRONES then
+		-- The system's NPC drones (plan.md §2.18) - main/drones.script draws them.
+		if current_system_id then
+			drone_registry.store(current_system_id, data)
+		end
 	elseif op == OP_ASTEROIDS then
 		if current_system_id then
 			store_asteroids(current_system_id, data)
@@ -722,6 +728,7 @@ end
 function M.enter_system(system_id)
 	system_generation = system_generation + 1
 	local generation = system_generation
+	drone_registry.clear() -- the old system's drones are gone
 	current_system_id = system_id
 	leave_current_match()
 	if not (M.connected and M.socket) then
@@ -760,6 +767,7 @@ end
 -- Leaves the current system (docking).
 function M.leave_system()
 	system_generation = system_generation + 1
+	drone_registry.clear()
 	current_system_id = nil
 	leave_current_match()
 end

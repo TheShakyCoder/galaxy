@@ -210,6 +210,52 @@ check("swarm in deneb (no swarm outpost) docks at its nearest", session.docked_s
 session.faction = "accord"
 check("accord in deneb docks right there", session.docked_system() == OPEN)
 
+-- 8. Drones (plan.md §2.18): deneb (threat 37) spawns its procedural set,
+-- they move, chase a nearby pilot, die to fire, pay XP and npc_kill progress,
+-- and come back after their respawn time.
+local drone_rules = require("main.drone_rules")
+local drone_data = require("main.data.drones")
+local dm = match.match_init({ env = { drone_seed = "test" } }, { system = OPEN })
+local expected_count = #drone_rules.population(OPEN, "test")
+local n = 0
+for _ in pairs(dm.drones) do n = n + 1 end
+check("deneb spawns " .. expected_count .. " drones (threat 37 -> 26)", n == expected_count and n == 26)
+check("same seed, same drones", drone_rules.population(OPEN, "test")[5].type == dm.drones[5].type)
+dm = match.match_join({}, dispatcher, 0, dm, { presence("a1") })
+local d = dm.drones[1]
+local start = { x = d.pos.x, z = d.pos.z }
+-- Park the pilot 900 m from drone 1 (inside aggro range) and let a few seconds pass.
+local px, pz = d.pos.x + 900, d.pos.z
+dm = run(dm, 1, function() return { state_msg("a1", px, d.pos.y, pz, d.pos.x, d.pos.z) } end)
+dm = run(dm, 50)
+check("drone 1 chases the pilot in range", d.chase == "a1")
+local gap = math.sqrt((d.pos.x - px) ^ 2 + (d.pos.z - pz) ^ 2)
+check(string.format("...closing to its standoff distance (now %.0f m)", gap), gap < 900)
+local drones_msg
+for _, m in ipairs(sent) do if m.op == 11 then drones_msg = m.data end end
+check("DRONES message carries every drone", drones_msg and #drones_msg.d == n)
+-- Shoot it down.
+local xp_before = store[skey("profile", "state", "a1")].xp or 0
+local pct_before = rules.progress_at(dm.records.accord, OPEN, "accord", now_ms)
+local ticks2 = 0
+dm = run(dm, 1, function()
+	return {
+		state_msg("a1", d.pos.x + 300, d.pos.y, d.pos.z, d.pos.x, d.pos.z),
+		{ op_code = 6, sender = presence("a1"), data = { target = "drone:1" } },
+	}
+end)
+while not d.destroyed_until and ticks2 < 20000 do
+	dm = run(dm, 1, function() return { state_msg("a1", d.pos.x + 300, d.pos.y, d.pos.z, d.pos.x, d.pos.z) } end)
+	ticks2 = ticks2 + 1
+end
+check(string.format("drone 1 destroyed (%.0f s)", ticks2 / 10), d.destroyed_until ~= nil)
+local xp_gain = (store[skey("profile", "state", "a1")].xp or 0) - xp_before
+check("XP paid: level x 10 x 1.08 outpost bonus = " .. xp_gain, xp_gain == math.floor(d.level * drone_data.REWARDS.xp_per_level * 1.08 + 0.5))
+check("killer's faction outpost progress +1%", rules.progress_at(dm.records.accord, OPEN, "accord", now_ms) > pct_before + 0.9)
+now_ms = d.destroyed_until
+dm = run(dm, 1)
+check("drone 1 respawns at its start after 5 minutes", not d.destroyed_until and d.hp == d.hull_points)
+
 if failures > 0 then
 	print(failures .. " FAILURE(S)")
 	os.exit(1)

@@ -62,6 +62,11 @@ Wire protocol (JSON match data):
  10 RESOURCE  server -> client  {resource, amount, total} - an asteroid the
               player's final shot depleted, credited to their saved
               inventory (only sent to them)
+ 11 DRONES    server -> client  {now, d = [{i, t, r, l, x, y, z, hx, hz, hp, m, down}]}
+              every NPC drone of the system (type, tier, level, position,
+              flat heading, hull, max hull, destroyed) - on joining and twice
+              a second while players are here (plan.md §2.18). FIRE accepts
+              "drone:<i>" as a target.
 ]]
 
 local nk = require("nakama")
@@ -75,12 +80,14 @@ local outposts = require("outposts")
 local rules = require("main.outpost_rules") -- copied from the game by tools/sync_server_rules.py
 local outpost_data = require("main.data.outposts")
 local sentry_platforms = require("main.data.sentry_platforms")
+local drone_rules = require("main.drone_rules")
+local drone_data = require("main.data.drones")
 local asteroids = require("main.data.asteroids")
 local rewards = require("main.data.xp_rewards")
 local progress = require("progress")
 local resources = require("resources")
 
-local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+local OP_STATE, OP_SNAPSHOT, OP_JOIN, OP_LEAVE, OP_OUTPOSTS, OP_FIRE, OP_ANALYSE, OP_PROGRESS, OP_ASTEROIDS, OP_RESOURCE, OP_DRONES = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
 local TICK_RATE = 10
 local HEARTBEAT_TICKS = 5 * TICK_RATE
@@ -91,6 +98,7 @@ local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed progress/hull every 
 local ASTEROID_BROADCAST_TICKS = 5 -- asteroid hull updates, same twice-a-second cap
 local ASTEROID_RESPAWN_MS = 5 * 60 * 1000 -- a depleted asteroid is gone for 5 minutes
 local XP_FLUSH_TICKS = 5 * TICK_RATE -- award outpost damage XP every 5 seconds
+local DRONE_BROADCAST_TICKS = 5 -- drone positions/hull twice a second
 local SCALE_REFRESH_TICKS = 60 * TICK_RATE -- re-read the galaxy-wide underdog hull scale every minute
 local ANALYSED_COLLECTION = "analysed" -- per player, key = system id (server-only, modules/auth.lua)
 
@@ -228,7 +236,7 @@ end
 -- Positions of the outpost and its defences (fixed per system).
 local function outpost_positions(system, faction)
 	local pos = star_systems.outpost_position(system, faction)
-	local list = { pos = pos, beacon = rules.beacon_position(pos), platforms = {} }
+	local list = { pos = pos, spine = rules.spine(pos, faction), beacon = rules.beacon_position(pos), platforms = {} }
 	for slot = 1, 4 do
 		list.platforms[slot] = rules.platform_position(pos, slot)
 	end
@@ -368,10 +376,11 @@ local function predicted_state(player, now)
 end
 
 -- Damage this player's weapons deal over `dt` seconds to a target at `pos`
--- of radius `radius` (0 = measure to its centre, as for the outpost itself):
--- each weapon counts if the target is within its range and firing arc of
--- where the ship is now (predicted_state).
-local function target_damage(player, pos, radius, dt, now)
+-- of radius `radius`, or - for an outpost - to its spine cylinder `spine`
+-- (main/outpost_rules.lua): each weapon counts if the target's surface is
+-- within its range, and its centre within the firing arc, of where the ship
+-- is now (predicted_state).
+local function target_damage(player, pos, radius, dt, now, spine)
 	local s = predicted_state(player, now)
 	if not s then
 		return 0
@@ -383,7 +392,7 @@ local function target_damage(player, pos, radius, dt, now)
 		local fx, fy, fz = forward(s)
 		cos_angle = (fx * dx + fy * dy + fz * dz) / dist
 	end
-	local reach = math.max(0, dist - radius)
+	local reach = spine and rules.spine_distance(spine, s) or math.max(0, dist - radius)
 	local damage = 0
 	for _, weapon in ipairs(player.weapons or {}) do
 		local switched_on = not player.firing_slots or player.firing_slots[weapon.slot]
@@ -485,16 +494,17 @@ local function update_outposts(dispatcher, state, now)
 		if not same_target(live, target) then
 			player.outpost_target = nil
 		elseif st then
-			local part, pos, radius
+			local part, pos, radius, spine
 			if target.part == "outpost" then
-				part, pos, radius = st, state.positions[target.faction].pos, 0
+				spine = state.positions[target.faction].spine
+				part, pos, radius = st, spine.centre, 0
 			elseif target.part == "beacon" then
 				part, pos, radius = st.beacon, state.positions[target.faction].beacon, outpost_data.BEACON.data.radius_m
 			else
 				part = st.platforms[target.slot]
 				pos, radius = state.positions[target.faction].platforms[target.slot], sentry_platforms.stat(part.class, "radius_m")
 			end
-			local dealt = target_damage(player, pos, radius, 1 / TICK_RATE, now)
+			local dealt = target_damage(player, pos, radius, 1 / TICK_RATE, now, spine)
 			if dealt > 0 and part.max_hp > 0 then
 				player.pending_damage = player.pending_damage + dealt
 				if target.part == "outpost" then
@@ -528,6 +538,158 @@ local function update_outposts(dispatcher, state, now)
 		end
 	end
 	return changed
+end
+
+-- Drones ------------------------------------------------------------------
+--
+-- The system's NPC drones (plan.md §2.18): generated from the system's
+-- threat by main/drone_rules.lua when the match starts, then simulated here
+-- while players are present - patrolling around their group's anchor,
+-- chasing the nearest player that comes within aggro range (any faction)
+-- until leashed, and taking damage from players' weapons. They don't fire
+-- back yet (no damage to player ships, plan.md §2.19). A destroyed drone
+-- returns at its start point after BEHAVIOUR.respawn_sec.
+
+local function init_drones(state, salt)
+	state.drones = {}
+	for _, d in ipairs(drone_rules.population(state.system, salt)) do
+		d.hp = d.hull_points
+		d.pos = { x = d.start.x, y = d.start.y, z = d.start.z }
+		d.hx, d.hz = 0, 1
+		d.attackers = {}
+		d.speed = drone_data.TYPES[d.type].speed_m_per_sec
+		d.radius = drone_data.TYPES[d.type].radius_m
+		state.drones[d.index] = d
+	end
+end
+
+local function new_patrol_point(d)
+	local r = drone_data.BEHAVIOUR.patrol_radius_m * math.sqrt(math.random())
+	local angle = math.random() * 2 * math.pi
+	d.dest = { x = d.anchor.x + r * math.cos(angle), y = d.anchor.y + (math.random() - 0.5) * 100, z = d.anchor.z + r * math.sin(angle) }
+end
+
+local function dist2(a, b)
+	return (a.x - b.x) ^ 2 + (a.y - b.y) ^ 2 + (a.z - b.z) ^ 2
+end
+
+-- Moves every standing drone one tick: chase a player in range, else patrol.
+local function move_drones(state, dt, now)
+	local b = drone_data.BEHAVIOUR
+	local positions = {}
+	for user_id, player in pairs(state.players) do
+		positions[user_id] = predicted_state(player, now)
+	end
+	for _, d in pairs(state.drones) do
+		if not d.destroyed_until then
+			-- Keep chasing while the quarry is still near the anchor; otherwise
+			-- look for the nearest player within aggro range.
+			local quarry = d.chase and positions[d.chase]
+			if not (quarry and dist2(quarry, d.anchor) <= b.leash_m * b.leash_m) then
+				d.chase, quarry = nil, nil
+				local best = b.aggro_range_m * b.aggro_range_m
+				for user_id, p in pairs(positions) do
+					local dd = dist2(p, d.pos)
+					if dd <= best and dist2(p, d.anchor) <= b.leash_m * b.leash_m then
+						best, d.chase, quarry = dd, user_id, p
+					end
+				end
+			end
+			local goal
+			if quarry then
+				local dx, dy, dz = d.pos.x - quarry.x, d.pos.y - quarry.y, d.pos.z - quarry.z
+				local len = math.sqrt(dx * dx + dy * dy + dz * dz)
+				if len < 1 then len, dx = 1, 1 end
+				goal = { x = quarry.x + dx / len * b.standoff_m, y = quarry.y + dy / len * b.standoff_m, z = quarry.z + dz / len * b.standoff_m }
+			else
+				if not d.dest then
+					new_patrol_point(d)
+				end
+				goal = d.dest
+			end
+			local dx, dy, dz = goal.x - d.pos.x, goal.y - d.pos.y, goal.z - d.pos.z
+			local len = math.sqrt(dx * dx + dy * dy + dz * dz)
+			if len > 0.5 then
+				local step = math.min(len, d.speed * dt)
+				d.pos.x, d.pos.y, d.pos.z = d.pos.x + dx / len * step, d.pos.y + dy / len * step, d.pos.z + dz / len * step
+				local flat = math.sqrt(dx * dx + dz * dz)
+				if flat > 0.01 then
+					d.hx, d.hz = dx / flat, dz / flat
+				end
+			end
+			if not quarry and len < 20 then
+				new_patrol_point(d)
+			end
+		end
+	end
+end
+
+-- Rewards for a destroyed drone (main/data/drones.lua REWARDS): XP to every
+-- pilot who damaged it recently, in full; the killer's faction's Outpost
+-- Progress here rises by gain_pct.npc_kill.
+local function award_drone(dispatcher, state, d, killer, now)
+	for user_id, a in pairs(d.attackers) do
+		if now - a.last <= drone_data.REWARDS.attacker_window_sec * 1000 then
+			send_progress(dispatcher, state, user_id, "drone_destroyed", progress.apply(user_id, "drone_destroyed", d.level))
+		end
+	end
+	d.attackers = {}
+	local player = state.players[killer]
+	if player and player.faction then
+		add_progress(state, player.faction, outpost_data.PROGRESS.gain_pct.npc_kill or 0, now)
+	end
+end
+
+-- Applies fire to drones, destroys any at zero hull and brings back any whose
+-- time is up. Returns true if any hull or presence changed.
+local function update_drones(dispatcher, state, now)
+	local changed = false
+	for _, d in pairs(state.drones) do
+		if d.destroyed_until and now >= d.destroyed_until then
+			d.destroyed_until, d.hp, d.chase, d.dest = nil, d.hull_points, nil, nil
+			d.pos = { x = d.start.x, y = d.start.y, z = d.start.z }
+			changed = true
+		end
+	end
+	for user_id, player in pairs(state.players) do
+		local d = player.drone_target and state.drones[player.drone_target]
+		if d and not d.destroyed_until then
+			local dealt = target_damage(player, d.pos, d.radius, 1 / TICK_RATE, now)
+			if dealt > 0 then
+				d.hp = d.hp - dealt
+				local a = d.attackers[user_id] or { damage = 0 }
+				a.damage, a.last = a.damage + dealt, now
+				d.attackers[user_id] = a
+				changed = true
+				if d.hp <= 0 then
+					d.hp, d.destroyed_until = 0, now + drone_data.BEHAVIOUR.respawn_sec * 1000
+					for _, other in pairs(state.players) do
+						if other.drone_target == d.index then
+							other.drone_target = nil
+						end
+					end
+					award_drone(dispatcher, state, d, user_id, now)
+				end
+			end
+		elseif player.drone_target then
+			player.drone_target = nil
+		end
+	end
+	return changed
+end
+
+-- { now, d = [ {i, t(ype), r(tier), l(evel), x,y,z, hx,hz, hp, m(ax), down} ] }
+local function drones_message(state)
+	local list = {}
+	for _, d in pairs(state.drones) do
+		table.insert(list, {
+			i = d.index, t = d.type, r = d.tier, l = d.level,
+			x = math.floor(d.pos.x + 0.5), y = math.floor(d.pos.y + 0.5), z = math.floor(d.pos.z + 0.5),
+			hx = math.floor(d.hx * 1000 + 0.5) / 1000, hz = math.floor(d.hz * 1000 + 0.5) / 1000,
+			hp = math.floor(d.hp + 0.5), m = d.hull_points, down = d.destroyed_until and true or nil,
+		})
+	end
+	return nk.json_encode({ now = nk.time(), d = list })
 end
 
 -- Asteroids ---------------------------------------------------------------
@@ -730,6 +892,7 @@ function M.match_init(context, params)
 		last_asteroids_broadcast = 0,
 	}
 	state.records, state.positions = load_records(system)
+	init_drones(state, context.env and context.env.drone_seed or "")
 	refresh_scales(state)
 	rebuild_outposts(state, nk.time())
 	local label = nk.json_encode({ system = system, node = registry.node_id(context) })
@@ -775,6 +938,7 @@ function M.match_join(context, dispatcher, tick, state, presences)
 		end
 		dispatcher.broadcast_message(OP_OUTPOSTS, outposts_message(state), { presence })
 		dispatcher.broadcast_message(OP_ASTEROIDS, asteroids_message(state), { presence })
+		dispatcher.broadcast_message(OP_DRONES, drones_message(state), { presence })
 		-- ...and everyone else about the newcomer (a reconnect replaces the
 		-- previous session silently).
 		if not old then
@@ -816,6 +980,9 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 			local target = ok and type(t) == "table" and type(t.target) == "string" and t.target or nil
 			local outpost_target = target and parse_outpost_target(state, player, target)
 			local asteroid_index = target and tonumber(target:match("^asteroid:(%d+)$"))
+			local drone_index = target and tonumber(target:match("^drone:(%d+)$"))
+			local drone = drone_index and state.drones[drone_index]
+			player.drone_target = (drone and not drone.destroyed_until) and drone_index or nil
 			-- Only a standing part of the other faction's outpost here (the
 			-- outpost, its beacon or a sentry platform), or one of this
 			-- system's standing asteroids, can be a target.
@@ -827,7 +994,7 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 			else
 				player.outpost_target, player.firing_asteroid = nil, nil
 			end
-			if player.outpost_target or player.firing_asteroid then
+			if player.outpost_target or player.firing_asteroid or player.drone_target then
 				-- Which weapons are switched on (Shift+1-9 in the game).
 				player.firing_slots = nil
 				if ok and type(t) == "table" and type(t.slots) == "table" then
@@ -889,6 +1056,13 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 	end
 	if update_asteroids(dispatcher, state, now) then
 		state.asteroids_changed = true
+	end
+	if next(state.players) then
+		move_drones(state, 1 / TICK_RATE, now)
+		update_drones(dispatcher, state, now)
+		if tick % DRONE_BROADCAST_TICKS == 0 then
+			dispatcher.broadcast_message(OP_DRONES, drones_message(state))
+		end
 	end
 	for user_id, player in pairs(state.players) do
 		if player.scan and tick >= player.scan.done_tick then

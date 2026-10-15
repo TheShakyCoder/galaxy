@@ -872,4 +872,5 @@ nodes {
   shadow_alpha: 0.0
 }
 material: "/builtins/materials/gui.material"
+max_nodes: 1024
 adjust_reference: ADJUST_REFERENCE_PARENT

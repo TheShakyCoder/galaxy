@@ -38,8 +38,33 @@ end
 
 local chassis = outposts.OUTPOSTS[outposts.DEFAULT]
 check("default outpost exists", chassis ~= nil)
-for _, key in ipairs({ "hull_points", "destroyed_for_sec", "radius_m", "dock_range_m", "dock_countdown_sec", "launch_distance_m", "ad_panels" }) do
+for _, key in ipairs({ "hull_points", "destroyed_for_sec", "dock_range_m", "dock_countdown_sec", "launch_distance_m", "ad_panels" }) do
 	check("chassis has " .. key, type(outposts.stat(key)) == "number")
+end
+local col = outposts.stat("collision")
+check("chassis collision is a z-axis cylinder", col and col.shape == "cylinder" and col.axis == "z" and col.radius_m > 0 and col.length_m > 0)
+
+-- The cylinder must cover each model's spine: read the station builder's
+-- own spine extents from the fixed mesh bounds (assets/models/stations/
+-- <faction>/fixed.glb) - the spine is the long Z tube at x = 0.
+local function glb_bounds(path)
+	local data = read(path)
+	if not data then return nil end
+	local json_len = data:byte(13) + data:byte(14) * 256 + data:byte(15) * 65536 + data:byte(16) * 16777216
+	local doc = data:sub(21, 20 + json_len)
+	local mn = doc:match('"min":%[([^%]]+)%]')
+	local mx = doc:match('"max":%[([^%]]+)%]')
+	local function nums(s) local t = {} for n in s:gmatch("[-%d.e]+") do t[#t + 1] = tonumber(n) end return t end
+	return nums(mn), nums(mx)
+end
+local SPINE_EXTENT = { accord = { -378, 378 }, swarm = { 8, 725 } } -- tools/build_stations.py: dock to dock / dock to rotor tip
+for _, faction in ipairs(outposts.FACTIONS) do
+	local c = outposts.skin(faction).spine_centre
+	check(faction .. " skin has spine_centre", c and c.x and c.y and c.z)
+	local lo, hi = c.z - col.length_m / 2, c.z + col.length_m / 2
+	check(faction .. " cylinder covers its spine's length", lo <= SPINE_EXTENT[faction][1] and hi >= SPINE_EXTENT[faction][2])
+	local mn, mx = glb_bounds("assets/models/stations/" .. faction .. "/fixed.glb")
+	check(faction .. " spine centre is inside the model's bounds", mn and c.y >= mn[2] and c.y <= mx[2] and c.z >= mn[3] - 1 and c.z <= mx[3] + 260)
 end
 check("launch distance is beyond dock range", outposts.stat("launch_distance_m") > outposts.stat("dock_range_m"))
 

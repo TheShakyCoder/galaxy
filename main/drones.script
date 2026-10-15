@@ -1,0 +1,74 @@
+-- Draws the current system's NPC drones (plan.md §2.18). The server's system
+-- match simulates them and sends their positions twice a second
+-- (main/network.lua -> main/drone_registry.lua); this spawns one main/drone.go
+-- per drone from #drone_factory, shows its type's model, glides it toward the
+-- latest server position and faces it along its heading, and writes the
+-- shown position back into the registry for targeting, radar and the system
+-- map. Destroyed drones are hidden until they respawn; drones that leave the
+-- registry (system change, docking) are deleted.
+
+local drone_registry = require "main.drone_registry"
+local drone_data = require "main.data.drones"
+
+local TINT = vmath.vector4(1.5, 0.95, 0.6, 1.0) -- a warm machine orange, apart from both factions
+local LIGHT_POS = vmath.vector4(4000, 6000, 4000, 1.0)
+local SMOOTHING = 4 -- per second; server updates arrive every 0.5 s
+local TYPES = drone_data.TYPE_ORDER
+
+local spawned = {} -- index -> { go, type, visible }
+
+local function url(go_id, component)
+	return msg.url(nil, go_id, component)
+end
+
+local function spawn(d)
+	local id = factory.create("#drone_factory", d.target)
+	for _, t in ipairs(TYPES) do
+		local u = url(id, t)
+		go.set(u, "tint", TINT)
+		go.set(u, "light", LIGHT_POS)
+		if t ~= d.type then
+			msg.post(u, "disable")
+		end
+	end
+	return { go = id, type = d.type, visible = true }
+end
+
+function update(self, dt)
+	local k = 1 - math.exp(-SMOOTHING * dt)
+	for index, d in pairs(drone_registry.drones) do
+		local s = spawned[index]
+		if not s then
+			s = spawn(d)
+			spawned[index] = s
+			d.pos = d.target
+		end
+		local visible = not d.down
+		if visible ~= s.visible then
+			s.visible = visible
+			msg.post(url(s.go, d.type), visible and "enable" or "disable")
+			if visible then
+				d.pos = d.target -- respawned elsewhere: no glide across the system
+			end
+		end
+		if visible then
+			d.pos = vmath.lerp(k, d.pos, d.target)
+			go.set_position(d.pos, s.go)
+			local yaw = math.atan2(d.heading.x, d.heading.z)
+			go.set_rotation(vmath.quat_rotation_y(yaw), s.go)
+		end
+	end
+	for index, s in pairs(spawned) do
+		if not drone_registry.drones[index] then
+			go.delete(s.go)
+			spawned[index] = nil
+		end
+	end
+end
+
+function final(self)
+	for _, s in pairs(spawned) do
+		go.delete(s.go)
+	end
+	spawned = {}
+end

@@ -20,6 +20,7 @@ local skin_prices = require("main.data.skin_prices")
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
 local outpost_rules = require("main.outpost_rules") -- synced to the server too
+local launch_delays = require("main.data.launch_delays")
 local catalog = require("main.data.modules.catalog")
 local ranks = require("main.data.ranks")
 local ship_class_levels = require("main.data.ship_class_levels")
@@ -80,10 +81,15 @@ M.owned = nil
 -- the same reason: installing/uninstalling must track which specific
 -- upgraded copy is in a slot, not just which type.
 M.loadout = nil
--- NOTE: `owned`/`loadout` are a single global pool, not yet scoped per
--- ship — only one ship exists in the roster so far (§2.1.2), so there's
--- nothing to test per-ship segregation against yet. Flagged as an open
--- question in plan.md §4 once more ships exist.
+-- `loadouts`: ship_id -> that ship's own loadout list (per direct
+-- instruction: modules are fitted to ONE ship; a newly bought ship of any
+-- class starts with NOTHING fitted - only the starting ship comes with its
+-- starter kit). `M.loadout` above is always the ACTIVE ship's entry of this
+-- table (same table, so every existing reader of M.loadout sees the active
+-- ship's fitting); M.select_ship repoints it. `owned` stays one shared pool
+-- - the hold of spare modules - and an instance is fitted to at most one
+-- ship at a time.
+M.loadouts = nil
 
 -- `tope`: the player's balance of Tope (§2.6's general currency, as
 -- opposed to PvP-only Valour). Per direct instruction, the outpost screen
@@ -181,7 +187,8 @@ local function start_character(faction)
 	M.assignments = nil
 	next_instance_id = 1
 	M.owned = {}
-	M.loadout = {}
+	M.loadouts = { [STARTING_SHIP_ID] = {} }
+	M.loadout = M.loadouts[STARTING_SHIP_ID]
 	M.tope = STARTING_TOPE
 	M.valour = STARTING_VALOUR
 	M.water = STARTING_WATER
@@ -410,17 +417,10 @@ end
 -- Dock / launch cooldown (§2.16, per direct instruction)
 -- ---------------------------------------------------------------------------
 
--- Seconds before a launch may leave the outpost, counted from the moment the
--- ship docked - or, being destroyed, was returned to one. Both go through
--- main/player_ship.script's complete_dock(), which calls M.dock() below, so
--- the two cases are deliberately the same length.
-local DOCK_LAUNCH_COOLDOWN = 10
-
--- Seconds before a launch may leave the outpost after the previous session
--- ended in any way: the player reloaded the browser, closed the tab or quit,
--- whether in space or docked (per direct instruction - the earlier docked
--- exemption was dropped). M.resume() applies it on every page load.
-local SESSION_END_LAUNCH_COOLDOWN = 60
+-- The launch delays (per direct instruction 2026-10-15) live in
+-- main/data/launch_delays.lua so they're easy to change. Only a session that
+-- ended IN FLIGHT (M.resume) and a repair (M.repair_delay) delay a launch;
+-- docking, respawning and loading the game while docked do not.
 
 -- The host's own clock, in seconds since the Unix epoch. A hook rather than a
 -- direct os.time() call for the same reason M.set_outpost_availability exists
@@ -493,24 +493,37 @@ end
 -- (main/player_ship.script's docking countdown) or being destroyed and
 -- respawning at one (its ship_destroyed()) - both route through complete_dock(),
 -- which is where this is called from. Clears M.flying (so a launch is allowed
--- again) and starts the ordinary dock cooldown. Never SHORTENS a cooldown
--- already running, so a dock during the long session-end one cannot cut it
--- back down to ten seconds.
+-- again) and adds the dock delay (launch_delays.DOCK_SEC - none today). Never
+-- SHORTENS a delay already running.
 function M.dock()
 	M.flying = false
-	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + DOCK_LAUNCH_COOLDOWN)
+	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + launch_delays.DOCK_SEC)
+	return true
+end
+
+-- Any repair at the outpost delays the next launch by launch_delays.REPAIR_SEC
+-- (20 s, arbitrary). For the repair operation to call once repairs exist
+-- (plan.md §2.19); never shortens a longer delay already running.
+function M.repair_delay()
+	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + launch_delays.REPAIR_SEC)
 	return true
 end
 
 -- A returning player's session begins at an outpost: main/profile.lua calls
 -- this once the saved profile has been loaded (and only for a profile that
--- already has a faction). Ending the game - reloading, closing or quitting,
--- in space or docked - must not be a free relaunch, so every page load arms
--- the session-end cooldown (per direct instruction: 60 seconds). Never
--- shortens a longer one already running.
+-- already has a faction). If that profile still says the ship was IN SPACE
+-- when the last session ended - the browser was reloaded, closed or quit
+-- mid-flight - leaving must not be a free relaunch, so the reload delay
+-- applies (launch_delays.RELOAD_IN_FLIGHT_SEC, 60 s). A session that ended
+-- docked - including simply opening the game from the website - adds no delay
+-- (per direct instruction 2026-10-15); anything still running (a repair delay)
+-- carries over in the profile. Never shortens a longer one.
 function M.resume()
+	local was_flying = M.flying and true or false
 	M.flying = false -- at the outpost from here on, whoever ends the session next
-	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + SESSION_END_LAUNCH_COOLDOWN)
+	if was_flying then
+		M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + launch_delays.RELOAD_IN_FLIGHT_SEC)
+	end
 	return true
 end
 
@@ -741,10 +754,50 @@ function M.advance_ship(ship_id)
 	return true
 end
 
--- Switches the active ship to `ship_id`, if owned. No-op otherwise.
+-- Does `module` (a catalog entry) fit a ship of class `ship_class`? Same rule
+-- as the outpost screen's own filter (main/outpost.gui_script
+-- module_fits_class): the singular `ship_class`, else the older plural
+-- `ship_classes` list; a module with neither fits any ship.
+function M.module_fits_ship(module, ship_id)
+	local ship = ships.SHIPS[ship_id]
+	local class = ship and ship.class
+	if not (module and class) then
+		return true
+	end
+	if module.ship_class then
+		return module.ship_class == class
+	end
+	if module.ship_classes then
+		for _, c in ipairs(module.ship_classes) do
+			if c == class then
+				return true
+			end
+		end
+		return false
+	end
+	return true
+end
+
+-- `ship_id`'s own loadout list, created empty the first time it's needed.
+local function loadout_of(ship_id)
+	M.loadouts = M.loadouts or {}
+	if not M.loadouts[ship_id] then
+		M.loadouts[ship_id] = {}
+	end
+	return M.loadouts[ship_id]
+end
+
+-- Points M.loadout at the active ship's own list.
+local function use_active_loadout()
+	M.loadout = loadout_of(M.active_ship_id)
+end
+
+-- Switches the active ship to `ship_id`, if owned. No-op otherwise. The
+-- fitting shown and used from then on is that ship's own (M.loadout).
 function M.select_ship(ship_id)
 	if M.is_ship_owned(ship_id) then
 		M.active_ship_id = ship_id
+		use_active_loadout()
 		return true
 	end
 	return false
@@ -767,6 +820,10 @@ function M.purchase_ship(ship_id)
 		return false
 	end
 	table.insert(M.owned_ships, ship_id)
+	-- A new ship never inherits any fitting (per direct instruction): it
+	-- starts with an empty loadout of its own.
+	M.loadouts = M.loadouts or {}
+	M.loadouts[ship_id] = {}
 	return true
 end
 
@@ -848,9 +905,11 @@ end
 -- levels, M.upgrade below). Use M.is_type_installed for the "is ANY copy
 -- of this type installed anywhere" query instead.
 function M.is_installed(instance_id)
-	for _, entry in ipairs(M.loadout or {}) do
-		if entry.instance_id == instance_id then
-			return true
+	for _, list in pairs(M.loadouts or {}) do
+		for _, entry in ipairs(list) do
+			if entry.instance_id == instance_id then
+				return true
+			end
 		end
 	end
 	return false
@@ -871,7 +930,7 @@ end
 -- Is any owned instance of `item_key` currently installed in any slot?
 -- Same "by type, not by specific copy" convenience as M.is_owned.
 function M.is_type_installed(item_key)
-	for _, entry in ipairs(M.loadout or {}) do
+	for _, entry in ipairs(M.loadout or {}) do -- the active ship
 		local inst = M.get_instance(entry.instance_id)
 		if inst and inst.item_key == item_key then
 			return true
@@ -927,14 +986,24 @@ end
 -- upgrade level, which is the whole point of tracking instances instead
 -- of just type keys.
 function M.install(slot, instance_id)
-	if not M.get_instance(instance_id) or not M.slot_exists(slot) then
+	local inst = M.get_instance(instance_id)
+	if not inst or not M.slot_exists(slot) then
 		return false
 	end
-	-- pull this instance out of whatever slot it's currently in, if any
-	for i, entry in ipairs(M.loadout) do
-		if entry.instance_id == instance_id then
-			table.remove(M.loadout, i)
-			break
+	-- Modules are made for one ship class (per direct instruction): a
+	-- Patrol weapon can't go on a Frigate. A module with no ship_class fits
+	-- any ship.
+	if not M.module_fits_ship(catalog.get(inst.item_key), M.active_ship_id) then
+		return false
+	end
+	-- pull this instance out of whatever slot it's currently in, on ANY
+	-- ship (an instance is fitted to one ship at a time)
+	for _, list in pairs(M.loadouts) do
+		for i, entry in ipairs(list) do
+			if entry.instance_id == instance_id then
+				table.remove(list, i)
+				break
+			end
 		end
 	end
 	-- whatever currently occupies `slot` is displaced back to being a spare
@@ -988,10 +1057,12 @@ function M.sell(instance_id)
 	if not M.get_instance(instance_id) then
 		return false
 	end
-	for i, entry in ipairs(M.loadout) do
-		if entry.instance_id == instance_id then
-			table.remove(M.loadout, i)
-			break
+	for _, list in pairs(M.loadouts) do
+		for i, entry in ipairs(list) do
+			if entry.instance_id == instance_id then
+				table.remove(list, i)
+				break
+			end
 		end
 	end
 	for i, inst in ipairs(M.owned) do
@@ -1029,6 +1100,11 @@ function M.sell_ship(ship_id)
 	if M.active_ship_id == ship_id then
 		M.active_ship_id = M.owned_ships[1]
 	end
+	-- Its fitted modules go back to the hold as spares (still owned).
+	if M.loadouts then
+		M.loadouts[ship_id] = nil
+	end
+	use_active_loadout()
 	M.advanced_ships[ship_id] = nil
 	add_tope(SHIP_SELL_REFUND)
 	return true
@@ -1044,6 +1120,9 @@ function M.serialize()
 		active_ship_id = M.active_ship_id,
 		advanced_ships = M.advanced_ships,
 		owned = M.owned,
+		loadouts = M.loadouts,
+		-- The active ship's loadout again, for readers that only need what's
+		-- flying (nakama-server/modules/system_match.lua) and older code.
 		loadout = M.loadout,
 		next_instance_id = next_instance_id,
 		tope = M.tope,
@@ -1072,7 +1151,38 @@ function M.restore(data)
 	M.active_ship_id = data.active_ship_id or M.active_ship_id
 	M.advanced_ships = data.advanced_ships or {}
 	M.owned = data.owned or M.owned
-	M.loadout = data.loadout or M.loadout
+	if data.loadouts then
+		M.loadouts = data.loadouts
+	elseif data.loadout then
+		-- A save from before per-ship loadouts: one list shared by every
+		-- ship. Each fitted module goes back onto ONE owned ship of its own
+		-- class (the starting ship first) where that slot exists; anything
+		-- that fits nowhere becomes a spare in the hold.
+		M.loadouts = {}
+		local order = {}
+		for _, id in ipairs(M.owned_ships or {}) do
+			if id == STARTING_SHIP_ID then table.insert(order, 1, id) else table.insert(order, id) end
+		end
+		for _, entry in ipairs(data.loadout) do
+			local inst = M.get_instance(entry.instance_id)
+			local module = inst and catalog.get(inst.item_key)
+			for _, ship_id in ipairs(order) do
+				local prefix, number = tostring(entry.slot):match("^([WCEH])(%d+)$")
+				local count = prefix and M.get_components(ship_id)[prefix]
+				local fits_class = M.module_fits_ship(module, ship_id)
+				local free = true
+				for _, other in ipairs(M.loadouts[ship_id] or {}) do
+					if other.slot == entry.slot then free = false end
+				end
+				if inst and fits_class and count and tonumber(number) <= count and free then
+					M.loadouts[ship_id] = M.loadouts[ship_id] or {}
+					table.insert(M.loadouts[ship_id], { slot = entry.slot, instance_id = entry.instance_id })
+					break
+				end
+			end
+		end
+	end
+	use_active_loadout()
 	next_instance_id = data.next_instance_id or next_instance_id
 	M.tope = data.tope or M.tope
 	M.valour = data.valour or M.valour
@@ -1093,7 +1203,7 @@ end
 -- Clears everything (logging out).
 function M.reset()
 	M.faction, M.owned_ships, M.active_ship_id, M.advanced_ships = nil, nil, nil, nil
-	M.owned, M.loadout, M.owned_skins, M.equipped_skins = nil, nil, nil, nil
+	M.owned, M.loadout, M.loadouts, M.owned_skins, M.equipped_skins = nil, nil, nil, nil, nil
 	M.tope, M.valour, M.water, M.iron, M.hydrogen = nil, nil, nil, nil, nil
 	M.current_system, M.pending_jump = nil, nil
 	M.flying, M.launch_blocked_until = nil, nil

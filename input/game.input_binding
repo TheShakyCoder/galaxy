@@ -159,6 +159,10 @@ key_trigger {
   action: "toggle_map"
 }
 key_trigger {
+  input: KEY_M
+  action: "toggle_system_map"
+}
+key_trigger {
   input: KEY_J
   action: "execute_jump"
 }

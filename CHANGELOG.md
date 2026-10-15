@@ -18,6 +18,11 @@ in `main/version.lua` (see "Versioning" in the README).
   Spica) around Polaris.
 
 ### Outpost
+- **Each ship keeps its own weapons and components.** A newly bought ship starts with
+  nothing fitted, whatever its class. Before, it showed the weapons of the ship you
+  already had. Modules can only be fitted to ships of their own class, and selling a
+  ship puts its modules back in your hold. Existing saves are sorted out
+  automatically: each module goes back onto a ship of its own class.
 - **Outposts are now earned.** Every system has an Outpost Progress meter for each
   faction. Mining there and flying there raise it, and it slowly drains.
   - **At 90%** your faction's outpost moves in, and it disappears again if progress
@@ -43,9 +48,26 @@ in `main/version.lua` (see "Versioning" in the README).
   destination. You can't jump while docked: launch, then press J.
 
 ### Flight
-- **Reloading the game always means a 60-second wait before launching.** Before,
-  reloading while docked at an outpost skipped it; now it applies whether you
-  were in space or docked.
+- **The camera stays put while you hold the mouse button.** After dragging the view
+  around your ship, it waits until you let go before counting down to swing back.
+- **Drones now patrol the systems.** Each system has its own group of hostile
+  machine drones, scaled to its threat level: none in the safest systems, a few weak
+  scouts around the home systems, and up to 34 tougher scouts, sentries, guards and
+  hunters in the most dangerous ones.
+  - **Behaviour:** they patrol their area and chase any pilot who comes close.
+  - **Fighting them:** you can target and shoot them down. They don't fire back yet.
+  - **Rewards:** each kill pays XP and raises your faction's Outpost Progress in that
+    system.
+  - **Seeing them:** drones show orange on the radar and on the system map.
+- **Press M for a map of the system you're in.** It shows:
+  - every asteroid, coloured by resource once analysed;
+  - the outposts and their defences;
+  - all friendly ships, plus enemy ships within your sensor range.
+
+  Click anything on it to target it. You keep flying while it's open.
+- **Launching is quicker.** You can launch straight away after docking, after
+  respawning and after opening the game from the website. Only reloading the game
+  while in flight still costs a 60-second wait.
 - **F3 shows a temporary debug readout** in flight: your position, velocity,
   speed, forward/up/right vectors, heading, pitch, roll and turn rates. Press F3
   again to hide it.
