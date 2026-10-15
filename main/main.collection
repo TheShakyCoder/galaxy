@@ -1154,3 +1154,26 @@ embedded_instances {
 instances { id: "space_sky" prototype: "/main/space.go" }
 
 instances { id: "space_wisps" prototype: "/main/space_wisps.go" }
+
+# OUTPOST DEFENCES BEGIN
+embedded_instances { id: "accord_beacon" data: "components { id: \"model\" component: \"/assets/models/outpost_defences/accord/beacon.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "accord_platform1" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/accord/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/accord/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/accord/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "accord_platform2" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/accord/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/accord/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/accord/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "accord_platform3" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/accord/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/accord/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/accord/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "accord_platform4" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/accord/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/accord/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/accord/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "swarm_beacon" data: "components { id: \"model\" component: \"/assets/models/outpost_defences/swarm/beacon.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "swarm_platform1" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/swarm/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/swarm/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/swarm/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "swarm_platform2" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/swarm/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/swarm/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/swarm/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "swarm_platform3" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/swarm/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/swarm/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/swarm/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+embedded_instances { id: "swarm_platform4" data: "components { id: \"light\" component: \"/assets/models/outpost_defences/swarm/light.model\" }\ncomponents { id: \"medium\" component: \"/assets/models/outpost_defences/swarm/medium.model\" }\ncomponents { id: \"heavy\" component: \"/assets/models/outpost_defences/swarm/heavy.model\" }"
+position { x: 0.0 y: 0.0 z: 0.0 } rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 } scale3 { x: 1.0 y: 1.0 z: 1.0 } }
+# OUTPOST DEFENCES END

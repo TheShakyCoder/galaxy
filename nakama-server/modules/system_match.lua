@@ -17,12 +17,21 @@ system_matches/<system>) up to date with a heartbeat, so the directory can
 find it - on this node now, and on whichever node hosts it once there are
 several (see directory.lua).
 
-The match also owns the system's outposts (modules/outposts.lua): players
-of the other faction can fire at one, and the match applies each of their
-installed weapons' damage per second (BSGO values in main/data/modules/
-weapons_autocannons.lua) while the outpost is within that weapon's range
-and firing arc of the ship's last validated position and heading. At zero
-hull the outpost is destroyed for an hour, then returns at full hull.
+The match also owns the system's outposts (modules/outposts.lua, rules in
+main/outpost_rules.lua, plan.md §2.7 "Outpost progression"):
+  * Outpost Progress: once a second each faction's meter here rises by its
+    pilots' presence and falls by the drain; an asteroid depleted by one of
+    its pilots adds the mining gain. The meter's control level decides
+    whether the faction's outpost stands here and which tier, plus its jump
+    beacon and up to 4 sentry platforms.
+  * Damage: players of the other faction can fire at the outpost, its
+    beacon or a platform; the match applies each of their installed weapons'
+    damage per second (BSGO values in main/data/modules/weapons_autocannons.lua)
+    while the target is within that weapon's range and firing arc of the
+    ship's predicted position and heading. At zero hull the outpost is gone
+    for an hour (a permanent one can't be destroyed), the beacon for an hour
+    and a platform for 10 minutes. Hull is scaled by the galaxy-wide
+    underdog factor.
 
 Wire protocol (JSON match data):
   1 STATE     client -> server  {x,y,z,qx,qy,qz,qw,speed}
@@ -30,9 +39,13 @@ Wire protocol (JSON match data):
   3 JOIN      server -> client  {u, ship_id, faction, skin_id}
   4 LEAVE     server -> client  {u}
   5 OUTPOSTS  server -> client  {accord = state, swarm = state, now}
-              state = {exists, hp, max_hp, available, destroyed_until}
-              (ms; `now` is the server's clock, for the countdown)
-  6 FIRE      client -> server  {target = "outpost:<faction>", slots = ["W1", ...]}
+              state = {exists, permanent, pct, level, tier, present, available,
+              hp, max_hp, destroyed_until, beacon = part, platforms = [part]}
+              part = {hp, max_hp, available, destroyed_until, class}
+              (ms; `now` is the server's clock, for the countdown). Sent on
+              joining and whenever hull, tier, level or whole percent changes.
+  6 FIRE      client -> server  {target = "outpost:<faction>" | "beacon:<faction>"
+              | "platform:<faction>:<slot>" | "asteroid:<i>", slots = ["W1", ...]}
               to fire the weapons in those slots (all fitted weapons if slots
               is missing), {} to stop
   7 ANALYSE   client -> server  {} - Asteroid Analyser (P): analyse every
@@ -59,6 +72,9 @@ local weapons = require("main.data.modules.weapons_autocannons")
 local tickets = require("tickets")
 local registry = require("registry")
 local outposts = require("outposts")
+local rules = require("main.outpost_rules") -- copied from the game by tools/sync_server_rules.py
+local outpost_data = require("main.data.outposts")
+local sentry_platforms = require("main.data.sentry_platforms")
 local asteroids = require("main.data.asteroids")
 local rewards = require("main.data.xp_rewards")
 local progress = require("progress")
@@ -71,10 +87,11 @@ local HEARTBEAT_TICKS = 5 * TICK_RATE
 local IDLE_TICKS = 5 * 60 * TICK_RATE -- empty for 5 minutes -> shut down
 local MAX_STRIKES = 20 -- invalid updates before a player is kicked
 local OUTPOST_BROADCAST_TICKS = 5 -- hull updates at most twice a second
-local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed hull every 5 seconds
+local OUTPOST_PERSIST_TICKS = 5 * TICK_RATE -- save changed progress/hull every 5 seconds
 local ASTEROID_BROADCAST_TICKS = 5 -- asteroid hull updates, same twice-a-second cap
 local ASTEROID_RESPAWN_MS = 5 * 60 * 1000 -- a depleted asteroid is gone for 5 minutes
 local XP_FLUSH_TICKS = 5 * TICK_RATE -- award outpost damage XP every 5 seconds
+local SCALE_REFRESH_TICKS = 60 * TICK_RATE -- re-read the galaxy-wide underdog hull scale every minute
 local ANALYSED_COLLECTION = "analysed" -- per player, key = system id (server-only, modules/auth.lua)
 
 -- Validation slack: speed limit is the ship's boost speed + 10%; a move may
@@ -163,32 +180,6 @@ local function flush_damage(dispatcher, state, user_id, player)
 	send_progress(dispatcher, state, user_id, "outpost_damage", progress.apply(user_id, "outpost_damage", damage))
 end
 
--- The destruction bonus, split by damage between everyone who hit the
--- outpost recently (whether or not they're still in the system).
-local function award_destruction(dispatcher, state, outpost, now)
-	local total, recent = 0, {}
-	for user_id, a in pairs(outpost.attackers or {}) do
-		if now - a.last <= rewards.OUTPOST_ATTACKER_WINDOW_S * 1000 then
-			recent[user_id] = a.damage
-			total = total + a.damage
-		end
-	end
-	outpost.attackers = {}
-	if total <= 0 then
-		return
-	end
-	for user_id, damage in pairs(recent) do
-		local player = state.players[user_id]
-		if player then
-			flush_damage(dispatcher, state, user_id, player)
-		end
-		local share = math.floor(rewards.OUTPOST_DESTROYED * damage / total)
-		if share > 0 then
-			send_progress(dispatcher, state, user_id, "outpost_destroyed", progress.apply(user_id, "outpost_destroyed", share))
-		end
-	end
-end
-
 -- Asteroid Analyser -------------------------------------------------------
 
 -- The asteroids (indices into state.field) within `range` of position `s`.
@@ -228,39 +219,118 @@ local function finish_scan(dispatcher, state, user_id, indices)
 end
 
 -- Outposts ----------------------------------------------------------------
+--
+-- state.records[faction] is the faction's stored record for this system
+-- (main/outpost_rules.lua shape); state.outposts[faction] the rule state
+-- derived from it (rules.state), rebuilt every tick, plus positions. Only
+-- factions that may ever have an outpost here have either.
 
-local function load_outposts(system)
-	local list = {}
-	local now = nk.time()
-	for _, faction in ipairs(outposts.FACTIONS) do
-		local st = outposts.state(system, faction, outposts.read(system, faction), now)
-		if st.exists then
-			st.pos = star_systems.outpost_position(system, faction)
-			list[faction] = st
-		end
+-- Positions of the outpost and its defences (fixed per system).
+local function outpost_positions(system, faction)
+	local pos = star_systems.outpost_position(system, faction)
+	local list = { pos = pos, beacon = rules.beacon_position(pos), platforms = {} }
+	for slot = 1, 4 do
+		list.platforms[slot] = rules.platform_position(pos, slot)
 	end
 	return list
 end
 
+local function load_records(system)
+	local records, positions = {}, {}
+	for _, faction in ipairs(outposts.FACTIONS) do
+		if star_systems.has_outpost(system, faction) then
+			records[faction] = outposts.read(system, faction) or {}
+			positions[faction] = outpost_positions(system, faction)
+		end
+	end
+	return records, positions
+end
+
+local function refresh_scales(state)
+	state.scales = {}
+	for faction in pairs(state.records) do
+		state.scales[faction] = outposts.hull_scale(faction)
+	end
+end
+
+-- Rebuilds state.outposts from the records. Returns true if anything a
+-- player would see changed (presence, tier, level, whole percent, a part
+-- appearing/disappearing) - hull changes are flagged by the damage code.
+local function rebuild_outposts(state, now)
+	local changed = false
+	state.outposts = state.outposts or {}
+	for faction, record in pairs(state.records) do
+		local st = rules.state(state.system, faction, record, now, state.scales[faction] or 1)
+		local old = state.outposts[faction]
+		local signature = string.format("%s|%s|%d|%d|%s|%s|%d", tostring(st.tier), tostring(st.available),
+			st.level, math.floor(st.pct), tostring(st.beacon and st.beacon.available), tostring(st.destroyed_until), #st.platforms)
+		for _, p in ipairs(st.platforms) do
+			signature = signature .. "|" .. p.class .. tostring(p.available)
+		end
+		if not old or old.signature ~= signature then
+			changed = true
+		end
+		st.signature = signature
+		st.attackers = old and old.attackers or {}
+		state.outposts[faction] = st
+		-- An outpost that has left (below 90 %) comes back at full hull.
+		if not st.present and record.hp_frac then
+			record.hp_frac = nil
+			state.dirty[faction] = true
+		end
+	end
+	return changed
+end
+
+local function part_brief(p)
+	return p and { hp = math.floor(p.hp + 0.5), max_hp = p.max_hp, available = p.available, destroyed_until = p.destroyed_until, class = p.class } or nil
+end
+
 local function outposts_message(state)
 	local out = { now = nk.time() }
-	for faction, o in pairs(state.outposts) do
-		out[faction] = { exists = true, hp = math.floor(o.hp + 0.5), max_hp = o.max_hp, available = o.available, destroyed_until = o.destroyed_until }
+	for faction, st in pairs(state.outposts) do
+		local platforms = {}
+		for slot, p in ipairs(st.platforms) do
+			platforms[slot] = part_brief(p)
+		end
+		out[faction] = {
+			exists = true, permanent = st.permanent, pct = math.floor(st.pct * 10 + 0.5) / 10, level = st.level,
+			tier = st.tier, present = st.present, available = st.available, hp = math.floor(st.hp + 0.5),
+			max_hp = st.max_hp, destroyed_until = st.destroyed_until,
+			beacon = part_brief(st.beacon), platforms = platforms,
+		}
 	end
 	return nk.json_encode(out)
 end
 
-local function save_outpost(state, faction)
-	local o = state.outposts[faction]
-	outposts.write(state.system, faction, { hp = o.hp, destroyed_until = o.destroyed_until })
-	o.dirty = false
+local function save_dirty_outposts(state)
+	for faction in pairs(state.dirty) do
+		outposts.write(state.system, faction, state.records[faction])
+	end
+	state.dirty = {}
 end
 
-local function save_dirty_outposts(state)
-	for faction, o in pairs(state.outposts) do
-		if o.dirty then
-			save_outpost(state, faction)
+-- Adds `delta` % to `faction`'s Outpost Progress here (drain applied first).
+local function add_progress(state, faction, delta, now)
+	local record = state.records[faction]
+	if record then
+		rules.add_progress(record, state.system, faction, delta, now)
+		state.dirty[faction] = true
+	end
+end
+
+-- Once a second: every faction's meter here moves by its pilots' presence
+-- (PROGRESS.gain_pct.presence_per_min each) less the drain.
+local function tick_progress(state, now)
+	local pilots = {}
+	for _, player in pairs(state.players) do
+		if player.faction then
+			pilots[player.faction] = (pilots[player.faction] or 0) + 1
 		end
+	end
+	local per_sec = (outpost_data.PROGRESS.gain_pct.presence_per_min or 0) / 60
+	for faction in pairs(state.records) do
+		add_progress(state, faction, (pilots[faction] or 0) * per_sec, now)
 	end
 end
 
@@ -297,70 +367,162 @@ local function predicted_state(player, now)
 	}
 end
 
--- Damage this player's weapons deal to `outpost` over `dt` seconds: each
--- weapon counts if the outpost is within its range and firing arc of where
--- the ship is now (predicted_state).
-local function outpost_damage(player, outpost, dt, now)
+-- Damage this player's weapons deal over `dt` seconds to a target at `pos`
+-- of radius `radius` (0 = measure to its centre, as for the outpost itself):
+-- each weapon counts if the target is within its range and firing arc of
+-- where the ship is now (predicted_state).
+local function target_damage(player, pos, radius, dt, now)
 	local s = predicted_state(player, now)
 	if not s then
 		return 0
 	end
-	local dx, dy, dz = outpost.pos.x - s.x, outpost.pos.y - s.y, outpost.pos.z - s.z
+	local dx, dy, dz = pos.x - s.x, pos.y - s.y, pos.z - s.z
 	local dist = math.sqrt(dx * dx + dy * dy + dz * dz)
 	local cos_angle = 1
 	if dist > 0 then
 		local fx, fy, fz = forward(s)
 		cos_angle = (fx * dx + fy * dy + fz * dz) / dist
 	end
+	local reach = math.max(0, dist - radius)
 	local damage = 0
 	for _, weapon in ipairs(player.weapons or {}) do
 		local switched_on = not player.firing_slots or player.firing_slots[weapon.slot]
-		if switched_on and dist <= weapon.range and cos_angle >= weapon.cos_half_arc then
+		if switched_on and reach <= weapon.range and cos_angle >= weapon.cos_half_arc then
 			damage = damage + weapon.dps * dt
 		end
 	end
 	return damage
 end
 
--- Applies this tick's fire to the outposts, destroys any at zero hull and
--- brings back any whose hour is up. Returns true if their state changed.
+-- The target a FIRE message names, if it's a standing part of the OTHER
+-- faction's outpost here: { faction, part = "outpost"|"beacon"|"platform", slot }.
+local function parse_outpost_target(state, player, target)
+	local faction, part, slot = nil, nil, nil
+	faction = target:match("^outpost:(%a+)$")
+	if faction then
+		part = "outpost"
+	else
+		faction = target:match("^beacon:(%a+)$")
+		if faction then
+			part = "beacon"
+		else
+			faction, slot = target:match("^platform:(%a+):(%d)$")
+			part, slot = "platform", tonumber(slot)
+		end
+	end
+	local st = faction and state.outposts[faction]
+	if not st or faction == player.faction or not st.available then
+		return nil
+	end
+	if part == "beacon" and not (st.beacon and st.beacon.available) then
+		return nil
+	end
+	if part == "platform" and not (slot and st.platforms[slot] and st.platforms[slot].available) then
+		return nil
+	end
+	if part == "outpost" and st.permanent then
+		return nil -- a permanent outpost can't be destroyed
+	end
+	return { faction = faction, part = part, slot = slot }
+end
+
+local function same_target(a, b)
+	return a and b and a.faction == b.faction and a.part == b.part and a.slot == b.slot
+end
+
+-- XP for destroying an outpost: BSGO Nova pays outpost kills IN FULL to
+-- every participant (never split) - everyone who damaged it in the last
+-- OUTPOST_ATTACKER_WINDOW_S seconds, whether or not they're still here.
+local function award_destruction(dispatcher, state, st, now)
+	for user_id, a in pairs(st.attackers or {}) do
+		if now - a.last <= rewards.OUTPOST_ATTACKER_WINDOW_S * 1000 then
+			local player = state.players[user_id]
+			if player then
+				flush_damage(dispatcher, state, user_id, player)
+			end
+			send_progress(dispatcher, state, user_id, "outpost_destroyed",
+				progress.apply(user_id, "outpost_destroyed", rewards.OUTPOST_DESTROYED))
+		end
+	end
+	st.attackers = {}
+end
+
+-- How long each part stays away once destroyed.
+local DOWN_MS = {
+	outpost = outposts.DESTROYED_FOR_MS,
+	beacon = outpost_data.BEACON.data.destroyed_for_sec * 1000,
+	platform = sentry_platforms.BEHAVIOUR.respawn_sec * 1000,
+}
+
+-- The stored sub-record a part's hull lives in (created on first hit; a
+-- stale or different-class one is replaced).
+local function stored_part(record, target, st)
+	if target.part == "outpost" then
+		return record
+	elseif target.part == "beacon" then
+		record.beacon = record.beacon or {}
+		return record.beacon
+	end
+	record.platforms = record.platforms or {}
+	local class = st.platforms[target.slot].class
+	local stored = record.platforms[target.slot]
+	if not stored or stored.class ~= class then
+		stored = { class = class }
+		record.platforms[target.slot] = stored
+	end
+	return stored
+end
+
+-- Applies this tick's fire to every outpost part. Returns true if any hull
+-- changed or a part was destroyed.
 local function update_outposts(dispatcher, state, now)
 	local changed = false
-	for faction, o in pairs(state.outposts) do
-		if not o.available and o.destroyed_until and now >= o.destroyed_until then
-			o.hp, o.available, o.destroyed_until = o.max_hp, true, nil
-			save_outpost(state, faction)
-			nk.logger_info(string.format("%s outpost in %s is back", faction, state.system))
-			changed = true
-		elseif o.available then
-			local damage = 0
-			o.attackers = o.attackers or {}
-			for user_id, player in pairs(state.players) do
-				if player.firing == faction and player.faction ~= faction then
-					local dealt = outpost_damage(player, o, 1 / TICK_RATE, now)
-					if dealt > 0 then
-						damage = damage + dealt
-						player.pending_damage = player.pending_damage + dealt
-						local a = o.attackers[user_id] or { damage = 0 }
-						a.damage, a.last = a.damage + dealt, now
-						o.attackers[user_id] = a
-					end
-				end
+	for user_id, player in pairs(state.players) do
+		local target = player.outpost_target
+		local st = target and state.outposts[target.faction]
+		local live = st and parse_outpost_target(state, player, (target.part == "platform")
+			and string.format("platform:%s:%d", target.faction, target.slot) or (target.part .. ":" .. target.faction))
+		if not same_target(live, target) then
+			player.outpost_target = nil
+		elseif st then
+			local part, pos, radius
+			if target.part == "outpost" then
+				part, pos, radius = st, state.positions[target.faction].pos, 0
+			elseif target.part == "beacon" then
+				part, pos, radius = st.beacon, state.positions[target.faction].beacon, outpost_data.BEACON.data.radius_m
+			else
+				part = st.platforms[target.slot]
+				pos, radius = state.positions[target.faction].platforms[target.slot], sentry_platforms.stat(part.class, "radius_m")
 			end
-			if damage > 0 then
-				o.hp = o.hp - damage
-				o.dirty = true
+			local dealt = target_damage(player, pos, radius, 1 / TICK_RATE, now)
+			if dealt > 0 and part.max_hp > 0 then
+				player.pending_damage = player.pending_damage + dealt
+				if target.part == "outpost" then
+					local a = st.attackers[user_id] or { damage = 0 }
+					a.damage, a.last = a.damage + dealt, now
+					st.attackers[user_id] = a
+				end
+				local record = state.records[target.faction]
+				local stored = stored_part(record, target, st)
+				stored.hp_frac = math.max(0, (part.hp - dealt) / part.max_hp)
+				stored.destroyed_until = nil
+				part.hp = part.max_hp * stored.hp_frac
+				state.dirty[target.faction] = true
 				changed = true
-				if o.hp <= 0 then
-					o.hp, o.available, o.destroyed_until = 0, false, now + outposts.DESTROYED_FOR_MS
-					save_outpost(state, faction)
-					nk.logger_info(string.format("%s outpost in %s destroyed until %d", faction, state.system, o.destroyed_until))
-					for _, player in pairs(state.players) do
-						if player.firing == faction then
-							player.firing = nil
+				if stored.hp_frac <= 0 then
+					stored.hp_frac, stored.destroyed_until = nil, now + DOWN_MS[target.part]
+					part.available = false
+					nk.logger_info(string.format("%s %s%s in %s destroyed until %d", target.faction, target.part,
+						target.slot and (" " .. target.slot) or "", state.system, stored.destroyed_until))
+					for _, other in pairs(state.players) do
+						if same_target(other.outpost_target, target) then
+							other.outpost_target = nil
 						end
 					end
-					award_destruction(dispatcher, state, o, now)
+					if target.part == "outpost" then
+						award_destruction(dispatcher, state, st, now)
+					end
+					save_dirty_outposts(state)
 				end
 			end
 		end
@@ -404,17 +566,29 @@ end
 -- player's inventory (modules/resources.lua); inert rock holds nothing and
 -- awards nothing. The player is told their new balance (OP_RESOURCE) if
 -- they're still in the system - the credit itself doesn't need them there.
-local function deplete_asteroid(dispatcher, state, index, a, user_id)
+--
+-- Mining also raises the miner's faction's Outpost Progress here
+-- (PROGRESS.gain_pct.mining per asteroid, plan.md §2.7) - inert rock
+-- included, it was still mined - and the resource paid is raised by the
+-- faction's galaxy-wide outpost bonus (+1 % per outpost held, BSGO Nova).
+local function deplete_asteroid(dispatcher, state, index, a, user_id, now)
+	local player = state.players[user_id]
+	local faction = player and player.faction
+	if faction then
+		add_progress(state, faction, outpost_data.PROGRESS.gain_pct.mining or 0, now)
+	end
 	local amount = asteroids.resource_amount(a.resource, a.diameter_m)
 	nk.logger_info(string.format("asteroid %d (%s) in %s depleted by %s", index, a.resource, state.system, user_id))
 	if amount <= 0 then
 		return
 	end
+	if faction then
+		amount = math.floor(amount * outposts.mining_multiplier(faction) + 0.5)
+	end
 	local total = resources.apply(user_id, a.resource, amount)
 	if not total then
 		return
 	end
-	local player = state.players[user_id]
 	if player then
 		dispatcher.broadcast_message(OP_RESOURCE,
 			nk.json_encode({ resource = a.resource, amount = amount, total = total }), { player.presence })
@@ -472,7 +646,7 @@ local function update_asteroids(dispatcher, state, now)
 					player.firing_asteroid = nil
 				end
 			end
-			deplete_asteroid(dispatcher, state, index, a, killer)
+			deplete_asteroid(dispatcher, state, index, a, killer, now)
 		end
 		state.rocks[index] = r
 		changed = true
@@ -543,7 +717,11 @@ function M.match_init(context, params)
 		players = {}, -- user_id -> { presence, ship_id, faction, skin_id, weapons, firing, state, updated_at, strikes }
 		used_tickets = {}, -- jti -> expiry (seconds)
 		idle_ticks = 0,
-		outposts = load_outposts(system), -- faction -> { hp, max_hp, available, destroyed_until, pos, dirty, attackers }
+		records = nil, -- faction -> stored outpost record (main/outpost_rules.lua shape)
+		positions = nil, -- faction -> { pos, beacon, platforms[1..4] }
+		outposts = nil, -- faction -> rules.state() + signature, attackers; rebuilt every tick
+		scales = {}, -- faction -> underdog hull scale, refreshed every SCALE_REFRESH_TICKS
+		dirty = {}, -- faction -> true when its record needs saving
 		field = asteroids.field_for(system), -- the system's asteroids (the same list every game has)
 		rocks = {}, -- index -> { hp, destroyed_until? } for asteroids not at full hull
 		outposts_changed = false,
@@ -551,6 +729,9 @@ function M.match_init(context, params)
 		asteroids_changed = false,
 		last_asteroids_broadcast = 0,
 	}
+	state.records, state.positions = load_records(system)
+	refresh_scales(state)
+	rebuild_outposts(state, nk.time())
 	local label = nk.json_encode({ system = system, node = registry.node_id(context) })
 	return state, TICK_RATE, label
 end
@@ -633,19 +814,20 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		if player and message.op_code == OP_FIRE and player.presence.session_id == message.sender.session_id then
 			local ok, t = pcall(nk.json_decode, message.data)
 			local target = ok and type(t) == "table" and type(t.target) == "string" and t.target or nil
-			local faction = target and target:match("^outpost:(%a+)$")
+			local outpost_target = target and parse_outpost_target(state, player, target)
 			local asteroid_index = target and tonumber(target:match("^asteroid:(%d+)$"))
-			-- Only the other faction's outpost in this system, or one of this
+			-- Only a standing part of the other faction's outpost here (the
+			-- outpost, its beacon or a sentry platform), or one of this
 			-- system's standing asteroids, can be a target.
-			if faction and state.outposts[faction] and faction ~= player.faction then
-				player.firing, player.firing_asteroid = faction, nil
+			if outpost_target then
+				player.outpost_target, player.firing_asteroid = outpost_target, nil
 			elseif asteroid_index and state.field[asteroid_index]
 				and not (state.rocks[asteroid_index] and state.rocks[asteroid_index].destroyed_until) then
-				player.firing, player.firing_asteroid = nil, asteroid_index
+				player.outpost_target, player.firing_asteroid = nil, asteroid_index
 			else
-				player.firing, player.firing_asteroid = nil, nil
+				player.outpost_target, player.firing_asteroid = nil, nil
 			end
-			if player.firing or player.firing_asteroid then
+			if player.outpost_target or player.firing_asteroid then
 				-- Which weapons are switched on (Shift+1-9 in the game).
 				player.firing_slots = nil
 				if ok and type(t) == "table" and type(t.slots) == "table" then
@@ -693,6 +875,15 @@ function M.match_loop(context, dispatcher, tick, state, messages)
 		dispatcher.broadcast_message(OP_SNAPSHOT, nk.json_encode(batch))
 	end
 
+	if tick % TICK_RATE == 0 then
+		tick_progress(state, now)
+	end
+	if tick % SCALE_REFRESH_TICKS == 0 then
+		refresh_scales(state)
+	end
+	if rebuild_outposts(state, now) then
+		state.outposts_changed = true
+	end
 	if update_outposts(dispatcher, state, now) then
 		state.outposts_changed = true
 	end

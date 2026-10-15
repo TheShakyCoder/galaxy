@@ -2021,6 +2021,28 @@ local function refresh_map(self)
 	end
 end
 
+-- "Outposts: Accord L3 (134%) - Swarm none (12%)", appended to the map's selection
+-- line, from the latest server state (main/network.lua, plan.md §2.7
+-- "Outpost progression"). A faction that may never have one there is left out.
+local function map_outpost_line(id)
+	local parts = {}
+	for _, faction in ipairs({ "accord", "swarm" }) do
+		local st = network.outpost_state(id, faction)
+		if st and st.exists ~= false then
+			local what
+			if st.available then
+				what = "L" .. tostring(st.level or 0)
+			elseif st.present and st.destroyed_until then
+				what = "destroyed"
+			else
+				what = "none"
+			end
+			table.insert(parts, string.format("%s %s (%d%%)", faction == "accord" and "Accord" or "Swarm", what, math.floor(st.pct or 0)))
+		end
+	end
+	return #parts > 0 and ("Outposts: " .. table.concat(parts, " - ")) or nil
+end
+
 -- Hides the selection lines under the map.
 local function clear_map_selection_text(self)
 	gui.set_enabled(self.map_selection_text_node, false)
@@ -2054,6 +2076,10 @@ local function select_map_system(self, id)
 	if not info.is_current and info.dist then
 		details = string.format("%s  -  %.1f ly  -  %d Hydrogen  -  Threat %d",
 			sys.name, star_systems.map_units_to_ly(info.dist), info.cost, sys.threat or 0)
+	end
+	local outpost_line = map_outpost_line(id)
+	if outpost_line then
+		details = details .. "  -  " .. outpost_line
 	end
 	gui.set_text(self.map_selection_text_node, details)
 	gui.set_text(self.map_selection_status_node, status)
@@ -2909,20 +2935,20 @@ function on_message(self, message_id, message, sender)
 				end
 			end
 		end)
-		-- Is this system's outpost still standing? If it has been destroyed
-		-- (main/network.lua outpost_state), docked_system() is home instead:
-		-- redraw the title and "Docked at" once the server has answered.
-		local system_id = session.get_current_system()
-		if system_id then
-			network.fetch_outposts(system_id, function(ok)
-				if ok and self.active and not self.launching then
-					gui.set_text(self.title_node, (ship_overview_text(session.get_faction())) .. " Outpost")
-					if self.active_page == "overview" then
-						refresh_overview(self)
-					end
+		-- Which outposts stand right now (plan.md §2.7 "Outpost progression")?
+		-- If this system's has gone (destroyed, or its progress fell below
+		-- 90 %), docked_system() is the nearest other one instead: redraw the
+		-- title, "Docked at" and the sector map once the server has answered.
+		network.fetch_galaxy(function(ok)
+			if ok and self.active and not self.launching then
+				gui.set_text(self.title_node, (ship_overview_text(session.get_faction())) .. " Outpost")
+				if self.active_page == "overview" then
+					refresh_overview(self)
+				elseif self.active_page == "map" then
+					refresh_map(self)
 				end
-			end)
-		end
+			end
+		end)
 	end
 end
 

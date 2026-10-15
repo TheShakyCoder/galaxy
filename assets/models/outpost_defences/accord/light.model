@@ -1,0 +1,4 @@
+mesh: "/assets/models/outpost_defences/accord/light.glb"
+material: "/builtins/materials/model.material"
+textures: "/assets/models/stations/accord/hull.png"
+name: "outpost_defence"

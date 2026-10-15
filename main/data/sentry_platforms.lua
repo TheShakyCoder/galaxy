@@ -1,0 +1,111 @@
+-- Sentry platforms (plan.md §2.7 "Outpost progression"): immobile weapons
+-- platforms placed at equal spacing around an outpost, at most 4, graded
+-- light / medium / heavy; which ones are present at each control level is
+-- main/data/outposts.lua's M.CONTROL_LEVELS.
+--
+-- Laid out like main/data/ships.lua and main/data/outposts.lua (per direct
+-- instruction): each class is ONE shared chassis (`data`, identical for both
+-- factions) plus a small `faction_skins` table for the look. The models are
+-- placeholder shapes from tools/build_outpost_defences.py.
+--
+-- In this pass they stand, can be targeted, shot and destroyed (respawning
+-- after BEHAVIOUR.respawn_sec) but do NOT fire back - nothing can damage a
+-- player's ship yet (plan.md §4). `radius_m` (click/marker size) is ours.
+--
+-- Numbers: BSGO wiki's Outposts page and bsgonline.fandom.com's
+-- *_Sentry_Platform pages (they agree). `armament` lists weapon KINDS and
+-- counts only - generic names, not BSG item names, and not yet linked to
+-- main/data/modules/ (no platform weapons exist there).
+--
+-- Behaviour (`aggro_range_m`, `respawn_sec`, `weapon_range_m`,
+-- `missile_range_m`, no hull regen) comes from the main wiki's generic
+-- Platforms page - BSGO's other AI defence platforms - and is assumed, not
+-- confirmed, to apply to sentries too.
+
+local M = {}
+
+M.FACTIONS = { "accord", "swarm" }
+
+-- Shared by every class: dormant until attacked or a ship comes this close,
+-- then fires until the target dies or leaves range; never regenerates hull;
+-- a destroyed platform returns in place after respawn_sec.
+M.BEHAVIOUR = {
+	aggro_range_m = 1200,
+	hull_regen = false,
+	respawn_sec = 10 * 60,
+	missile_range_m = 3500,
+	-- Platform guns turn freely (BSGO Nova combat reference: arc >= 180°
+	-- half-angle) and its point defence is very accurate (~700).
+	omnidirectional = true,
+	point_defence_accuracy = 700,
+}
+
+M.PLATFORMS = {
+	["light"] = {
+		data = {
+			radius_m = 20,
+			hull_points = 7500,
+			power = 3000,
+			armor = 35,
+			weapon_range_m = 1600,
+		},
+		armament = {
+			{ kind = "light_autocannon_turret", count = 8 },
+			{ kind = "interceptor_missile_launcher", count = 2 },
+		},
+		faction_skins = {
+			accord = { name = "Accord light sentry", model = "/assets/models/outpost_defences/accord/light.model" },
+			swarm  = { name = "Swarm light sentry", model = "/assets/models/outpost_defences/swarm/light.model" },
+		},
+	},
+	["medium"] = {
+		data = {
+			radius_m = 28,
+			hull_points = 10000,
+			power = 3000,
+			armor = 60,
+			weapon_range_m = nil, -- between light and heavy; not given
+		},
+		armament = {
+			{ kind = "medium_cannon_turret", count = 8 },
+			{ kind = "medium_missile_launcher", count = 5 },
+		},
+		faction_skins = {
+			accord = { name = "Accord medium sentry", model = "/assets/models/outpost_defences/accord/medium.model" },
+			swarm  = { name = "Swarm medium sentry", model = "/assets/models/outpost_defences/swarm/medium.model" },
+		},
+	},
+	["heavy"] = {
+		data = {
+			radius_m = 38,
+			hull_points = 15000,
+			power = 3000,
+			armor = 75,
+			weapon_range_m = 2000,
+		},
+		armament = {
+			{ kind = "flak_cannon", count = 2 },
+			{ kind = "point_defence_turret", count = 2 },
+			{ kind = "heavy_cannon_turret", count = 8 },
+			{ kind = "heavy_missile_launcher", count = 5 },
+		},
+		faction_skins = {
+			accord = { name = "Accord heavy sentry", model = "/assets/models/outpost_defences/accord/heavy.model" },
+			swarm  = { name = "Swarm heavy sentry", model = "/assets/models/outpost_defences/swarm/heavy.model" },
+		},
+	},
+}
+
+-- A chassis stat of platform class `class` ("light"/"medium"/"heavy").
+function M.stat(class, name)
+	local platform = M.PLATFORMS[class]
+	return platform and platform.data[name]
+end
+
+-- `faction`'s skin of platform class `class`, or nil.
+function M.skin(class, faction)
+	local platform = M.PLATFORMS[class]
+	return platform and platform.faction_skins[faction]
+end
+
+return M

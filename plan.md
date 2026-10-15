@@ -990,6 +990,32 @@ capital-ship siege" already is.
 - **Do not** reuse the *Twelve Colonies* names (Caprica, Picon, Aerilon, Tauron,
   Gemenon, Leonis, Libran, Sagittaron, Scorpia, Virgon, Canceron, Aquaria) — those are
   BSG-show IP. None appear anywhere in the new data.
+- **Positions from the BSGO map screenshot (decided, per direct instruction):** "use
+  the coordinates from the imported image to create star systems in our game... on
+  the basis of the distance between imsida and toah is 8.25 light years, adjust the
+  game statistics to suit". `map_x`/`map_y` for all 58 systems are now the dot
+  centres measured from `screenshots/Screenshot 2026-10-12 at 17.52.59.png`
+  (996×635): `map_x = px − 489.5`, `map_y = 342.5 − py`, centred on the systems'
+  bounding box with Y pointing up, so the layout spans ±446.5 × ±265.5.
+  - **How systems were matched**: the earlier positions were the SuperShips
+    reconstruction, which matches BSGO's system names 1:1 by position, so every
+    Galaxy system has a BSGO counterpart. An affine fit plus a one-to-one assignment
+    paired each with its screenshot dot, and every pair agreed with the label read
+    off the screenshot. 53 dots were detected automatically (±1 px). Five were
+    covered by icons and read from their outpost disc's centre (±1 px): Hatir
+    (Hadar), Vidofnir (Wezen), Calibaan (Caph), Muninn (Muphrid), 74 Imsida
+    (70 Virginis). Names stay ours; no new systems were needed.
+  - **Scale**: 74 Imsida → 14 Toah is our 70 Virginis → Deneb: 197.0 map units =
+    8.25 ly, so `M.MAP_UNITS_PER_LY` = 23.877 (computed in the file from
+    `M.SCALE_REFERENCE`, was 20). This agrees with the original game's own
+    calibration (FTL range = ly × 20 in its map units, ≈ 1.19 screenshot px each),
+    so the ships' light-year stats (`ftl_range_ly`, `ftl_cost_hydrogen_per_ly`) were
+    left unchanged.
+  - **Effect on jumps**: the old reconstruction was off in places (HD 209458 by
+    ~90 units, 70 Virginis by ~54) and had two systems only 0.4 ly apart. Now the
+    closest pair is 2.6 ly apart (mean nearest neighbour 3.3 ly, max 4.2 ly), and
+    even the shortest FTL range in `ships.lua` (4.5 ly) connects all 58 systems, where
+    the old layout split into two groups at that range.
 - **Mechanics carried over** (see the file itself): straight-line map distance,
   faction-gated `can_enter`, FTL-range reachability, and a per-jump **Hydrogen** cost
   (renamed from the source's Tylium-cost function, §2.6) — all structural/functional,
@@ -998,8 +1024,9 @@ capital-ship siege" already is.
   system, **and also can't enter the 3 systems nearest to it** — not just the single
   home system. Computed once from the map's own distances and stored as
   `M.HOME_BUFFER`:
-  - Accord home (**Sol**) buffer: Wolf 359, Tau Ceti, Beta Andromedae
-  - Swarm home (**Polaris**) buffer: Merak, Ankaa, Gliese 667
+  - Accord home (**Sol**) buffer: Wolf 359, Epsilon Indi, Beta Andromedae
+  - Swarm home (**Polaris**) buffer: Ankaa, Merak, Gliese 667
+  - (Recomputed for the screenshot layout below: Epsilon Indi replaced Tau Ceti.)
   - `M.zone_owner(system_id)` returns which faction (if any) a system is
     restricted to — home system or buffer zone — and `M.can_enter` now checks
     that instead of just the home system alone.
@@ -1040,10 +1067,13 @@ capital-ship siege" already is.
   the *opposing* faction an outpost entirely. This is a wider zone than §2.7's
   entry-blocking `HOME_BUFFER` (nearest 3, "can't even enter") — the nearest-3 list
   is always a subset of the nearest-6 list, so the two zones nest cleanly:
-  - Accord home (Sol) + nearest 6 → no Swarm outpost: Sol, Wolf 359, Tau Ceti, Beta
-    Andromedae, Epsilon Indi, Avior, Barnard's Star
-  - Swarm home (Polaris) + nearest 6 → no Accord outpost: Polaris, Merak, Ankaa,
-    Gliese 667, 70 Virginis, Acrux, Spica
+  - Accord home (Sol) + nearest 6 → no Swarm outpost: Sol, Wolf 359, Epsilon Indi,
+    Beta Andromedae, Tau Ceti, Furud, Avior
+  - Swarm home (Polaris) + nearest 6 → no Accord outpost: Polaris, Ankaa, Merak,
+    Gliese 667, Acrux, 70 Virginis, Alnair
+  - (Recomputed for the screenshot layout below: Furud replaced Barnard's Star, and
+    Alnair replaced Spica — Alnair is 6.80 ly from Polaris, Spica 6.85 ly, about one
+    screenshot pixel apart. The 4th–6th entries are also `M.SHIP_CAP_ZONE`.)
 - **Implemented** in `main/data/star_systems.lua`: `M.OUTPOST_DENIED`,
   `M.has_outpost(system_id, faction)`, `M.outpost_position(system_id, faction)`.
   Verified working via a standalone `luajit` check (not just code review): a
@@ -1092,6 +1122,124 @@ capital-ship siege" already is.
     the outpost's own hull/weapon numbers; whether they are server-simulated
     (recommended — the server already owns all outpost damage) or client-visual
     only; and how the whole layer scales with a system's threat rating (§2.7).
+- **Outpost progression (implemented 2026-10-15, per direct instruction: "implement
+  the outpost information as close to the derived data as possible")**: as in BSGO,
+  an outpost is **earned per system, per faction**. This **supersedes** the earlier
+  "every system has both outposts by default" rule above and in §2.9, except for each
+  faction's **permanent** outposts. The reference research follows these bullets.
+  - **Decisions taken (per direct instruction, when asked):**
+    1. **Permanent outposts** = a faction's home system plus its 6 nearest (exactly
+       the systems in the other faction's `OUTPOST_DENIED` list). Their meter never
+       drains below 90 %, and the outpost can't be destroyed, though its platforms
+       and beacon can.
+    2. **Gain/drain = mining + presence** (BSGO publishes no amounts; these are
+       ours, in `PROGRESS`): **+2 %** per asteroid a faction's pilot depletes,
+       **+1 %/min** per pilot of the faction in the system, **−1 %/min** drain.
+       One pilot alone cancels the drain; mining with the starter loadout (one
+       rock per ~30 s) earns an outpost in about 30 minutes. Kill/mission gains
+       are nil until those activities exist.
+    3. **Platforms and beacon are present and targetable**: they stand around the
+       outpost at the right levels as placeholder shapes, show on radar and in
+       the target panel, and can be shot and destroyed (platforms return after
+       10 min, the beacon after 60). They **don't fire back** yet, because nothing
+       can damage a player ship (§4). The beacon has no jump function yet.
+    4. **Repair resumes at the level reached**: when the 60-minute timer ends, the
+       outpost returns straight away if the meter is still at 90 %+.
+  - **Code:**
+    - `main/outpost_rules.lua` holds the rules (meter, levels, layout, state,
+      positions, hull scale, nearest outpost). It is engine-free and synced to the
+      server, so game and server agree.
+    - `nakama-server/modules/outposts.lua` handles records, the galaxy summary
+      (storage list, 2 s cache) and the `outpost_status` / new `outpost_galaxy`
+      RPCs.
+    - `system_match.lua` ticks presence and drain each second, adds the mining
+      gain, accepts `beacon:<f>` / `platform:<f>:<slot>` FIRE targets, applies and
+      saves damage, and broadcasts the full state (level, tier, defences).
+    - Hull is stored as a fraction, so tier changes and the **±36 % underdog
+      scale** (implemented; ours: linear in the held-outpost share difference,
+      refreshed every minute) never heal or hurt anything.
+    - **Rewards implemented:** +1 % XP (`progress.grant`) and +1 % mined resource
+      per outpost the faction holds galaxy-wide; outpost-kill XP is now paid **in
+      full to every participant** (was split by damage).
+    - **Docking/respawn:** `session.docked_system()` is now the **nearest**
+      system with an available outpost of the faction (was: home). The game
+      fetches every system's state at login and whenever the outpost screen
+      opens (`network.fetch_galaxy`); until it knows, only permanent outposts are
+      assumed.
+    - **On screen:** the flight HUD shows an *Outpost Progress* readout top-left
+      (per faction: %, level and tier, permanent, or destroyed with return time),
+      and the outpost sector map adds each system's outposts to its selection
+      line.
+    - **Defence objects:** `tools/build_outpost_defences.py` builds
+      `<faction>_beacon` and `<faction>_platform1-4` (one model component per
+      class) into `main/main.collection`. `main/player_ship.script` places them
+      from the server state.
+  - **Tests:** `tests/outpost_rules_harness.lua` covers the rules,
+    `tests/outpost_match_harness.lua` runs the real server match on a fake Nakama
+    (presence, mining, +7 % bonus, platform destroyed, permanent refuses fire,
+    galaxy RPC, nearest docking), and `tests/outposts_data_harness.lua` checks the
+    data against the scene. **Not yet seen in a browser.**
+  - **Not done** (no game system to hang it on yet): kill and mission gains, the
+    −15 % failed-mission penalty, the 10 s in-combat docking (wired to
+    `self.in_combat`, which nothing sets), platforms firing, beacon jumps, Merits,
+    and real platform/beacon art.
+  - **The meter**: each faction has an *Outpost Progress* percentage per system,
+    **0–300 %**, shown on screen while there. It unlocks 10 control levels:
+
+    | Level | Progress | Outpost | Beacon | Sentry platforms |
+    |---|---|---|---|---|
+    | 1 | 50 % | none — system "captured" | – | – |
+    | 2 | 90 % | regular (50,000 hull) jumps in | – | – |
+    | 3 | 125 % | regular | FTL jump beacon | 2 light |
+    | 4 | 175 % | regular | yes | 4 light |
+    | 5 | 200 % | **upgraded** (55,000) | yes | 2 light + 2 medium |
+    | 6 | 225 % | upgraded | yes | 4 medium |
+    | 7 | 250 % | upgraded | yes | 2 medium + 2 heavy |
+    | 8 | 275 % | **fortified** (60,000) | yes | 4 heavy |
+    | 9–10 | up to 300 % | fortified | yes | 4 heavy (no change; no separate thresholds given) |
+
+    Only the hull changes between outpost tiers; extra firepower comes from the
+    platforms. A later BSGO rework (Dev Blog 15) restated the same ladder as 8 levels
+    on 0–3,000 *Sector Control Points* (outpost ≈ 900, beacon + 2 light ≈ 1,250,
+    upgraded ≈ 2,000, fortified + heavies from ≈ 2,751); the BSGO Nova revival uses a
+    0–3,000 outpost score (active at 900, beacon at 1,000, fortified + 4 heavy at
+    3,000). Either scale maps onto `CONTROL_LEVELS` by ×10.
+  - **Raising it**: mining (by hand or a mining ship), NPC kills, player kills,
+    completing a rescue-a-freighter or drone-incursion mission, and (Nova) the
+    faction's ships simply being present. **Lowering it**: a constant auto-drain
+    every minute, a *failed* freighter mission (**−15 %**), and (Nova) the enemy
+    destroying the faction's mines or running convoy routes. **No per-action amounts
+    or drain rate are published** — `PROGRESS.gain_pct` / `drain_pct_per_min` are nil
+    until we tune them. Falling **below 90 %** makes the outpost jump out again.
+  - **Destruction**: the meter is replaced by a **60-minute repair countdown** (our
+    server's `destroyed_for_sec` already matches). Control can still be built during
+    it; reaching level 2+ by the end brings the outpost straight back at that level
+    (an older wiki revision says the meter resets to 0 % instead). Nova: a destroyed
+    jump beacon is also down for an hour.
+  - **Underdog scaling** (Update 47): outpost and platform hull scaled live by up to
+    **−36 %** for the faction holding more of the sector and **+36 %** for the one
+    holding less.
+  - **Sentry platforms** (`sentry_platforms.lua`): light 7,500 hull / 3,000 power /
+    armour 35; medium 10,000 / 3,000 / 60; heavy 15,000 / 3,000 / 75 (armaments as in
+    the defence bullet above); spaced evenly around the outpost, max 4. Behaviour
+    assumed from BSGO's generic platforms: dormant until attacked or a ship is within
+    1,200 m, guns 1,600 m (light) – 2,000 m (heavy), missiles 3,500 m, no hull regen,
+    respawn after 10 min.
+  - **Docking & respawn**: dock range 999 m (ours: 1,000 m); docking takes **10 s while
+    in combat** (ours: 5 s always — recorded as `dock_countdown_in_combat_sec`, unused);
+    a destroyed pilot respawns at their faction's outpost in that system, else at the
+    **nearest** system with one (ours: home system, §2.9). Outpost power 4,500, visual
+    range 1,300 m (recorded, unused). Services inside: shop, fitting, upgrades, repair,
+    ship assignment, buying/advancing ships — which our outpost screen already covers.
+  - **Rewards** (Nova): every outpost a faction holds gives all its pilots **+1 % XP
+    and +1 % mining income** galaxy-wide (after personal bonuses). Outpost kill rewards
+    are paid in full to every participant, never split; enemy pilots within 4,000 m
+    of the kill are paid but not credited. Outposts, platforms and beacons are a
+    *Merit* (PvP currency — our Valour, §2.6) source exempt from level scaling; Nova
+    caps merits at 500/day and 7,000/week.
+  - **Restricted systems** match ours: each faction has 7 home-region systems where
+    the enemy can't build an outpost but may enter in limited numbers (§2.7's
+    `OUTPOST_DENIED` / `SHIP_CAP_ZONE`).
 
 **Outpost 3D models (decided, first pass — basic placeholder shapes, per direct
 instruction: "let's begin by building two basic shapes")**:
@@ -3016,6 +3164,27 @@ vacant slot previews which stats it would affect.
 
 ### 2.9 Spawn / start location (decided — rule, with one open edge case)
 
+- **Outpost data lives in `main/data/outposts.lua`** (per direct instruction, laid
+  out like `main/data/ships.lua`): one shared **chassis** (`data` — hull 50,000,
+  destroyed for 3,600 s, click radius 150 m, dock range 1,000 m, dock countdown 5 s,
+  launch distance 1,200 m, 8 ad panels) plus per-faction **`faction_skins`** (name,
+  dock `model`, `rotor_model`, `rotor_period_sec` 110 / 120). Read through
+  `outposts.stat(name)` / `outposts.skin(faction)` by `main/player_ship.script`,
+  `main/station_visual.lua` and the server's `nakama-server/modules/outposts.lua`
+  (the file is in `tools/sync_server_rules.py`'s list). `main/main.collection` still
+  places the models itself, naming the same `.model` files —
+  `tests/outposts_data_harness.lua` fails if the two disagree. *Where* outposts stand
+  (`has_outpost`, `OUTPOST_DENIED`, `outpost_position`, spawn points) stays in
+  `main/data/star_systems.lua` as map geography. The same file also holds the
+  upgraded/fortified tiers (hull only — every other stat and both skins fall back to
+  the regular entry), the control-level ladder, progress rules, rewards and the jump
+  beacon, with sentry platforms in `main/data/sentry_platforms.lua`, all applied by
+  `main/outpost_rules.lua` (§2.7 "Outpost progression").
+- **Outposts are earned (2026-10-15, supersedes "every system has both by default")**:
+  outside a faction's 7 permanent systems, its outpost stands only while that
+  system's Outpost Progress is 90 %+ (§2.7). Docking, quitting and respawning go to
+  the **nearest** system with one of the faction's outposts available (BSGO's rule),
+  not the home system.
 - **Home-system spawn**: the **outpost of the player's faction's home system** on that
   server — Sol for Accord, Polaris for Swarm (§2.7). (Guest mode, which always used
   this spawn, has been removed — §3.2.)
@@ -3880,6 +4049,15 @@ appears at 90%, fortification and 4 heavy sentry platforms by 300%), including t
   hull/power tiers Light 1,250/500, Medium 4,250–5,750/750, Heavy 7,250–8,750/1,000.
 - Folded into a concrete proposal in §2.7 ("Outpost defence (proposed)") and left as
   an open §4 item; not implemented.
+- **Third pass (2026-10-15)** — archived `bsgo.wikia.com/wiki/Outposts` (2017),
+  `bsgonline` Colonial/Cylon Outposts, Dev Blog 15 and BSGO Nova's `game-features` /
+  `bonus-handbook` guides added: how progress is gained and drained, the −15 % failed
+  mission, the 60-min repair countdown, 999 m / 10 s-in-combat docking, nearest-outpost
+  respawn, and the +1 % XP/mining per held outpost. Recorded in §2.7 "Outpost
+  progression" (since implemented) and as data in `main/data/outposts.lua` /
+  `main/data/sentry_platforms.lua`. (The second wiki's Colonial page lists 30k/35k/40k
+  hull — an older revision; the main wiki's 50k/55k/60k is used. `playbsgo.com`'s
+  changelog/devblog and `bsgo.fun` have nothing on outposts.)
 
 **J. Mining, planetoids and the event loop.** Planetoid mining (scan → call a mining
 ship for a fee → defend it from escalating waves → it breaks up when drained) is a
@@ -4045,17 +4223,15 @@ the cool down needs to be 60 seconds."*
   an outpost, deliberately the same rule either way, since both go through
   `main/player_ship.script`'s `complete_dock()` — and **60 s** when the previous
   session *ended in space* instead (the browser reloaded, the tab closed, the game
-  quit mid-flight). **Only that case** (decided when the rule was built): a page load
-  while already docked keeps whatever is left of the ordinary 10 s, because the
-  cooldown is persisted in the profile and so cannot be dodged by reloading in the
-  first place — and charging every page load the long one would cost a returning
-  player a minute before their first launch for nothing.
+  quit mid-flight). **Superseded (per direct instruction, 2026-10-14):** the 60 s now
+  applies to *every* page load, docked or not — the earlier exemption for a session
+  that ended docked was dropped, so reloading at an outpost no longer skips it. The
+  cost, accepted: a returning player always waits a minute before their first launch.
 - **The rules live in `main/session.lua`** (the server-authority rule of §3.2/§3.3),
   as new operations: `M.dock()` clears the new `flying` flag ("is the ship in
   space") and stamps `launch_blocked_until` = now + 10; `M.resume()` — called once
   per page load by `main/profile.lua`, right after the saved profile is restored —
-  clears `flying` and, if that profile said the ship was still in space, stamps
-  now + 60; `M.launch()` refuses (changing nothing) while a cooldown is still
+  clears `flying` and stamps now + 60 (never shortening a longer one); `M.launch()` refuses (changing nothing) while a cooldown is still
   running. Both fields are part of the saved profile, so the server replays the
   whole rule against its own copy: `dock` and `resume` are new entries in `M.OPS`
   (the `economy` RPC's whitelist, §3.3).
@@ -4083,7 +4259,7 @@ the cool down needs to be 60 seconds."*
   fresh-character case (no cooldown, first launch allowed), the 10 s dock window
   (refused at 9 s, allowed at 10 s, a refusal changing nothing), that a second launch
   *while flying* is refused, the 60 s in-flight-exit window (refused at 59 s, allowed
-  at 60 s), that a session which ended *docked* only carries the dock cooldown over,
+  at 60 s), that a session which ended *docked* also gets the 60 s (client and server),
   that docking can never shorten a cooldown already running, that stored timestamps
   read correctly once `sync_clock()` has lined the host clock up with the server's,
   the serialize/restore/reset round trip, and a full server-side replay (`restore` →
@@ -4326,6 +4502,13 @@ rotating line."*
   progression curves, etc.
 - Rationale: keeps each table easy to open, scan, and diff in isolation as the game
   grows, rather than hunting through a monolithic data file.
+- **Shared chassis, mirrored factions (per direct instruction, 2026-10-15)**: data
+  always lives in its own `main/data/` file rather than inline in scripts, and
+  anything both factions have a version of is stored **once** — a shared chassis
+  (`data`, identical stats) plus a small `faction_skins` table holding only the
+  per-faction look (name, model, cosmetic fields). Pattern: `ships.lua`,
+  `outposts.lua`, `sentry_platforms.lua`. If the server enforces it, add the file to
+  `tools/sync_server_rules.py`.
 - Suggested layout once data work starts (Lua modules returning tables, Defold's usual
   pattern):
   ```
@@ -4337,6 +4520,8 @@ rotating line."*
     currencies.lua
     ranks.lua
     star_systems.lua       -- ✅ implemented, §2.7
+    outposts.lua           -- ✅ implemented, §2.9 (chassis + faction_skins; tiers/ladder are reference data)
+    sentry_platforms.lua   -- ✅ implemented, §2.7 "Outpost progression"
     modules/
       weapons_autocannons.lua   -- ✅ implemented
       weapons_launchers.lua     -- ✅ implemented
@@ -4997,6 +5182,17 @@ are in `laravel/AGENTS.md`.
       defensive AI (dormant until ~1,200 m, ~1,600–2,000 m guns, ~3,500 m missiles,
       no hull regen, ~10 min respawn). The attack side already exists
       (`nakama-server/modules/outposts.lua`, §2.7); only the defensive layer is new.
+- [x] ~~Decide whether outposts are earned~~ — **implemented** 2026-10-15 (§2.7
+      "Outpost progression"): earned, with permanent home-region outposts, mining +
+      presence gains, targetable platforms/beacon, and repair resuming at the level
+      reached.
+- [ ] Outpost progression follow-ups: tune the invented gain/drain numbers once
+      played; give levels 9/10 thresholds (or drop them); add kill/mission gains
+      and the −15 % failed-mission penalty once those activities exist; make
+      platforms fire (needs player-ship damage); beacon jump-in; 10 s in-combat
+      docking once anything sets `in_combat`; Merit payouts; real platform/beacon
+      art; check the defences' 900/1,100 m placement against the station models
+      in-engine.
 - [ ] Tune the outpost corner-placement inset (`M.OUTPOST_CORNER_FRACTION = 0.8`,
       §2.7) — currently a placeholder, not real level-design placement.
 - [ ] Confirm the opposing-ship population cap value (`M.OPPOSING_SHIP_CAP = 50`,

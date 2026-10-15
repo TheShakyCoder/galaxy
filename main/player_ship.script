@@ -21,6 +21,9 @@
 
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
+local outposts = require("main.data.outposts")
+local sentry_platforms = require("main.data.sentry_platforms")
+local outpost_rules = require("main.outpost_rules")
 local flight_throttle = require("main.flight_throttle")
 local session = require("main.session")
 local catalog = require("main.data.modules.catalog")
@@ -149,13 +152,20 @@ local function model_component_id(ship_id, faction)
 end
 
 -- Outposts come from main/data/star_systems.lua's outpost_position(): each
--- faction's outpost sits in its own corner of every system where it has one
--- (large systems included; per-system overrides allowed there). The one
--- accord_outpost / swarm_outpost object pair in main/main.collection is
--- moved there on every system change (place_outposts() below), and hidden
--- in systems where that faction has no outpost, or while it's destroyed
--- (the server's state, main/network.lua outpost_state).
-local OUTPOST_FACTIONS = { "accord", "swarm" }
+-- faction's outpost sits in its own corner of every system where it may have
+-- one (large systems included; per-system overrides allowed there). Whether
+-- it actually stands there follows the system's Outpost Progress (plan.md
+-- §2.7 "Outpost progression", main/outpost_rules.lua), which the server
+-- sends (main/network.lua outpost_state). The one accord_outpost /
+-- swarm_outpost object pair in main/main.collection is moved there on every
+-- system change and state update (place_outposts() below), and hidden where
+-- that faction's outpost isn't standing or is destroyed. Its jump beacon
+-- (<faction>_beacon) and up to 4 sentry platforms (<faction>_platform1-4,
+-- one model component per class: #light/#medium/#heavy) are placed the same
+-- way from the server's state - tools/build_outpost_defences.py builds them.
+local OUTPOST_FACTIONS = outposts.FACTIONS
+local PLATFORM_SLOTS = 4
+local PLATFORM_CLASSES = { "light", "medium", "heavy" }
 
 -- `faction`'s outpost in `system_id` as a vector3, or nil if it has none
 -- or it's currently destroyed.
@@ -167,6 +177,31 @@ local function outpost_position(system_id, faction)
 	return vmath.vector3(p.x, p.y, p.z)
 end
 
+local function to_vector(p)
+	return vmath.vector3(p.x, p.y, p.z)
+end
+
+-- Where `faction`'s beacon / platform `slot` stands in `system_id` right now
+-- (a vector3, plus the platform's class), or nil if it isn't standing.
+local function beacon_position(system_id, faction)
+	local pos = outpost_position(system_id, faction)
+	local st = pos and network.outpost_state(system_id, faction)
+	if not (st and st.beacon and st.beacon.available) then
+		return nil
+	end
+	return to_vector(outpost_rules.beacon_position(pos))
+end
+
+local function platform_position(system_id, faction, slot)
+	local pos = outpost_position(system_id, faction)
+	local st = pos and network.outpost_state(system_id, faction)
+	local p = st and st.platforms and st.platforms[slot]
+	if not (p and p.available) then
+		return nil
+	end
+	return to_vector(outpost_rules.platform_position(pos, slot)), p.class
+end
+
 local function place_outposts(system_id)
 	for _, faction in ipairs(OUTPOST_FACTIONS) do
 		local id = "/" .. faction .. "_outpost"
@@ -176,6 +211,30 @@ local function place_outposts(system_id)
 			msg.post(id, "enable")
 		else
 			msg.post(id, "disable")
+		end
+		local beacon_id = "/" .. faction .. "_beacon"
+		local beacon_pos = beacon_position(system_id, faction)
+		if beacon_pos then
+			go.set_position(beacon_pos, beacon_id)
+			msg.post(beacon_id, "enable")
+		else
+			msg.post(beacon_id, "disable")
+		end
+		for slot = 1, PLATFORM_SLOTS do
+			local platform_id = "/" .. faction .. "_platform" .. slot
+			local platform_pos, class = platform_position(system_id, faction, slot)
+			if platform_pos then
+				go.set_position(platform_pos, platform_id)
+				msg.post(platform_id, "enable")
+				-- Enabling the object enables all three class models; keep only this one.
+				for _, other in ipairs(PLATFORM_CLASSES) do
+					if other ~= class then
+						msg.post(platform_id .. "#" .. other, "disable")
+					end
+				end
+			else
+				msg.post(platform_id, "disable")
+			end
 		end
 	end
 end
@@ -209,6 +268,19 @@ end
 -- consistent scene-wide change, not just brighter ships.
 local AMBIENT_TINT = vmath.vector4(1.4, 1.4, 1.4, 1.0)
 
+-- The outposts' beacon and platform models get the same boost (the
+-- outposts themselves have main/ambient_lit.script).
+local function tint_outpost_defences()
+	for _, faction in ipairs(OUTPOST_FACTIONS) do
+		go.set("/" .. faction .. "_beacon#model", "tint", AMBIENT_TINT)
+		for slot = 1, PLATFORM_SLOTS do
+			for _, class in ipairs(PLATFORM_CLASSES) do
+				go.set("/" .. faction .. "_platform" .. slot .. "#" .. class, "tint", AMBIENT_TINT)
+			end
+		end
+	end
+end
+
 -- Shows the equipped skin on the visible model component (main/skin_flight.lua:
 -- recolors swap its texture, surface themes spawn their own model on this
 -- ship). One skin_flight state per model component, created the first time
@@ -235,9 +307,10 @@ end
 -- where its faction has no outpost), facing the system centre - see
 -- arrival_spawn()/update()'s docking block below. LAUNCH_DISTANCE is beyond
 -- DOCK_RANGE, so a freshly arrived ship has to fly in before it can dock.
-local DOCK_RANGE = 1000
-local LAUNCH_DISTANCE = 1200
-local DOCK_COUNTDOWN_SEC = 5
+-- All three are outpost chassis stats (main/data/outposts.lua).
+local DOCK_RANGE = outposts.stat("dock_range_m")
+local LAUNCH_DISTANCE = outposts.stat("launch_distance_m")
+local DOCK_COUNTDOWN_SEC = outposts.stat("dock_countdown_sec")
 
 -- FTL jump (per direct instruction: "implement [the SuperShips jump
 -- mechanic] here" - see the SuperShips research findings this ports).
@@ -558,6 +631,14 @@ function init(self)
 	-- show returned ones. Socket callbacks run outside this script's
 	-- context (no go.* there), so update() does the re-placing.
 	self.outposts_changed = false
+	-- Beacons and platforms stay hidden until a flight places them from the
+	-- server's state (place_outposts).
+	for _, faction in ipairs(OUTPOST_FACTIONS) do
+		msg.post("/" .. faction .. "_beacon", "disable")
+		for slot = 1, PLATFORM_SLOTS do
+			msg.post("/" .. faction .. "_platform" .. slot, "disable")
+		end
+	end
 	network.set_outposts_callback(function(system_id)
 		if system_id == self.current_system_id then
 			self.outposts_changed = true
@@ -721,6 +802,10 @@ local function start_flight(self)
 	-- has an outpost there, otherwise home). Stored on self so
 	-- toggle_map()/on_input can reach it later in the flight.
 	self.current_system_id = session.get_current_system()
+	if not self.defences_tinted then
+		tint_outpost_defences()
+		self.defences_tinted = true
+	end
 	place_outposts(self.current_system_id)
 	local pos, rot = arrival_spawn(self.current_system_id, faction)
 	go.set_position(pos)
@@ -1007,13 +1092,16 @@ end
 -- factions' outposts and asteroids. The target is marked on screen
 -- (main/flight_hud.gui_script) and described in the top-middle panel.
 --
--- Target ids: a ship's user_id, "outpost:<faction>" (also the server's FIRE
--- target) or "asteroid:<index>" (main/asteroid_registry.lua).
+-- Target ids: a ship's user_id, "outpost:<faction>", "beacon:<faction>",
+-- "platform:<faction>:<slot>" (all three also the server's FIRE targets) or
+-- "asteroid:<index>" (main/asteroid_registry.lua).
 local OUTPOST_TARGET_PREFIX = "outpost:"
+local BEACON_TARGET_PREFIX = "beacon:"
+local PLATFORM_TARGET_PREFIX = "platform:"
 local ASTEROID_TARGET_PREFIX = "asteroid:"
 local DEFAULT_SENSOR_RANGE = 3000 -- m, for a ship without its own sensor_range_m
 local SHIP_RADIUS = 15 -- m, rough size of a ship for clicking and the marker
-local OUTPOST_RADIUS = 150 -- m, same for an outpost
+local OUTPOST_RADIUS = outposts.stat("radius_m") -- m, same for an outpost (main/data/outposts.lua)
 local CLICK_MIN_RADIUS = 28 -- px: small or distant objects are still easy to click
 local FACTION_NAMES = { accord = "Accord", swarm = "Swarm" }
 
@@ -1032,6 +1120,16 @@ end
 local function outpost_target_faction(target_id)
 	return target_id and target_id:sub(1, #OUTPOST_TARGET_PREFIX) == OUTPOST_TARGET_PREFIX
 		and target_id:sub(#OUTPOST_TARGET_PREFIX + 1) or nil
+end
+
+-- "beacon:<faction>" -> faction; "platform:<faction>:<slot>" -> faction, slot.
+local function beacon_target_faction(target_id)
+	return target_id and target_id:match("^beacon:(%a+)$") or nil
+end
+
+local function platform_target(target_id)
+	local faction, slot = (target_id or ""):match("^platform:(%a+):(%d)$")
+	return faction, tonumber(slot)
 end
 
 local function asteroid_target_index(target_id)
@@ -1064,15 +1162,39 @@ local function resolve_target(self, id)
 	local faction = outpost_target_faction(id)
 	if faction then
 		local p = star_systems.outpost_position(self.current_system_id, faction)
-		if not p then
+		local st = network.outpost_state(self.current_system_id, faction)
+		-- No outpost at all while its control level puts none here (a
+		-- destroyed one stays a target: the panel says when it returns).
+		if not p or (st and st.present == false) then
 			return nil
 		end
 		return {
 			id = id, pos = vmath.vector3(p.x, p.y, p.z), radius = OUTPOST_RADIUS, kind = "outpost", faction = faction,
 			relation = faction == session.get_faction() and "friendly" or "enemy",
-			name = FACTION_NAMES[faction] .. " outpost",
+			name = outposts.skin(faction, st and st.tier).name,
 			destroyed = not session.outpost_available(self.current_system_id, faction),
+			permanent = st and st.permanent or outpost_rules.permanent(self.current_system_id, faction),
 		}
+	end
+	faction = beacon_target_faction(id)
+	if faction then
+		local pos = beacon_position(self.current_system_id, faction)
+		return pos and {
+			id = id, pos = pos, radius = outposts.BEACON.data.radius_m, kind = "beacon", faction = faction,
+			relation = faction == session.get_faction() and "friendly" or "enemy",
+			name = outposts.BEACON.faction_skins[faction].name,
+		} or nil
+	end
+	local slot
+	faction, slot = platform_target(id)
+	if faction then
+		local pos, class = platform_position(self.current_system_id, faction, slot)
+		return pos and {
+			id = id, pos = pos, radius = sentry_platforms.stat(class, "radius_m"), kind = "platform", faction = faction,
+			slot = slot, class = class,
+			relation = faction == session.get_faction() and "friendly" or "enemy",
+			name = sentry_platforms.skin(class, faction).name,
+		} or nil
 	end
 	local index = asteroid_target_index(id)
 	if index then
@@ -1100,6 +1222,16 @@ local function target_candidates(self)
 		local target = resolve_target(self, OUTPOST_TARGET_PREFIX .. faction)
 		if target and not target.destroyed then
 			table.insert(list, target)
+		end
+		local beacon = resolve_target(self, BEACON_TARGET_PREFIX .. faction)
+		if beacon then
+			table.insert(list, beacon)
+		end
+		for slot = 1, PLATFORM_SLOTS do
+			local platform = resolve_target(self, PLATFORM_TARGET_PREFIX .. faction .. ":" .. slot)
+			if platform then
+				table.insert(list, platform)
+			end
 		end
 	end
 	for _, a in ipairs(asteroid_registry.asteroids) do
@@ -1311,8 +1443,9 @@ end
 local function update_firing(self, target)
 	local slots = {}
 	local can_fire = target and (
-		(target.kind == "outpost" and target.faction ~= session.get_faction()
+		(target.kind == "outpost" and target.faction ~= session.get_faction() and not target.permanent
 			and session.outpost_available(self.current_system_id, target.faction))
+		or ((target.kind == "beacon" or target.kind == "platform") and target.faction ~= session.get_faction())
 		or target.kind == "asteroid")
 	if can_fire then
 		slots = weapons_on_slots(self)
@@ -1478,7 +1611,7 @@ end
 
 local function update_weapon_fire(self, dt, target, pos, rot)
 	self.gun_timers = self.gun_timers or {}
-	local can_shoot = target and not target.destroyed and target.relation ~= "friendly" and target.kind ~= "ship"
+	local can_shoot = target and not target.destroyed and not target.permanent and target.relation ~= "friendly" and target.kind ~= "ship"
 	local shot = false
 	for _, entry in ipairs(session.get_loadout() or {}) do
 		local slot = entry.slot
@@ -1488,11 +1621,14 @@ local function update_weapon_fire(self, dt, target, pos, rot)
 			if module and module.max_range_m and timer <= 0 then
 				local to_target = target.pos - pos
 				local dist = vmath.length(to_target)
-				local reach = target.kind == "asteroid" and dist - target.radius or dist
+				-- Asteroids, beacons and platforms are measured to their surface
+				-- (as the server does); the outpost to its centre.
+				local surface = target.kind ~= "outpost"
+				local reach = surface and dist - target.radius or dist
 				local forward = vmath.rotate(rot, SHIP_FORWARD)
 				local dir = dist > 0 and to_target / dist or forward
 				if reach <= module.max_range_m and vmath.dot(forward, dir) >= math.cos(math.rad((module.arc or 0) / 2)) then
-					local aim = target.kind == "asteroid" and (pos + dir * math.max(0, dist - target.radius)) or target.pos
+					local aim = surface and (pos + dir * math.max(0, dist - target.radius)) or target.pos
 					-- The weapon data stores `shot_scale` as a plain numeric triple
 					-- (see weapons_autocannons.lua), so that file stays loadable by
 					-- the Nakama server where vmath does not exist; convert it to a
@@ -1865,7 +2001,9 @@ function on_input(self, action_id, action)
 				self.jump_hydrogen_spent = 0
 			elseif self.near_outpost and not self.docking then
 				self.docking = true
-				self.dock_time_left = DOCK_COUNTDOWN_SEC
+				-- BSGO Update 47: docking takes 10 s while in combat (an inert
+				-- hook until something sets self.in_combat).
+				self.dock_time_left = self.in_combat and outposts.stat("dock_countdown_in_combat_sec") or DOCK_COUNTDOWN_SEC
 			end
 		end
 	elseif action_id == hash("shift") then
@@ -1901,6 +2039,39 @@ function on_input(self, action_id, action)
 	return true
 end
 
+-- The HUD's Outpost Progress lines for this system (plan.md §2.7 "Outpost
+-- progression"): own faction first, one line per faction that may have an
+-- outpost here, from the server's latest state. nil when there is nothing
+-- to say (no state yet).
+local TIER_NAMES = { outpost = "Outpost", upgraded_outpost = "Upgraded outpost", fortified_outpost = "Fortified outpost" }
+
+local function outpost_progress_text(self)
+	local own = session.get_faction()
+	local lines = {}
+	for _, faction in ipairs({ own, outpost_rules.opponent(own) }) do
+		local st = network.outpost_state(self.current_system_id, faction)
+		if st and st.exists ~= false then
+			local what
+			if st.present and not st.available and st.destroyed_until then
+				what = string.format("destroyed - back in %d min",
+					math.ceil(network.outpost_returns_in(self.current_system_id, faction) / 60))
+			elseif st.available then
+				what = string.format("Level %d - %s", st.level or 0, TIER_NAMES[st.tier] or "Outpost")
+				if st.permanent then
+					what = what .. " (permanent)"
+				end
+			else
+				what = (st.level or 0) >= 1 and "Level 1 - captured, no outpost" or "no outpost"
+			end
+			table.insert(lines, string.format("%s  %d%%  %s", FACTION_NAMES[faction] or faction, math.floor(st.pct or 0), what))
+		end
+	end
+	if #lines == 0 then
+		return nil
+	end
+	return "OUTPOST PROGRESS\n" .. table.concat(lines, "\n")
+end
+
 function update(self, dt)
 	if not self.flying then
 		return
@@ -1919,6 +2090,7 @@ function update(self, dt)
 	-- project's own update() (§0).
 	if self.outposts_changed then
 		self.outposts_changed = false
+		self.outpost_progress_timer = 0
 		place_outposts(self.current_system_id)
 	end
 
@@ -2238,8 +2410,20 @@ function update(self, dt)
 				math.ceil(network.outpost_returns_in(self.current_system_id, target.faction) / 60)))
 		elseif target.kind == "outpost" then
 			local st = network.outpost_state(self.current_system_id, target.faction)
-			if st then
+			if st and st.hp then
 				table.insert(details, "HULL " .. with_commas(st.hp) .. " / " .. with_commas(st.max_hp))
+			end
+			if st and st.level then
+				table.insert(details, string.format("LEVEL %d (%d%%)", st.level, math.floor(st.pct or 0)))
+			end
+			if target.permanent then
+				table.insert(details, "PERMANENT")
+			end
+		elseif target.kind == "beacon" or target.kind == "platform" then
+			local st = network.outpost_state(self.current_system_id, target.faction)
+			local part = st and (target.kind == "beacon" and st.beacon or (st.platforms and st.platforms[target.slot]))
+			if part and part.hp then
+				table.insert(details, "HULL " .. with_commas(part.hp) .. " / " .. with_commas(part.max_hp))
 			end
 		elseif target.kind == "asteroid" then
 			-- Hull the server (or the shared rule, until it says otherwise)
@@ -2335,15 +2519,25 @@ function update(self, dt)
 	-- tagged with whether it is ours so the HUD can colour it like a
 	-- friendly/enemy ship contact. Y is ignored here exactly as it is for the
 	-- other blips (the scope is a flat X/Z plot).
+	self.outpost_progress_timer = (self.outpost_progress_timer or 0) - dt
+	if self.outpost_progress_timer <= 0 then
+		self.outpost_progress_timer = 1
+		msg.post("flight_hud#gui", "outpost_progress", { text = outpost_progress_text(self) })
+	end
+
 	local radar_outposts = {}
+	-- Beacons and sentry platforms plot the same way (same pool).
 	for _, faction in ipairs(OUTPOST_FACTIONS) do
-		local outpost_pos = outpost_position(self.current_system_id, faction)
-		if outpost_pos and vmath.length(outpost_pos - pos) <= radar_range then
-			table.insert(radar_outposts, {
-				pos = outpost_pos,
-				id = OUTPOST_TARGET_PREFIX .. faction,
-				relation = (faction == session.get_faction()) and "friendly" or "enemy",
-			})
+		local relation = (faction == session.get_faction()) and "friendly" or "enemy"
+		local function plot(item_pos, id)
+			if item_pos and vmath.length(item_pos - pos) <= radar_range then
+				table.insert(radar_outposts, { pos = item_pos, id = id, relation = relation })
+			end
+		end
+		plot(outpost_position(self.current_system_id, faction), OUTPOST_TARGET_PREFIX .. faction)
+		plot(beacon_position(self.current_system_id, faction), BEACON_TARGET_PREFIX .. faction)
+		for slot = 1, PLATFORM_SLOTS do
+			plot((platform_position(self.current_system_id, faction, slot)), PLATFORM_TARGET_PREFIX .. faction .. ":" .. slot)
 		end
 	end
 	msg.post("flight_hud#gui", "contacts", {

@@ -19,6 +19,7 @@ local skins = require("main.data.skins")
 local skin_prices = require("main.data.skin_prices")
 local ships = require("main.data.ships")
 local star_systems = require("main.data.star_systems")
+local outpost_rules = require("main.outpost_rules") -- synced to the server too
 local catalog = require("main.data.modules.catalog")
 local ranks = require("main.data.ranks")
 local ship_class_levels = require("main.data.ship_class_levels")
@@ -370,20 +371,22 @@ function M.ftl_cost_per_ly(ship_id)
 end
 
 -- The system whose outpost the player is at whenever they're not flying:
--- their current system if their faction has an outpost there, otherwise
--- their home system. That covers docking (only possible at an outpost),
--- quitting mid-flight, and being destroyed: in a system without one of
--- their outposts, they're back at home.
+-- their current system if their faction's outpost is there, otherwise the
+-- NEAREST system that has one (BSGO's respawn rule, plan.md §2.7 "Outpost
+-- progression" - outposts now come and go with control). That covers
+-- docking (only possible at an outpost), quitting mid-flight, and being
+-- destroyed. A faction's permanent outposts (main/outpost_rules.lua) mean
+-- there is always one; the home system is the last resort regardless.
 function M.docked_system()
-	if M.current_system and M.outpost_available(M.current_system, M.faction) then
-		return M.current_system
-	end
-	return star_systems.HOME_SYSTEM[M.faction]
+	return outpost_rules.nearest_available(M.current_system, M.faction, function(system_id)
+		return M.outpost_available(system_id, M.faction)
+	end)
 end
 
 -- Is `faction`'s outpost in `system_id` there right now? By default just
--- "does the faction have an outpost in that system" (star_systems). Outposts
--- can also be destroyed for an hour, which only the server knows for sure:
+-- "may the faction have an outpost in that system" (star_systems). Whether
+-- one actually stands there follows the system's Outpost Progress, and it can
+-- be destroyed for an hour - which only the server knows for sure:
 -- nakama-server/modules/economy.lua replaces this with the live state, and
 -- the game with its latest copy of it (main/network.lua). A destroyed outpost
 -- counts as no outpost - docking, quitting and respawning there send the
@@ -413,12 +416,10 @@ end
 -- the two cases are deliberately the same length.
 local DOCK_LAUNCH_COOLDOWN = 10
 
--- Seconds before a launch may leave the outpost when the previous session
--- ended IN SPACE instead of docking: the player reloaded the browser, closed
--- the tab, or quit mid-flight. M.resume() applies it. Deliberately only that
--- case (decided): a page load while already docked keeps whatever is left of
--- the ordinary dock cooldown, which the profile already carries - the longer
--- one is for ending the game rather than docking it.
+-- Seconds before a launch may leave the outpost after the previous session
+-- ended in any way: the player reloaded the browser, closed the tab or quit,
+-- whether in space or docked (per direct instruction - the earlier docked
+-- exemption was dropped). M.resume() applies it on every page load.
 local SESSION_END_LAUNCH_COOLDOWN = 60
 
 -- The host's own clock, in seconds since the Unix epoch. A hook rather than a
@@ -503,18 +504,13 @@ end
 
 -- A returning player's session begins at an outpost: main/profile.lua calls
 -- this once the saved profile has been loaded (and only for a profile that
--- already has a faction). If that profile still says the ship was IN SPACE when
--- the last session ended - the game was reloaded, closed or quit mid-flight -
--- ending the game must not be a free relaunch, so the much longer session-end
--- cooldown replaces the dock one (per direct instruction: 60 seconds). A
--- session that ended docked arms nothing new: whatever is left of the dock
--- cooldown is already in the profile.
+-- already has a faction). Ending the game - reloading, closing or quitting,
+-- in space or docked - must not be a free relaunch, so every page load arms
+-- the session-end cooldown (per direct instruction: 60 seconds). Never
+-- shortens a longer one already running.
 function M.resume()
-	local was_flying = M.flying and true or false
 	M.flying = false -- at the outpost from here on, whoever ends the session next
-	if was_flying then
-		M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + SESSION_END_LAUNCH_COOLDOWN)
-	end
+	M.launch_blocked_until = math.max(M.launch_blocked_until or 0, server_now() + SESSION_END_LAUNCH_COOLDOWN)
 	return true
 end
 

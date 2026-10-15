@@ -80,18 +80,20 @@ check("59s in: still refused", session.launch() == false)
 advance(1)
 check("60s in: allowed", session.launch() == true)
 
--- 7. A session that ends DOCKED arms nothing new: the dock cooldown carries on
---    in the profile, so a quick reload is not punished by the long one.
+-- 7. A session that ends DOCKED gets the 60s too: reloading at the outpost
+--    is ending the game just the same.
 session.dock()
 advance(2) -- 8 seconds of the dock cooldown left
 local docked_save = session.serialize()
 session.reset()
 session.restore(docked_save)
 session.resume()
-check("docked session: no 60s cooldown", session.launch_cooldown_left() == 8)
-check("docked session: launch still refused", session.launch() == false)
-advance(8)
-check("docked session: allowed after the 10s", session.launch() == true)
+check("docked session: 60s cooldown", session.launch_cooldown_left() == 60)
+check("docked session: launch refused", session.launch() == false)
+advance(59)
+check("docked session: still refused at 59s", session.launch() == false)
+advance(1)
+check("docked session: allowed after the 60s", session.launch() == true)
 
 -- 8. A dock never SHORTENS a cooldown that is already running.
 session.reset()
@@ -177,6 +179,10 @@ check("server: launch right after that refused", after_resume == false)
 server_seconds = server_seconds + 60
 local after_wait = server_apply(resumed_save, "launch")
 check("server: launch 60s after that allowed", after_wait == true)
+
+-- Reloading while DOCKED arms the same 60s on the server.
+local resumed_docked, resumed_docked_save = server_apply(docked_save, "resume")
+check("server: resume after a docked session arms 60s", resumed_docked == true and resumed_docked_save.launch_blocked_until == server_seconds + 60)
 
 if failures > 0 then
 	print(failures .. " FAILURE(S)")

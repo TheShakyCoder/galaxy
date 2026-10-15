@@ -29,6 +29,7 @@ local json = require "nakama.util.json"
 local nakama_session = require "nakama.session"
 local b64 = require "nakama.util.b64"
 local session = require "main.session"
+local outpost_rules = require "main.outpost_rules"
 
 local M = {}
 
@@ -76,12 +77,22 @@ local connecting = false
 -- when we drop or change system, since no LEAVE arrives for those cases.
 local members = {}
 
--- Outposts' hull/destruction as last heard from the server (the system's
--- match while flying, the outpost_status RPC at an outpost): system_id ->
--- faction -> { exists, hp, max_hp, available, destroyed_until, returns_at }.
--- `returns_at` is destroyed_until on the local socket.gettime() clock, so
--- countdowns don't depend on this computer's clock matching the server's.
+-- Outposts as last heard from the server (the system's match while flying,
+-- the outpost_status RPC at an outpost, the outpost_galaxy RPC for every
+-- system): system_id -> faction -> the server's state (nakama-server/
+-- modules/system_match.lua OUTPOSTS: exists, permanent, pct, level, tier,
+-- present, available, hp, max_hp, destroyed_until, beacon, platforms - the
+-- galaxy RPC only fills pct/level/present/available/permanent/destroyed_until).
+-- `returns_at` (on the outpost and each beacon/platform part) is
+-- destroyed_until on the local socket.gettime() clock, so countdowns don't
+-- depend on this computer's clock matching the server's.
 local outpost_cache = {}
+
+local function local_return(part, server_now, now)
+	if type(part) == "table" and part.destroyed_until and server_now then
+		part.returns_at = now + (part.destroyed_until - server_now) / 1000
+	end
+end
 
 local function store_outposts(system_id, data)
 	local now = socket.gettime()
@@ -89,8 +100,10 @@ local function store_outposts(system_id, data)
 	for _, faction in ipairs({ "accord", "swarm" }) do
 		local st = data[faction]
 		if type(st) == "table" then
-			if st.destroyed_until and data.now then
-				st.returns_at = now + (st.destroyed_until - data.now) / 1000
+			local_return(st, data.now, now)
+			local_return(st.beacon, data.now, now)
+			for _, p in ipairs(st.platforms or {}) do
+				local_return(p, data.now, now)
 			end
 			by_faction[faction] = st
 		end
@@ -98,13 +111,25 @@ local function store_outposts(system_id, data)
 	outpost_cache[system_id] = by_faction
 end
 
--- The outpost's last known state, or nil if the server hasn't told us yet.
--- A destruction whose hour is up counts as returned (the server says so as
+-- A destroyed part whose timer is up counts as back (the server says so as
 -- soon as it notices).
+local function settle(part, back)
+	if part and not part.available and part.returns_at and socket.gettime() >= part.returns_at then
+		part.available, part.hp, part.destroyed_until, part.returns_at = back, part.max_hp, nil, nil
+	end
+end
+
+-- The outpost's last known state, or nil if the server hasn't told us yet.
+-- A destroyed outpost returns once its hour is up if its control level still
+-- puts one here (`present`).
 function M.outpost_state(system_id, faction)
 	local st = outpost_cache[system_id] and outpost_cache[system_id][faction]
-	if st and not st.available and st.returns_at and socket.gettime() >= st.returns_at then
-		st.available, st.hp, st.destroyed_until, st.returns_at = true, st.max_hp, nil, nil
+	if st then
+		settle(st, st.present ~= false)
+		settle(st.beacon, true)
+		for _, p in ipairs(st.platforms or {}) do
+			settle(p, true)
+		end
 	end
 	return st
 end
@@ -153,11 +178,16 @@ function M.asteroid_state(system_id, index)
 end
 
 -- Docking, launching and respawning (main/session.lua docked_system) treat
--- a destroyed outpost as missing, the same rule the server applies. Until
--- the server has said otherwise an outpost is assumed to be there.
+-- an outpost that isn't there (Outpost Progress below 90 %) or is destroyed
+-- as missing, the same rule the server applies. Until the server has said
+-- anything about a system, only a permanent outpost is assumed to be there
+-- (main/outpost_rules.lua) - M.fetch_galaxy() fills in the rest.
 session.set_outpost_availability(function(system_id, faction)
 	local st = M.outpost_state(system_id, faction)
-	return st == nil or st.available
+	if st == nil then
+		return outpost_rules.permanent(system_id, faction)
+	end
+	return st.available == true
 end)
 
 -- False after M.logout(), so a pending reconnect doesn't bring a logged-out
@@ -598,6 +628,36 @@ function M.fetch_outposts(system_id, callback)
 	rpc("outpost_status", { system_id = system_id }, function(result)
 		if result and not result.error then
 			store_outposts(system_id, result)
+			if callback then callback(true) end
+		elseif callback then
+			callback(false)
+		end
+	end)
+end
+
+-- Asks the server for every system's outposts (presence, level, progress)
+-- - for docking at the nearest one and the sector map. Systems the cache
+-- already knows in full keep their hull/defence detail; callback(ok).
+function M.fetch_galaxy(callback)
+	rpc("outpost_galaxy", {}, function(result)
+		if result and type(result.systems) == "table" then
+			local now = socket.gettime()
+			for system_id, by_faction in pairs(result.systems) do
+				local cached = outpost_cache[system_id] or {}
+				for faction, brief in pairs(by_faction) do
+					local st = cached[faction] or {}
+					for k, v in pairs(brief) do
+						st[k] = v
+					end
+					if brief.available then
+						st.destroyed_until, st.returns_at = nil, nil
+					end
+					st.exists = true
+					local_return(st, result.now, now)
+					cached[faction] = st
+				end
+				outpost_cache[system_id] = cached
+			end
 			if callback then callback(true) end
 		elseif callback then
 			callback(false)

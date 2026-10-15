@@ -6,7 +6,36 @@ in `main/version.lua` (see "Versioning" in the README).
 
 ## [Unreleased]
 
+### Star map
+- **The sector map now matches the original Veil Sector layout.** All 58 systems
+  were re-positioned from a screenshot of the original map, keeping their names.
+  Distances are calibrated so 70 Virginis to Deneb is 8.25 light-years. Systems
+  are more evenly spaced, and every system can now be reached step by step with
+  any ship's jump range.
+- **Home zones moved with the map.** Epsilon Indi is now in the Accord home buffer
+  (the Swarm can't enter it) instead of Tau Ceti. The no-enemy-outpost zones now
+  include Furud (instead of Barnard's Star) around Sol and Alnair (instead of
+  Spica) around Polaris.
+
 ### Outpost
+- **Outposts are now earned.** Every system has an Outpost Progress meter for each
+  faction. Mining there and flying there raise it, and it slowly drains.
+  - **At 90%** your faction's outpost moves in, and it disappears again if progress
+    drops below that.
+  - **Higher levels** add a jump beacon and up to four sentry platforms, then upgrade
+    the outpost and finally fortify it.
+  - **Your home system and the six around it** always keep your outpost, and it
+    can't be destroyed.
+  - **Reading it:** the flight HUD shows the current system's progress top-left, and
+    clicking a system on the Sector Map shows its outposts.
+- **Enemy beacons and sentry platforms can be shot down.** A destroyed platform is
+  back after 10 minutes and a beacon after an hour. They don't fire back yet.
+- **Holding outposts pays.** Each outpost your faction holds gives every pilot +1%
+  XP and +1% mined resources. Everyone who helps destroy an outpost now gets the full
+  reward.
+- **You dock at the nearest outpost.** If the system you're in has no outpost of
+  yours, docking, quitting or respawning puts you at the nearest one instead of your
+  home system.
 - **Pick your next jump from the outpost's Sector Map.** The map now shows your
   ship's FTL range as a green circle around the system you're docked at, colours
   systems by whether you can jump there, and lets you click one to see its distance,
@@ -14,6 +43,9 @@ in `main/version.lua` (see "Versioning" in the README).
   destination. You can't jump while docked: launch, then press J.
 
 ### Flight
+- **Reloading the game always means a 60-second wait before launching.** Before,
+  reloading while docked at an outpost skipped it; now it applies whether you
+  were in space or docked.
 - **F3 shows a temporary debug readout** in flight: your position, velocity,
   speed, forward/up/right vectors, heading, pitch, roll and turn rates. Press F3
   again to hide it.

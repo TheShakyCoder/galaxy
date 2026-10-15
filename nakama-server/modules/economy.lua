@@ -22,9 +22,11 @@ local progress = require("progress")
 local session = require("main.session")
 local outposts = require("outposts")
 
--- Destroyed outposts count as absent for docking/launch/respawn rules.
+-- Docking, launching and respawning use the live outposts: one that isn't
+-- there (progress below 90 %, plan.md §2.7) or is destroyed counts as absent,
+-- and the player goes to the nearest one their faction has.
 session.set_outpost_availability(function(system_id, faction)
-	return outposts.get(system_id, faction).available
+	return outposts.available(system_id, faction)
 end)
 
 -- The dock/launch cooldown (main/session.lua, plan.md §2.16) stores

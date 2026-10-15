@@ -126,7 +126,13 @@ function M.load(callback)
 			session.reset()
 		end
 		session.set_on_change(M.record)
-		callback(true, session.get_faction() ~= nil)
+		-- Which systems have outposts right now (plan.md §2.7 "Outpost
+		-- progression"): docked_system() needs it to put the player at the
+		-- nearest one. A failure still lets the game start - only permanent
+		-- outposts are assumed until the next fetch.
+		network.fetch_galaxy(function()
+			callback(true, session.get_faction() ~= nil)
+		end)
 	end)
 end
 

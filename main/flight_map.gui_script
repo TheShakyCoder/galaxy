@@ -11,7 +11,7 @@
 -- project's own main/map.gui_script: same layout (offsets transplanted
 -- onto this project's 1920x1080 canvas - the source's own 1280x720's
 -- worth of relative positions, not rescaled, since main/data/star_systems.lua's
--- map_x/map_y (+-386/+-231) comfortably fits either canvas unscaled, same
+-- map_x/map_y (+-446.5/+-265.5 since the screenshot layout, plan.md §2.7) fits this canvas unscaled, same
 -- "already a screen-appropriate scale" reasoning that file's own header
 -- comment gives), same dot-pool-created-once approach, same click-to-
 -- select/arm-on-select flow, same 4-color reachability scheme. Ported

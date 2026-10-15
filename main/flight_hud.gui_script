@@ -133,9 +133,10 @@ local ASTEROID_DOT_COLOR = vmath.vector4(0.62, 0.66, 0.72, 0.4)
 -- Outposts (per direct instruction: "add outposts"): a third pool, drawn ON TOP
 -- of the rocks but under ship contacts, in the same friendly/enemy colours the
 -- target brackets already use (RELATION_COLORS below) so a friendly outpost
--- reads like a friendly ship. Two factions can have one outpost each in a
--- system, so the pool only needs headroom, not a crowd.
-local OUTPOST_POOL_SIZE = 4
+-- reads like a friendly ship. Each faction's outpost in a system also has a
+-- jump beacon and up to 4 sentry platforms (plan.md §2.7 "Outpost
+-- progression"), which share this pool: 2 x (1 + 1 + 4).
+local OUTPOST_POOL_SIZE = 12
 local OUTPOST_DOT_SIZE = vmath.vector3(7, 7, 0)
 
 -- The selected target's own blip (per direct instruction: "if the selected
@@ -157,8 +158,16 @@ local POSITION_TEXT_SCALE = vmath.vector3(0.37, 0.37, 1)
 -- and shows a temporary gui showing the ships position and vector details") -
 -- F3 in main/player_ship.script. Top-left, under the currency bar, in the empty
 -- space above the vitals panel.
-local DEBUG_INFO_POS = vmath.vector3(40, 930, 0) -- top-left corner (PIVOT_NW)
+local DEBUG_INFO_POS = vmath.vector3(40, 860, 0) -- top-left, under the Outpost Progress readout (PIVOT_NW)
 local DEBUG_INFO_SIZE = vmath.vector3(580, 310, 0)
+
+-- Outpost Progress readout (plan.md §2.7 "Outpost progression"): BSGO showed
+-- the system's outpost progress in the top-left corner; here it sits under
+-- the currency panel, one line per faction that may have an outpost here
+-- (main/player_ship.script builds the text).
+local OUTPOST_PROGRESS_POS = vmath.vector3(40, 940, 0) -- PIVOT_NW
+local OUTPOST_PROGRESS_SCALE = vmath.vector3(0.42, 0.42, 1)
+local OUTPOST_PROGRESS_COLOR = vmath.vector4(0.85, 0.9, 1, 0.9)
 local DEBUG_INFO_PADDING = vmath.vector3(14, -12, 0)
 local DEBUG_INFO_BG_COLOR = vmath.vector4(0, 0, 0, 0.55)
 local DEBUG_INFO_TEXT_COLOR = vmath.vector4(0.75, 0.95, 0.75, 1)
@@ -657,6 +666,12 @@ function init(self)
 	gui.set_scale(self.debug_text_node, DEBUG_INFO_TEXT_SCALE)
 	gui.set_color(self.debug_text_node, DEBUG_INFO_TEXT_COLOR)
 	gui.set_enabled(self.debug_text_node, false)
+	self.outpost_progress_node = gui.new_text_node(OUTPOST_PROGRESS_POS, "")
+	gui.set_font(self.outpost_progress_node, "default_font")
+	gui.set_pivot(self.outpost_progress_node, gui.PIVOT_NW)
+	gui.set_scale(self.outpost_progress_node, OUTPOST_PROGRESS_SCALE)
+	gui.set_color(self.outpost_progress_node, OUTPOST_PROGRESS_COLOR)
+	gui.set_enabled(self.outpost_progress_node, false)
 	self.build_version_node = gui.get_node("build_version")
 	gui.set_text(self.build_version_node, "v" .. version.VERSION)
 
@@ -1040,6 +1055,12 @@ function on_message(self, message_id, message)
 		gui.set_enabled(self.debug_text_node, on)
 		if on then
 			gui.set_text(self.debug_text_node, message.text)
+		end
+	elseif message_id == hash("outpost_progress") then
+		-- main/player_ship.script: this system's Outpost Progress lines, nil hides.
+		gui.set_enabled(self.outpost_progress_node, message.text ~= nil)
+		if message.text then
+			gui.set_text(self.outpost_progress_node, message.text)
 		end
 	elseif message_id == hash("jump_preset") then
 		-- Persistent readout of main/player_ship.script's own

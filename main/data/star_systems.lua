@@ -10,12 +10,16 @@
 -- though one of those, "Alpha Ceti", happens to itself be a real star) -
 -- see plan.md §2.7 for that reasoning.
 --
--- `map_x`/`map_y` are NOT meters - an abstract pixel-ish layout space,
--- same spirit as the source project's own sector_map.lua (see plan.md
--- §2.7). Calibrated against main/data/ships.lua's own ftl_range_ly (real
--- light-years, plan.md §2.1.1) via M.MAP_UNITS_PER_LY below, per direct
--- instruction ("one light-year = 35 pixels") - resolves the gap
--- main/flight_map.gui_script previously had to flag unfixed.
+-- `map_x`/`map_y` are NOT meters - an abstract pixel layout space. They are
+-- the pixel positions of the 58 systems on a screenshot of BSGO's own Veil
+-- Sector map (screenshots/Screenshot 2026-10-12 at 17.52.59.png, 996x635),
+-- per direct instruction ("use the coordinates from the imported image"):
+-- map_x = px - 489.5, map_y = 342.5 - py, i.e. centred on the middle of the
+-- systems' bounding box with Y flipped to point up. Each system was matched
+-- to its screenshot dot through its BSGO counterpart (this file's earlier
+-- positions were the SuperShips reconstruction, which matched BSGO's names
+-- 1:1 by position). Calibrated against main/data/ships.lua's ftl_range_ly
+-- (real light-years, plan.md §2.1.1) via M.MAP_UNITS_PER_LY below.
 --
 -- `width_m`/`height_m`/`depth_m` (plan.md §2.7, per direct instruction) are
 -- the in-system world extent along each of the ship's own local axes (§0 -
@@ -42,12 +46,13 @@ M.HOME_SYSTEM = { accord = "sol", swarm = "polaris" }
 -- systems nearest each home system, not just the home system itself.
 -- Computed once via M.distance from the table below (nearest-3, home
 -- system itself excluded) - listed explicitly here rather than derived
--- at runtime so the restricted set is easy to read/audit directly:
---   nearest 3 to "sol"     -> wolf_359, tau_ceti, beta_andromedae
---   nearest 3 to "polaris" -> merak, ankaa, gliese_667
+-- at runtime so the restricted set is easy to read/audit directly.
+-- Recomputed for the screenshot positions (light-years in brackets):
+--   nearest 3 to "sol"     -> wolf_359 (2.82), epsilon_indi (4.04), beta_andromedae (4.27)
+--   nearest 3 to "polaris" -> ankaa (2.70), merak (3.00), gliese_667 (3.10)
 M.HOME_BUFFER = {
-	accord = { "wolf_359", "tau_ceti", "beta_andromedae" },
-	swarm  = { "merak", "ankaa", "gliese_667" },
+	accord = { "wolf_359", "epsilon_indi", "beta_andromedae" },
+	swarm  = { "ankaa", "merak", "gliese_667" },
 }
 
 function M.faction_home_of(system_id)
@@ -67,13 +72,14 @@ end
 -- of M.HOME_BUFFER's narrower "can't even enter" 3-system zone above; the
 -- first 3 entries of each list below are exactly M.HOME_BUFFER's own
 -- systems, since nearest-3 is always a subset of nearest-6).
---   nearest 6 to "sol"     -> wolf_359, tau_ceti, beta_andromedae, epsilon_indi, avior, barnards_star
---   nearest 6 to "polaris" -> merak, ankaa, gliese_667, 70_virginis, acrux, spica
+--   nearest 6 to "sol"     -> wolf_359, epsilon_indi, beta_andromedae, tau_ceti (4.53), furud (6.86), avior (7.00)
+--   nearest 6 to "polaris" -> ankaa, merak, gliese_667, acrux (4.45), 70_virginis (5.79), alnair (6.80)
+-- (alnair only just beats spica, 6.85 ly - about one screenshot pixel.)
 -- Keyed by the faction being DENIED an outpost, listing the systems that
 -- denial applies to (that faction's opponent's home turf).
 M.OUTPOST_DENIED = {
-	swarm  = { "sol", "wolf_359", "tau_ceti", "beta_andromedae", "epsilon_indi", "avior", "barnards_star" },
-	accord = { "polaris", "merak", "ankaa", "gliese_667", "70_virginis", "acrux", "spica" },
+	swarm  = { "sol", "wolf_359", "epsilon_indi", "beta_andromedae", "tau_ceti", "furud", "avior" },
+	accord = { "polaris", "ankaa", "merak", "gliese_667", "acrux", "70_virginis", "alnair" },
 }
 
 -- Does `faction` have an outpost in `system_id` at all?
@@ -196,8 +202,8 @@ end
 M.OPPOSING_SHIP_CAP = 50 -- TBC
 
 M.SHIP_CAP_ZONE = {
-	swarm  = { "epsilon_indi", "avior", "barnards_star" }, -- 4th-6th nearest to Sol (Accord home)
-	accord = { "70_virginis", "acrux", "spica" },          -- 4th-6th nearest to Polaris (Swarm home)
+	swarm  = { "tau_ceti", "furud", "avior" },             -- 4th-6th nearest to Sol (Accord home)
+	accord = { "acrux", "70_virginis", "alnair" },         -- 4th-6th nearest to Polaris (Swarm home)
 }
 
 -- The concurrent-ship cap on `faction` in `system_id`, or nil if
@@ -216,64 +222,64 @@ function M.ship_cap(system_id, faction)
 end
 
 M.SYSTEMS = {
-	["hadar"]              = { name = "Hadar",              map_x = -68.5,  map_y = 180.5,  threat = 20,  threat_real = true },
-	["mira"]               = { name = "Mira",               map_x = -194.5, map_y = 150.5,  threat = 50 },
-	["wezen"]              = { name = "Wezen",               map_x = 90.5,   map_y = 163.5,  threat = 20,  threat_real = true },
-	["caph"]               = { name = "Caph",                map_x = 21.5,   map_y = 147.5,  threat = 20,  threat_real = true },
-	["61_cygni"]           = { name = "61 Cygni",            map_x = 180.5,  map_y = 147.5,  threat = 20,  threat_real = true },
-	["nihal"]              = { name = "Nihal",               map_x = 248.5,  map_y = 141.5,  threat = 44 },
-	["delta_aurigae"]      = { name = "Delta Aurigae",       map_x = -119.5, map_y = 121.5,  threat = 50 },
-	["beta_persei"]        = { name = "Beta Persei",         map_x = -250.5, map_y = 92.5,   threat = 18,  threat_real = true },
-	["muphrid"]            = { name = "Muphrid",             map_x = 64.5,   map_y = 84.5,   threat = 48 },
-	["70_ophiuchi"]        = { name = "70 Ophiuchi",         map_x = 156.5,  map_y = 60.5,   threat = 39 },
-	["36_ophiuchi"]        = { name = "36 Ophiuchi",         map_x = 242.5,  map_y = 67.5,   threat = 35 },
-	["albireo"]            = { name = "Albireo",             map_x = -127.5, map_y = 52.5,   threat = 42 },
-	["gamma_draconis"]     = { name = "Gamma Draconis",      map_x = -199.5, map_y = 32.5,   threat = 36 },
-	["asterope"]           = { name = "Asterope",            map_x = -298.5, map_y = 30.5,   threat = 17,  threat_real = true },
-	["82_eridani"]         = { name = "82 Eridani",          map_x = 96.5,   map_y = 22.5,   threat = 39 },
-	["zaurak"]             = { name = "Zaurak",              map_x = 305.5,  map_y = 38.5,   threat = 31 },
-	["47_ursae_majoris"]   = { name = "47 Ursae Majoris",    map_x = 167.5,  map_y = -8.5,   threat = 31 },
-	["canopus"]            = { name = "Canopus",             map_x = -365.5, map_y = -26.5,  threat = 0,   threat_real = true },
-	["kraz"]               = { name = "Kraz",                map_x = -180.5, map_y = -19.5,  threat = 31 },
-	["gienah"]             = { name = "Gienah",              map_x = -100.5, map_y = -19.5,  threat = 37 },
-	["antares"]            = { name = "Antares",             map_x = -20.5,  map_y = -30.5,  width_m = 40000, height_m = 40000, depth_m = 40000, threat = 44 },
-	["epsilon_eridani"]    = { name = "Epsilon Eridani",     map_x = -259.5, map_y = -36.5,  threat = 25 },
-	["51_pegasi"]          = { name = "51 Pegasi",           map_x = 267.5,  map_y = -29.5,  threat = 23 },
-	["55_cancri"]          = { name = "55 Cancri",           map_x = 340.5,  map_y = -26.5,  threat = 23 },
-	["14_herculis"]        = { name = "14 Herculis",         map_x = 146.5,  map_y = -42.5,  threat = 29 },
-	["homam"]              = { name = "Homam",               map_x = -72.5,  map_y = -58.5,  threat = 37 },
-	["nashira"]            = { name = "Nashira",             map_x = 74.5,   map_y = -47.5,  threat = 36 },
-	["18_scorpii"]         = { name = "18 Scorpii",          map_x = 195.5,  map_y = -71.5,  threat = 22 },
-	["spica"]              = { name = "Spica",               map_x = 341.5,  map_y = -96.5,  threat = 10,  threat_real = true },
-	["omicron_persei"]     = { name = "Omicron Persei",      map_x = -385.5, map_y = -94.5,  threat = 19 },
-	["avior"]              = { name = "Avior",               map_x = -300.5, map_y = -98.5,  threat = 16 },
-	["miaplacidus"]        = { name = "Miaplacidus",         map_x = -234.5, map_y = -78.5,  threat = 21 },
-	["tau_bootis"]         = { name = "Tau Bo\195\182tis",   map_x = -134.5, map_y = -105.5, threat = 27 },
-	["fomalhaut"]          = { name = "Fomalhaut",           map_x = -49.5,  map_y = -110.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 36 },
-	["deneb"]              = { name = "Deneb",               map_x = 37.5,   map_y = -106.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 37 },
-	["40_eridani"]         = { name = "40 Eridani",          map_x = 141.5,  map_y = -110.5, threat = 25 },
-	["alnair"]             = { name = "Alnair",              map_x = 263.5,  map_y = -106.5, threat = 9,   threat_real = true },
-	["acrux"]              = { name = "Acrux",               map_x = 360.5,  map_y = -147.5, threat = 9 },
-	["rastaban"]           = { name = "Rastaban",            map_x = 7.5,    map_y = -155.5, threat = 39 },
-	["70_virginis"]        = { name = "70 Virginis",         map_x = 269.5,  map_y = -160.5, threat = 6,   threat_real = true },
-	["merak"]              = { name = "Merak",               map_x = 319.5,  map_y = -158.5, threat = 6 },
-	["tau_ceti"]           = { name = "Tau Ceti",            map_x = -340.5, map_y = -181.5, threat = 6 },
-	["epsilon_indi"]       = { name = "Epsilon Indi",        map_x = -225.5, map_y = -170.5, threat = 255, threat_real = true },
-	["furud"]              = { name = "Furud",               map_x = -180.5, map_y = -170.5, threat = 18 },
-	["omicron_andromedae"] = { name = "Omicron Andromedae",  map_x = -80.5,  map_y = -172.5, threat = 30 },
-	["hd_209458"]          = { name = "HD 209458",           map_x = 7.5,    map_y = -181.5, threat = 38 },
-	["groombridge_1618"]   = { name = "Groombridge 1618",    map_x = 156.5,  map_y = -189.5, threat = 20 },
-	["gliese_667"]         = { name = "Gliese 667",          map_x = 252.5,  map_y = -209.5, threat = 8 },
-	["polaris"]            = { name = "Polaris",             map_x = 316.5,  map_y = -209.5, threat = 1 }, -- Swarm home system
-	["ankaa"]              = { name = "Ankaa",               map_x = 372.5,  map_y = -185.5, threat = 7 },
-	["sigma_draconis"]     = { name = "Sigma Draconis",      map_x = -121.5, map_y = -202.5, threat = 24 },
-	["tarazed"]            = { name = "Tarazed",             map_x = 7.5,    map_y = -189.5, threat = 38 },
-	["wolf_359"]           = { name = "Wolf 359",            map_x = -354.5, map_y = -207.5, threat = 5 },
-	["beta_andromedae"]    = { name = "Beta Andromedae",     map_x = -221.5, map_y = -210.5, threat = 12 },
-	["sol"]                = { name = "Sol",                 map_x = -317.5, map_y = -230.5, threat = 1 }, -- Accord home system
-	["alpha_draconis"]     = { name = "Alpha Draconis",      map_x = -30.5,  map_y = -217.5, threat = 35 },
-	["barnards_star"]      = { name = "Barnard's Star",      map_x = -168.5, map_y = -230.5, threat = 18 },
-	["denebola"]           = { name = "Denebola",            map_x = 56.5,   map_y = -217.5, threat = 32 },
+	["hadar"]              = { name = "Hadar",              map_x = -71.5,  map_y = 265.5,  threat = 20,  threat_real = true },
+	["mira"]               = { name = "Mira",               map_x = -223.5, map_y = 232.5,  threat = 50 },
+	["wezen"]              = { name = "Wezen",               map_x = 118.5,  map_y = 248.5,  threat = 20,  threat_real = true },
+	["caph"]               = { name = "Caph",                map_x = 18.5,   map_y = 222.5,  threat = 20,  threat_real = true },
+	["61_cygni"]           = { name = "61 Cygni",            map_x = 220.5,  map_y = 217.5,  threat = 20,  threat_real = true },
+	["nihal"]              = { name = "Nihal",               map_x = 308.5,  map_y = 222.5,  threat = 44 },
+	["delta_aurigae"]      = { name = "Delta Aurigae",       map_x = -134.5, map_y = 196.5,  threat = 50 },
+	["beta_persei"]        = { name = "Beta Persei",         map_x = -282.5, map_y = 155.5,  threat = 18,  threat_real = true },
+	["muphrid"]            = { name = "Muphrid",             map_x = 87.5,   map_y = 152.5,  threat = 48 },
+	["70_ophiuchi"]        = { name = "70 Ophiuchi",         map_x = 197.5,  map_y = 124.5,  threat = 39 },
+	["36_ophiuchi"]        = { name = "36 Ophiuchi",         map_x = 301.5,  map_y = 132.5,  threat = 35 },
+	["albireo"]            = { name = "Albireo",             map_x = -150.5, map_y = 105.5,  threat = 42 },
+	["gamma_draconis"]     = { name = "Gamma Draconis",      map_x = -231.5, map_y = 90.5,   threat = 36 },
+	["asterope"]           = { name = "Asterope",            map_x = -348.5, map_y = 86.5,   threat = 17,  threat_real = true },
+	["82_eridani"]         = { name = "82 Eridani",          map_x = 125.5,  map_y = 77.5,   threat = 39 },
+	["zaurak"]             = { name = "Zaurak",              map_x = 377.5,  map_y = 81.5,   threat = 31 },
+	["47_ursae_majoris"]   = { name = "47 Ursae Majoris",    map_x = 212.5,  map_y = 42.5,   threat = 31 },
+	["canopus"]            = { name = "Canopus",             map_x = -427.5, map_y = 19.5,   threat = 0,   threat_real = true },
+	["kraz"]               = { name = "Kraz",                map_x = -224.5, map_y = 20.5,   threat = 31 },
+	["gienah"]             = { name = "Gienah",              map_x = -126.5, map_y = 16.5,   threat = 37 },
+	["antares"]            = { name = "Antares",             map_x = 16.5,   map_y = -19.5,  width_m = 40000, height_m = 40000, depth_m = 40000, threat = 44 },
+	["epsilon_eridani"]    = { name = "Epsilon Eridani",     map_x = -348.5, map_y = -9.5,   threat = 25 },
+	["51_pegasi"]          = { name = "51 Pegasi",           map_x = 331.5,  map_y = 8.5,    threat = 23 },
+	["55_cancri"]          = { name = "55 Cancri",           map_x = 420.5,  map_y = 18.5,   threat = 23 },
+	["14_herculis"]        = { name = "14 Herculis",         map_x = 170.5,  map_y = -16.5,  threat = 29 },
+	["homam"]              = { name = "Homam",               map_x = -73.5,  map_y = -45.5,  threat = 37 },
+	["nashira"]            = { name = "Nashira",             map_x = 98.5,   map_y = -40.5,  threat = 36 },
+	["18_scorpii"]         = { name = "18 Scorpii",          map_x = 245.5,  map_y = -52.5,  threat = 22 },
+	["spica"]              = { name = "Spica",               map_x = 423.5,  map_y = -65.5,  threat = 10,  threat_real = true },
+	["omicron_persei"]     = { name = "Omicron Persei",      map_x = -446.5, map_y = -85.5,  threat = 19 },
+	["avior"]              = { name = "Avior",               map_x = -349.5, map_y = -88.5,  threat = 16 },
+	["miaplacidus"]        = { name = "Miaplacidus",         map_x = -257.5, map_y = -58.5,  threat = 21 },
+	["tau_bootis"]         = { name = "Tau Bo\195\182tis",   map_x = -142.5, map_y = -99.5,  threat = 27 },
+	["fomalhaut"]          = { name = "Fomalhaut",           map_x = -45.5,  map_y = -105.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 36 },
+	["deneb"]              = { name = "Deneb",               map_x = 81.5,   map_y = -101.5, width_m = 40000, height_m = 40000, depth_m = 40000, threat = 37 },
+	["40_eridani"]         = { name = "40 Eridani",          map_x = 170.5,  map_y = -123.5, threat = 25 },
+	["alnair"]             = { name = "Alnair",              map_x = 327.5,  map_y = -75.5,  threat = 9,   threat_real = true },
+	["acrux"]              = { name = "Acrux",               map_x = 442.5,  map_y = -133.5, threat = 9 },
+	["rastaban"]           = { name = "Rastaban",            map_x = 17.5,   map_y = -135.5, threat = 39 },
+	["70_virginis"]        = { name = "70 Virginis",         map_x = 271.5,  map_y = -153.5, threat = 6,   threat_real = true },
+	["merak"]              = { name = "Merak",               map_x = 361.5,  map_y = -159.5, threat = 6 },
+	["tau_ceti"]           = { name = "Tau Ceti",            map_x = -415.5, map_y = -167.5, threat = 6 },
+	["epsilon_indi"]       = { name = "Epsilon Indi",        map_x = -315.5, map_y = -166.5, threat = 255, threat_real = true },
+	["furud"]              = { name = "Furud",               map_x = -223.5, map_y = -154.5, threat = 18 },
+	["omicron_andromedae"] = { name = "Omicron Andromedae",  map_x = -87.5,  map_y = -158.5, threat = 30 },
+	["hd_209458"]          = { name = "HD 209458",           map_x = 129.5,  map_y = -183.5, threat = 38 },
+	["groombridge_1618"]   = { name = "Groombridge 1618",    map_x = 217.5,  map_y = -213.5, threat = 20 },
+	["gliese_667"]         = { name = "Gliese 667",          map_x = 315.5,  map_y = -227.5, threat = 8 },
+	["polaris"]            = { name = "Polaris",             map_x = 389.5,  map_y = -225.5, threat = 1 }, -- Swarm home system
+	["ankaa"]              = { name = "Ankaa",               map_x = 446.5,  map_y = -195.5, threat = 7 },
+	["sigma_draconis"]     = { name = "Sigma Draconis",      map_x = -115.5, map_y = -227.5, threat = 24 },
+	["tarazed"]            = { name = "Tarazed",             map_x = 19.5,   map_y = -205.5, threat = 38 },
+	["wolf_359"]           = { name = "Wolf 359",            map_x = -415.5, map_y = -231.5, threat = 5 },
+	["beta_andromedae"]    = { name = "Beta Andromedae",     map_x = -252.5, map_y = -235.5, threat = 12 },
+	["sol"]                = { name = "Sol",                 map_x = -352.5, map_y = -255.5, threat = 1 }, -- Accord home system
+	["alpha_draconis"]     = { name = "Alpha Draconis",      map_x = -38.5,  map_y = -253.5, threat = 35 },
+	["barnards_star"]      = { name = "Barnard's Star",      map_x = -178.5, map_y = -265.5, threat = 18 },
+	["denebola"]           = { name = "Denebola",            map_x = 80.5,   map_y = -251.5, threat = 32 },
 }
 
 -- Straight-line "map distance" between two systems, same abstract units
@@ -289,15 +295,17 @@ end
 
 -- Conversion factor between main/data/ships.lua's light-year stats
 -- (ftl_range_ly, ftl_cost_hydrogen_per_ly) and this file's map_x/map_y
--- units. 20 is the original game's own scale: the BSGO server emulator
--- (github.com/victti/BSGO-Private-Server) stores FTL range in map units as
--- light-years x 20 (e.g. "90 //4.5f * 20"), and map_x/map_y here match its
--- star positions 1:1 (fitted: 1.013 original units per unit here, Y
--- flipped), since both come from the same map. Callers comparing a ship's
+-- units. Set from one known distance, per direct instruction: 74 Imsida ->
+-- 14 Toah (our 70 Virginis -> Deneb) is 8.25 light-years, i.e. 197.0 map
+-- units / 8.25 = 23.877 units per light-year. That agrees with the original
+-- game's own scale (the BSGO server emulator stores FTL range as light-years
+-- x 20 in its own map units, about 1.19 screenshot pixels each), so the
+-- ships' real light-year stats stay as they are. Callers comparing a ship's
 -- FTL range against M.distance()'s output should convert through
 -- M.ly_to_map_units() first - M.distance()/M.in_ftl_range() themselves stay
 -- in plain map units.
-M.MAP_UNITS_PER_LY = 20
+M.SCALE_REFERENCE = { from = "70_virginis", to = "deneb", ly = 8.25 }
+M.MAP_UNITS_PER_LY = M.distance(M.SCALE_REFERENCE.from, M.SCALE_REFERENCE.to) / M.SCALE_REFERENCE.ly
 
 function M.ly_to_map_units(ly)
 	return ly * M.MAP_UNITS_PER_LY

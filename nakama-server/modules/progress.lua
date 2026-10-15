@@ -78,6 +78,13 @@ local function assignment_units(event, units, assignments)
 	return units
 end
 
+-- The faction's XP multiplier (modules/outposts.lua xp_multiplier), looked
+-- up lazily so this module still loads on its own (tests).
+local xp_multiplier = nil
+function M.set_xp_multiplier(fn)
+	xp_multiplier = fn
+end
+
 -- Applies `event` to the profile table: XP, first-arrival bookkeeping and
 -- assignment progress (completing one pays its XP and Tope). Returns
 -- { xp_gained, tope_gained, xp, level, level_before, rank, completed }.
@@ -98,6 +105,13 @@ function M.grant(profile, event, units, now_ms)
 			profile.visited[units] = true
 			xp = rewards.SYSTEM_FIRST_ARRIVAL
 		end
+	end
+
+	-- Galaxy-wide outpost bonus (BSGO Nova): +1 % XP per outpost the
+	-- player's faction holds, applied last. Only for grants from a system's
+	-- match/economy here, where modules/outposts.lua is loaded.
+	if xp > 0 and xp_multiplier then
+		xp = math.floor(xp * xp_multiplier(profile.faction) + 0.5)
 	end
 
 	local completed = {}
